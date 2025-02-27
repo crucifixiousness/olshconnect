@@ -1,0 +1,222 @@
+@media only screen and (min-width: 320px) and (max-width: 992px){
+
+  .res-hide{display: none !important;}
+  .res-show{display: block !important;}
+
+  header{padding: 15px 0px; height: auto !important;}
+  header .part1, header .part3{padding: 0px !important;}
+  header .part1{max-width: 40% !important; flex: 0 0 40% !important;}
+  header .logo img{width: 35px !important;}
+  header .logo span{font-size: 18px !important;}
+
+  header .part3{max-width: 60% !important; flex: 0 0 60% !important;}
+
+  .main .sidebarWrapper{width: 80% !important; height: 100vh !important; position: fixed !important; top: 0px; left: -100%; z-index: 10000; opacity: 0; transition: all 0.4s ease-in-out;}
+  .main .sidebarWrapper .sidebar{width: 100% !important; position: relative !important; top: 0px !important; max-height: inherit !important;}
+  .main .content{width: 100% !important; flex: 0 0 100% !important;}
+  .right-content{padding: 90px 15px !important;}
+
+  .sidebarWrapper.open{left: 0px !important; opacity: 1 !important;}
+  .sidebarOverlay{position: fixed; top: 0px; left: 0px; z-index: 100; background: rgba(0,0,0,0.7); z-index: 1000 !important; width: 100%; height: 100% !important;}
+
+  .dashboardBoxWrapper{display: flex !important; width: 100% !important; white-space: nowrap !important; overflow-x: scroll !important; overflow-y: hidden !important; margin-bottom: 20px !important; flex-wrap: nowrap !important;}
+  .dashboardBoxWrapper button{flex: 0 0 auto !important; width: 270px !important; height: 160px !important; margin-right: 10px !important; }
+  .dashboardBoxWrapper::-webkit-scrollbar{display: none !important;}
+  .topPart2{padding-left: 15px !important;}
+
+  .homesec {
+    height: auto !important;
+    padding: 20px 10px !important;
+    text-align: center !important;
+}
+
+.intro {
+    max-width: 90% !important;
+    padding: 15px !important;
+}
+
+.intro h2 {
+    font-size: 1.5rem !important;
+    text-align: center;
+}
+
+.intro p {
+    font-size: 1rem !important;
+    text-align: center;
+}
+
+/* Section 2: School */
+#school {
+  height: auto; /* Allow the height to adjust dynamically */
+  padding: 20px 15px; /* Add some padding for better spacing */
+}
+
+#school h1 {
+  font-size: 1.8em; /* Reduce font size for better fit on smaller screens */
+}
+
+#school img {
+  margin-top: 50px; /* Adjust the image margin for smaller screens */
+  height: auto; /* Allow the image to scale properly */
+}
+
+.header-bar h1 {
+    font-size: 1rem !important;
+    text-align: center !important;
+}
+
+
+
+/* Section 3: Offered Courses */
+#courses {
+    height: auto !important;
+    padding: 50px 10px !important;
+}
+
+.course-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+}
+
+.course-item {
+    text-align: center !important;
+}
+
+.course-item h3 {
+    font-size: 1rem !important;
+}
+
+.course-item img {
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Section 4: Announcements */
+#announcement {
+    height: auto !important;
+    padding: 50px 10px !important;
+}
+
+.announcements-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+}
+
+.announcement-card {
+    text-align: center !important;
+    padding: 20px !important;
+}
+
+.announcement-card h3 {
+    font-size: 1.2rem !important;
+}
+
+.announcement-card p {
+    font-size: 1rem !important;
+}
+
+/* Footer */
+footer {
+    padding: 30px 15px !important;
+    text-align: center !important;
+}
+
+footer ul {
+    padding-left: 0 !important;
+    list-style-type: none !important;
+}
+
+footer ul li {
+    font-size: 0.9rem !important;
+}
+  
+  nav {
+    display: none;
+  }
+
+  /* Show the menu icon on mobile */
+  .menu-icon {
+    cursor: pointer;
+    font-size: 20px;
+    display: flex; /* Equivalent to d-flex */
+    align-items: center; /* Equivalent to align-items-center */
+    width: 58.33333%; /* Equivalent to col-sm-7 (7 out of 12 columns) */
+    margin-left: auto;
+    margin-right: 20px !important;
+  }
+
+  /* Sidebar styles (hidden by default) */
+  .msidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; /* Sidebar width */
+    height: 100vh;
+    background-color: #ce0505;
+    z-index: 1000;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+  }
+
+  /* When the sidebar is open, show it */
+  .msidebar.show {
+    display: block !important;
+  }
+
+  .msidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .msidebar ul li {
+    padding: 10px 0;
+  }
+
+  .msidebar ul li a {
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 18px;
+  }
+
+  
+}
+
+@media only screen and (min-width:320px) and (max-width:575px){
+  header .row{margin: auto !important;}
+  header button.rounded-circle{width: 35px !important; min-width: 35px !important; height: 35px !important; margin-right: 8px !important;}
+  .userImg{width: 35px; height: 35px;}
+  header .menu-icon{width: 35px !important; min-width: 35px !important; height: 35px !important; margin-right: 8px !important;}
+
+  .myAccWrapper button{padding: 0px !important; min-width: 35px !important; min-height: 35px !important;}
+
+  .homesec {
+    padding: 15px 10px !important;
+}
+
+.intro h2 {
+    font-size: 1.2rem !important;
+}
+
+.intro p {
+    font-size: 0.9rem !important;
+}
+
+.course-item h3 {
+    font-size: 1rem !important;
+}
+
+.announcement-card h3 {
+    font-size: 1rem !important;
+}
+
+.announcement-card p {
+    font-size: 0.9rem !important;
+}
+
+.footer-section ul li {
+    font-size: 0.8rem !important;
+}
+}
