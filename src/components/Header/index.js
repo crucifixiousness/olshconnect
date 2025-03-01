@@ -48,7 +48,7 @@ const Header = ()=>{
             <div className="col-sm-2 part1">
               <Link to={'/'} className="d-flex align-items-center logo">
                 <img alt="logu" src={logo}/>
-                <span className="ml-2">SACRADEMIA</span>
+                <span className="ml-2">OLSHCONNECT</span>
               </Link>              
             </div>
 

@@ -267,9 +267,9 @@ const Homepage = () => {
                 <section id="home" className="homesec" 
                     style={{backgroundImage: `url(${homepagebg})`, backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center',}}>
                         <div className='intro col-sm-7'>
-                            <h2>Welcome to OLSHCO Sacrademia: Your Gateway to Academic Excellence</h2>
+                            <h2>Welcome to OLSHCOnnect: Your Gateway to Academic Excellence</h2>
                             <p>
-                                OLSHCO Sacrademia, the official student portal of Our Lady of the Sacred Heart College of Guimba Inc. 
+                                OLSHCOnnect, the official student portal of Our Lady of the Sacred Heart College of Guimba Inc. 
                                 This platform is designed to empower students by providing easy access to essential academic tools, resources, 
                                 and updates. Whether you're exploring your courses, monitoring your grades, or staying updated on the latest 
                                 announcements, OLSHCO Sacrademia ensures a seamless and interactive experience.

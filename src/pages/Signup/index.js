@@ -76,11 +76,11 @@ const Signup = () => {
         <div className='row'>
           <div className='col-md-8 d-flex align-items-center flex-column justify-content-center part1'>
             <h1>
-              WELCOME TO <span className='text-sky'>OLSHCO SACRADEMIA</span>, MAINLY FOR 
+              WELCOME TO <span className='text-sky'>OLSHCOnnect</span>, MAINLY FOR 
               <span className='text-sky'> ADMIN</span> AND <span className='text-sky'>STAFFS</span>
             </h1>
             <p>
-              In the Sacrademia's Portal, the Admin manages user access and system operations to ensure smooth functionality. 
+              In the OLSHCOnnect's Portal, the Admin manages user access and system operations to ensure smooth functionality. 
               The Registrar oversees enrollment by reviewing applications and documents, finalizing enrollment once Finance confirms payment. 
               Finance handles tuition processing, updating payment status so the Registrar can complete official registration. 
               Instructors also have access to input calculated student grades, allowing students to view their academic progress. 
