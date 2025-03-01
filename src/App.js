@@ -55,6 +55,10 @@ function App() {
     setUser(JSON.parse(localStorage.getItem('user')));
   }, [token]);
 
+  useEffect(() => {
+    document.title = "OLSHCOnnect";
+  }, []);
+
 
   const openNav = () => {
     setIsOpenNav(true);
