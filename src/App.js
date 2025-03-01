@@ -128,7 +128,7 @@ function App() {
 
           <div className={`content ${isHideComponents === true && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`} onClick={() => { if (isOpenNav) { setIsOpenNav(false); } }}>
             <Routes>
-              <Route path="/" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole={['registrar', 'admin', 'finance', 'instructor']} redirectTo="/stafflogin" />} />
+              <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={token ? <Dashboard /> : <Navigate to="/stafflogin" />} />
               <Route path="/login" exact={true} element={<Login />} />
