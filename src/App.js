@@ -24,6 +24,7 @@ import FinanceDashboard from './pages/Financedashboard';
 import FinanceSidebar from './components/Finsidebar';
 import Enrollment from './pages/Enrollment';
 import StudentCourses from './pages/StudentCourse';
+import NotFound from './pages/NotFound';
 
 const MyContext = createContext();
 
@@ -128,6 +129,7 @@ function App() {
 
           <div className={`content ${isHideComponents === true && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`} onClick={() => { if (isOpenNav) { setIsOpenNav(false); } }}>
             <Routes>
+              <Route path="*" element={<NotFound />} />
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={token ? <Dashboard /> : <Navigate to="/stafflogin" />} />
