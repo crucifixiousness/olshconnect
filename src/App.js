@@ -101,6 +101,7 @@ function App() {
 
   return (
     <BrowserRouter>
+    <Route path="*" element={<NotFound />} />
       <MyContext.Provider value={values}>
         <Routes>
           <Route
@@ -153,9 +154,6 @@ function App() {
             </Routes>
           </div>
         </div>
-        <Routes>
-          <Route path="*" element={<NotFound />} />
-        </Routes>        
       </MyContext.Provider>
     </BrowserRouter>
   );
