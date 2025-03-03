@@ -101,7 +101,6 @@ function App() {
 
   return (
     <BrowserRouter>
-    <Route path="*" element={<NotFound />} />
       <MyContext.Provider value={values}>
         <Routes>
           <Route
@@ -134,7 +133,7 @@ function App() {
 
           <div className={`content ${isHideComponents === true && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`} onClick={() => { if (isOpenNav) { setIsOpenNav(false); } }}>
             <Routes>
-              
+              <Route path="*" exact={true} element={<ProtectedRoute element={<NotFound />} requiredRole={['registrar', 'admin', 'finance', 'instructor', 'student']}/>} />
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={token ? <Dashboard /> : <Navigate to="/stafflogin" />} />
