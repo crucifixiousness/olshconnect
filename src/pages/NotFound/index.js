@@ -6,7 +6,7 @@ const NotFound = () => {
   const context = useContext(MyContext);
 
   useEffect(() => {
-    context.setIsHideComponents(false);
+    context.setIsHideComponents(true);
     window.scrollTo(0, 0);
   }, [context]);
 
