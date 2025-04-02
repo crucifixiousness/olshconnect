@@ -13,7 +13,7 @@ import courses from '../../asset/images/courses.png';
 import { Link } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import announcement from '../../asset/images/anno.png';
-import { Modal, Button, Box, TextField, MenuItem, Checkbox, FormControlLabel, Grid, Typography, Select, FormControl } from "@mui/material";
+import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
 
 const Homepage = () => {
@@ -40,13 +40,17 @@ const Homepage = () => {
         setIsSidebarOpen(prevState => !prevState);
     };
 
-   /* const handleFileChange = (e) => {
-        const { name, files } = e.target;
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+      });
     
-        if (files && files[0]) {
-            setFormData({ ...formData, [name]: files[0] });
-        }
-    };*/
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
+      };
+
+    
 
     const [formData, setFormData] = useState({
         userName: '',
@@ -139,19 +143,45 @@ const Homepage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
     
+        // Validate required fields
+        if (!formData.userName || !formData.password || !formData.firstName || 
+            !formData.lastName || !formData.sex || !formData.birthdate) {
+            setSnackbar({
+                open: true,
+                message: "Please fill in all required fields",
+                severity: 'error'
+            });
+            return;
+        }
+
         try {
-            const formDataToSend = new FormData();
-            Object.keys(formData).forEach((key) => {
-                formDataToSend.append(key, formData[key]);
-            });
+            // Clean the form data to ensure no undefined values
+            const cleanFormData = {
+                userName: formData.userName || null,
+                password: formData.password || null,
+                firstName: formData.firstName || null,
+                middleName: formData.middleName || null,
+                lastName: formData.lastName || null,
+                suffix: formData.suffix || null,
+                sex: formData.sex || null,
+                birthdate: formData.birthdate || null,
+                age: formData.age || null,
+                placeOfBirth: formData.placeOfBirth || null,
+                religion: formData.religion || null,
+                email: formData.email || null,
+                number: formData.number || null,
+                street_text: formData.street_text || null,
+                guardianName: formData.guardianName || null,
+                guardianContactNo: formData.guardianContactNo || null
+            };
+
+            const response = await axios.post("http://localhost:4000/register", cleanFormData);
     
-            const response = await axios.post("http://localhost:4000/register", formDataToSend, {
-                headers: { "Content-Type": "multipart/form-data" },
+            setSnackbar({
+                open: true,
+                message: response.data.message || "Registration successful!",
+                severity: 'success'
             });
-    
-            // Show success message
-            setStatusMessage({ message: "Registration successful!", type: "success" });
-            setIsVisible(true);
             setOpen(true);
             setIsRegistered(true);
     
@@ -175,17 +205,12 @@ const Homepage = () => {
                 guardianContactNo: "",
             });
         } catch (error) {
-            console.error(error);
-    
-            // Show error message
-            setStatusMessage({ message: "Registration failed. Please try again.", type: "error" });
-            setIsVisible(true);
-        } finally {
-            // Hide the notification after 3 seconds
-            setTimeout(() => {
-                setIsVisible(false);
-                setOpen(false);
-            }, 4000);
+            console.error("Registration error:", error.response?.data || error.message);
+            setSnackbar({
+                open: true,
+                message: error.response?.data?.message || "Registration failed. Please try again.",
+                severity: 'error'
+            });
         }
     };
 
@@ -272,12 +297,12 @@ const Homepage = () => {
                                 OLSHCOnnect, the official student portal of Our Lady of the Sacred Heart College of Guimba Inc. 
                                 This platform is designed to empower students by providing easy access to essential academic tools, resources, 
                                 and updates. Whether you're exploring your courses, monitoring your grades, or staying updated on the latest 
-                                announcements, OLSHCO Sacrademia ensures a seamless and interactive experience.
+                                announcements, OLSHCOnnect ensures a seamless and interactive experience.
                             </p>
                             <p>
                                 If you are incoming 1st year college you can register now.
                             </p>
-                            <button className="btn btn-danger btn-expanded" onClick={handleOpen}>
+                            <button className="btn btn-danger btn-expanded" onClick={handleOpen} data-testid="open-modal-button">
                                 REGISTER NOW!
                             </button>
                             <p>
@@ -285,261 +310,376 @@ const Homepage = () => {
                             </p>
 
                             {/* Modal */}
-                            <Modal open={open} onClose={setOpen}>
-                            <Box
-                            sx={{
-                                position: "relative",
-                                width: "90%",
-                                maxWidth: "600px",
-                                margin: "50px auto",
-                                backgroundColor: "white",
-                                borderRadius: "10px",
-                                padding: "20px",
-                                boxShadow: 24,
-                                maxHeight: "90vh", // Restrict the height of the modal
-                                overflowY: "auto", // Enable scrolling
-                            }}
+                            <Modal 
+                                open={open} 
+                                onClose={handleClose}
+                                aria-labelledby="registration-modal-title"
+                                data-testid="registration-modal"
                             >
-                            {/* Close Button */}
-                            <Button
-                            onClick={handleClose}
-                            sx={{
-                                position: "absolute",
-                                top: "10px",
-                                right: "10px",
-                                minWidth: "30px",
-                                minHeight: "30px",
-                                padding: "5px",
-                                fontSize: "1rem",
-                                backgroundColor: "transparent",
-                                color: "#000",
-                                border: "none",
-                                cursor: "pointer",
-                            }}
-                            >
-                            &times;
-                            </Button>
-
-                            <h2 style={{ textAlign: "center", marginBottom: "20px", }}>
-                                Registration Form
-                            </h2>
-                            {!isRegistered ? (    
-                                <form onSubmit={handleSubmit}>
-                                    <h4>Account</h4>
-                                    <div className="mb-3">
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={6}>
-                                                <TextField
-                                                label="Username"
-                                                fullWidth
-                                                margin="normal"
-                                                name="userName"
-                                                value={formData.userName}
-                                                onChange={handleInputChange}                                       
-                                                required
-                                                />
-                                            </Grid>
-                                            <Grid item xs={6}>
-                                                <TextField
-                                                type='password'
-                                                label="Password"
-                                                fullWidth
-                                                margin="normal"
-                                                name="password"
-                                                value={formData.password}
-                                                onChange={handleInputChange}
-                                                required
-                                                />
-                                            </Grid>                                    
-                                        </Grid>
-                                    </div>
-                                    {/* Student Information */}
-                                    <h4>Student Information</h4>
-                                    <div className="mb-3">
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={3}>
-                                            <TextField
-                                            label="First Name"
-                                            fullWidth
-                                            margin="normal"
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleInputChange}
-                                            required
-                                            />
-                                        </Grid>
-                                        <Grid item xs={3}>
-                                            <TextField
-                                            label="Middle Name"
-                                            fullWidth
-                                            margin="normal"
-                                            name="middleName"
-                                            value={formData.middleName}
-                                            onChange={handleInputChange}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={3}>
-                                            <TextField
-                                            label="Last Name"
-                                            fullWidth
-                                            margin="normal"
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleInputChange}
-                                            required
-                                            />
-                                        </Grid>
-                                        <Grid item xs={3}>
-                                            <TextField
-                                            label="Suffix"
-                                            fullWidth
-                                            margin="normal"
-                                            name="suffix"
-                                            value={formData.suffix}
-                                            onChange={handleInputChange}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    </div>
-                                    {/* Sex Information */}
-                                    <h4>Sex</h4>
-                                    <div className="mb-3">
-                                        <FormControl fullWidth margin="normal" required>
-                                            <Select
-                                                name="sex"
-                                                value={formData.sex}
-                                                onChange={handleInputChange}
-                                            >
-                                                <MenuItem value="Male">Male</MenuItem>
-                                                <MenuItem value="Female">Female</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    </div>
-                                    <h4>Birthday</h4>
-                                    <div className="mb-3">
-                                    <TextField                                    
-                                        fullWidth
-                                        margin="normal"
-                                        name="birthdate"
-                                        type="date"
-                                        value={formData.birthdate ? formData.birthdate.split('/').reverse().join('-') : ''}
-                                        onChange={handleInputChange}
-                                        required                                    
-                                    />
-                                    <TextField
-                                        label="Age"
-                                        fullWidth
-                                        margin="normal"
-                                        name="age"
-                                        value={formData.age}
-                                        onChange={handleInputChange}
-                                        disabled
-                                    />
-                                    <TextField
-                                        label="Place of Birth"
-                                        fullWidth
-                                        margin="normal"
-                                        name="placeOfBirth"
-                                        value={formData.placeOfBirth}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                    <TextField
-                                        label="Religion"
-                                        fullWidth
-                                        margin="normal"
-                                        name="religion"
-                                        value={formData.religion}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                    </div>                                
-                                    <div className="mb-3">
-                                    <TextField
-                                        label="Email"
-                                        fullWidth
-                                        margin="normal"
-                                        name="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                    <TextField
-                                        label="Contact Number"
-                                        fullWidth
-                                        margin="normal"
-                                        name="number"
-                                        value={formData.number}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                    </div>
-                                    
-                                    <div className="mb-3">
-                                    <h4>Address</h4>                                
-                                        <TextField
-                                        label="Full Address"
-                                        fullWidth
-                                        margin="normal"
-                                        name="street_text"
-                                        id="street-text"
-                                        value={formData.street_text}
-                                        onChange={handleInputChange}
-                                        placeholder='Example: Purok 2, Narvacan II, Guimba, Nueva Ecija'
-                                        />                                                                            
-                                    </div>
-
-                                    {/* Guardian Information */}
-                                    <h4>Guardian Information</h4>
-                                    <div className="mb-3">
-                                    <TextField
-                                        label="Guardian Name"
-                                        fullWidth
-                                        margin="normal"
-                                        name="guardianName"
-                                        value={formData.guardianName}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                    <TextField
-                                        label="Guardian Contact"
-                                        fullWidth
-                                        margin="normal"
-                                        name="guardianContactNo"
-                                        value={formData.guardianContactNo}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                    </div>
-                                    {/* Privacy Policy Agreement */}
-                                    <FormControlLabel
-                                    control={<Checkbox required />}
-                                    label={
-                                        <>
-                                        I agree with the Privacy Policy
-                                        </>
-                                    } 
-                                    />
-
-                                    {/* Submit Button */}
-                                    <div style={{ textAlign: "center", marginTop: "20px" }}>
-                                    <Button variant="contained" color="primary" type="submit">
-                                        Register
-                                    </Button>
-                                    </div>
-                                </form>
-                            ) : (
-                                <Typography
-                                    variant="h6"
-                                    align="center"
-                                    sx={{ color: "green", fontWeight: "bold", mt: 4 }}
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        top: '50%',
+                                        left: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                        width: "90%",
+                                        maxWidth: "600px",
+                                        margin: "50px auto",
+                                        backgroundColor: "white",
+                                        borderRadius: "10px",
+                                        padding: 4,
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                                        maxHeight: "90vh", // Restrict the height of the modal
+                                        overflowY: "auto", // Enable scrolling
+                                    }}
+                                    data-testid="modal-content"
                                 >
-                                    {statusMessage.message}
-                                </Typography>
-                            )}
-                            </Box>
-                            </Modal>                            
+                                    {/* Close Button */}
+                                    <div className="registration-details">
+                                        <Button
+                                            onClick={handleClose}
+                                            data-testid="modal-close-button"
+                                            sx={{
+                                                position: "absolute",
+                                                top: "10px",
+                                                right: "10px",
+                                                minWidth: "30px",
+                                                minHeight: "30px",
+                                                padding: "5px",
+                                                fontSize: "1.2rem",
+                                                color: "#c70202",
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(199, 2, 2, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            &times;
+                                        </Button>
+                                    </div>
+
+                                    <Typography variant="h5" sx={{ 
+                                        textAlign: "center", 
+                                        marginBottom: "20px",
+                                        color: '#c70202',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        Registration Form
+                                    </Typography>
+
+                                    {!isRegistered ? (    
+                                        <form onSubmit={handleSubmit} data-testid="registration-form">
+                                            <div className="registration-section">
+                                                <Typography variant="h6" className="section-title">
+                                                    Account Details
+                                                </Typography>
+                                                <div className="mb-3">
+                                                    <Grid container spacing={2}>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                            label="Username"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="userName"
+                                                            data-testid="input-userName"
+                                                            value={formData.userName}
+                                                            onChange={handleInputChange}                                       
+                                                            required
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                            type='password'
+                                                            label="Password"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="password"
+                                                            data-testid="input-password"
+                                                            value={formData.password}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            />
+                                                        </Grid>                                    
+                                                    </Grid>
+                                                </div>
+                                            </div>
+                                            {/* Student Information */}
+                                            <div className="registration-section">
+                                                <Typography variant="h6" className="section-title">
+                                                    Personal Information
+                                                </Typography>
+                                                <div className="mb-3">
+                                                    <Grid container spacing={2}>
+                                                        <Grid item xs={3}>
+                                                            <TextField
+                                                                label="First Name"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="firstName"
+                                                                data-testid="input-firstName"
+                                                                value={formData.firstName}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={3}>
+                                                            <TextField
+                                                                label="Middle Name"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="middleName"
+                                                                data-testid="input-middleName"
+                                                                value={formData.middleName}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={3}>
+                                                            <TextField
+                                                                label="Last Name"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="lastName"
+                                                                data-testid="input-lastName"
+                                                                value={formData.lastName}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={3}>
+                                                            <TextField
+                                                                label="Suffix"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="suffix"
+                                                                data-testid="input-suffix"
+                                                                value={formData.suffix}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </Grid>
+                                                    </Grid>
+                                                </div>
+                                            </div>
+                                            {/* Sex Information */}
+                                            <div className="registration-section">
+                                                <Typography variant="h6" className="section-title">
+                                                    Additional Information
+                                                </Typography>
+                                                <div className="mb-3">                                                
+                                                    <Grid container spacing={2}>
+                                                        <Grid item xs={12}>
+                                                            <FormControl fullWidth margin="normal" required>
+                                                            <h6>Sex</h6>
+                                                                <Select
+                                                                    name="sex"
+                                                                    data-testid="input-sex"
+                                                                    value={formData.sex}
+                                                                    onChange={handleInputChange}
+                                                                    displayEmpty
+                                                                    label="Sex"
+                                                                >
+                                                                    <MenuItem value=""><em>Select Sex</em></MenuItem>
+                                                                    <MenuItem value="Male">Male</MenuItem>
+                                                                    <MenuItem value="Female">Female</MenuItem>
+                                                                </Select>
+                                                            </FormControl>
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            <TextField                                    
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="birthdate"
+                                                                label="Birthday"
+                                                                data-testid="input-birthdate"
+                                                                type="date"
+                                                                value={formData.birthdate ? formData.birthdate.split('/').reverse().join('-') : ''}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                                InputLabelProps={{ shrink: true }}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={4}>
+                                                            <TextField
+                                                                label="Age"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="age"
+                                                                data-testid="input-age"
+                                                                value={formData.age}
+                                                                onChange={handleInputChange}
+                                                                disabled
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={4}>
+                                                            <TextField
+                                                                label="Place of Birth"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="placeOfBirth"
+                                                                data-testid="input-placeOfBirth"
+                                                                value={formData.placeOfBirth}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={4}>
+                                                            <TextField
+                                                                label="Religion"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="religion"
+                                                                data-testid="input-religion"
+                                                                value={formData.religion}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </Grid>
+                                                    </Grid>
+                                                </div>
+                                            </div>
+
+                                            <div className="registration-section">
+                                                <Typography variant="h6" className="section-title">
+                                                    Contact Information
+                                                </Typography>
+                                                <div className="mb-3">
+                                                    <Grid container spacing={2}>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                                label="Email"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="email"
+                                                                data-testid="input-email"
+                                                                type="email"
+                                                                value={formData.email}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                                label="Contact Number"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="number"
+                                                                data-testid="input-number"
+                                                                value={formData.number}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </Grid>
+                                                    </Grid>
+                                                </div>
+                                            </div>
+
+                                            <div className="registration-section">
+                                                <Typography variant="h6" className="section-title">
+                                                    Address Information
+                                                </Typography>
+                                                <div className="mb-3">
+                                                    <TextField
+                                                        label="Full Address"
+                                                        fullWidth
+                                                        margin="normal"
+                                                        name="street_text"
+                                                        data-testid="input-street_text"
+                                                        id="street-text"
+                                                        value={formData.street_text}
+                                                        onChange={handleInputChange}
+                                                        placeholder='Example: Purok 2, Narvacan II, Guimba, Nueva Ecija'
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Guardian Information */}
+                                            <div className="registration-section">
+                                            <Typography variant="h6" className="section-title">
+                                                Guardian Information
+                                            </Typography>
+                                                <div className="mb-3">
+                                                    <TextField
+                                                        label="Guardian Name"
+                                                        fullWidth
+                                                        margin="normal"
+                                                        name="guardianName"
+                                                        data-testid="input-guardianName"
+                                                        value={formData.guardianName}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                    <TextField
+                                                        label="Guardian Contact"
+                                                        fullWidth
+                                                        margin="normal"
+                                                        name="guardianContactNo"
+                                                        data-testid="input-guardianContactNo"
+                                                        value={formData.guardianContactNo}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Privacy Policy Agreement */}
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox 
+                                                        required 
+                                                        sx={{
+                                                            color: '#c70202',
+                                                            '&.Mui-checked': {
+                                                                color: '#c70202',
+                                                            },
+                                                        }}
+                                                    />
+                                                }
+                                                label="I agree with the Privacy Policy"
+                                                sx={{ mt: 2 }}
+                                            />
+
+                                            {/* Submit Button */}
+                                            <Button 
+                                                variant="contained" 
+                                                type="submit"
+                                                fullWidth
+                                                sx={{ 
+                                                    mt: 3,
+                                                    bgcolor: '#c70202',
+                                                    '&:hover': {
+                                                        bgcolor: '#a00000',
+                                                    },
+                                                    height: '45px',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                Register
+                                            </Button>
+                                        </form>
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                                            <h3>Registration Successful!</h3>
+                                            <p>You can now proceed to login.</p>
+                                            <Button variant="contained" color="primary" onClick={handleClose}>
+                                                Close
+                                            </Button>
+                                        </div>
+                                    )}
+                                </Box>
+                                </Modal>
+                                <Snackbar
+                                    open={snackbar.open}
+                                    autoHideDuration={4000}
+                                    onClose={handleSnackbarClose}
+                                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                    >
+                                    <Alert 
+                                        onClose={handleSnackbarClose} 
+                                        severity={snackbar.severity}
+                                        variant="filled"
+                                        sx={{ width: '100%' }}
+                                    >
+                                        {snackbar.message}
+                                    </Alert>
+                                </Snackbar>                            
                         </div>                     
                 </section>
 

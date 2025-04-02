@@ -16,8 +16,7 @@ import { IoIosPeople } from "react-icons/io";
 import { MyContext } from "../../App";
 import RegDashboardBox from "./component/regdashboardbox";
 
-
-const RegistrarDashboard = ()=>{
+const RegistrarDashboard = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -130,4 +129,5 @@ const RegistrarDashboard = ()=>{
     </>    
   )
 }
+
 export default RegistrarDashboard;

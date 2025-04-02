@@ -32,7 +32,7 @@ const RegistrarSidebar = () =>{
         <div className="sidebar">
           <ul>
             <li>
-              <Link to="/">
+              <Link to="/registrar-dashboard">
                 <Button className={`w-100 ${activeTab===0 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(0)}>
                   <span className='icon'><RiDashboardHorizontalLine /></span>
                     Registrar Dashboard 
@@ -61,7 +61,7 @@ const RegistrarSidebar = () =>{
                 </div>                             
             </li>
             <li>
-              <Link to="/registrar-enrollment">
+              <Link to="/registrar-enrollmentt">
                 <Button className={`w-100 ${activeTab===2 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(2)}>
                   <span className='icon'><IoDocuments />
                   </span>

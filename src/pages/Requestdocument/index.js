@@ -1,7 +1,9 @@
-import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination } from '@mui/material';
+import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography } from '@mui/material';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaCirclePlus } from "react-icons/fa6";
+import { Snackbar, Alert } from '@mui/material';
+import { useCallback } from 'react';
 
 const RequestDocument = () => {
   // eslint-disable-next-line
@@ -18,20 +20,47 @@ const RequestDocument = () => {
     requestDate: new Date().toISOString().slice(0, 10),
     status: "Pending",
   });
+  const [rowsPerPage] = useState(10);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  // Fetch existing document requests on component mount
-  useEffect(() => {
-    fetchRequestData(); // Call fetchRequestData when component mounts
-  }, []); // Page dependency to fetch data again on page change
 
-  const fetchRequestData = async () => {
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedRequests = requestList.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(requestList.length / rowsPerPage);
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+
+
+  const fetchRequestData = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:4000/requests");
-      setRequestList(response.data); // Set the full list of requests
+      if (!user || !user.id) {
+        console.error("No user ID found");
+        return;
+      }
+      const response = await axios.get(`http://localhost:4000/requests/student/${user.id}`);
+      setRequestList(response.data);
     } catch (error) {
       console.error("Error fetching request data:", error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchRequestData();
+  }, [fetchRequestData]);
+
+  useEffect(() => {
+    if (user) {
+      fetchRequestData();
+    }
+  }, [user, fetchRequestData]); // Add both dependencies
 
   // Handle new request input changes
   const handleInputChange = (e) => {
@@ -42,12 +71,14 @@ const RequestDocument = () => {
   const handleAddRequest = async (e) => {
     e.preventDefault();
   
-    console.log("New request data:", newRequest); // Log for debugging
-  
     const { id, doc_type } = newRequest;
   
     if (!id || !doc_type) {
-      alert('Both student ID and document type are required.');
+      setSnackbar({
+        open: true,
+        message: 'Both student ID and document type are required.',
+        severity: 'error'
+      });
       return;
     }
   
@@ -55,24 +86,26 @@ const RequestDocument = () => {
       const response = await axios.post("http://localhost:4000/requests", newRequest);
       
       if (response.status === 201) {
-        setRequestList([...requestList, response.data]); // Add new request to the list
+        setRequestList([...requestList, response.data]);
         setShowRequestModal(false);
-        alert("Request added successfully.");
-        fetchRequestData(); // Refetch the data to refresh the list
-      } else {
-        alert("Failed to add request. Try again.");
+        setSnackbar({
+          open: true,
+          message: 'Request added successfully.',
+          severity: 'success'
+        });
+        fetchRequestData();
       }
     } catch (error) {
       console.error("Error submitting request:", error);
-  
-      if (error.response && error.response.data) {
-        alert(`Error: ${error.response.data.message}`);
-      } else {
-        alert("An unexpected error occurred. Please try again later.");
-      }
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || 'An unexpected error occurred.',
+        severity: 'error'
+      });
     }
   };
 
+  // Add this component before the closing div of your return statement
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
@@ -102,8 +135,8 @@ const RequestDocument = () => {
               </tr>
             </thead>
             <tbody>
-            {requestList.length > 0 ? (
-              requestList.map((request) => (
+            {paginatedRequests.length > 0 ? (
+              paginatedRequests.map((request) => (
                 <tr key={request.req_id}> {/* Use request_id from backend */}
                   <td>{request.doc_type}</td>
                   <td>{new Date(request.req_date).toLocaleDateString()}</td>
@@ -123,9 +156,9 @@ const RequestDocument = () => {
           {/* Pagination */}
           <div className="d-flex justify-content-center mt-3">
             <Pagination
-              count={10} // Assuming 10 pages
+              count={pageCount}
               page={page}
-              onChange={(e, newPage) => setPage(newPage)} // Handle page change
+              onChange={(e, newPage) => setPage(newPage)}
               color="primary"
               showFirstButton
               showLastButton
@@ -138,20 +171,20 @@ const RequestDocument = () => {
       <Modal
         open={showRequestModal}
         onClose={handleClose}
-        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.5)' } }}
       >
-        <div
-          className="modal-container p-4"
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            maxWidth: '500px',
-            width: '100%',
-          }}
-        >
-          <h3>Request a Document</h3>
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "500px",
+          bgcolor: 'background.paper',
+          borderRadius: "10px",
+          boxShadow: 24,
+          p: 4,
+        }}>
+          <Typography variant="h6" className="hd mb-4">Request a Document</Typography>
           <form onSubmit={handleAddRequest}>
             <FormControl fullWidth margin="normal">
               <InputLabel id="document-type-label">Document Type</InputLabel>
@@ -161,6 +194,7 @@ const RequestDocument = () => {
                 value={newRequest.doc_type}
                 onChange={handleInputChange}
                 label="Document Type"
+                required
               >
                 <MenuItem value="Certificate of Grades">Certificate of Grades</MenuItem>
                 <MenuItem value="Good Moral Certificate">Good Moral Certificate</MenuItem>
@@ -168,15 +202,42 @@ const RequestDocument = () => {
               </Select>
             </FormControl>
 
-            <div className="d-flex justify-content-end mt-3">
+            <div className="d-flex justify-content-end gap-2 mt-3">
               <Button onClick={handleClose}>Cancel</Button>
-              <Button type="submit" color="primary" variant="contained" disabled={isLoading}>
-                {isLoading ? "Requesting..." : "Submit"}
+              <Button 
+                type="submit" 
+                variant="contained"
+                disabled={isLoading}
+                sx={{
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  }
+                }}
+              >
+                {isLoading ? "Requesting..." : "Submit Request"}
               </Button>
             </div>
           </form>
-        </div>
+        </Box>
       </Modal>
+      
+      {/* Add this before the closing div */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

@@ -2,11 +2,11 @@ import Button from '@mui/material/Button';
 import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
-import { IoDocuments } from "react-icons/io5";
-import { IoIosPeople } from "react-icons/io";
+import { FaCashRegister } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
+import { IoDocuments } from "react-icons/io5";
 
 
 const FinanceSidebar = () =>{
@@ -29,7 +29,7 @@ const FinanceSidebar = () =>{
         <div className="sidebar">
           <ul>
             <li>
-              <Link to="/">
+              <Link to="/finance-dashboard">
                 <Button className={`w-100 ${activeTab===0 ? 'active' : ''}`} onClick={()=>handleTabClick(0)}>
                   <span className='icon'><RiDashboardHorizontalLine /></span>
                     Finance Dashboard 
@@ -39,10 +39,10 @@ const FinanceSidebar = () =>{
               </Link>              
             </li>
             <li>
-                <Link to="/studentlist">            
+                <Link to="/student-balance">            
                   <Button className={`w-100 ${activeTab===1  && isToggleStudentMenu===true ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(1)}>
                     <span className='icon'><PiStudentBold /></span>
-                      Student List 
+                      Students Balance 
                     <span className='arrow'><FaAnglesRight />
                     </span>             
                   </Button>
@@ -58,33 +58,23 @@ const FinanceSidebar = () =>{
                 </div>                             
             </li>
             <li>
-              <Link to="/">
+              <Link to="/tuition-management">
+                <Button 
+                  className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
+                  onClick={() => handleTabClick(2)}
+                >
+                  <span className='icon'><FaCashRegister /></span>
+                  Tuition Management
+                  <span className='arrow'><FaAnglesRight /></span> 
+                </Button>
+              </Link>
+            </li>
+            <li>
+              <Link to="/payment-verification">
                 <Button className={`w-100 ${activeTab===2 ? 'active' : ''}`} onClick={()=>handleTabClick(2)}>
                   <span className='icon'><IoDocuments />
                   </span>
-                    Records 
-                  <span className='arrow'><FaAnglesRight />
-                  </span>
-                </Button>
-              </Link>              
-            </li>
-            <li>
-              <Link to="/staffs">
-                <Button className={`w-100 ${activeTab===3 ? 'active' : ''}`} onClick={()=>handleTabClick(3)}>
-                  <span className='icon'><IoIosPeople />
-                  </span>
-                    Manage Staffs
-                  <span className='arrow'><FaAnglesRight />
-                  </span>
-                </Button>
-              </Link>              
-            </li>
-            <li>
-              <Link to="/document-request">
-                <Button className={`w-100 ${activeTab===4 ? 'active' : ''}`} onClick={()=>handleTabClick(4)}>
-                  <span className='icon'><IoIosPeople />
-                  </span>
-                    Document Request
+                    Payment Verification
                   <span className='arrow'><FaAnglesRight />
                   </span>
                 </Button>

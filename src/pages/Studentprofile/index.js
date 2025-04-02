@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Stepper, Step, StepLabel, Paper } from '@mui/material';
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
@@ -10,10 +11,45 @@ import Typography from '@mui/material/Typography';
 import { FaSchool } from "react-icons/fa";
 import { FaUserEdit } from "react-icons/fa";
 import { MenuItem, Select, FormControl } from "@mui/material";
+import { createTheme, ThemeProvider } from '@mui/material';
 
-
+const formatFullName = (studentData) => {
+  if (!studentData) return "N/A";
+  
+  let fullName = studentData.firstName || "";
+  
+  if (studentData.middleName && studentData.middleName.trim()) {
+    fullName += ` ${studentData.middleName.charAt(0)}.`;
+  }
+  
+  if (studentData.lastName) {
+    fullName += ` ${studentData.lastName}`;
+  }
+  
+  if (studentData.suffix && studentData.suffix.trim()) {
+    fullName += ` ${studentData.suffix}`;
+  }
+  
+  return fullName;
+};
 
 const StudentProfile = () => {
+  const generateAcademicYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = 0; i < 2; i++) {
+      const academicYear = `${currentYear + i}-${currentYear + i + 1}`;
+      years.push(academicYear);
+    }
+    return years;
+  };
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#c70202',
+      },
+    },
+  });
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -28,11 +64,46 @@ const StudentProfile = () => {
     form137Doc: '',
     programs: '',
     yearLevel: '',
+    semester: '',           // Add this
+    academic_year: ''       // Add this
   });
   
   const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
   const [_isVisible, setIsVisible] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
+
+  const [activeStep, setActiveStep] = useState(0);
+  const steps = [
+    'Registration',
+    'Enrollment',
+    'Verify Enrollment',
+    'Payment',
+    'Officially Enrolled'
+  ];
+
+  useEffect(() => {
+    if (studentData?.enrollment) {
+      switch (studentData.enrollment.status) {
+        case 'Registered':
+          setActiveStep(0);
+          break;
+        case 'Pending':
+          setActiveStep(1);
+          break;
+        case 'Verified':
+          setActiveStep(2);
+          break;
+        case 'For Payment':
+          setActiveStep(3);
+          break;
+        case 'Enrolled':
+          setActiveStep(4);
+          break;
+        default:
+          setActiveStep(0);
+      }
+    }
+  }, [studentData]);
 
   const token = localStorage.getItem('token'); 
   
@@ -136,9 +207,9 @@ const StudentProfile = () => {
 
     } 
      // Handle dropdown selections (Material-UI Select) for `formDataa`
-     else if (['programs', 'yearLevel'].includes(name)) {
-      setFormDataa({ ...formDataa, [name]: value });  // ✅ Updating `formDataa`
-    } 
+     else if (['programs', 'yearLevel', 'semester', 'academic_year'].includes(name)) {
+      setFormDataa({ ...formDataa, [name]: value });
+     }
     // Handle file uploads separately
     else if (['idpic', 'birthCertificateDoc', 'form137Doc'].includes(name)) {
         const file = e.target.files[0] || null; // Get selected file
@@ -154,50 +225,94 @@ const StudentProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put("http://localhost:4000/student/profile", formData, {
+      // Create a new object that explicitly includes empty values
+      const dataToSubmit = {
+        ...formData,
+        suffix: formData.suffix || null, // Explicitly set null if empty
+      };
+
+      const response = await axios.put("http://localhost:4000/student/profile", dataToSubmit, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStudentData(response.data); // Update studentData with the latest data
-      setOpen(false); // Close the modal
+      setStudentData(response.data);
+      setOpen(false);
       setIsEditing(false);
-      fetchStudentData(); // Reset editing flag
+      fetchStudentData();
     } catch (error) {
       console.error('Error updating student data:', error);
     }
   };
 
   const handleEnroll = async (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
-      try {
-        const formDataToSend = new FormData();
-        Object.keys(formDataa).forEach((key) => {
-            if (formDataa[key] !== null && formDataa[key] !== "") {
-                formDataToSend.append(key, formDataa[key]);
-            }
+      const requiredFields = ['programs', 'yearLevel', 'semester', 'academic_year'];
+      const missingFields = requiredFields.filter(field => !formDataa[field]);
+      
+      if (missingFields.length > 0) {
+        setStatusMessage({ 
+          message: `Please fill in all required fields: ${missingFields.join(', ')}`, 
+          type: "error" 
         });
-
-          const response = await axios.put("http://localhost:4000/enroll", formDataToSend, {
-              headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
+        setIsVisible(true);
+        return;
+      }
+  
+      try {
+          const formDataToSend = new FormData();
+          Object.keys(formDataa).forEach((key) => {
+              if (formDataa[key] !== null && formDataa[key] !== "") {
+                  formDataToSend.append(key, formDataa[key]);
+              }
           });
-
+  
+          // Remove hardcoded values since they're now part of formDataa
+          const response = await axios.put("http://localhost:4000/enroll", formDataToSend, {
+              headers: { 
+                  "Content-Type": "multipart/form-data", 
+                  Authorization: `Bearer ${token}` 
+              },
+          });
+  
           // Show success message
           setStatusMessage({ message: "Enrollment successful!", type: "success" });
           setIsVisible(true);
           setOpenEnrollment(true);
           setIsEnrolled(true);
-
+  
+          // Update student data to reflect new profile picture
+          if (formDataa.idpic) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setStudentData(prev => ({
+                ...prev,
+                enrollment: {
+                  ...prev.enrollment,
+                  idpic: reader.result.split(',')[1] // Get base64 part only
+                }
+              }));
+            };
+            reader.readAsDataURL(formDataa.idpic);
+          }
+  
           // Clear form fields
+          // Update the form reset to include new fields
           setFormDataa({
-              programs: "",
-              yearLevel: "",
-              idpic: null,
-              birthCertificateDoc: null,
-              form137Doc: null,
+            programs: "",
+            yearLevel: "",
+            semester: "",           // Add this
+            academic_year: "",      // Add this
+            idpic: null,
+            birthCertificateDoc: null,
+            form137Doc: null,
           });
+  
+          // Refresh student data from server
+          fetchStudentData();
+          
       } catch (error) {
           console.error(error);
-
+  
           // Show error message
           setStatusMessage({ message: "Enrollment failed. Please try again.", type: "error" });
           setIsVisible(true);
@@ -217,6 +332,17 @@ const StudentProfile = () => {
 
   return (
     <div className="right-content w-100">
+      <ThemeProvider theme={theme}>
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Stepper activeStep={activeStep} alternativeLabel>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Paper>
+      </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
         <h3 className="hd mt-2 pb-0" style={{ margin: 0 }}>Student Profile</h3>
         <Button variant="contained" className='enrollbut' color="primary" onClick={handleOpenEnrollment}>
@@ -236,50 +362,137 @@ const StudentProfile = () => {
         </Button>
       </div>
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd">My Profile</h3>
         <div className="profile-container">
           <div className="profile-card">
-            {studentData ? (
-              <div className="student-details">
-                <div className="profile-field mt-3">
-                  <strong>Name:</strong> {studentData.firstName} {studentData.middleName} {studentData.lastName} {studentData.suffix}
+            <div className="row">
+              {/* Profile Picture Section */}
+              <div className="col-md-4 text-center">
+                <div className="profile-picture-container mb-4" style={{
+                  width: '200px',
+                  height: '200px',
+                  border: '3px solid #c70202',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  margin: '0 auto',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'scale(1.05)'
+                  }
+                }}>
+                  {studentData?.enrollment?.idpic ? (
+                    <img
+                      src={`data:image/jpeg;base64,${studentData.enrollment.idpic}`}
+                      alt="Student ID"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#f8f9fa',
+                      color: '#6c757d'
+                    }}>
+                      <span>No Photo</span>
+                    </div>
+                  )}
                 </div>
-                <div className="profile-field mt-3">
-                  <strong>Birthdate:</strong>{" "}
-                  {studentData.birthdate ? new Date(studentData.birthdate).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  }) : "N/A"}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Age:</strong> {studentData.age}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Place of Birth:</strong> {studentData.placeOfBirth}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Religion:</strong> {studentData.religion}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Email:</strong> {studentData.email}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Contact Number:</strong> {studentData.number}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Address:</strong> {studentData.street_text}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Guardian Name:</strong> {studentData.guardianName}
-                </div>
-                <div className="profile-field mt-3">
-                  <strong>Guardian Contact No:</strong> {studentData.guardianContactNo}
-                </div>               
+                <h4 className="mt-3" style={{ color: '#c70202' }}>
+                  {formatFullName(studentData)}
+                </h4>
+                <p className="text-muted">Student</p>
               </div>
-            ) : (
-              <p>No student data found.</p>
-            )}
+
+              {/* Student Details Section */}
+              <div className="col-md-8">
+                <div className="profile-details p-3">
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="info-group mb-4" style={{
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '8px',
+                        transition: 'transform 0.2s',
+                        cursor: 'pointer'
+                      }}>
+                        <h5 style={{ color: '#c70202' }} className="mb-3">Personal Information</h5>
+                        <div className="info-item mb-2">
+                          <strong>Birthdate:</strong><br/>
+                          {studentData?.birthdate ? new Date(studentData.birthdate).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          }) : "N/A"}
+                        </div>
+                        <div className="info-item mb-2">
+                          <strong>Age:</strong><br/>
+                          {studentData?.age}
+                        </div>
+                        <div className="info-item mb-2">
+                          <strong>Religion:</strong><br/>
+                          {studentData?.religion}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="info-group mb-4" style={{
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '8px',
+                        transition: 'transform 0.2s',
+                        cursor: 'pointer'
+                      }}>
+                        <h5 style={{ color: '#c70202' }} className="mb-3">Contact Information</h5>
+                        <div className="info-item mb-2">
+                          <strong>Email:</strong><br/>
+                          {studentData?.email}
+                        </div>
+                        <div className="info-item mb-2">
+                          <strong>Phone:</strong><br/>
+                          {studentData?.number}
+                        </div>
+                        <div className="info-item mb-2">
+                          <strong>Address:</strong><br/>
+                          {studentData?.street_text}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="info-group mb-4" style={{
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '8px',
+                    transition: 'transform 0.2s',
+                    cursor: 'pointer'
+                  }}>
+                    <h5 style={{ color: '#c70202' }} className="mb-3">Guardian Information</h5>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="info-item mb-2">
+                          <strong>Guardian Name:</strong><br/>
+                          {studentData?.guardianName}
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="info-item mb-2">
+                          <strong>Guardian Contact:</strong><br/>
+                          {studentData?.guardianContactNo}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -494,20 +707,21 @@ const StudentProfile = () => {
         </Box>
       </Modal>
       <Modal open={openEnrollment} onClose={handleCloseEnrollment}>
-        <Box
-          sx={{
-            position: "relative",
-            width: "90%",
-            maxWidth: "600px",
-            margin: "50px auto",
-            backgroundColor: "white",
-            borderRadius: "10px",
-            padding: "20px",
-            boxShadow: 24,
-            maxHeight: "90vh",
-            overflowY: "auto",
-          }}
-        >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "600px",
+          margin: "50px auto",
+          backgroundColor: "white",
+          borderRadius: "10px",
+          padding: "30px",
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}>
           <Button
             onClick={handleCloseEnrollment}
             sx={{
@@ -517,104 +731,172 @@ const StudentProfile = () => {
               minWidth: "30px",
               minHeight: "30px",
               padding: "5px",
-              fontSize: "1rem",
-              backgroundColor: "transparent",
-              color: "#000",
-              border: "none",
-              cursor: "pointer",
+              fontSize: "1.2rem",
+              color: "#c70202",
+              '&:hover': {
+                backgroundColor: 'rgba(199, 2, 2, 0.1)',
+              },
             }}
           >
             &times;
           </Button>
 
-          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-            Enrollment
-          </h2>
+          <Typography variant="h5" sx={{ 
+            textAlign: "center", 
+            marginBottom: "20px",
+            color: '#c70202',
+            fontWeight: 'bold'
+          }}>
+            Enrollment Form
+          </Typography>
+
           {!isEnrolled ? (
-          <form onSubmit={handleEnroll}>
-            <h4>Program</h4>
-            <div className="mb-3">
-              <FormControl fullWidth margin="normal" required>
+            <form onSubmit={handleEnroll}>
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
+                  Program Selection
+                </Typography>
+                <FormControl fullWidth margin="normal" required>
                   <Select
-                      name="programs"
-                      value={formDataa.programs}
-                      onChange={handleInputChange}
-                      >
-                      <MenuItem value="BEEd">Bacherlor of Elementary Education</MenuItem>
-                      <MenuItem value="BSEd">Bacherlor of Secondary Education</MenuItem>
-                      <MenuItem value="BSHM">Bacherlor of Science in Hospitality Management</MenuItem>
-                      <MenuItem value="BSIT">Bacherlor of Science in Information Technolgy</MenuItem>
-                      <MenuItem value="BSCrim">Bacherlor of Science in Criminology</MenuItem>
+                    name="programs"
+                    value={formDataa.programs}
+                    onChange={handleInputChange}
+                  >
+                    <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
+                    <MenuItem value={3}>Bachelor of Science in Hospitality Management</MenuItem>
+                    <MenuItem value={1}>Bachelor of Science in Information Technology</MenuItem>
+                    <MenuItem value={4}>Bachelor of Science in Office Administration</MenuItem>
+                    <MenuItem value={5}>Bachelor of Science in Criminology</MenuItem>
                   </Select>
-              </FormControl>
-            </div>
-            <h4>Year Level</h4>
-            <div className="mb-3">
-              <FormControl fullWidth margin="normal" required>
+                </FormControl>
+              </div>
+
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
+                  Year Level
+                </Typography>
+                <FormControl fullWidth margin="normal" required>
                   <Select
-                      name="yearLevel"
-                      value={formDataa.yearLevel}
-                      onChange={handleInputChange}
-                      >
-                      <MenuItem value="1st">1st Year</MenuItem>
-                      <MenuItem value="2nd">2nd Year</MenuItem>
-                      <MenuItem value="3rd">3rd Year</MenuItem>
-                      <MenuItem value="4th">4th Year</MenuItem>
+                    name="yearLevel"
+                    value={formDataa.yearLevel}
+                    onChange={handleInputChange}
+                  >
+                    <MenuItem value={1}>1st Year</MenuItem>
+                    <MenuItem value={2}>2nd Year</MenuItem>
+                    <MenuItem value={3}>3rd Year</MenuItem>
+                    <MenuItem value={4}>4th Year</MenuItem>
                   </Select>
-              </FormControl>
-            </div>
-            <h4>Documents</h4>
-            <div className="mb-3">
-                <label htmlFor="idpic">Picture:</label>
-                <input
-                    type="file"
-                    accept=".jpeg, .jpg"
-                    className="form-control"
-                    id="idpic"
-                    name="idpic"
-                    onChange={(e) => setFormDataa({ ...formDataa, idpic: e.target.files[0] })}
-                    required
-                    style={{ marginBottom: "20px" }}
-                />
-            </div>
-            <div className="mb-3">
-                <label htmlFor="birthCertificateDoc">Birth Certificate:</label>
-                <input
-                    type="file"
-                    accept=".pdf, .jpeg, .jpg, .png"
-                    className="form-control"
-                    name="birthCertificateDoc"
-                    onChange={(e) => setFormDataa({ ...formDataa, birthCertificateDoc: e.target.files[0] })}
-                    required
-                    style={{ marginBottom: "20px" }}
-                />
-            </div>
-            <div className="mb-3">
-                <label htmlFor="form137Doc">Form 137:</label>
-                <input
-                    type="file"
-                    accept=".pdf, .jpeg, .jpg, .png"
-                    className="form-control"
-                    name="form137Doc"
-                    onChange={(e) => setFormDataa({ ...formDataa, form137Doc: e.target.files[0] })}
-                    required
-                    style={{ marginBottom: "20px" }}
-                />
-            </div>                    
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <Button variant="contained" color="primary" type="submit">
-                Enroll
+                </FormControl>
+              </div>
+
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
+                  Semester
+                </Typography>
+                <FormControl fullWidth margin="normal" required>
+                  <Select
+                    name="semester"
+                    value={formDataa.semester || ''}
+                    onChange={handleInputChange}
+                  >
+                    <MenuItem value="1st">1st Semester</MenuItem>
+                    <MenuItem value="2nd">2nd Semester</MenuItem>
+                    <MenuItem value="Summer">Summer</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
+                  Academic Year
+                </Typography>
+                <FormControl fullWidth margin="normal" required>
+                  <Select
+                    name="academic_year"
+                    value={formDataa.academic_year || ''}
+                    onChange={handleInputChange}
+                  >
+                    {generateAcademicYears().map((year) => (
+                      <MenuItem key={year} value={year}>
+                        {year}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
+                  Required Documents
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>ID Picture (JPEG/JPG)</Typography>
+                    <input
+                      type="file"
+                      accept=".jpeg, .jpg"
+                      className="form-control"
+                      id="idpic"
+                      name="idpic"
+                      onChange={(e) => setFormDataa({ ...formDataa, idpic: e.target.files[0] })}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, mt: 2, color: '#666' }}>Birth Certificate</Typography>
+                    <input
+                      type="file"
+                      accept=".pdf, .jpeg, .jpg, .png"
+                      className="form-control"
+                      name="birthCertificateDoc"
+                      onChange={(e) => setFormDataa({ ...formDataa, birthCertificateDoc: e.target.files[0] })}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, mt: 2, color: '#666' }}>Form 137</Typography>
+                    <input
+                      type="file"
+                      accept=".pdf, .jpeg, .jpg, .png"
+                      className="form-control"
+                      name="form137Doc"
+                      onChange={(e) => setFormDataa({ ...formDataa, form137Doc: e.target.files[0] })}
+                      required
+                    />
+                  </Grid>
+                </Grid>
+              </div>
+
+              <Button 
+                variant="contained" 
+                type="submit"
+                fullWidth
+                sx={{ 
+                  mt: 3,
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  },
+                  height: '45px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Submit Enrollment
               </Button>
-            </div>
-          </form>
+            </form>
           ) : (
-          <Typography
+            <Typography
               variant="h6"
               align="center"
-              sx={{ color: "green", fontWeight: "bold", mt: 4 }}
-              >
+              sx={{ 
+                color: statusMessage.type === "success" ? "#2e7d32" : "#d32f2f",
+                fontWeight: "bold",
+                mt: 4 
+              }}
+            >
               {statusMessage.message}
-          </Typography>
+            </Typography>
           )}
         </Box>
       </Modal>

@@ -1,0 +1,138 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Paper, 
+  Button,
+  Chip
+} from '@mui/material';
+import axios from 'axios';
+
+const StudentPayment = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalBalance, setTotalBalance] = useState(0);
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token'); // Get JWT token from localStorage
+      const response = await axios.get(`http://localhost:4000/payments`, {
+        headers: {
+          'Authorization': `Bearer ${token}` // Add token to request headers
+        }
+      });
+      setPayments(response.data);
+      
+      // Set total balance from the first payment (current enrollment)
+      if (response.data && response.data.length > 0) {
+        setTotalBalance(response.data[0].amount);
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'overdue':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  if (loading) {
+    return <div>Loading payment information...</div>;
+  }
+
+  return (
+    <div className="right-content w-100">
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="hd mt-2 pb-0">
+          Payment Information
+        </h3>
+      </div>
+
+      <div className="card shadow border-0 p-3 mt-3">
+        <div className="mb-3">
+          <h4 className="hd">Payment Summary</h4>
+          <Paper elevation={0} className="p-3 bg-light">
+            <div className="row">
+              <div className="col-md-6">
+                <h5>Total Balance: ₱{totalBalance.toFixed(2)}</h5>
+              </div>
+              <div className="col-md-6">
+                <h5>Breakdown:</h5>
+                {payments[0]?.breakdown && (
+                  <div className="ms-3">
+                    <p>Tuition Fee: ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
+                    <p>Miscellaneous: ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
+                    <p>Laboratory: ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
+                    <p>Other Fees: ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Paper>
+        </div>
+
+        <div className="table-responsive mt-3">
+          <table className="table table-bordered v-align">
+            <thead className="thead-dark">
+              <tr>
+                <th>Description</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((payment) => (
+                <tr key={payment.id}>
+                  <td>{payment.description}</td>
+                  <td>{new Date(payment.dueDate).toLocaleDateString()}</td>
+                  <td>₱{payment.amount.toFixed(2)}</td>
+                  <td>
+                    <Chip 
+                      label={payment.status}
+                      color={getStatusColor(payment.status)}
+                      size="small"
+                    />
+                  </td>
+                  <td>
+                    <Button
+                      variant="contained"
+                      className="success"
+                      size="small"
+                      disabled={payment.status.toLowerCase() === 'paid'}
+                      sx={{
+                        bgcolor: '#c70202',
+                        '&:hover': {
+                          bgcolor: '#a00000',
+                        }
+                      }}
+                    >
+                      Pay Now
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StudentPayment;

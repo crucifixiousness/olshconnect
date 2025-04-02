@@ -1,0 +1,37 @@
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import RegistrationPanel from "./RegistrationPanel";
+
+describe("RegistrationPanel Component", () => {
+  test("renders panel with open modal button", () => {
+    render(<RegistrationPanel />);
+    expect(screen.getByTestId("registration-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("open-modal-button")).toBeInTheDocument();
+  });
+
+  test("opens modal when button is clicked", () => {
+    render(<RegistrationPanel />);
+    
+    fireEvent.click(screen.getByTestId("open-modal-button"));
+    
+    expect(screen.getByTestId("modal")).toBeInTheDocument();
+    expect(screen.getByText("Register")).toBeInTheDocument();
+  });
+
+  test("closes modal when close button is clicked", () => {
+    render(<RegistrationPanel />);
+    
+    fireEvent.click(screen.getByTestId("open-modal-button"));
+    fireEvent.click(screen.getByTestId("close-button"));
+
+    expect(screen.queryByTestId("modal")).not.toBeInTheDocument();
+  });
+
+  test("form inside modal is accessible", () => {
+    render(<RegistrationPanel />);
+    
+    fireEvent.click(screen.getByTestId("open-modal-button"));
+    
+    expect(screen.getByTestId("email-input")).toBeInTheDocument();
+  });
+});

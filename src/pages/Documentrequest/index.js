@@ -6,20 +6,61 @@ import Button from '@mui/material/Button';
 import Pagination from '@mui/material/Pagination';
 import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
-
-
+import axios from 'axios';
 
 const DocumentRequests = () => {
   // eslint-disable-next-line
   const [requests, setRequests] = useState([]);
   const [filterBy, setFilterBy] = useState('');
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+
+  const fetchRequests = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:4000/requests/all', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRequests(response.data);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    }
+  };
+
+  const handleStatusUpdate = async (reqId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:4000/requests/${reqId}/status`, 
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      // Refresh the requests list after update
+      fetchRequests();
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
 
   useEffect(() => {
-    // Fetch requests from API (replace URL with your API endpoint)
-    fetch('/api/document-requests')
-      .then((response) => response.json())
-      .then((data) => setRequests(data));
+    fetchRequests();
   }, []);
+
+  // Filter requests based on document type
+  const filteredRequests = filterBy
+    ? requests.filter(request => request.doc_type === filterBy)
+    : requests;
+
+  // Pagination calculations
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(filteredRequests.length / rowsPerPage);
+
+  const formatStudentName = (firstName, middleName, lastName, suffix) => {
+    const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
+    const suffixText = suffix ? ` ${suffix}` : '';
+    return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
+  };
 
   return (
     <div className="right-content w-100">
@@ -45,7 +86,7 @@ const DocumentRequests = () => {
                   <em>All</em>
                 </MenuItem>
                 <MenuItem value="Certificate of Grades">Certificate of Grades</MenuItem>
-                <MenuItem value="Good Moral">Good Moral</MenuItem>
+                <MenuItem value="Good Moral Certificate">Good Moral Certificate</MenuItem>
                 <MenuItem value="Diploma">Diploma</MenuItem>
               </Select>
             </FormControl>
@@ -63,35 +104,62 @@ const DocumentRequests = () => {
                 <th>ACTION</th>
               </tr>
             </thead>
-            <tbody>              
-                  <tr>
-                    <td>Cee Jay P. Madayag</td>
-                    <td>Certification of Grades</td>
-                    <td>07-17-2024</td>
-                    <td>Pending</td>
+            <tbody>
+              {paginatedRequests.length > 0 ? (
+                paginatedRequests.map((request) => (
+                  <tr key={request.req_id}>
+                    <td>
+                      {formatStudentName(
+                        request.first_name,
+                        request.middle_name,
+                        request.last_name,
+                        request.suffix
+                      )}
+                    </td>
+                    <td>{request.doc_type}</td>
+                    <td>{new Date(request.req_date).toLocaleDateString()}</td>
+                    <td>{request.req_status}</td>
                     <td className='action'>
                       <div className='actions d-flex align-items-center'>
-                        <Button className="success" color="success"><FaCheck/></Button>
-                        <Button className="error" color="error"><FaXmark/></Button>
+                        <Button 
+                          className="success" 
+                          color="success"
+                          onClick={() => handleStatusUpdate(request.req_id, 'Approved')}
+                          disabled={request.req_status !== 'Pending'}
+                        >
+                          <FaCheck/>
+                        </Button>
+                        <Button 
+                          className="error" 
+                          color="error"
+                          onClick={() => handleStatusUpdate(request.req_id, 'Rejected')}
+                          disabled={request.req_status !== 'Pending'}
+                        >
+                          <FaXmark/>
+                        </Button>
                       </div>
                     </td>
                   </tr>
-                  <tr>
-                    <td>Ken L. Magno</td>
-                    <td>Good Moral</td>
-                    <td>12-13-2024</td>
-                    <td>Pending</td>
-                    <td className='action'>
-                      <div className='actions d-flex align-items-center'>
-                        <Button className="success" color="success"><FaCheck/></Button>
-                        <Button className="error" color="error"><FaXmark/></Button>
-                      </div>
-                    </td>
-                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    No document requests available
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           <div className='d-flex tableFooter'>
-            <Pagination count={10} color="primary" className='pagination' showFirstButton showLastButton />
+            <Pagination 
+              count={pageCount}
+              page={page}
+              onChange={(e, newPage) => setPage(newPage)}
+              color="primary" 
+              className='pagination'
+              showFirstButton 
+              showLastButton 
+            />
           </div>
         </div>
       </div>

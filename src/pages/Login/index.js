@@ -83,7 +83,7 @@ const Login = () => {
                     {/* Moved logo and header inside the loginWrap */}
                     <div className='logo text-center'>
                       <img src={logo} alt="samp" width="60px" className='pb-1' />
-                      <h5 className='loginHeader'>Login to SACRADEMIA</h5>
+                      <h5 className='loginHeader'>Login to OLSHCOnnect</h5>
                     </div>
 
                     <form onSubmit={handleLogin}>

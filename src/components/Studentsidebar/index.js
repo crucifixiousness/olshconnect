@@ -3,22 +3,29 @@ import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaBookOpen } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useContext } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
 import { GiPapers } from "react-icons/gi";
+import { FaMoneyBillWave } from "react-icons/fa";
 
 
 const StudentSidebar = () => {
   const [activeTab, setActiveTab] = useState(0);
   // eslint-disable-next-line
   const context = useContext(MyContext);
+  const navigate = useNavigate();
 
   const handleTabClick = (index) => {
     setActiveTab(index);
   };
 
+    // Logout function to remove user data and redirect
+  const handleLogout = () => {
+    localStorage.removeItem("user"); // Remove user data from localStorage
+    navigate("/homepage"); // Redirect to homepage
+  };
   return (
     <div className="sidebar">
       <ul>
@@ -78,12 +85,23 @@ const StudentSidebar = () => {
             </Button>
           </Link>
         </li>
+        <li>
+          <Link to="/student-payment">
+            <Button 
+              className={`w-100 ${activeTab === 5 ? 'active' : ''}`} 
+              onClick={() => handleTabClick(5)}
+            >
+              <span className='icon'><FaMoneyBillWave /></span>
+              Payment
+            </Button>
+          </Link>
+        </li>
       </ul>
 
       <div className='logoutWrap'>
         <Link to="/homepage">
           <div className='logoutBox'>
-            <Button variant="contained">
+            <Button variant="contained" onClick={handleLogout}>
               <HiOutlineLogout /> Logout
             </Button>
           </div>

@@ -2,7 +2,6 @@ import { Modal, Button, TextField, Select, MenuItem, FormControl, InputLabel, Ty
 import Pagination from '@mui/material/Pagination';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
 import { FaEye } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
@@ -18,6 +17,7 @@ const Staff = () => {
     staff_username: "",
     staff_password: "",
     role: "",
+    program_id: "", // Add this to track selected program
   });
 
   // Fetch staff data on component mount
@@ -47,59 +47,54 @@ const Staff = () => {
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Check if the required fields are filled
-    const { full_name, staff_username, staff_password, role } = newStaff; // Destructure from newStaff
-    if (!full_name || !staff_username || !staff_password || !role) {
-      alert('Please fill in all the fields.');
+  
+    const { full_name, staff_username, staff_password, role, program_id } = newStaff;
+  
+    // Ensure program is selected when role is "Program Head"
+    if (role === "program head" && !program_id) {
+      alert("Please select a program for the Program Head.");
+      setIsLoading(false);
       return;
     }
   
-    // Prepare the data to send to the backend
+    // Prepare the request data
     const requestData = {
       full_name,
       staff_username,
       staff_password,
       role,
+      program_id: role === "program head" ? program_id : null  // Set null for non-program head roles
     };
   
     try {
-      // Make the fetch request to the backend API
-      const response = await fetch('http://localhost:4000/registerStaff', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("http://localhost:4000/registerStaff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
       });
   
-      // eslint-disable-next-line
-      const result = await response.json();
-  
-      // Check for successful response
       if (response.ok) {
-        // Handle successful registration (e.g., show a success message, redirect)
         setStatusMessage({ message: "Account Added!", type: "success" });
         setIsVisible(true);
         setShowAddStaffModal(true);
         setIsCreated(true);
-        fetchStaffData(); // Optionally reload the staff list after adding new staff
+        fetchStaffData(); // Reload the staff list
       } else {
-        // Handle error (e.g., show error message)
         setStatusMessage({ message: "Registration failed. Please try again.", type: "error" });
         setIsVisible(true);
       }
     } catch (error) {
-      // Catch and handle any network or server errors
-      console.error('Error during the request:', error);
-      alert('Server error. Please try again later.');
+      console.error("Error during the request:", error);
+      alert("Server error. Please try again later.");
     } finally {
-        setTimeout(() => {
-          setIsVisible(false);
-          setShowAddStaffModal(false);
+      setTimeout(() => {
+        setIsVisible(false);
+        setShowAddStaffModal(false);
       }, 2000);
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="right-content w-100">
@@ -176,18 +171,37 @@ const Staff = () => {
           <h3>Create Staff Account</h3>
           {!isCreated ? (
           <form onSubmit={handleAddStaff}>
-            <TextField label="Full Name" name="full_name" value={newStaff.full_name} onChange={handleInputChange} fullWidth margin="normal"/>
-            <TextField label="Username" name="staff_username" value={newStaff.staff_username} onChange={handleInputChange} fullWidth margin="normal"/>
-            <TextField label="Password" name="staff_password" type="password" value={newStaff.staff_password} onChange={handleInputChange} fullWidth margin="normal"/>
+            <TextField label="Full Name" name="full_name" value={newStaff.full_name} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-full_name"/>
+            <TextField label="Username" name="staff_username" value={newStaff.staff_username} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-staff_username"/>
+            <TextField label="Password" name="staff_password" type="password" value={newStaff.staff_password} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-staff_password"/>
             <FormControl fullWidth margin="normal">
               <InputLabel id="role-label">Role</InputLabel>
-              <Select labelId="role-label" name="role" value={newStaff.role} onChange={handleInputChange} label="Role">
+              <Select labelId="role-label" name="role" value={newStaff.role} onChange={handleInputChange} label="Role" data-testid="input-role">
                 <MenuItem value="admin">admin</MenuItem>
                 <MenuItem value="instructor">instructor</MenuItem>
                 <MenuItem value="registrar">registrar</MenuItem>
                 <MenuItem value="finance">finance</MenuItem>
+                <MenuItem value="program head">program head</MenuItem>
               </Select>
             </FormControl>
+            {newStaff.role === "program head" && (
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="program-label">Program</InputLabel>
+                <Select
+                  labelId="program-label"
+                  name="program_id"
+                  value={newStaff.program_id}
+                  onChange={handleInputChange}
+                  label="Program"
+                >
+                  <MenuItem value="1">BSIT</MenuItem>
+                  <MenuItem value="2">BSHM</MenuItem>
+                  <MenuItem value="3">Education</MenuItem>
+                  <MenuItem value="4">BSOAd</MenuItem>
+                  <MenuItem value="5">BSCrim</MenuItem>
+                </Select>
+              </FormControl>
+            )}
 
             {isVisible && (
               <Typography
@@ -201,7 +215,7 @@ const Staff = () => {
 
             <div className="d-flex justify-content-end mt-3">
               <Button onClick={() => setShowAddStaffModal(false)}>Cancel</Button>
-              <Button type="submit" color="primary" variant="contained" disabled={isLoading}>
+              <Button type="submit" color="primary" variant="contained" disabled={isLoading} data-testid="submit-button">
                 {isLoading ? "Saving..." : "Save"}
               </Button>
             </div>

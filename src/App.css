@@ -10,6 +10,9 @@ body{font-family: "Open Sans", sans-serif !important; background: #ebe9e9 !impor
 
 h1,h2,h3,h4,h5,h6,p{color: #403e57;}
 
+.MuiMenu-paper {
+  z-index: 1100 !important; /* Ensure menu appears above header */
+}
 
 ::-webkit-scrollbar{width: 5px !important; height: 5px !important;}
 ::-webkit-scrollbar-thumb{background: #c70202 !important;}
@@ -445,6 +448,21 @@ table.v-align td{vertical-align: middle !important;}
   border-radius: 15px !important;
 }
 
+/* Add responsive styles for mobile */
+@media screen and (max-width: 768px) {
+  .btn-expanded {
+    width: 80%;  /* Increase width on mobile */
+    margin: 0 auto;  /* Center the button */
+    font-size: 1.2rem;  /* Slightly smaller font for better fit */
+  }
+}
+
+/* For even smaller screens */
+@media screen and (max-width: 480px) {
+  .btn-expanded {
+    width: 90%;  /* Even wider on smaller phones */
+  }
+}
 .menu-icon {
   display: none; /* Hide the menu icon on desktop */
 }
@@ -463,5 +481,153 @@ table.v-align td{vertical-align: middle !important;}
   max-width: 500px;
   margin: auto;
   padding: 16px;
+}
+
+/* Add these styles for the filter and button alignment */
+.d-flex.justify-content-between {
+  margin-top: 1rem;
+}
+
+.MuiFormControl-root {
+  background-color: white;
+}
+
+/* Ensure consistent button styling */
+.MuiButton-contained {
+  height: 50px;
+}
+
+.profile-container {
+  padding: 20px;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.info-group:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.info-item {
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.info-item:hover {
+  background-color: #ffffff;
+}
+
+.text-primary {
+  color: #c70202 !important;
+}
+
+@media (max-width: 768px) {
+  .profile-picture-container {
+    width: 150px !important;
+    height: 150px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .info-group {
+    margin-bottom: 15px !important;
+  }
+}
+
+/* Enrollment Details Modal Styles */
+.enrollment-details {
+  background: linear-gradient(145deg, #ffffff, #f3f3f3);
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.enrollment-details-header {
+  border-bottom: 2px solid #c70202;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+
+.enrollment-info-item {
+  background: #f8f9fa;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid #c70202;
+  transition: all 0.3s ease;
+}
+
+.enrollment-info-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(199, 2, 2, 0.1);
+}
+
+.enrollment-docs-section {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.document-preview {
+  border: 2px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.document-preview:hover {
+  border-color: #c70202;
+  transform: scale(1.01);
+}
+
+.document-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c70202;
+  margin-bottom: 10px;
+}
+
+.no-doc-message {
+  color: #666;
+  font-style: italic;
+  padding: 15px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* Registration Form Modal Styles */
+.registration-details {
+  background: linear-gradient(145deg, #ffffff, #f3f3f3);
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.registration-section {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c70202;
+  transition: all 0.3s ease;
+}
+
+.registration-section:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(199, 2, 2, 0.1);
+}
+
+.section-title {
+  color: #c70202;
+  font-weight: bold;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #c70202;
 }
 

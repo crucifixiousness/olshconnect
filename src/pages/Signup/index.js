@@ -47,27 +47,35 @@ const Signup = () => {
     try {
       const response = await axios.post('http://localhost:4000/login/staff', credentials);
       const { token, user } = response.data;
-
-      // Store token and update user context
+  
+      // Store complete user data in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('role', user.role);
+      localStorage.setItem('program_id', user.program_id);
+      localStorage.setItem('staff_id', user.staff_id); // Add this line
+      localStorage.setItem('user', JSON.stringify(user)); // Store complete user object
+  
       setUser(user);
       setRole(user.role);
-
       setIsLogin(true);
+  
+      // Redirect based on role
       if (user.role === 'admin') {
         navigate('/dashboard');
       } else if (user.role === 'instructor') {
-        navigate('/dashboard');
+        navigate('/instructor-dashboard');
       } else if (user.role === 'registrar') {
         navigate('/registrar-dashboard');
       } else if (user.role === 'finance') {
         navigate('/finance-dashboard');
+      } else if (user.role === 'program head') {
+        navigate('/programhead-dashboard');
       }
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
     }
   };
+  
 
   return (
     <>
