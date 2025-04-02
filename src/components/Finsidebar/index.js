@@ -71,7 +71,7 @@ const FinanceSidebar = () =>{
             </li>
             <li>
               <Link to="/payment-verification">
-                <Button className={`w-100 ${activeTab===2 ? 'active' : ''}`} onClick={()=>handleTabClick(2)}>
+                <Button className={`w-100 ${activeTab===3 ? 'active' : ''}`} onClick={()=>handleTabClick(3)}>
                   <span className='icon'><IoDocuments />
                   </span>
                     Payment Verification
