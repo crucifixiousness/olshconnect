@@ -33,31 +33,27 @@ const Login = () => {
     };
 
     const handleLogin = async (e) => {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:4000/login/student', credentials);
+            const response = await axios.post('https://olshconnect-server.vercel.app/api/auth/student/login', credentials);
             console.log('Login response:', response);
     
             const { token, user } = response.data;
     
-            // Check if the role is defined
             if (!user.role) {
                 console.error('Role is undefined in the API response.');
                 setErrorMessage('Unexpected error occurred. Please contact support.');
                 return;
             }
     
-            // Store token and role in localStorage
             localStorage.setItem('token', token);
-            localStorage.setItem('role', user.role); // Store correct role
-            localStorage.setItem('user', JSON.stringify(user)); // Store user data
+            localStorage.setItem('role', user.role);
+            localStorage.setItem('user', JSON.stringify(user));
     
-            // Update context state
             setUser(user);
-            setRole(user.role); // Ensure role is updated
+            setRole(user.role);
             setIsLogin(true);
     
-            // Debugging role and token
             console.log('App State Update:', {
                 token,
                 role: user.role,
@@ -65,11 +61,10 @@ const Login = () => {
                 isHideComponents: context.isHideComponents,
             });
     
-            // Navigate based on role
             navigate(user.role === 'student' ? '/student-dashboard' : '/dashboard');
         } catch (error) {
             console.error('Login Error:', error.response?.data);
-            setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+            setErrorMessage(error.response?.data?.error || 'Login failed. Please try again.');
         }
     };
     
