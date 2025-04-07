@@ -1,15 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "olshco-portal/package.json",
-      "use": "@vercel/static-build"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
