@@ -175,7 +175,7 @@ const Homepage = () => {
                 guardianContactNo: formData.guardianContactNo || null
             };
 
-            const response = await axios.post("/api/register", cleanFormData);
+            const response = await axios.post("/api/registerstudent", cleanFormData);
     
             setSnackbar({
                 open: true,
