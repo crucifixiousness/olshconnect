@@ -35,7 +35,7 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:4000/login/student', credentials);
+            const response = await axios.post('https://olshconnect-server.vercel.app/api/auth/student/login', credentials);
             console.log('Login response:', response);
     
             const { token, user } = response.data;
