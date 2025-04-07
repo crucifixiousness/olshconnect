@@ -87,6 +87,7 @@ const ClassManagement = () => {
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
             <Select
+              data-testid="semester-select"
               labelId="semester-filter-label"
               value={selectedSemester}
               onChange={handleSemesterChange}
@@ -122,9 +123,12 @@ const ClassManagement = () => {
                     <td>{course.course_code}</td>
                     <td>{course.course_name}</td>
                     <td>{course.section}</td>
-                    <td>{`${course.day} ${formatTime(course.start_time)} - ${formatTime(course.end_time)}`}</td>
+                    <td data-testid={`schedule-${index}`}>
+                      {`${course.day} ${formatTime(course.start_time)} - ${formatTime(course.end_time)}`}
+                    </td>
                     <td>
                       <Button 
+                        data-testid={`manage-button-${index}`}
                         variant="contained" 
                         color="primary" 
                         size="small"
@@ -137,7 +141,7 @@ const ClassManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center">
+                  <td colSpan="5" className="text-center" data-testid="no-courses-message">
                     No courses found{selectedSemester ? ` for ${selectedSemester} semester` : ''}.
                   </td>
                 </tr>

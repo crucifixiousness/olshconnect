@@ -1,28 +1,14 @@
+import React, { useContext, useEffect} from "react";
+import { Card, Typography } from '@mui/material';
 import { GiBookshelf } from "react-icons/gi";
 import { RiPoliceBadgeFill } from "react-icons/ri";
 import { MdTour } from "react-icons/md";
 import { FaComputer } from "react-icons/fa6";
 import { PiComputerTowerFill } from "react-icons/pi";
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import React,{ useContext, useEffect, useState } from "react";
-import { TbCircleNumber1Filled } from "react-icons/tb";
-import { TbCircleNumber2Filled } from "react-icons/tb";
-import { TbCircleNumber3Filled } from "react-icons/tb";
-import { TbCircleNumber4Filled } from "react-icons/tb";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import Button from '@mui/material/Button';
 import { IoIosPeople } from "react-icons/io";
 import { MyContext } from "../../App";
-import RegDashboardBox from "./component/regdashboardbox";
 
 const RegistrarDashboard = () => {
-
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-
-  const ITEM_HEIGHT = 48;
-
   const context = useContext(MyContext);
 
   useEffect(() => {
@@ -30,104 +16,113 @@ const RegistrarDashboard = () => {
     window.scrollTo(0,0);
   }, [context]);
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  
-  return(
-    <>
-      <div className="right-content w-100">
-        <div className="row dashboardBoxWrapperRow">
-          <div className="col-md-8">
-            <div className="dashboardBoxWrapper d-flex">
-              <RegDashboardBox color={["#092985", "#0097ff"]} icon={<GiBookshelf />} grow="true" title="Total BEED" value="300" />
-              <RegDashboardBox color={["#092985", "#0097ff"]} icon={<GiBookshelf />} grow="true" title="Total BSEd" value="250" />
-              <RegDashboardBox color={["#6a0000", "#ff2f2f"]} icon={<RiPoliceBadgeFill />} grow="false" title="Total BSCrim" value="225" />
-              <RegDashboardBox color={["#b6b62a", "#dbff00"]} icon={<MdTour />} grow="extra" title="Total BSHM" value=" 247" />
-              <RegDashboardBox color={["#006a13", "#11f000"]} icon={<FaComputer />} grow="medium" title="Total BSIT" value=" 221" />
-              <RegDashboardBox color={["#006a13", "#11f000"]} icon={<PiComputerTowerFill />} grow="small" title="Total BSOAd" value="230" />               
+  const statCards = [
+    {
+      title: 'Total BEED',
+      value: '300',
+      icon: <GiBookshelf size={30} />,
+      color: '#1976d2'
+    },
+    {
+      title: 'Total BSEd',
+      value: '250',
+      icon: <GiBookshelf size={30} />,
+      color: '#1976d2'
+    },
+    {
+      title: 'Total BSCrim',
+      value: '225',
+      icon: <RiPoliceBadgeFill size={30} />,
+      color: '#c70202'
+    },
+    {
+      title: 'Total BSHM',
+      value: '247',
+      icon: <MdTour size={30} />,
+      color: '#dbff00'
+    },
+    {
+      title: 'Total BSIT',
+      value: '221',
+      icon: <FaComputer size={30} />,
+      color: '#2e7d32'
+    },
+    {
+      title: 'Total BSOAd',
+      value: '230',
+      icon: <PiComputerTowerFill size={30} />,
+      color: '#2e7d32'
+    }
+  ];
+
+  const yearLevelData = [
+    { year: 'First Year', count: 344 },
+    { year: 'Second Year', count: 352 },
+    { year: 'Third Year', count: 367 },
+    { year: 'Fourth Year', count: 372 }
+  ];
+
+  return (
+    <div className="right-content w-100">
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="mb-4">Registrar Dashboard</h3>
+        <div className="row">
+          {statCards.map((card, index) => (
+            <div key={index} className="col-md-4 mb-4">
+              <Card 
+                className="h-100 p-3" 
+                sx={{ 
+                  transition: 'transform 0.2s',
+                  '&:hover': { transform: 'translateY(-5px)' },
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}
+              >
+                <div className="d-flex align-items-center mb-3">
+                  <div style={{ color: card.color }}>{card.icon}</div>
+                  <Typography variant="h6" className="ms-2">{card.title}</Typography>
+                </div>
+                <Typography variant="h3" style={{ color: card.color }}>
+                  {card.value}
+                </Typography>
+              </Card>
             </div>
+          ))}
+        </div>
+
+        <div className="row mt-4">
+          <div className="col-md-6 mb-4">
+            <Card className="h-100 p-4">
+              <div className="d-flex align-items-center mb-4">
+                <IoIosPeople size={30} style={{ color: '#1976d2' }} />
+                <Typography variant="h5" className="ms-2">Total Enrolled Students</Typography>
+              </div>
+              <Typography variant="h2" style={{ color: '#1976d2', marginBottom: '20px' }}>
+                1,435
+              </Typography>
+              <Typography variant="h6" className="mb-3">Per Year Level</Typography>
+              {yearLevelData.map((data, index) => (
+                <div key={index} className="d-flex align-items-center mb-3">
+                  <Typography variant="body1">{data.year}</Typography>
+                  <Typography 
+                    variant="h6" 
+                    className="ms-auto" 
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {data.count}
+                  </Typography>
+                </div>
+              ))}
+            </Card>
           </div>
-
-          <div className="col-md-4 pl-0 topPart2">
-            <div className="box">
-              <div className="d-flex align-items-center w-100 bottomEle">
-                <h6 className="text-white mb-0 mt-0">Total Enrolled Student</h6>
-                <div className="ml-auto">
-                  <Button className="toggleIcon" onClick={handleClick} ><BsThreeDotsVertical/>
-                  </Button>
-
-                  
-                  <Menu
-                  className="year_dropdown"
-                  MenuListProps={{
-                    'aria-labelledby': 'long-button',
-                  }}
-                  anchorEl={anchorEl}
-                  open={open}
-                  onClose={handleClose}
-                  PaperProps={{
-                    style: {
-                      maxHeight: ITEM_HEIGHT * 4.5,
-                      width: '20ch',
-                    },
-                  }}
-                >
-                  
-                    <MenuItem onClick={handleClose}>
-                      <TbCircleNumber1Filled/> 1st Year
-                    </MenuItem>
-                    <MenuItem onClick={handleClose}>
-                      <TbCircleNumber2Filled/> 2nd Year
-                    </MenuItem>
-                    <MenuItem onClick={handleClose}>
-                      <TbCircleNumber3Filled/> 3rd Year
-                    </MenuItem>
-                    <MenuItem onClick={handleClose}>
-                      <TbCircleNumber4Filled/> 4th Year
-                    </MenuItem>
-                  
-                </Menu>
-                </div>
-                
-              </div>
-
-              <div className="d-flex align-items-center totalStudentCount">
-                <IoIosPeople/>
-                <h4 className="text-white font-weight-bold mb-0">1435</h4>
-              </div>
-
-              <div className="additional-info mt-3">
-                <div className="d-flex align-items-center mb-4 headerPerYear">
-                  <h6 className="text-white mb-0">Per Year Level</h6>
-                </div>
-                <div className="d-flex align-items-center mb-4">
-                  <TbCircleNumber1Filled /> <span className="text-white">First Year : </span>
-                  <span id="totalCountPerYear" className="ml-auto text-white font-weight-bold">344</span>
-                </div>
-                <div className="d-flex align-items-center mb-4">
-                  <TbCircleNumber2Filled/> <span className="text-white">Second Year : </span>
-                  <span id="totalCountPerYear" className="ml-auto text-white font-weight-bold">352</span>
-                </div>
-                <div className="d-flex align-items-center mb-4">
-                  <TbCircleNumber3Filled/> <span className="text-white">Third Year : </span>
-                  <span id="totalCountPerYear" className="ml-auto text-white font-weight-bold">367</span>
-                </div>
-                <div className="d-flex align-items-center mb-4">
-                  <TbCircleNumber4Filled/> <span className="text-white">Fourth Year : </span>
-                  <span id="totalCountPerYear" className="ml-auto text-white font-weight-bold">372</span>
-                </div>               
-              </div>
-
-            </div>
+          <div className="col-md-6 mb-4">
+            <Card className="h-100 p-4">
+              {/* Additional statistics or charts can be added here */}
+            </Card>
           </div>
-        </div>        
+        </div>
       </div>
-    </>    
-  )
-}
+    </div>
+  );
+};
 
 export default RegistrarDashboard;

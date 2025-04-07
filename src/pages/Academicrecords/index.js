@@ -16,7 +16,7 @@ const AcademicRecords = () => {
       {/* Header Section */}
       {context.isLogin !== false ? (
         <div className="card shadow border-0 p-3 mt-1">
-          <h3 className="hd mt-2 pb-0">Academic Records</h3>
+          <h3 className="hd mt-2 pb-0" data-testid="page-title">Academic Records</h3>
           <p className="text-muted">Welcome to your Academic Records, {user?.firstName}</p>
         </div>
       ) : null}

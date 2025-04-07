@@ -13,7 +13,8 @@ import {
   Alert
 } from '@mui/material';
 import axios from 'axios';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+// Import the search icon
+import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
 import { CircularProgress } from '@mui/material';  // Add this to imports
 
 const TuitionManagement = () => {
@@ -53,6 +54,7 @@ const TuitionManagement = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching tuition fees:', error);
+      // No error message displayed to user
     }
   };
 
@@ -112,6 +114,17 @@ const TuitionManagement = () => {
       setSnackbar({ ...snackbar, open: false });
   };
 
+  // Add this state for search
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Add this function to handle search
+  const filteredTuitionFees = tuitionFees.filter(fee =>
+    fee.program_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fee.semester.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fee.year_level.toString().includes(searchTerm)
+  );
+
+  // In the return statement, add this before the table
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
@@ -121,14 +134,50 @@ const TuitionManagement = () => {
       </div>
 
       <div className="card shadow border-0 p-3 mt-3">
-        <div className="d-flex justify-content-end mb-3">
+        <div className="d-flex justify-content-between mb-3">
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              size="small"
+              placeholder="Search by program, semester, or year level"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ 
+                width: '400px',
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#c70202',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#a00000',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#c70202',
+                  },
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <Button
+                    sx={{
+                      minWidth: '40px',
+                      bgcolor: '#c70202',
+                      '&:hover': { bgcolor: '#a00000' },
+                      height: '100%',
+                      borderRadius: '0 4px 4px 0',
+                      marginRight: '-13px'
+                    }}
+                  >
+                    <FaSearch style={{ color: 'white' }} />
+                  </Button>
+                ),
+              }}
+            />
+          </Box>
           <Button 
             variant="contained" 
             onClick={() => setOpenModal(true)}
-            sx={{
-              bgcolor: '#c70202',
-              '&:hover': { bgcolor: '#a00000' }
-            }}
+            sx={{ bgcolor: '#c70202', '&:hover': { bgcolor: '#a00000' } }}
           >
             <FaPlus className="me-2"/> Set New Tuition Fee
           </Button>
@@ -155,7 +204,7 @@ const TuitionManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {tuitionFees.map((fee) => (
+                {filteredTuitionFees.map((fee) => (
                   <tr key={fee.fee_id}>
                     <td>{fee.program_name}</td>
                     <td>{fee.year_level}</td>
@@ -167,10 +216,20 @@ const TuitionManagement = () => {
                     <td>₱{parseFloat(fee.tuition_amount) + parseFloat(fee.misc_fees) + parseFloat(fee.lab_fees) + parseFloat(fee.other_fees)}</td>
                     <td>
                       <div className="actions d-flex align-items-center gap-2">
-                        <Button className="success" color="success" size="small">
+                        <Button 
+                          data-testid={`edit-button-${fee.fee_id}`}
+                          className="success" 
+                          color="success" 
+                          size="small"
+                        >
                           <FaEdit />
                         </Button>
-                        <Button className="error" color="error" size="small">
+                        <Button 
+                          data-testid={`delete-button-${fee.fee_id}`}
+                          className="error" 
+                          color="error" 
+                          size="small"
+                        >
                           <FaTrash />
                         </Button>
                       </div>
@@ -215,7 +274,8 @@ const TuitionManagement = () => {
               <FormControl fullWidth margin="normal">
                 <InputLabel>Program</InputLabel>
                 <Select
-                  name="program_id"  // Changed from 'program' to 'program_id'
+                  data-testid="program-select"
+                  name="program_id"
                   value={formData.program_id}
                   onChange={handleInputChange}
                   required
@@ -231,6 +291,7 @@ const TuitionManagement = () => {
               <FormControl fullWidth margin="normal">
                 <InputLabel>Year Level</InputLabel>
                 <Select
+                  data-testid="year-select"
                   name="yearLevel"
                   value={formData.yearLevel}
                   onChange={handleInputChange}
@@ -246,6 +307,7 @@ const TuitionManagement = () => {
               <FormControl fullWidth margin="normal">
                 <InputLabel>Semester</InputLabel>
                 <Select
+                  data-testid="semester-select"
                   name="semester"
                   value={formData.semester}
                   onChange={handleInputChange}
@@ -263,6 +325,7 @@ const TuitionManagement = () => {
                 Fee Breakdown
               </Typography>
               <TextField
+                data-testid="tuition-amount"
                 fullWidth
                 margin="normal"
                 label="Tuition Amount"
@@ -274,6 +337,7 @@ const TuitionManagement = () => {
               />
 
               <TextField
+                data-testid="misc-fees"
                 fullWidth
                 margin="normal"
                 label="Miscellaneous Fees"
@@ -285,6 +349,7 @@ const TuitionManagement = () => {
               />
 
               <TextField
+                data-testid="lab-fees"
                 fullWidth
                 margin="normal"
                 label="Laboratory Fees"
@@ -296,6 +361,7 @@ const TuitionManagement = () => {
               />
 
               <TextField
+                data-testid="other-fees"
                 fullWidth
                 margin="normal"
                 label="Other Fees"
@@ -305,22 +371,23 @@ const TuitionManagement = () => {
                 onChange={handleInputChange}
                 required
               />
-            </div>
 
-            <Button 
-              type="submit" 
-              variant="contained"
-              fullWidth
-              sx={{
-                mt: 3,
-                bgcolor: '#c70202',
-                '&:hover': { bgcolor: '#a00000' },
-                height: '45px',
-                fontWeight: 'bold'
-              }}
-            >
-              Save Tuition Fee
-            </Button>
+              <Button 
+                data-testid="submit-button"
+                type="submit" 
+                variant="contained"
+                fullWidth
+                sx={{
+                  mt: 3,
+                  bgcolor: '#c70202',
+                  '&:hover': { bgcolor: '#a00000' },
+                  height: '45px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Save Tuition Fee
+              </Button>
+            </div>
           </form>
         </Box>
       </Modal>

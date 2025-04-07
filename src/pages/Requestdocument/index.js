@@ -13,10 +13,21 @@ const RequestDocument = () => {
   const [page, setPage] = useState(1); // Pagination state
   const handleOpen = () => setShowRequestModal(true);
   const handleClose = () => setShowRequestModal(false);
-  const user = JSON.parse(localStorage.getItem("user")); 
+  
+  // Add safe parsing of user data
+  const user = (() => {
+    try {
+      const userData = localStorage.getItem("user");
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      return null;
+    }
+  })();
+
   const [newRequest, setNewRequest] = useState({
-    id: user ? user.id : null,
-    doc_type: "", // Changed from documentType
+    id: user?.id || null,
+    doc_type: "",
     requestDate: new Date().toISOString().slice(0, 10),
     status: "Pending",
   });
@@ -109,7 +120,7 @@ const RequestDocument = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Document Request Management</h3>
+        <h3 className="hd mt-2 pb-0" data-testid="page-title">Document Request Management</h3>
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
@@ -120,13 +131,14 @@ const RequestDocument = () => {
             variant="contained"
             color="primary"
             onClick={handleOpen}
+            data-testid="request-document-button"
           >
             <FaCirclePlus/> Request Document
           </Button>
         </div>
 
         <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align">
+          <table className="table table-bordered v-align" data-testid="requests-table">
             <thead className="thead-dark">
               <tr>
                 <th>Document Type</th>
@@ -145,7 +157,7 @@ const RequestDocument = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="3" style={{ textAlign: "center" }}>
+                <td colSpan="3" style={{ textAlign: "center" }} data-testid="no-requests-message">
                   No document requests available.
                 </td>
               </tr>
@@ -156,6 +168,7 @@ const RequestDocument = () => {
           {/* Pagination */}
           <div className="d-flex justify-content-center mt-3">
             <Pagination
+              data-testid="pagination"
               count={pageCount}
               page={page}
               onChange={(e, newPage) => setPage(newPage)}
@@ -171,6 +184,7 @@ const RequestDocument = () => {
       <Modal
         open={showRequestModal}
         onClose={handleClose}
+        data-testid="request-modal"
       >
         <Box sx={{
           position: 'absolute',
@@ -195,6 +209,9 @@ const RequestDocument = () => {
                 onChange={handleInputChange}
                 label="Document Type"
                 required
+                aria-label="Document Type"
+                data-testid="document-type-select"
+                data-value={newRequest.doc_type} // Add this line
               >
                 <MenuItem value="Certificate of Grades">Certificate of Grades</MenuItem>
                 <MenuItem value="Good Moral Certificate">Good Moral Certificate</MenuItem>
@@ -208,6 +225,7 @@ const RequestDocument = () => {
                 type="submit" 
                 variant="contained"
                 disabled={isLoading}
+                data-testid="submit-request-button"
                 sx={{
                   bgcolor: '#c70202',
                   '&:hover': {
@@ -224,12 +242,14 @@ const RequestDocument = () => {
       
       {/* Add this before the closing div */}
       <Snackbar
+        data-testid="snackbar"
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert 
+          data-testid="snackbar-alert"
           onClose={handleSnackbarClose} 
           severity={snackbar.severity}
           variant="filled"

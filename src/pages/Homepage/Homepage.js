@@ -175,7 +175,7 @@ const Homepage = () => {
                 guardianContactNo: formData.guardianContactNo || null
             };
 
-            const response = await axios.post("http://localhost:4000/register", cleanFormData);
+            const response = await axios.post("/api/register", cleanFormData);
     
             setSnackbar({
                 open: true,

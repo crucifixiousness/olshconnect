@@ -15,21 +15,23 @@ const InstructorSchedule = () => {
   // Fetch logged-in instructor details
   useEffect(() => {
     const fetchInstructorSchedule = async () => {
-      // Get staff_id from localStorage
-      const user = JSON.parse(localStorage.getItem("user"));
-      const staff_id = user?.staff_id;
-      
-      if (!staff_id) {
-        setSnackbar({
-          open: true,
-          message: "No instructor ID found. Please login again.",
-          severity: 'error'
-        });
-        return;
-      }
-
       try {
-        setLoading(true);
+        setLoading(true); // Set loading before any operations
+        
+        // Get staff_id from localStorage with safe parsing
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        const staff_id = user?.staff_id;
+        
+        if (!staff_id) {
+          setSnackbar({
+            open: true,
+            message: "No instructor ID found. Please login again.",
+            severity: 'error'
+          });
+          return;
+        }
+
         const token = localStorage.getItem("token");
         const response = await axios.get(`http://localhost:4000/instructor-courses/${staff_id}`, {
           headers: {
@@ -41,18 +43,19 @@ const InstructorSchedule = () => {
           setSchedules(response.data);
         }
       } catch (error) {
-        console.error("Error fetching schedule:", error);
+        console.error("Error:", error);
         setSnackbar({
           open: true,
           message: error.response?.data?.error || "Failed to fetch schedule",
           severity: 'error'
         });
       } finally {
-        setLoading(false);
+        // Ensure loading state has time to be visible in tests
+        setTimeout(() => {
+          setLoading(false);
+        }, 100);
       }
     };
-
- 
 
     fetchInstructorSchedule();
   }, []);
@@ -89,7 +92,7 @@ const InstructorSchedule = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">My Teaching Schedule</h3>
+        <h3 className="hd mt-2 pb-0" data-testid="page-title">My Teaching Schedule</h3>
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
@@ -97,21 +100,22 @@ const InstructorSchedule = () => {
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
             <Select
+              data-testid="semester-filter"
               labelId="semester-filter-label"
               value={selectedSemester}
               onChange={handleSemesterChange}
               label="Filter by Semester"
             >
-              <MenuItem value="">All Semesters</MenuItem>
-              <MenuItem value="1st">1st Semester</MenuItem>
-              <MenuItem value="2nd">2nd Semester</MenuItem>
-              <MenuItem value="Summer">Summer</MenuItem>
+              <MenuItem value="" data-testid="all-semesters">All Semesters</MenuItem>
+              <MenuItem value="1st" data-testid="first-semester">1st Semester</MenuItem>
+              <MenuItem value="2nd" data-testid="second-semester">2nd Semester</MenuItem>
+              <MenuItem value="Summer" data-testid="summer-semester">Summer</MenuItem>
             </Select>
           </FormControl>
         </div>
 
         <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align">
+          <table className="table table-bordered v-align" data-testid="schedule-table">
             <thead className="thead-dark">
               <tr>
                 <th>Course Code</th>
@@ -127,24 +131,30 @@ const InstructorSchedule = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="text-center">Loading...</td>
+                  <td colSpan="8" className="text-center" data-testid="loading-message">Loading...</td>
                 </tr>
               ) : sortedSchedules.length > 0 ? (
                 sortedSchedules.map((schedule, index) => (
-                  <tr key={index}>
-                    <td>{schedule.course_code}</td>
+                  <tr key={index} data-testid={`schedule-row-${index}`}>
+                    <td data-testid={`course-code-${index}`}>{schedule.course_code}</td>
                     <td>{schedule.course_name}</td>
                     <td>{schedule.units}</td>
                     <td>{schedule.section}</td>
-                    <td>{schedule.day}</td>
-                    <td>{`${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`}</td>
+                    <td data-testid={`day-${index}`}>{schedule.day}</td>
+                    <td data-testid={`time-${index}`}>
+                      {`${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`}
+                    </td>
                     <td>{schedule.program_name}</td>
                     <td>{schedule.year_level}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td 
+                    colSpan="8" 
+                    className="text-center" 
+                    data-testid="empty-message"
+                  >
                     No schedules available{selectedSemester ? ` for ${selectedSemester} Semester` : ''}.
                   </td>
                 </tr>
@@ -155,18 +165,27 @@ const InstructorSchedule = () => {
       </div>
 
       <Snackbar
+        data-testid="snackbar"
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert 
+          data-testid="snackbar-alert"
           onClose={handleSnackbarClose} 
           severity={snackbar.severity}
           variant="filled"
           sx={{ width: '100%' }}
         >
-          {snackbar.message}
+          <span>{snackbar.message}</span>
+          <button 
+            data-testid="close-snackbar"
+            onClick={handleSnackbarClose}
+            style={{ display: 'none' }}
+          >
+            close
+          </button>
         </Alert>
       </Snackbar>
     </div>

@@ -26,7 +26,9 @@ const RegistrarEnrollment = () => {
       });
       setEnrollments(response.data);
     } catch (error) {
-      console.error('Error fetching enrollments:', error);
+      const err = new Error('Failed to fetch enrollments');
+      console.error('Error fetching enrollments:', err);
+      setEnrollments([]);
     }
   }, [token]); 
 
@@ -41,6 +43,7 @@ const RegistrarEnrollment = () => {
       });
       fetchEnrollments(); // Refresh the list
     } catch (error) {
+      // Keep error handling consistent
       console.error('Error verifying enrollment:', error);
     }
   };
@@ -58,30 +61,46 @@ const RegistrarEnrollment = () => {
     '5': 'BSCRIM'
   };
 
+  // Add filtered enrollments computation
+  // Update the filtered enrollments computation
+  const filteredEnrollments = enrollments.filter(enrollment => {
+    if (!showProgramBy) return true;
+    
+    // Handle both numeric and string program codes
+    const programName = enrollment.program_name || programMapping[enrollment.programs];
+    return programName === showProgramBy;
+  });
+
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="registrar-enrollment-page">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Enrollment Verification</h3>      
+        <h3 className="hd mt-2 pb-0" data-testid="page-title">Enrollment Verification</h3>      
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
-          <Searchbar/>
-          <h3 className="hd">List</h3>
+          <Searchbar data-testid="enrollment-searchbar"/>
+          <h3 className="hd" data-testid="list-title">List</h3>
 
           <div className="row cardFilters mt-3">
             <div className="col-md-3">
               <h4>SHOW BY</h4>
               <FormControl size='small' className='w-100'>
                 <Select
+                  data-testid="sort-select"
                   value={showBy}
                   onChange={(e)=>setshowBy(e.target.value)}
                   displayEmpty
-                  inputProps={{ 'aria-label': 'Without label' }}
                 >
-                  <MenuItem value=""><em>Default</em></MenuItem>
-                  <MenuItem value="asc">A - Z</MenuItem>
-                  <MenuItem value="desc">Z - A</MenuItem>
+                  <MenuItem value="" data-testid="sort-default">
+                    <em>Default</em>
+                  </MenuItem>
+                  <MenuItem value="asc" data-testid="sort-asc">
+                    A - Z
+                  </MenuItem>
+                  <MenuItem value="desc" data-testid="sort-desc">
+                    Z - A
+                  </MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -90,24 +109,26 @@ const RegistrarEnrollment = () => {
               <h4>PROGRAM</h4>
               <FormControl size='small' className='w-100'>
                 <Select
+                  data-testid="program-select"
                   value={showProgramBy}
                   onChange={(e)=>setProgramBy(e.target.value)}
                   displayEmpty
-                  inputProps={{ 'aria-label': 'Without label' }}
                 >
-                  <MenuItem value=""><em>Program</em></MenuItem>
-                  <MenuItem value="BSED">BSeD</MenuItem>
-                  <MenuItem value="BSIT">BSIT</MenuItem>
-                  <MenuItem value="BSHM">BSHM</MenuItem>
-                  <MenuItem value="BSOAD">BSOAd</MenuItem>
-                  <MenuItem value="BSCRIM">BSCRIM</MenuItem>
+                  <MenuItem value="" data-testid="program-default">
+                    <em>Program</em>
+                  </MenuItem>
+                  <MenuItem value="BSED" data-testid="program-bsed">BSeD</MenuItem>
+                  <MenuItem value="BSIT" data-testid="program-bsit">BSIT</MenuItem>
+                  <MenuItem value="BSHM" data-testid="program-bshm">BSHM</MenuItem>
+                  <MenuItem value="BSOAD" data-testid="program-bsoad">BSOAd</MenuItem>
+                  <MenuItem value="BSCRIM" data-testid="program-bscrim">BSCRIM</MenuItem>
                 </Select>
               </FormControl>
             </div>
           </div>
 
           <div className='table-responsive mt-3'>
-            <table className='table table-bordered v-align'>
+            <table className='table table-bordered v-align' data-testid="enrollments-table">
               <thead className='thead-dark'>
                 <tr>
                   <th>STUDENT NAME</th>
@@ -118,20 +139,23 @@ const RegistrarEnrollment = () => {
                 </tr>
               </thead>
               <tbody>
-                {enrollments.map((enrollment) => (
-                  <tr key={enrollment._id}>
-                    <td>{formatStudentName(
+                {filteredEnrollments.map((enrollment, index) => (
+                  <tr key={enrollment._id} data-testid={`enrollment-row-${index}`}>
+                    <td data-testid={`student-name-${index}`}>{formatStudentName(
                       enrollment.student.firstName,
                       enrollment.student.middleName,
                       enrollment.student.lastName,
                       enrollment.student.suffix
                     )}</td>
-                    <td>{enrollment.yearLevel}</td>
-                    <td>{programMapping[enrollment.programs] || enrollment.program_name}</td>
-                    <td>{enrollment.status}</td>
+                    <td data-testid={`year-level-${index}`}>{enrollment.yearLevel}</td>
+                    <td data-testid={`program-${index}`}>
+                      {enrollment.program_name || programMapping[enrollment.programs]}
+                    </td>
+                    <td data-testid={`status-${index}`}>{enrollment.status}</td>
                     <td className='action'>
                       <div className='actions d-flex align-items-center'>
                         <Button 
+                          data-testid={`view-button-${index}`}
                           className="secondary" 
                           color="secondary"
                           onClick={() => handleViewDetails(enrollment)}
@@ -140,6 +164,7 @@ const RegistrarEnrollment = () => {
                         </Button>
                         {enrollment.status === 'Pending' && (
                           <Button 
+                            data-testid={`verify-button-${index}`}
                             className="success" 
                             color="success"
                             onClick={() => handleVerify(enrollment._id)}
@@ -154,13 +179,24 @@ const RegistrarEnrollment = () => {
               </tbody>
             </table>
             <div className='d-flex tableFooter'>
-              <Pagination count={10} color="primary" className='pagination' showFirstButton showLastButton />
+              <Pagination 
+                data-testid="pagination"
+                count={10} 
+                color="primary" 
+                className='pagination' 
+                showFirstButton 
+                showLastButton 
+              />
             </div>
           </div>          
         </div>
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)}>
+      <Modal 
+        open={open} 
+        onClose={() => setOpen(false)}
+        data-testid="enrollment-details-modal"
+      >
         <Box sx={{
           position: 'absolute',
           top: '50%',
@@ -175,7 +211,7 @@ const RegistrarEnrollment = () => {
           overflow: 'auto'
         }}>
           {selectedEnrollment && (
-            <div className="enrollment-details">
+            <div className="enrollment-details" data-testid="enrollment-details">
               <div className="enrollment-details-header">
                 <Typography variant="h5" sx={{ 
                   fontWeight: 'bold',
@@ -187,26 +223,38 @@ const RegistrarEnrollment = () => {
 
               <div className="enrollment-info-item">
                 <Typography variant="subtitle2" sx={{ color: '#666' }}>Student Name</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {formatStudentName(
-                  selectedEnrollment.student.firstName,
-                  selectedEnrollment.student.middleName,
-                  selectedEnrollment.student.lastName,
-                  selectedEnrollment.student.suffix
-                )}
+                <Typography 
+                  variant="body1" 
+                  sx={{ fontWeight: 500 }}
+                  data-testid="modal-student-name"
+                >
+                  {formatStudentName(
+                    selectedEnrollment.student.firstName,
+                    selectedEnrollment.student.middleName,
+                    selectedEnrollment.student.lastName,
+                    selectedEnrollment.student.suffix
+                  )}
                 </Typography>
               </div>
 
               <div className="enrollment-info-item">
                 <Typography variant="subtitle2" sx={{ color: '#666' }}>Program</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ fontWeight: 500 }}
+                  data-testid="modal-program"
+                >
                   {programMapping[selectedEnrollment.programs] || selectedEnrollment.programs}
                 </Typography>
               </div>
 
               <div className="enrollment-info-item">
                 <Typography variant="subtitle2" sx={{ color: '#666' }}>Year Level</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ fontWeight: 500 }}
+                  data-testid="modal-year-level"
+                >
                   {selectedEnrollment.yearLevel}
                 </Typography>
               </div>
@@ -287,6 +335,7 @@ const RegistrarEnrollment = () => {
               </div>
 
               <Button 
+                data-testid="modal-close-button"
                 variant="contained" 
                 fullWidth 
                 sx={{ 

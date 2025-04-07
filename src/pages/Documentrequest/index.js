@@ -65,21 +65,22 @@ const DocumentRequests = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Document Requests</h3>
+        <h3 className="hd mt-2 pb-0" data-testid="page-title">Document Requests</h3>
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd">Requested Documents</h3>
+        <h3 className="hd" data-testid="section-title">Requested Documents</h3>
 
         <div className="row cardFilters mt-3">
           <div className="col-md-3">
             <h4>FILTER BY DOCUMENT</h4>
             <FormControl size='small' className='w-100'>
               <Select
+                data-testid="document-filter"
                 value={filterBy}
                 onChange={(e) => setFilterBy(e.target.value)}
                 displayEmpty
-                inputProps={{ 'aria-label': 'Without label' }}
+                inputProps={{ 'aria-label': 'Filter documents by type' }}
                 className='w-100'
               >
                 <MenuItem value="">
@@ -94,7 +95,7 @@ const DocumentRequests = () => {
         </div>
 
         <div className='table-responsive mt-3'>
-          <table className='table table-bordered v-align'>
+          <table className='table table-bordered v-align' data-testid="requests-table">
             <thead className='thead-dark'>
               <tr>
                 <th>STUDENT NAME</th>
@@ -107,7 +108,7 @@ const DocumentRequests = () => {
             <tbody>
               {paginatedRequests.length > 0 ? (
                 paginatedRequests.map((request) => (
-                  <tr key={request.req_id}>
+                  <tr key={request.req_id} data-testid={`request-row-${request.req_id}`}>
                     <td>
                       {formatStudentName(
                         request.first_name,
@@ -124,6 +125,8 @@ const DocumentRequests = () => {
                         <Button 
                           className="success" 
                           color="success"
+                          data-testid={`approve-button-${request.req_id}`}
+                          aria-label={`Approve request for ${request.first_name} ${request.last_name}`}
                           onClick={() => handleStatusUpdate(request.req_id, 'Approved')}
                           disabled={request.req_status !== 'Pending'}
                         >
@@ -132,6 +135,8 @@ const DocumentRequests = () => {
                         <Button 
                           className="error" 
                           color="error"
+                          data-testid={`reject-button-${request.req_id}`}
+                          aria-label={`Reject request for ${request.first_name} ${request.last_name}`}
                           onClick={() => handleStatusUpdate(request.req_id, 'Rejected')}
                           disabled={request.req_status !== 'Pending'}
                         >
@@ -143,7 +148,7 @@ const DocumentRequests = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center" }}>
+                  <td colSpan="5" style={{ textAlign: "center" }} data-testid="no-data-message">
                     No document requests available
                   </td>
                 </tr>
@@ -152,6 +157,7 @@ const DocumentRequests = () => {
           </table>
           <div className='d-flex tableFooter'>
             <Pagination 
+              data-testid="pagination"
               count={pageCount}
               page={page}
               onChange={(e, newPage) => setPage(newPage)}

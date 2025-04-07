@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Button, FormControl, InputLabel, Select, MenuItem, Pagination } from "@mui/material";
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import { TextField, InputAdornment } from '@mui/material';
+import { FaSearch } from 'react-icons/fa';
 
 const StudentBalance = () => {
   const [students, setStudents] = useState([]);
@@ -13,6 +15,7 @@ const StudentBalance = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [selectedSemester, setSelectedSemester] = useState('');
+  
 
   // Fetch students with balance
   const fetchStudents = useCallback(async () => {
@@ -38,10 +41,18 @@ const StudentBalance = () => {
     }
   }, [fetchStudents, program_id]);
 
+  // Add this state for search
+  const [searchTerm, setSearchTerm] = useState('');
+
   const filteredStudents = students.filter(student => {
     const yearMatch = yearLevel ? student.year_level === parseInt(yearLevel) : true;
     const semesterMatch = selectedSemester ? student.semester === selectedSemester : true;
-    return yearMatch && semesterMatch;
+    const searchMatch = searchTerm.toLowerCase() === '' ? true : 
+      student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.program_name.toLowerCase().includes(searchTerm.toLowerCase());
+    return yearMatch && semesterMatch && searchMatch;
   });
 
   const handleSemesterChange = (event) => {
@@ -69,20 +80,50 @@ const StudentBalance = () => {
         </h3>
 
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
-            <Select
-              labelId="semester-filter-label"
-              value={selectedSemester}
-              onChange={handleSemesterChange}
-              label="Filter by Semester"
-            >
-              <MenuItem value="">All Semesters</MenuItem>
-              <MenuItem value="1st">1st Semester</MenuItem>
-              <MenuItem value="2nd">2nd Semester</MenuItem>
-              <MenuItem value="Summer">Summer</MenuItem>
-            </Select>
-          </FormControl>
+          <div className="d-flex gap-3">
+            <TextField
+              size="small"
+              placeholder="Search by ID, name, or program"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ 
+                width: '300px',
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#c70202',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#a00000',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#c70202',
+                  },
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <FaSearch style={{ color: '#c70202' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+              <Select
+                labelId="semester-filter-label"
+                value={selectedSemester}
+                onChange={handleSemesterChange}
+                label="Filter by Semester"
+              >
+                <MenuItem value="">All Semesters</MenuItem>
+                <MenuItem value="1st">1st Semester</MenuItem>
+                <MenuItem value="2nd">2nd Semester</MenuItem>
+                <MenuItem value="Summer">Summer</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
         </div>
 
         <div className="table-responsive mt-3">
