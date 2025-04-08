@@ -16,33 +16,42 @@ module.exports = async (req, res) => {
     const { staff_username, staff_password } = req.body;
 
     if (!staff_username || !staff_password) {
-      return res.status(400).send("Username and password are required.");
+      return res.status(400).json({ message: "Username and password are required." });
     }
 
     try {
-      const result = await pool.query(
-        "SELECT * FROM admins WHERE staff_username = $1",
-        [staff_username]
-      );
+      const client = await pool.connect();
+      
+      const staffQuery = `
+        SELECT *
+        FROM admins
+        WHERE staff_username = $1
+      `;
+
+      const result = await client.query(staffQuery, [staff_username]);
 
       if (result.rows.length === 0) {
-        return res.status(401).send("Invalid credentials.");
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const staff = result.rows[0];
       const isMatch = await bcrypt.compare(staff_password, staff.staff_password);
 
       if (!isMatch) {
-        return res.status(401).send("Invalid credentials.");
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const token = jwt.sign(
-        { id: staff.staff_id, staff_username: staff.staff_username, role: staff.role },
+        { 
+          id: staff.staff_id, 
+          staff_username: staff.staff_username, 
+          role: staff.role 
+        },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: '1h' }
       );
 
-      res.json({
+      res.status(200).json({
         token,
         user: {
           staff_id: staff.staff_id,
@@ -53,11 +62,13 @@ module.exports = async (req, res) => {
           program_id: staff.program_id,
         },
       });
+
+      client.release();
     } catch (error) {
-      console.error("Error during staff login:", error);
-      res.status(500).send("Server error");
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Server error" });
     }
   } else {
-    res.status(405).send("Method not allowed");
+    res.status(405).json({ message: 'Method not allowed' });
   }
 };
