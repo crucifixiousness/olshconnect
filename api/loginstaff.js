@@ -1,6 +1,7 @@
 // api/loginstaff.js
 
 const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const pool = new Pool({
@@ -24,16 +25,21 @@ module.exports = async (req, res) => {
       const staffQuery = `
         SELECT *
         FROM admins
-        WHERE staff_username = $1 AND staff_password = $2
+        WHERE staff_username = $1
       `;
 
-      const result = await client.query(staffQuery, [staff_username, staff_password]);
+      const result = await client.query(staffQuery, [staff_username]);
 
       if (result.rows.length === 0) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const staff = result.rows[0];
+      const isMatch = await bcrypt.compare(staff_password, staff.staff_password);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
 
       const token = jwt.sign(
         { 
