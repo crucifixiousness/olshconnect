@@ -45,7 +45,7 @@ const Signup = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:4000/login/staff', credentials);
+      const response = await axios.post('/api/loginstaff', credentials);
       const { token, user } = response.data;
   
       // Store complete user data in localStorage
