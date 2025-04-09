@@ -1,6 +1,7 @@
 // api/updatestudentprofile.js
 
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,25 +10,44 @@ const pool = new Pool({
   },
 });
 
+const authenticateToken = (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    throw new Error('No token provided');
+  }
+
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
 module.exports = async (req, res) => {
   if (req.method === 'PUT') {
-    const { id } = req.user;
-    const {
-      firstName,
-      middleName,
-      lastName,
-      suffix,
-      religion,
-      email,
-      number,
-      street_text,
-      guardianName,
-      guardianContactNo,
-    } = req.body;
-
+    let client;
     try {
-      const client = await pool.connect();
+      // Verify token and get user data
+      const decoded = authenticateToken(req, res);
+      req.user = decoded;
+      const { id } = req.user;
 
+      console.log('Updating profile for user:', id); // Debug log
+      console.log('Update data:', req.body); // Debug log
+
+      const {
+        firstName,
+        middleName,
+        lastName,
+        suffix,
+        religion,
+        email,
+        number,
+        street_text,
+        guardianName,
+        guardianContactNo,
+      } = req.body;
+
+      client = await pool.connect();
+      
       const updateFields = [];
       const updateValues = [];
       let paramCount = 1;
@@ -116,14 +136,29 @@ module.exports = async (req, res) => {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).send("Student not found");
+        return res.status(404).json({ error: "Student not found" });
       }
 
       res.json(result.rows[0]);
-      client.release();
     } catch (error) {
-      console.error("Error updating student profile:", error);
-      res.status(500).send("Server error");
+      console.error("Detailed error:", {
+        message: error.message,
+        stack: error.stack,
+        type: error.name
+      });
+
+      if (error.message === 'No token provided' || error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ error: 'Authentication failed' });
+      }
+
+      res.status(500).json({ 
+        error: "Server error", 
+        details: error.message 
+      });
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
