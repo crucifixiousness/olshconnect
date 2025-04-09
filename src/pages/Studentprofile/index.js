@@ -109,7 +109,7 @@ const StudentProfile = () => {
   
   const fetchStudentData = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:4000/student/profile", {
+      const response = await axios.get("/api/studentprofile", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStudentData(response.data);
@@ -231,7 +231,7 @@ const StudentProfile = () => {
         suffix: formData.suffix || null, // Explicitly set null if empty
       };
 
-      const response = await axios.put("http://localhost:4000/student/profile", dataToSubmit, {
+      const response = await axios.put("/api/updatestudentprofile", dataToSubmit, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStudentData(response.data);
@@ -267,7 +267,7 @@ const StudentProfile = () => {
           });
   
           // Remove hardcoded values since they're now part of formDataa
-          const response = await axios.put("http://localhost:4000/enroll", formDataToSend, {
+          const response = await axios.put("/api/enroll", formDataToSend, {
               headers: { 
                   "Content-Type": "multipart/form-data", 
                   Authorization: `Bearer ${token}` 
