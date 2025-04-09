@@ -1,6 +1,7 @@
 // api/studentprofile.js
 
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,11 +10,29 @@ const pool = new Pool({
   },
 });
 
+const authenticateToken = (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    throw new Error('No token provided');
+  }
+
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
 module.exports = async (req, res) => {
   if (req.method === 'GET') {
+    let client;
     try {
-      const client = await pool.connect();
+      // Verify token first
+      const decoded = authenticateToken(req, res);
+      req.user = decoded;
+
+      client = await pool.connect();
       const { id } = req.user;
+
+      console.log('User ID:', id); // Debug log
 
       // Get student basic info
       const studentResult = await client.query(
@@ -69,8 +88,24 @@ module.exports = async (req, res) => {
       res.json(studentData);
       client.release();
     } catch (error) {
-      console.error("Error fetching student profile:", error);
-      res.status(500).send("Server error");
+      console.error("Detailed error:", {
+        message: error.message,
+        stack: error.stack,
+        type: error.name
+      });
+      
+      if (error.message === 'No token provided' || error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ error: 'Authentication failed' });
+      }
+      
+      res.status(500).json({ 
+        error: "Server error", 
+        details: error.message 
+      });
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
