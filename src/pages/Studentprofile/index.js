@@ -110,13 +110,24 @@ const StudentProfile = () => {
   const fetchStudentData = useCallback(async () => {
     try {
       const response = await axios.get("/api/studentprofile", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
       setStudentData(response.data);
       setFormData(response.data);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching student data:", error);
+      console.error("Error fetching student data:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      setStatusMessage({ 
+        message: `Failed to load profile: ${error.response?.data?.error || error.message}`, 
+        type: "error" 
+      });
       setLoading(false);
     }
   }, [token]);
