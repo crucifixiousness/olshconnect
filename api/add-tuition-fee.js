@@ -10,6 +10,7 @@ const pool = new Pool({
 
 module.exports = async (req, res) => {
   if (req.method === 'POST') {
+    let client;
     try {
       const {
         program_id,
@@ -23,20 +24,22 @@ module.exports = async (req, res) => {
 
       const academic_year = new Date().getFullYear() + "-" + (new Date().getFullYear() + 1);
 
+      client = await pool.connect();
+
       // Check if fee already exists
-      const [existingFee] = await pool.query(
+      const existingFee = await client.query(
         `SELECT fee_id FROM tuition_fees 
          WHERE program_id = $1 AND year_level = $2 AND semester = $3 AND academic_year = $4`,
         [program_id, yearLevel, semester, academic_year]
       );
 
-      if (existingFee.length > 0) {
+      if (existingFee.rows.length > 0) {
         return res.status(400).json({ 
           error: "Tuition fee already exists for this program, year level, and semester" 
         });
       }
 
-      await pool.query(
+      await client.query(
         `INSERT INTO tuition_fees (
           program_id, year_level, semester, tuition_amount, 
           misc_fees, lab_fees, other_fees, academic_year
@@ -47,7 +50,11 @@ module.exports = async (req, res) => {
       res.status(201).json({ message: "Tuition fee added successfully" });
     } catch (error) {
       console.error("Error adding tuition fee:", error);
-      res.status(500).json({ error: "Failed to add tuition fee" });
+      res.status(500).json({ error: "Failed to add tuition fee", details: error.message });
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
