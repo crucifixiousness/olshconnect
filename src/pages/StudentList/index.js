@@ -15,7 +15,7 @@ const StudentList  = () => {
   const [showCourseBy, setCourseBy] = useState('')
 
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="student-list">
       <div className="card shadow border-0 p-3 mt-1">
           <h3 className="hd mt-2 pb-0">Student List</h3>      
       </div>
@@ -33,7 +33,8 @@ const StudentList  = () => {
                           value={showBy}
                           onChange={(e)=>setshowBy(e.target.value)}
                           displayEmpty
-                          inputProps={{ 'aria-label': 'Without label' }}
+                          inputProps={{ 'aria-label': 'Show by filter' }}
+                          data-testid="show-by-select"
                           labelId="demo-simple-select-label"
                           className='w-100'
                         >
@@ -53,7 +54,8 @@ const StudentList  = () => {
                         value={showCourseBy}
                         onChange={(e)=>setCourseBy(e.target.value)}
                         displayEmpty
-                        inputProps={{ 'aria-label': 'Without label' }}
+                        inputProps={{ 'aria-label': 'Program filter' }}
+                        data-testid="program-select"
                         labelId="demo-simple-select-label"
                         className='w-100'
                       >
@@ -71,14 +73,14 @@ const StudentList  = () => {
               </div>
 
               <div className='table-responsive mt-3'>
-                  <table className='table table-bordered v-align'>
+                  <table className='table table-bordered v-align' data-testid="student-table">
                         <thead className='thead-dark'>
                             <tr>
-                                <th>STUDENT NAME</th>
-                                <th>YEAR LEVEL</th>
-                                <th>PROGRAM</th>
-                                <th>SEX</th>
-                                <th>ACTION</th>
+                                <th data-testid="header-student-name">STUDENT NAME</th>
+                                <th data-testid="header-year-level">YEAR LEVEL</th>
+                                <th data-testid="header-program">PROGRAM</th>
+                                <th data-testid="header-sex">SEX</th>
+                                <th data-testid="header-action">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -89,9 +91,9 @@ const StudentList  = () => {
                                 <td>Male</td>
                                 <td className='action'>
                                     <div className='actions d-flex align-items-center'>
-                                        <Button className="secondary" color="secondary"><FaEye/></Button>
-                                        <Button className="success" color="success">< FaPencilAlt/></Button>
-                                        <Button className="error" color="error"><MdDelete/></Button>
+                                        <Button className="secondary" color="secondary" data-testid="view-button"><FaEye/></Button>
+                                        <Button className="success" color="success" data-testid="edit-button"><FaPencilAlt/></Button>
+                                        <Button className="error" color="error" data-testid="delete-button"><MdDelete/></Button>
                                     </div>
                                 </td>
                             </tr>

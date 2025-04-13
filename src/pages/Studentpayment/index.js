@@ -55,7 +55,7 @@ const StudentPayment = () => {
   }
 
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="student-payment">
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="hd mt-2 pb-0">
           Payment Information
@@ -65,7 +65,7 @@ const StudentPayment = () => {
       <div className="card shadow border-0 p-3 mt-3">
         <div className="mb-3">
           <h4 className="hd">Payment Summary</h4>
-          <Paper elevation={0} className="p-3 bg-light">
+          <Paper elevation={0} className="p-3 bg-light" data-testid="payment-summary">
             <div className="row">
               <div className="col-md-6">
                 <h5>Total Balance: ₱{totalBalance.toFixed(2)}</h5>
@@ -86,14 +86,14 @@ const StudentPayment = () => {
         </div>
 
         <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align">
+          <table className="table table-bordered v-align" data-testid="payment-table">
             <thead className="thead-dark">
               <tr>
-                <th>Description</th>
-                <th>Due Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th data-testid="header-description">Description</th>
+                <th data-testid="header-due-date">Due Date</th>
+                <th data-testid="header-amount">Amount</th>
+                <th data-testid="header-status">Status</th>
+                <th data-testid="header-action">Action</th>
               </tr>
             </thead>
             <tbody>

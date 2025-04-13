@@ -16,7 +16,7 @@ const StudentCourses = () => {
   }, [context]);
 
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="student-courses">
       <div className="card shadow border-0 p-3 mt-1">      
         <h3 className="hd mt-2 pb-0">My Courses</h3>
       </div>
@@ -25,13 +25,13 @@ const StudentCourses = () => {
       <div className="card shadow border-0 p-3 mt-1">
         {/* Course Table */}
         <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align">
+          <table className="table table-bordered v-align" data-testid="courses-table">
             <thead className="thead-dark">
               <tr>
-                <th>COURSE TITLE</th>
-                <th>CODE</th>
-                <th>UNIT/S</th>
-                <th>PRE-REQUISITE</th>
+                <th data-testid="header-course-title">COURSE TITLE</th>
+                <th data-testid="header-code">CODE</th>
+                <th data-testid="header-units">UNIT/S</th>
+                <th data-testid="header-prerequisite">PRE-REQUISITE</th>
               </tr>
             </thead>
             <tbody>

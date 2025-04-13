@@ -262,7 +262,7 @@ const StudentProfile = () => {
       
       if (missingFields.length > 0) {
         setStatusMessage({ 
-          message: `Please fill in all required fields: ${missingFields.join(', ')}`, 
+          message: "Please fill in all required fields", 
           type: "error" 
         });
         setIsVisible(true);
@@ -342,10 +342,10 @@ const StudentProfile = () => {
   }
 
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="student-profile">
       <ThemeProvider theme={theme}>
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Stepper activeStep={activeStep} alternativeLabel>
+          <Stepper activeStep={activeStep} alternativeLabel data-testid="enrollment-stepper">
             {steps.map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -356,7 +356,13 @@ const StudentProfile = () => {
       </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
         <h3 className="hd mt-2 pb-0" style={{ margin: 0 }}>Student Profile</h3>
-        <Button variant="contained" className='enrollbut' color="primary" onClick={handleOpenEnrollment}>
+        <Button 
+          variant="contained" 
+          className='enrollbut' 
+          color="primary" 
+          onClick={handleOpenEnrollment}
+          data-testid="enroll-button"
+        >
           <FaSchool/>Enroll Now!
         </Button>
       </div>
@@ -365,13 +371,15 @@ const StudentProfile = () => {
           variant="contained" 
           color="primary" 
           onClick={handleOpen} 
-          className="edit-profile-button" 
-          style={{ backgroundColor: '#c70202', color: 'white' }} // Adding background color here
+          className="edit-profile-button"
+          data-testid="edit-profile-button"
+          style={{ backgroundColor: '#c70202', color: 'white' }}
         >
           <FaUserEdit style={{ fontSize: '18px', marginRight: '10px' }} />
           Edit Profile
         </Button>
       </div>
+
       <div className="card shadow border-0 p-3 mt-1">
         <div className="profile-container">
           <div className="profile-card">
@@ -509,7 +517,7 @@ const StudentProfile = () => {
       </div>
 
       {/* Modal for Editing Profile */}
-      <Modal open={open} onClose={handleClose}>
+      <Modal open={open} onClose={handleClose} data-testid="edit-profile-modal">
         <Box
           sx={{
             position: "relative",
@@ -547,7 +555,7 @@ const StudentProfile = () => {
             Edit Profile
           </h2>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} data-testid="edit-profile-form">
             <h4>Account</h4>
             <div className="mb-3">
               <Grid container spacing={2}>
@@ -657,6 +665,7 @@ const StudentProfile = () => {
                 name="religion"
                 value={formData.religion || ''}
                 onChange={handleInputChange}
+                data-testid="religion-input"
               />
             </div>
             <div className="mb-3">
@@ -668,6 +677,7 @@ const StudentProfile = () => {
                 type="email"
                 value={formData.email || ''}
                 onChange={handleInputChange}
+                inputProps={{ 'aria-label': 'Email' }}
               />
               <TextField
                 label="Contact Number"
@@ -710,14 +720,14 @@ const StudentProfile = () => {
               />
             </div>                    
             <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <Button variant="contained" color="primary" type="submit">
+              <Button variant="contained" color="primary" type="submit" data-testid="save-profile-button">
                 Save Changes
               </Button>
             </div>
           </form>
         </Box>
       </Modal>
-      <Modal open={openEnrollment} onClose={handleCloseEnrollment}>
+      <Modal open={openEnrollment} onClose={handleCloseEnrollment} data-testid="enrollment-modal">
         <Box sx={{
           position: 'absolute',
           top: '50%',
@@ -761,8 +771,21 @@ const StudentProfile = () => {
             Enrollment Form
           </Typography>
 
+          {/* Add error message display */}
+          {statusMessage.type === "error" && (
+            <div role="alert" className="error-message" style={{
+              color: '#d32f2f',
+              backgroundColor: '#ffebee',
+              padding: '10px',
+              borderRadius: '4px',
+              marginBottom: '20px'
+            }}>
+              {statusMessage.message}
+            </div>
+          )}
+
           {!isEnrolled ? (
-            <form onSubmit={handleEnroll}>
+            <form onSubmit={handleEnroll} data-testid="enrollment-form">
               <div className="registration-section">
                 <Typography variant="h6" className="section-title">
                   Program Selection
@@ -772,6 +795,8 @@ const StudentProfile = () => {
                     name="programs"
                     value={formDataa.programs}
                     onChange={handleInputChange}
+                    inputProps={{ 'aria-label': 'programs' }}
+                    data-testid="program-select"
                   >
                     <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
                     <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
@@ -792,6 +817,8 @@ const StudentProfile = () => {
                     name="yearLevel"
                     value={formDataa.yearLevel}
                     onChange={handleInputChange}
+                    inputProps={{ 'aria-label': 'yearLevel' }}
+                    data-testid="year-level-select"
                   >
                     <MenuItem value={1}>1st Year</MenuItem>
                     <MenuItem value={2}>2nd Year</MenuItem>
@@ -810,6 +837,8 @@ const StudentProfile = () => {
                     name="semester"
                     value={formDataa.semester || ''}
                     onChange={handleInputChange}
+                    inputProps={{ 'aria-label': 'semester' }}
+                    data-testid="semester-select"
                   >
                     <MenuItem value="1st">1st Semester</MenuItem>
                     <MenuItem value="2nd">2nd Semester</MenuItem>
@@ -852,6 +881,8 @@ const StudentProfile = () => {
                       name="idpic"
                       onChange={(e) => setFormDataa({ ...formDataa, idpic: e.target.files[0] })}
                       required
+                      aria-label="ID Picture (JPEG/JPG)"
+                      data-testid="id-pic-input"
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -863,6 +894,8 @@ const StudentProfile = () => {
                       name="birthCertificateDoc"
                       onChange={(e) => setFormDataa({ ...formDataa, birthCertificateDoc: e.target.files[0] })}
                       required
+                      aria-label="Birth Certificate (JPEG/JPG)"
+                      data-testid="birth-cert-input"
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -874,6 +907,8 @@ const StudentProfile = () => {
                       name="form137Doc"
                       onChange={(e) => setFormDataa({ ...formDataa, form137Doc: e.target.files[0] })}
                       required
+                      aria-label="Form 137 (JPEG/JPG)"
+                      data-testid="form137-input"
                     />
                   </Grid>
                 </Grid>
@@ -892,6 +927,7 @@ const StudentProfile = () => {
                   height: '45px',
                   fontWeight: 'bold'
                 }}
+                data-testid="submit-enrollment-button"
               >
                 Submit Enrollment
               </Button>
