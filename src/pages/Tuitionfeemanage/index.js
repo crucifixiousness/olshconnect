@@ -35,7 +35,7 @@ const TuitionManagement = () => {
 
   const fetchPrograms = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/programs');
+      const response = await axios.get('/api/programs');
       setPrograms(response.data);
     } catch (error) {
       console.error('Error fetching programs:', error);
