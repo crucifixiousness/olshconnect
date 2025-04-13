@@ -71,7 +71,7 @@ const AssignCourses = () => {
       await fetchInstructors();
       
       // Fetch existing assignment data
-      const response = await axios.get(`http://localhost:4000/program-course/assignment/${course.pc_id}`);
+      const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
       const assignmentData = response.data;
       
       if (assignmentData) {
@@ -106,7 +106,7 @@ const AssignCourses = () => {
   const fetchInstructors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:4000/instructors');
+      const response = await axios.get(`/api/instructor-courses?staff_id=${staff_id}`);
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -171,7 +171,7 @@ const AssignCourses = () => {
     if (program_id) {
       const fetchProgramName = async () => {
         try {
-          const response = await axios.get(`http://localhost:4000/api/programs/${program_id}`);
+          const response = await axios.get(`/api/program/${program_id}`);
           setProgramName(response.data.program_name);
         } catch (error) {
           console.error("Error fetching program name:", error);
@@ -185,7 +185,7 @@ const AssignCourses = () => {
   const fetchAssignedCourses = useCallback(async () => {
     if (!program_id) return;
     try {
-      const response = await axios.get(`http://localhost:4000/program-course/${program_id}`);
+      const response = await axios.get(`/api/program-courses?program_id=value`);
       setAssignedCourses(response.data);
     } catch (error) {
       console.error("Error fetching assigned courses:", error);
@@ -208,7 +208,7 @@ const AssignCourses = () => {
   // Fetch all available courses
   const fetchCourses = async () => {
     try {
-      const response = await axios.get("http://localhost:4000/courses");
+      const response = await axios.get("/api/courses");
       setCourses(response.data);
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -241,7 +241,7 @@ const AssignCourses = () => {
     }
   
     try {
-      const response = await axios.post("http://localhost:4000/program-course", {
+      const response = await axios.post("/api/program-course", {
         program_id: program_id,
         course_code: newAssignment.course_code,
         course_name: newAssignment.course_name,
@@ -288,7 +288,7 @@ const AssignCourses = () => {
     }
   
     try {
-      await axios.put(`http://localhost:4000/program-course/assign-instructor`, {
+      await axios.put(`/api/assign-instructor`, {
         course_id: selectedCourse.pc_id, // Make sure you're using the correct ID field
         instructor_id: selectedInstructor,
         section: selectedSection,
