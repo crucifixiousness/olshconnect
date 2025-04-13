@@ -804,7 +804,7 @@ const Homepage = () => {
                     <li>Email: olshco.acesschools.ph</li>
                     <li>Tel. No.: 0956-2774029</li>
                     <li>2024 by OUR LADY OF THE SACRED HEART COLLEGE OF GUIMBA, INC..
-                    Created by BSIT-3B Von Mamaid, Dianne Paderan, Aileen Rigor</li>
+                    Created by BSIT-3B Von Mamaid, Dianne Paderan, Aileen Rigor, Lorence Gamboa</li>
                 </ul>
             </footer>
     </>
