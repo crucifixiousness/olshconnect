@@ -49,7 +49,7 @@ const TuitionManagement = () => {
 
   const fetchTuitionFees = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/tuition-fees');
+      const response = await axios.get('/api/tuition-fees');
       setTuitionFees(response.data);
       setLoading(false);
     } catch (error) {
@@ -65,7 +65,7 @@ const TuitionManagement = () => {
       const token = localStorage.getItem('token');
       
       // Add token to request headers
-      await axios.post('http://localhost:4000/tuition-fees', formData, {
+      await axios.post('/api/add-tuition-fee', formData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
