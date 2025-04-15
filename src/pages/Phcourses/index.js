@@ -43,6 +43,7 @@ const AssignCourses = () => {
   //eslint-disable-next-line
   const [courses, setCourses] = useState([]); // Store available courses
   const [program_id, setProgramId] = useState(null);
+  const [staff_id, setStaffId] = useState(null);
   const [program_name, setProgramName] = useState("");
   const [searchParams] = useSearchParams();
   const yearLevel = searchParams.get('year');
@@ -103,10 +104,11 @@ const AssignCourses = () => {
   };
 
   // Add this function to fetch instructors
-  const fetchInstructors = async () => {
+  // Wrap fetchInstructors in useCallback
+  const fetchInstructors = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/instructor-courses?staff_id=${staff_id}`);
+      const response = await axios.get(`/api/instructor-courses${staff_id ? `?staff_id=${staff_id}` : ''}`);
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -118,11 +120,12 @@ const AssignCourses = () => {
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [staff_id]); // Add staff_id as dependency
+  
+  // Update the useEffect
   useEffect(() => {
     fetchInstructors();
-  }, []);
+  }, [fetchInstructors]); // Add fetchInstructors as dependency
 
   // Modify your filteredCourses logic to include semester filtering
   const filteredCourses = assignedCourses.filter(course => {
@@ -157,12 +160,18 @@ const AssignCourses = () => {
   // Fetch logged-in user details (assuming it's stored in localStorage)
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
+    const storedStaffId = localStorage.getItem("staff_id"); // Add this line
+    
     if (storedProgramId) {
       const programId = parseInt(storedProgramId, 10);
-      if (!isNaN(programId)) {  // Add this check
+      if (!isNaN(programId)) {
         setProgramId(programId);
         setProgramName(programMapping[programId] || "Unknown");
       }
+    }
+
+    if (storedStaffId) { // Add this block
+      setStaffId(storedStaffId);
     }
   }, []);
   
