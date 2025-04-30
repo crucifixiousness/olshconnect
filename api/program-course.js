@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
         year_id = existingYear.rows[0].year_id;
       }
 
-      // 3. Create program course assignment
+      // 3. Create program course assignmentsdf
       await client.query(
         "INSERT INTO program_course (program_id, year_id, course_id, semester) VALUES ($1, $2, $3, $4)",
         [program_id, year_id, course_id, semester]
