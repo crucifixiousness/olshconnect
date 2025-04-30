@@ -43,6 +43,7 @@ const AssignCourses = () => {
   //eslint-disable-next-line
   const [courses, setCourses] = useState([]); // Store available courses
   const [program_id, setProgramId] = useState(null);
+  //eslint-disable-next-line
   const [staff_id, setStaffId] = useState(null);
   const [program_name, setProgramName] = useState("");
   const [searchParams] = useSearchParams();
@@ -108,7 +109,9 @@ const AssignCourses = () => {
   const fetchInstructors = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/instructor-courses${staff_id ? `?staff_id=${staff_id}` : ''}`);
+      // Get staff_id from state
+      const storedStaffId = localStorage.getItem('staff_id');
+      const response = await axios.get(`/api/instructor-courses?staff_id=${storedStaffId}`);
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -120,7 +123,7 @@ const AssignCourses = () => {
     } finally {
       setLoading(false);
     }
-  }, [staff_id]); // Add staff_id as dependency
+  }, []); // No need for staff_id dependency as we're getting it from localStorage
   
   // Update the useEffect
   useEffect(() => {
