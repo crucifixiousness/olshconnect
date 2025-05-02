@@ -179,7 +179,7 @@ const AssignCourses = () => {
   }, []);
   
   // Fetch program_name based on program_id
-  useEffect(() => {
+  /*useEffect(() => {
     if (program_id) {
       const fetchProgramName = async () => {
         try {
@@ -191,7 +191,7 @@ const AssignCourses = () => {
       };
       fetchProgramName();
     }
-  }, [program_id]);
+  }, [program_id]);*/
   
   // First, wrap fetchAssignedCourses in useCallback
   const fetchAssignedCourses = useCallback(async () => {
