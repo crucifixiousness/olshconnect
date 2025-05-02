@@ -197,7 +197,7 @@ const AssignCourses = () => {
   const fetchAssignedCourses = useCallback(async () => {
     if (!program_id) return;
     try {
-      const response = await axios.get(`/api/program-courses?program_id=value`);
+      const response = await axios.get(`/api/program-courses?program_id=${program_id}`); // Fixed: Using actual program_id
       setAssignedCourses(response.data);
     } catch (error) {
       console.error("Error fetching assigned courses:", error);
