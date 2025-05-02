@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Stepper, Step, StepLabel, Paper } from '@mui/material';
+import { Stepper, Step, StepLabel, Paper, CircularProgress } from '@mui/material';
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
@@ -337,8 +337,15 @@ const StudentProfile = () => {
   };
   
 
+  // Replace the current loading state
   if (loading) {
-    return <p>Loading your profile...</p>;
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
   }
 
   return (
