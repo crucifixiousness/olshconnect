@@ -111,8 +111,10 @@ const ProgramHeadDashboard = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-        <CircularProgress />
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
       </div>
     );
   }
