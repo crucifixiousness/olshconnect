@@ -1,19 +1,32 @@
 import { useContext, useEffect, useState } from 'react';
-
+import { CircularProgress } from '@mui/material';
 import { MyContext } from "../../App";
 
 const StudentCourses = () => {
+  const [loading, setLoading] = useState(true);
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
   const { user } = useContext(MyContext);
-/* eslint-disable no-unused-vars */
+  /* eslint-disable no-unused-vars */
   const context = useContext(MyContext);
 
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
+    // Simulate loading time
+    setTimeout(() => setLoading(false), 1000);
   }, [context]);
+
+  if (loading) {
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="right-content w-100" data-testid="student-courses">
