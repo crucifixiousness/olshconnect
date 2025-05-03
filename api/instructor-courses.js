@@ -16,13 +16,13 @@ module.exports = async (req, res) => {
       client = await pool.connect();
       const result = await client.query(
         `SELECT 
-          s.staff_id,
-          s.full_name,
-          s.role
-         FROM staff s
-         WHERE s.role = 'instructor' 
-         AND s.program_id = $1
-         ORDER BY s.full_name ASC`,
+          staff_id,
+          full_name,
+          role
+         FROM admins
+         WHERE role = 'instructor' 
+         AND program_id = $1
+         ORDER BY full_name ASC`,
         [program_id]
       );
       
