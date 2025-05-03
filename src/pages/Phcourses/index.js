@@ -123,10 +123,12 @@ const AssignCourses = () => {
     }
   }, [program_id]); // Add program_id as dependency
   
-  // Update the useEffect
+  // Update the useEffect for fetchInstructors
   useEffect(() => {
-    fetchInstructors();
-  }, [fetchInstructors]); // Add fetchInstructors as dependency
+    if (program_id) { // Only fetch if program_id exists
+      fetchInstructors();
+    }
+  }, [fetchInstructors, program_id]);
 
   // Modify your filteredCourses logic to include semester filtering
   const filteredCourses = assignedCourses.filter(course => {
@@ -708,6 +710,7 @@ const AssignCourses = () => {
               <Typography variant="h6" className="section-title">
                 Instructor Assignment
               </Typography>
+              // Update the instructor Select component in the modal
               <FormControl fullWidth margin="normal">
                 <InputLabel>Select Instructor</InputLabel>
                 <Select
@@ -716,8 +719,8 @@ const AssignCourses = () => {
                   disabled={loading}
                 >
                   {instructors.map((instructor) => (
-                    <MenuItem key={instructor.id} value={instructor.id}>
-                      {instructor.name}
+                    <MenuItem key={instructor.staff_id} value={instructor.staff_id}>
+                      {instructor.full_name}
                     </MenuItem>
                   ))}
                 </Select>
