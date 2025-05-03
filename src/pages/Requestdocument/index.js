@@ -1,9 +1,10 @@
 import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { FaCirclePlus } from "react-icons/fa6";
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, CircularProgress } from '@mui/material';
 import { useCallback } from 'react';
+import { MyContext } from '../../App';
 
 const RequestDocument = () => {
   // eslint-disable-next-line
@@ -13,6 +14,16 @@ const RequestDocument = () => {
   const [page, setPage] = useState(1); // Pagination state
   const handleOpen = () => setShowRequestModal(true);
   const handleClose = () => setShowRequestModal(false);
+  const context = useContext(MyContext);
+  // eslint-disable-next-line
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    context.setIsHideComponents(false);
+    window.scrollTo(0, 0);
+    // Simulate loading time
+    setTimeout(() => setLoading(false), 1000);
+  }, [context]);
   
   // Add safe parsing of user data
   const user = (() => {
@@ -115,7 +126,15 @@ const RequestDocument = () => {
       });
     }
   };
-
+  if (loading) {
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
+  }
   // Add this component before the closing div of your return statement
   return (
     <div className="right-content w-100">
