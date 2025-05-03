@@ -108,9 +108,8 @@ const AssignCourses = () => {
   const fetchInstructors = useCallback(async () => {
     try {
       setLoading(true);
-      // Get staff_id from state
-      const storedStaffId = localStorage.getItem('staff_id');
-      const response = await axios.get(`/api/instructor-courses?staff_id=${storedStaffId}`);
+      // Get program_id from state
+      const response = await axios.get(`/api/instructor-courses?program_id=${program_id}`);
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -122,7 +121,7 @@ const AssignCourses = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // No need for staff_id dependency as we're getting it from localStorage
+  }, [program_id]); // Add program_id as dependency
   
   // Update the useEffect
   useEffect(() => {
