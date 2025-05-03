@@ -1,15 +1,28 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { MyContext } from "../../App";
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 
 const AcademicRecords = () => {
+  const [loading, setLoading] = useState(true);
   const { user } = useContext(MyContext);
   const context = useContext(MyContext);
 
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
+    // Simulate loading time
+    setTimeout(() => setLoading(false), 1000);
   }, [context]);
+
+  if (loading) {
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="right-content w-100">
