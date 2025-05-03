@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button, Modal, TextField, FormControl, InputLabel, Select, MenuItem, Pagination, Snackbar, Alert, Box, Typography, Grid, CircularProgress } from "@mui/material";
+import { Button, Modal, TextField, FormControl, InputLabel, Select, MenuItem, Pagination, Snackbar, Alert, Box, Typography, Grid } from "@mui/material";
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { FaCirclePlus } from "react-icons/fa6";
@@ -178,7 +178,7 @@ const AssignCourses = () => {
   }, []);
   
   // Fetch program_name based on program_id
-  /*useEffect(() => {
+/*  useEffect(() => {
     if (program_id) {
       const fetchProgramName = async () => {
         try {
@@ -326,17 +326,9 @@ const AssignCourses = () => {
     }
   };
 
-  // Update the loading check in the return statement
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
-        </div>
-      </div>
-    );
-  }
+  // ... existing imports and state ...
 
+  // Add this component before the closing div of your return statement
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
