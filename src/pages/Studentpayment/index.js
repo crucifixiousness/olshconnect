@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Paper, 
   Button,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import axios from 'axios';
 
@@ -51,7 +52,13 @@ const StudentPayment = () => {
   };
 
   if (loading) {
-    return <div>Loading payment information...</div>;
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
   }
 
   return (
