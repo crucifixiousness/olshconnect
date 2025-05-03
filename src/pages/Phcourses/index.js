@@ -710,7 +710,6 @@ const AssignCourses = () => {
               <Typography variant="h6" className="section-title">
                 Instructor Assignment
               </Typography>
-              // Update the instructor Select component in the modal
               <FormControl fullWidth margin="normal">
                 <InputLabel>Select Instructor</InputLabel>
                 <Select
