@@ -44,15 +44,16 @@ const Staff = () => {
   const [isCreated, setIsCreated] = useState(false);
 
   // Add new staff
+  // Modify handleAddStaff function
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setIsLoading(true);
   
     const { full_name, staff_username, staff_password, role, program_id } = newStaff;
   
-    // Ensure program is selected when role is "Program Head"
-    if (role === "program head" && !program_id) {
-      alert("Please select a program for the Program Head.");
+    // Ensure program is selected when role is Program Head or Instructor
+    if ((role === "program head" || role === "instructor") && !program_id) {
+      alert(`Please select a program for the ${role === "program head" ? "Program Head" : "Instructor"}.`);
       setIsLoading(false);
       return;
     }
@@ -63,7 +64,8 @@ const Staff = () => {
       staff_username,
       staff_password,
       role,
-      program_id: role === "program head" ? program_id : null  // Set null for non-program head roles
+      // Set program_id for both program head and instructor, null for others
+      program_id: (role === "program head" || role === "instructor") ? program_id : null
     };
   
     try {
@@ -96,6 +98,7 @@ const Staff = () => {
   };
   
 
+  // Update the form JSX part
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
@@ -184,7 +187,8 @@ const Staff = () => {
                 <MenuItem value="program head">program head</MenuItem>
               </Select>
             </FormControl>
-            {newStaff.role === "program head" && (
+            {/* Show program selection for both program head and instructor */}
+            {(newStaff.role === "program head" || newStaff.role === "instructor") && (
               <FormControl fullWidth margin="normal">
                 <InputLabel id="program-label">Program</InputLabel>
                 <Select
