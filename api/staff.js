@@ -18,8 +18,9 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Please fill in all fields." });
     }
 
-    if (role === "program head" && !program_id) {
-      return res.status(400).json({ error: "Program ID is required for Program Head role." });
+    // Update validation to include both program head and instructor
+    if ((role === "program head" || role === "instructor") && !program_id) {
+      return res.status(400).json({ error: `Program ID is required for ${role} role.` });
     }
 
     try {
@@ -38,7 +39,7 @@ module.exports = async (req, res) => {
       // Hash the password
       const hashedPassword = await bcrypt.hash(staff_password, 10);
 
-      // Insert new staff
+      // Update the condition in the query to include both roles
       const insertQuery = `
         INSERT INTO admins (full_name, staff_username, staff_password, role, program_id) 
         VALUES ($1, $2, $3, $4, $5)
@@ -49,7 +50,7 @@ module.exports = async (req, res) => {
         staff_username, 
         hashedPassword, 
         role,
-        role === "program head" ? program_id : null
+        (role === "program head" || role === "instructor") ? program_id : null
       ]);
 
       res.status(201).json({ message: "Staff added successfully!" });
