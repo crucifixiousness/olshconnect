@@ -298,10 +298,23 @@ const AssignCourses = () => {
       });
       return;
     }
+
+    // Validate time format and range
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    
+    if (end <= start) {
+      setSnackbar({
+        open: true,
+        message: "End time must be after start time",
+        severity: 'error'
+      });
+      return;
+    }
   
     try {
       await axios.put(`/api/assign-instructor`, {
-        course_id: selectedCourse.pc_id, // Make sure you're using the correct ID field
+        course_id: selectedCourse.pc_id,
         instructor_id: selectedInstructor,
         section: selectedSection,
         day: selectedDay,
@@ -316,7 +329,7 @@ const AssignCourses = () => {
       });
   
       handleEditClose();
-      fetchAssignedCourses(); // Refresh the course list
+      fetchAssignedCourses();
     } catch (error) {
       console.error("Error assigning instructor:", error);
       setSnackbar({
@@ -710,6 +723,7 @@ const AssignCourses = () => {
               <Typography variant="h6" className="section-title">
                 Instructor Assignment
               </Typography>
+              // Update the instructor Select component in the modal
               <FormControl fullWidth margin="normal">
                 <InputLabel>Select Instructor</InputLabel>
                 <Select
