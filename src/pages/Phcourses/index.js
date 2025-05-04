@@ -3,7 +3,7 @@ import { Button, Modal, TextField, FormControl, InputLabel, Select, MenuItem, Pa
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { FaCirclePlus } from "react-icons/fa6";
-import { FaEdit, FaTrash } from "react-icons/fa"; 
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa"; 
 
 const programMapping = {
   1: "BSIT",
@@ -43,6 +43,7 @@ const AssignCourses = () => {
   //eslint-disable-next-line
   const [courses, setCourses] = useState([]); // Store available courses
   const [program_id, setProgramId] = useState(null);
+  //eslint-disable-next-line
   const [staff_id, setStaffId] = useState(null);
   const [program_name, setProgramName] = useState("");
   const [searchParams] = useSearchParams();
@@ -61,6 +62,29 @@ const AssignCourses = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [instructors, setInstructors] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState('');
+
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedViewCourse, setSelectedViewCourse] = useState(null);
+
+  const handleViewOpen = async (course) => {
+    try {
+      const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
+      setSelectedViewCourse({ ...course, ...response.data });
+      setShowViewModal(true);
+    } catch (error) {
+      console.error('Error fetching course details:', error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch course details",
+        severity: 'error'
+      });
+    }
+  };
+  
+  const handleViewClose = () => {
+    setShowViewModal(false);
+    setSelectedViewCourse(null);
+  };
 
   // Update the handleEditOpen function
   const handleEditOpen = async (course) => {
@@ -418,6 +442,14 @@ const AssignCourses = () => {
                         >
                           <FaEdit />
                         </Button>
+                        <Button 
+                          className="info" 
+                          color="info" 
+                          size="small"
+                          onClick={() => handleViewOpen(assignment)}
+                        >
+                          <FaEye />
+                        </Button>
                         <Button className="error" color="error" size="small">
                           <FaTrash />
                         </Button>
@@ -447,6 +479,70 @@ const AssignCourses = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        open={showViewModal}
+        onClose={handleViewClose}
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "600px",
+          backgroundColor: "white",
+          borderRadius: "10px",
+          padding: "30px",
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        }}>
+          <Typography variant="h5" sx={{ mb: 3, color: '#c70202', fontWeight: 'bold' }}>
+            Course Details
+          </Typography>
+
+          {selectedViewCourse && (
+            <div>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" fontWeight="bold">Course Information</Typography>
+                  <Typography>Code: {selectedViewCourse.course_code}</Typography>
+                  <Typography>Name: {selectedViewCourse.course_name}</Typography>
+                  <Typography>Units: {selectedViewCourse.units}</Typography>
+                  <Typography>Semester: {selectedViewCourse.semester}</Typography>
+                </Grid>
+                
+                <Grid item xs={12} sx={{ mt: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">Assignment Details</Typography>
+                  <Typography>
+                    Instructor: {selectedViewCourse.instructor_name || 'Not assigned'}
+                  </Typography>
+                  <Typography>
+                    Block/Section: {selectedViewCourse.section || 'Not assigned'}
+                  </Typography>
+                  <Typography>
+                    Schedule: {selectedViewCourse.day && selectedViewCourse.start_time ? 
+                      `${selectedViewCourse.day} (${selectedViewCourse.start_time} - ${selectedViewCourse.end_time})` : 
+                      'Not scheduled'}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Button 
+                onClick={handleViewClose}
+                variant="contained"
+                fullWidth
+                sx={{ 
+                  mt: 3,
+                  bgcolor: '#c70202',
+                  '&:hover': { bgcolor: '#a00000' }
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          )}
+        </Box>
+      </Modal>
 
       {/* Modal for Assigning a Course */}
       <Modal
@@ -723,7 +819,6 @@ const AssignCourses = () => {
               <Typography variant="h6" className="section-title">
                 Instructor Assignment
               </Typography>
-              // Update the instructor Select component in the modal
               <FormControl fullWidth margin="normal">
                 <InputLabel>Select Instructor</InputLabel>
                 <Select
