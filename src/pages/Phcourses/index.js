@@ -68,8 +68,7 @@ const AssignCourses = () => {
 
   const handleViewOpen = async (course) => {
     try {
-      // Fix: Change the endpoint to match the backend route
-      const response = await axios.get(`/api/course-assignment?pc_id=${course.pc_id}`);
+      const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
       setSelectedViewCourse({ ...course, ...response.data });
       setShowViewModal(true);
     } catch (error) {
