@@ -15,7 +15,31 @@ module.exports = async (req, res) => {
     try {
       client = await pool.connect();
       
-      // First check if the assignment already exists
+      // Check for schedule conflicts
+      const conflictCheck = await client.query(
+        `SELECT ca.*, c.course_name 
+         FROM course_assignments ca
+         JOIN program_course pc ON ca.pc_id = pc.pc_id
+         JOIN course c ON pc.course_id = c.course_id
+         WHERE ca.staff_id = $1 
+         AND ca.day = $2
+         AND ca.pc_id != $3
+         AND (
+           (ca.start_time <= $4 AND ca.end_time > $4)
+           OR (ca.start_time < $5 AND ca.end_time >= $5)
+           OR (ca.start_time >= $4 AND ca.end_time <= $5)
+         )`,
+        [instructor_id, day, course_id, start_time, end_time]
+      );
+
+      if (conflictCheck.rows.length > 0) {
+        const conflict = conflictCheck.rows[0];
+        return res.status(400).json({
+          error: `Schedule conflict: Instructor already has ${conflict.course_name} from ${conflict.start_time} to ${conflict.end_time}`
+        });
+      }
+
+      // If no conflicts, proceed with assignment
       const existing = await client.query(
         `SELECT * FROM course_assignments 
          WHERE pc_id = $1`,
