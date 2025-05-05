@@ -68,20 +68,8 @@ const AssignCourses = () => {
 
   const handleViewOpen = async (course) => {
     try {
-      // Get the assignment details
-      const assignmentResponse = await axios.get(`/api/course-assignment/${course.pc_id}`);
-      const assignmentData = assignmentResponse.data;
-      
-      // Merge the data
-      setSelectedViewCourse({ 
-        ...course,
-        ...assignmentData,
-        instructor_name: assignmentData.instructor_name || 'Not assigned',
-        section: assignmentData.section || 'Not assigned',
-        day: assignmentData.day || '',
-        start_time: assignmentData.start_time || '',
-        end_time: assignmentData.end_time || ''
-      });
+      const response = await axios.get(`/api/view-course-assignment?pc_id=${course.pc_id}`);
+      setSelectedViewCourse(response.data);
       setShowViewModal(true);
     } catch (error) {
       console.error('Error fetching course details:', error);
