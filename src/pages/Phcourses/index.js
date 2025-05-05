@@ -68,21 +68,19 @@ const AssignCourses = () => {
 
   const handleViewOpen = async (course) => {
     try {
-      // Get course information and assignment details in parallel
-      const [courseResponse, assignmentResponse] = await Promise.all([
-        axios.get(`/api/course-info/${course.pc_id}`),
-        axios.get(`/api/assignment-info/${course.pc_id}`)
-      ]);
-
+      // Get the assignment details
+      const assignmentResponse = await axios.get(`/api/course-assignment/${course.pc_id}`);
+      const assignmentData = assignmentResponse.data;
+      
       // Merge the data
       setSelectedViewCourse({ 
-        ...courseResponse.data,
-        ...assignmentResponse.data,
-        instructor_name: assignmentResponse.data.instructor_name || 'Not assigned',
-        section: assignmentResponse.data.section || 'Not assigned',
-        day: assignmentResponse.data.day || '',
-        start_time: assignmentResponse.data.start_time || '',
-        end_time: assignmentResponse.data.end_time || ''
+        ...course,
+        ...assignmentData,
+        instructor_name: assignmentData.instructor_name || 'Not assigned',
+        section: assignmentData.section || 'Not assigned',
+        day: assignmentData.day || '',
+        start_time: assignmentData.start_time || '',
+        end_time: assignmentData.end_time || ''
       });
       setShowViewModal(true);
     } catch (error) {
