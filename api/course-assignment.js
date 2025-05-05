@@ -11,18 +11,29 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     let client;
     try {
-      const { pc_id } = req.query;
+      const pc_id = req.query.pc_id || req.params.pc_id; // Handle both query and path params
       
       client = await pool.connect();
       const result = await client.query(
-        `SELECT ca.*, a.staff_id, a.full_name as instructor_name,
-                pc.program_id, pc.year_level,
-                c.course_code, c.course_name, c.units
-         FROM course_assignments ca
+        `SELECT 
+          pc.pc_id,
+          pc.program_id,
+          pc.year_level,
+          pc.semester,
+          c.course_code,
+          c.course_name,
+          c.units,
+          ca.section,
+          ca.day,
+          ca.start_time,
+          ca.end_time,
+          a.staff_id,
+          a.full_name as instructor_name
+         FROM program_course pc
+         JOIN course c ON pc.course_id = c.course_id
+         LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
          LEFT JOIN admins a ON ca.staff_id = a.staff_id
-         LEFT JOIN program_course pc ON ca.pc_id = pc.pc_id
-         LEFT JOIN course c ON pc.course_id = c.course_id
-         WHERE ca.pc_id = $1`,
+         WHERE pc.pc_id = $1`,
         [pc_id]
       );
       
@@ -30,14 +41,14 @@ module.exports = async (req, res) => {
       const assignment = result.rows[0];
       if (assignment) {
         if (assignment.start_time) {
-          assignment.start_time = assignment.start_time.slice(0, 5); // Convert "HH:MM:SS" to "HH:MM"
+          assignment.start_time = assignment.start_time.slice(0, 5);
         }
         if (assignment.end_time) {
           assignment.end_time = assignment.end_time.slice(0, 5);
         }
       }
 
-      res.json(assignment || null);
+      res.json(assignment || {});
     } catch (error) {
       console.error("Error fetching course assignment:", error);
       res.status(500).json({ error: "Failed to fetch course assignment" });
