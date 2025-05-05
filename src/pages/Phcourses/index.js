@@ -352,7 +352,7 @@ const AssignCourses = () => {
     }
   
     try {
-      await axios.put(`/api/assign-instructor`, {
+      const response = await axios.put(`/api/assign-instructor`, {
         course_id: selectedCourse.pc_id,
         instructor_id: selectedInstructor,
         section: selectedSection,
@@ -360,6 +360,10 @@ const AssignCourses = () => {
         start_time: startTime,
         end_time: endTime
       });
+
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
   
       setSnackbar({
         open: true,
@@ -368,12 +372,12 @@ const AssignCourses = () => {
       });
   
       handleEditClose();
-      fetchAssignedCourses();
+      await fetchAssignedCourses(); // Added await to ensure data is refreshed
     } catch (error) {
       console.error("Error assigning instructor:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.error || "Failed to assign instructor",
+        message: error.response?.data?.error || error.message || "Failed to assign instructor",
         severity: 'error'
       });
     }
