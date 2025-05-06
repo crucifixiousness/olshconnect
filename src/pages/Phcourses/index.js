@@ -72,15 +72,17 @@ const AssignCourses = () => {
       const assignmentResponse = await axios.get(`/api/course-assignment/${course.pc_id}`);
       const assignmentData = assignmentResponse.data;
       
-      // Merge the data
+      // Log the data to check what we're receiving
+      console.log('Assignment Data:', assignmentData);
+      
+      // Merge the data without spreading assignmentData to avoid overwriting
       setSelectedViewCourse({ 
         ...course,
-        ...assignmentData,
-        instructor_name: assignmentData.instructor_name || 'Not assigned',
-        section: assignmentData.section || 'Not assigned',
-        day: assignmentData.day || '',
-        start_time: assignmentData.start_time || '',
-        end_time: assignmentData.end_time || ''
+        instructor_name: assignmentData?.full_name || 'Not assigned',
+        section: assignmentData?.section || 'Not assigned',
+        day: assignmentData?.day || '',
+        start_time: assignmentData?.start_time ? assignmentData.start_time : '',
+        end_time: assignmentData?.end_time ? assignmentData.end_time : ''
       });
       setShowViewModal(true);
     } catch (error) {
