@@ -68,18 +68,18 @@ const AssignCourses = () => {
 
   const handleViewOpen = async (course) => {
     try {
-      // Get the assignment details
       const assignmentResponse = await axios.get(`/api/course-assignment/${course.pc_id}`);
       const assignmentData = assignmentResponse.data;
       
-      // Merge the data
+      // Log for debugging
+      console.log('Course:', course);
+      console.log('Assignment Data:', assignmentData);
+      
+      // Merge the data without schedule information
       setSelectedViewCourse({ 
         ...course,
-        instructor_name: assignmentData.instructor_name,  // Backend already handles the 'Not assigned' fallback
-        section: assignmentData.section,                  // Backend already handles the 'Not assigned' fallback
-        day: assignmentData.day || '',
-        start_time: assignmentData.start_time || '',
-        end_time: assignmentData.end_time || ''
+        instructor_name: assignmentData.instructor_name || 'Not assigned',
+        section: assignmentData.section || 'Not assigned'
       });
       setShowViewModal(true);
     } catch (error) {
@@ -91,7 +91,7 @@ const AssignCourses = () => {
       });
     }
   };
-  
+
   const handleViewClose = () => {
     setShowViewModal(false);
     setSelectedViewCourse(null);
@@ -529,15 +529,10 @@ const AssignCourses = () => {
                 <Grid item xs={12} sx={{ mt: 2 }}>
                   <Typography variant="subtitle1" fontWeight="bold">Assignment Details</Typography>
                   <Typography>
-                    Instructor: {selectedViewCourse.instructor_name || 'Not assigned'}
+                    Instructor: {selectedViewCourse.instructor_name}
                   </Typography>
                   <Typography>
-                    Block/Section: {selectedViewCourse.section || 'Not assigned'}
-                  </Typography>
-                  <Typography>
-                    Schedule: {selectedViewCourse.day && selectedViewCourse.start_time ? 
-                      `${selectedViewCourse.day} (${selectedViewCourse.start_time} - ${selectedViewCourse.end_time})` : 
-                      'Not scheduled'}
+                    Block/Section: {selectedViewCourse.section}
                   </Typography>
                 </Grid>
               </Grid>
