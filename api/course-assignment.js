@@ -23,18 +23,22 @@ module.exports = async (req, res) => {
           c.course_code,
           c.course_name,
           c.units,
-          ca.section,
-          ca.day,
-          ca.start_time::varchar,
-          ca.end_time::varchar,
-          a.staff_id,
-          a.full_name as instructor_name
+          json_agg(json_build_object(
+            'section', COALESCE(ca.section, 'Not assigned'),
+            'instructor_name', COALESCE(a.full_name, 'Not assigned'),
+            'staff_id', a.staff_id,
+            'day', COALESCE(ca.day, 'Not assigned'),
+            'start_time', COALESCE(ca.start_time::varchar, 'Not assigned'),
+            'end_time', COALESCE(ca.end_time::varchar, 'Not assigned')
+          )) as schedules
         FROM program_course pc
         JOIN course c ON pc.course_id = c.course_id
         JOIN program_year py ON pc.year_id = py.year_id
         LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
         LEFT JOIN admins a ON ca.staff_id = a.staff_id
-        WHERE pc.pc_id = $1`;
+        WHERE pc.pc_id = $1
+        GROUP BY pc.pc_id, pc.program_id, py.year_level, pc.semester, 
+                 c.course_code, c.course_name, c.units`;
       
       const result = await client.query(query, [pc_id]);
       
@@ -42,11 +46,7 @@ module.exports = async (req, res) => {
         const data = result.rows[0];
         res.json({
           ...data,
-          instructor_name: data.instructor_name || 'Not assigned',
-          section: data.section || 'Not assigned',
-          day: data.day || 'Not assigned',
-          start_time: data.start_time || 'Not assigned',
-          end_time: data.end_time || 'Not assigned'
+          schedules: data.schedules || []
         });
       } else {
         res.status(404).json({ error: 'Course not found' });
