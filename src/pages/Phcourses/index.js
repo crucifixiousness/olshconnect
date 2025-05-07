@@ -68,25 +68,32 @@ const AssignCourses = () => {
 
   const handleViewOpen = async (course) => {
     try {
-      const assignmentResponse = await axios.get(`/api/course-assignment/${course.pc_id}`);
-      const assignmentData = assignmentResponse.data;
+      const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
+      const data = response.data;
       
       // Log for debugging
-      console.log('Course:', course);
-      console.log('Assignment Data:', assignmentData);
+      console.log('API Response:', data);
       
-      // Merge the data without schedule information
+      if (data.status) {
+        setSnackbar({
+          open: true,
+          message: `Course information ${data.status.course_info}, Assignment ${data.status.assignment_info}`,
+          severity: 'info'
+        });
+      }
+      
       setSelectedViewCourse({ 
         ...course,
-        instructor_name: assignmentData.instructor_name || 'Not assigned',
-        section: assignmentData.section || 'Not assigned'
+        ...data,  // This will include both course and assignment data
+        instructor_name: data.instructor_name,
+        section: data.section
       });
       setShowViewModal(true);
     } catch (error) {
-      console.error('Error fetching course details:', error);
+      console.error('Error fetching details:', error);
       setSnackbar({
         open: true,
-        message: "Failed to fetch course details",
+        message: error.response?.data?.error || "Failed to fetch course details",
         severity: 'error'
       });
     }
@@ -519,7 +526,12 @@ const AssignCourses = () => {
             <div>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" fontWeight="bold">Course Information</Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Course Information 
+                    {selectedViewCourse.status?.course_info === 'fetched' && 
+                      <span style={{ color: 'green', fontSize: '0.8em', marginLeft: '8px' }}>✓</span>
+                    }
+                  </Typography>
                   <Typography>Code: {selectedViewCourse.course_code}</Typography>
                   <Typography>Name: {selectedViewCourse.course_name}</Typography>
                   <Typography>Units: {selectedViewCourse.units}</Typography>
@@ -527,7 +539,12 @@ const AssignCourses = () => {
                 </Grid>
                 
                 <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">Assignment Details</Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Assignment Details
+                    {selectedViewCourse.status?.assignment_info === 'assigned' && 
+                      <span style={{ color: 'green', fontSize: '0.8em', marginLeft: '8px' }}>✓</span>
+                    }
+                  </Typography>
                   <Typography>
                     Instructor: {selectedViewCourse.instructor_name}
                   </Typography>
