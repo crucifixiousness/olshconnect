@@ -73,7 +73,7 @@ const AssignCourses = () => {
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${ampm}`;
+    return `${formattedHour}:${minutes.slice(0, 2)} ${ampm}`;
   };
 
   const handleViewOpen = async (course) => {
@@ -551,7 +551,7 @@ const AssignCourses = () => {
                             <TableCell>{schedule.instructor_name}</TableCell>
                             <TableCell>{schedule.section}</TableCell>
                             <TableCell>{schedule.day}</TableCell>
-                            <TableCell>{`${schedule.start_time} - ${schedule.end_time}`}</TableCell>
+                            <TableCell>{`${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
