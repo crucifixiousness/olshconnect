@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { FaCirclePlus } from "react-icons/fa6";
 import { FaEdit, FaTrash, FaEye } from "react-icons/fa"; 
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 const programMapping = {
   1: "BSIT",
@@ -524,18 +525,29 @@ const AssignCourses = () => {
                 </Grid>
                 
                 <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">Assigned Details</Typography>
-                  {selectedViewCourse.schedules && selectedViewCourse.schedules.map((schedule, index) => (
-                    <Box key={index} sx={{ mb: 2 }}>
-                      <Typography>Instructor: {schedule.instructor_name}</Typography>
-                      <Typography>Block/Section: {schedule.section}</Typography>
-                      <Typography>Day: {schedule.day}</Typography>
-                      <Typography>Time: {schedule.start_time} - {schedule.end_time}</Typography>
-                      {index < selectedViewCourse.schedules.length - 1 && (
-                        <Box sx={{ my: 1, borderBottom: '1px solid #eee' }} />
-                      )}
-                    </Box>
-                  ))}
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>Assigned Details</Typography>
+                  <TableContainer component={Paper} sx={{ maxHeight: 300 }}>
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Instructor</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Block/Section</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Day</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Time</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {selectedViewCourse.schedules && selectedViewCourse.schedules.map((schedule, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{schedule.instructor_name}</TableCell>
+                            <TableCell>{schedule.section}</TableCell>
+                            <TableCell>{schedule.day}</TableCell>
+                            <TableCell>{`${schedule.start_time} - ${schedule.end_time}`}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </Grid>
               </Grid>
 
