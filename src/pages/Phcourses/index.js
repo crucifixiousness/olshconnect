@@ -502,10 +502,7 @@ const AssignCourses = () => {
         </div>
       </div>
 
-      <Modal
-        open={showViewModal}
-        onClose={handleViewClose}
-      >
+      <Modal open={showViewModal} onClose={handleViewClose}>
         <Box sx={{
           position: 'absolute',
           top: '50%',
@@ -534,24 +531,11 @@ const AssignCourses = () => {
                 </Grid>
                 
                 <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">Assignment Details</Typography>
-                  <Typography>
-                    Instructor: {selectedViewCourse.instructor_name}
-                  </Typography>
-                  <Typography>
-                    Block/Section: {selectedViewCourse.section}
-                  </Typography>
-                </Grid>
-                
-                {/* Remove the comment syntax and fix the Schedule Details section */}
-                <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">Schedule Details</Typography>
-                  <Typography>
-                    Day: {selectedViewCourse.day}
-                  </Typography>
-                  <Typography>
-                    Time: {selectedViewCourse.start_time} - {selectedViewCourse.end_time}
-                  </Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">Assigned Instructors</Typography>
+                  <Typography>Instructor: {selectedViewCourse.instructor_name}</Typography>
+                  <Typography>Block/Section: {selectedViewCourse.section}</Typography>
+                  <Typography>Day: {selectedViewCourse.day}</Typography>
+                  <Typography>Time: {selectedViewCourse.start_time} - {selectedViewCourse.end_time}</Typography>
                 </Grid>
               </Grid>
 
