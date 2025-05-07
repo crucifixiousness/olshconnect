@@ -67,6 +67,15 @@ const AssignCourses = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewCourse, setSelectedViewCourse] = useState(null);
 
+  const formatTime = (time) => {
+    if (!time || time === 'Not assigned') return time;
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
   const handleViewOpen = async (course) => {
     try {
       const assignmentResponse = await axios.get('/api/course-assignment', {
