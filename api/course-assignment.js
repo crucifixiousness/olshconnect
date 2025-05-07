@@ -24,6 +24,9 @@ module.exports = async (req, res) => {
           c.course_name,
           c.units,
           ca.section,
+          ca.day,
+          ca.start_time::varchar,
+          ca.end_time::varchar,
           a.staff_id,
           a.full_name as instructor_name
         FROM program_course pc
@@ -40,7 +43,10 @@ module.exports = async (req, res) => {
         res.json({
           ...data,
           instructor_name: data.instructor_name || 'Not assigned',
-          section: data.section || 'Not assigned'
+          section: data.section || 'Not assigned',
+          day: data.day || 'Not assigned',
+          start_time: data.start_time || 'Not assigned',
+          end_time: data.end_time || 'Not assigned'
         });
       } else {
         res.status(404).json({ error: 'Course not found' });
