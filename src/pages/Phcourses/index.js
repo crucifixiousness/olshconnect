@@ -75,18 +75,11 @@ const AssignCourses = () => {
       });
       const assignmentData = assignmentResponse.data;
       
-      // Log for debugging
-      console.log('Course:', course);
-      console.log('Assignment Data:', assignmentData);
+      console.log('Schedule Data:', assignmentData.schedules);
       
-      // Merge the data including schedule information
       setSelectedViewCourse({ 
         ...course,
-        instructor_name: assignmentData.instructor_name || 'Not assigned',
-        section: assignmentData.section || 'Not assigned',
-        day: assignmentData.day || 'Not assigned',
-        start_time: assignmentData.start_time || 'Not assigned',
-        end_time: assignmentData.end_time || 'Not assigned'
+        schedules: assignmentData.schedules || []
       });
       setShowViewModal(true);
     } catch (error) {
@@ -133,7 +126,7 @@ const AssignCourses = () => {
       });
     }
   };
-  
+
   // Update handleEditClose to reset all fields
   const handleEditClose = () => {
     setShowEditModal(false);
@@ -531,11 +524,18 @@ const AssignCourses = () => {
                 </Grid>
                 
                 <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">Assigned Instructors</Typography>
-                  <Typography>Instructor: {selectedViewCourse.instructor_name}</Typography>
-                  <Typography>Block/Section: {selectedViewCourse.section}</Typography>
-                  <Typography>Day: {selectedViewCourse.day}</Typography>
-                  <Typography>Time: {selectedViewCourse.start_time} - {selectedViewCourse.end_time}</Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">Assigned Details</Typography>
+                  {selectedViewCourse.schedules && selectedViewCourse.schedules.map((schedule, index) => (
+                    <Box key={index} sx={{ mb: 2 }}>
+                      <Typography>Instructor: {schedule.instructor_name}</Typography>
+                      <Typography>Block/Section: {schedule.section}</Typography>
+                      <Typography>Day: {schedule.day}</Typography>
+                      <Typography>Time: {schedule.start_time} - {schedule.end_time}</Typography>
+                      {index < selectedViewCourse.schedules.length - 1 && (
+                        <Box sx={{ my: 1, borderBottom: '1px solid #eee' }} />
+                      )}
+                    </Box>
+                  ))}
                 </Grid>
               </Grid>
 
