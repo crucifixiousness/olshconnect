@@ -103,19 +103,33 @@ const AssignCourses = () => {
     setShowEditModal(true);
     
     try {
-      // Fetch instructors
+      // Fetch instructors first
       await fetchInstructors();
       
       // Fetch existing assignment data
       const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
       const assignmentData = response.data;
       
-      if (assignmentData) {
+      console.log('Assignment Data:', assignmentData); // For debugging
+      
+      // Check if we have assignment data and set the values
+      if (assignmentData && !assignmentData.error) {
         setSelectedSection(assignmentData.section || '');
-        setSelectedDay(assignmentData.day || '');
-        setStartTime(assignmentData.start_time || '');
-        setEndTime(assignmentData.end_time || '');
         setSelectedInstructor(assignmentData.staff_id || '');
+        
+        // Set schedule details if they exist
+        if (assignmentData.schedule) {
+          setSelectedDay(assignmentData.schedule.day || '');
+          setStartTime(assignmentData.schedule.start_time || '');
+          setEndTime(assignmentData.schedule.end_time || '');
+        }
+      } else {
+        // Reset form if no assignment data
+        setSelectedSection('');
+        setSelectedInstructor('');
+        setSelectedDay('');
+        setStartTime('');
+        setEndTime('');
       }
     } catch (error) {
       console.error('Error fetching assignment details:', error);
@@ -124,6 +138,13 @@ const AssignCourses = () => {
         message: "Failed to fetch assignment details",
         severity: 'error'
       });
+      
+      // Reset form on error
+      setSelectedSection('');
+      setSelectedInstructor('');
+      setSelectedDay('');
+      setStartTime('');
+      setEndTime('');
     }
   };
   
