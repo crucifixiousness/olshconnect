@@ -79,6 +79,7 @@ const AssignCourses = () => {
       console.log('Course:', course);
       console.log('Assignment Data:', assignmentData);
       
+      // Merge the data without schedule information
       setSelectedViewCourse({ 
         ...course,
         instructor_name: assignmentData.instructor_name || 'Not assigned',
@@ -106,35 +107,19 @@ const AssignCourses = () => {
     setShowEditModal(true);
     
     try {
-      // Fetch instructors first
+      // Fetch instructors
       await fetchInstructors();
       
-      // Fetch existing assignment data using query parameters
-      const response = await axios.get('/api/course-assignment', {
-        params: {
-          pc_id: course.pc_id
-        }
-      });
+      // Fetch existing assignment data
+      const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
       const assignmentData = response.data;
       
-      console.log('Assignment Data:', assignmentData);
-      
-      if (assignmentData && !assignmentData.error) {
+      if (assignmentData) {
         setSelectedSection(assignmentData.section || '');
+        setSelectedDay(assignmentData.day || '');
+        setStartTime(assignmentData.start_time || '');
+        setEndTime(assignmentData.end_time || '');
         setSelectedInstructor(assignmentData.staff_id || '');
-        
-        if (assignmentData.schedule) {
-          setSelectedDay(assignmentData.schedule.day || '');
-          setStartTime(assignmentData.schedule.start_time || '');
-          setEndTime(assignmentData.schedule.end_time || '');
-        }
-      } else {
-        // Reset form if no assignment data
-        setSelectedSection('');
-        setSelectedInstructor('');
-        setSelectedDay('');
-        setStartTime('');
-        setEndTime('');
       }
     } catch (error) {
       console.error('Error fetching assignment details:', error);
@@ -143,16 +128,9 @@ const AssignCourses = () => {
         message: "Failed to fetch assignment details",
         severity: 'error'
       });
-      
-      // Reset form on error
-      setSelectedSection('');
-      setSelectedInstructor('');
-      setSelectedDay('');
-      setStartTime('');
-      setEndTime('');
     }
   };
-
+  
   // Update handleEditClose to reset all fields
   const handleEditClose = () => {
     setShowEditModal(false);
@@ -169,11 +147,8 @@ const AssignCourses = () => {
   const fetchInstructors = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/instructor-courses', {
-        params: {
-          program_id: program_id
-        }
-      });
+      // Get program_id from state
+      const response = await axios.get(`/api/instructor-courses?program_id=${program_id}`);
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -185,8 +160,8 @@ const AssignCourses = () => {
     } finally {
       setLoading(false);
     }
-  }, [program_id]);
-
+  }, [program_id]); // Add program_id as dependency
+  
   // Update the useEffect for fetchInstructors
   useEffect(() => {
     if (program_id) { // Only fetch if program_id exists
