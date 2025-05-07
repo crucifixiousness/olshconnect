@@ -543,7 +543,7 @@ const AssignCourses = () => {
                   </Typography>
                 </Grid>
                 
-                // In the view modal content, add this after the Assignment Details section:
+                {/* Remove the comment syntax and fix the Schedule Details section */}
                 <Grid item xs={12} sx={{ mt: 2 }}>
                   <Typography variant="subtitle1" fontWeight="bold">Schedule Details</Typography>
                   <Typography>
