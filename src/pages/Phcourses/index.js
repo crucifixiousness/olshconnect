@@ -79,11 +79,14 @@ const AssignCourses = () => {
       console.log('Course:', course);
       console.log('Assignment Data:', assignmentData);
       
-      // Merge the data without schedule information
+      // Merge the data including schedule information
       setSelectedViewCourse({ 
         ...course,
         instructor_name: assignmentData.instructor_name || 'Not assigned',
-        section: assignmentData.section || 'Not assigned'
+        section: assignmentData.section || 'Not assigned',
+        day: assignmentData.day || 'Not assigned',
+        start_time: assignmentData.start_time || 'Not assigned',
+        end_time: assignmentData.end_time || 'Not assigned'
       });
       setShowViewModal(true);
     } catch (error) {
@@ -537,6 +540,17 @@ const AssignCourses = () => {
                   </Typography>
                   <Typography>
                     Block/Section: {selectedViewCourse.section}
+                  </Typography>
+                </Grid>
+                
+                // In the view modal content, add this after the Assignment Details section:
+                <Grid item xs={12} sx={{ mt: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">Schedule Details</Typography>
+                  <Typography>
+                    Day: {selectedViewCourse.day}
+                  </Typography>
+                  <Typography>
+                    Time: {selectedViewCourse.start_time} - {selectedViewCourse.end_time}
                   </Typography>
                 </Grid>
               </Grid>
