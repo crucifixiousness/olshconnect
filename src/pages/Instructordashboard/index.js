@@ -35,13 +35,13 @@ const InstructorDashboard = () => {
           return;
         }
 
-        // Fetch dashboard data
-        const dashboardResponse = await axios.get(`http://localhost:4000/instructor/dashboard/${staff_id}`, {
+        // Fetch dashboard data from new API endpoint
+        const dashboardResponse = await axios.get(`/api/instructor-dashboard?staff_id=${staff_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        // Fetch today's schedule
-        const scheduleResponse = await axios.get(`http://localhost:4000/instructor-courses/${staff_id}`, {
+        // Fetch today's schedule from new API endpoint
+        const scheduleResponse = await axios.get(`/api/instructor-subjects?staff_id=${staff_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
