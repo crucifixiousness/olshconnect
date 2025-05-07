@@ -68,14 +68,17 @@ const AssignCourses = () => {
 
   const handleViewOpen = async (course) => {
     try {
-      const assignmentResponse = await axios.get(`/api/course-assignment/${course.pc_id}`);
+      const assignmentResponse = await axios.get('/api/course-assignment', {
+        params: {
+          pc_id: course.pc_id
+        }
+      });
       const assignmentData = assignmentResponse.data;
       
       // Log for debugging
       console.log('Course:', course);
       console.log('Assignment Data:', assignmentData);
       
-      // Merge the data without schedule information
       setSelectedViewCourse({ 
         ...course,
         instructor_name: assignmentData.instructor_name || 'Not assigned',
@@ -106,18 +109,20 @@ const AssignCourses = () => {
       // Fetch instructors first
       await fetchInstructors();
       
-      // Fetch existing assignment data
-      const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
+      // Fetch existing assignment data using query parameters
+      const response = await axios.get('/api/course-assignment', {
+        params: {
+          pc_id: course.pc_id
+        }
+      });
       const assignmentData = response.data;
       
-      console.log('Assignment Data:', assignmentData); // For debugging
+      console.log('Assignment Data:', assignmentData);
       
-      // Check if we have assignment data and set the values
       if (assignmentData && !assignmentData.error) {
         setSelectedSection(assignmentData.section || '');
         setSelectedInstructor(assignmentData.staff_id || '');
         
-        // Set schedule details if they exist
         if (assignmentData.schedule) {
           setSelectedDay(assignmentData.schedule.day || '');
           setStartTime(assignmentData.schedule.start_time || '');
@@ -147,7 +152,7 @@ const AssignCourses = () => {
       setEndTime('');
     }
   };
-  
+
   // Update handleEditClose to reset all fields
   const handleEditClose = () => {
     setShowEditModal(false);
@@ -164,8 +169,11 @@ const AssignCourses = () => {
   const fetchInstructors = useCallback(async () => {
     try {
       setLoading(true);
-      // Get program_id from state
-      const response = await axios.get(`/api/instructor-courses?program_id=${program_id}`);
+      const response = await axios.get('/api/instructor-courses', {
+        params: {
+          program_id: program_id
+        }
+      });
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -177,8 +185,8 @@ const AssignCourses = () => {
     } finally {
       setLoading(false);
     }
-  }, [program_id]); // Add program_id as dependency
-  
+  }, [program_id]);
+
   // Update the useEffect for fetchInstructors
   useEffect(() => {
     if (program_id) { // Only fetch if program_id exists
