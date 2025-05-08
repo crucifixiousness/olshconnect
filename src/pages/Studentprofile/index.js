@@ -257,66 +257,85 @@ const StudentProfile = () => {
   const handleEnroll = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
-      // Validate required fields
+      // ✅ Stricter required field check
       const requiredFields = ['programs', 'yearLevel', 'semester', 'academic_year'];
-      const missingFields = requiredFields.filter(field => !formDataa[field]);
-      
+      const missingFields = requiredFields.filter(
+        field => formDataa[field] === undefined || formDataa[field] === null || formDataa[field] === ''
+      );
+  
       if (missingFields.length > 0) {
-        setStatusMessage({ 
-          message: `Required fields missing: ${missingFields.join(', ')}`, 
-          type: "error" 
+        setStatusMessage({
+          message: `Required fields missing: ${missingFields.join(', ')}`,
+          type: "error"
         });
         setIsVisible(true);
         setLoading(false);
         return;
       }
-
-      // Validate files
-      const maxSize = 50 * 1024 * 1024; // 50MB to match backend
+  
+      // ✅ Semester validation
+      const validSemesters = ['1st', '2nd', 'Summer'];
+      if (!validSemesters.includes(formDataa.semester)) {
+        setStatusMessage({
+          message: "Invalid semester selected.",
+          type: "error"
+        });
+        setIsVisible(true);
+        setLoading(false);
+        return;
+      }
+  
+      // ✅ Validate files
+      const maxSize = 50 * 1024 * 1024; // 50MB
       const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-      
+  
       const files = {
         idpic: formDataa.idpic,
         birthCertificateDoc: formDataa.birthCertificateDoc,
         form137Doc: formDataa.form137Doc
       };
-
+  
       for (const [key, file] of Object.entries(files)) {
         if (file && (!allowedTypes.includes(file.type) || file.size > maxSize)) {
           throw new Error(`${key}: Must be JPG, PNG or PDF under 50MB`);
         }
       }
-
-      const formDataToSend = new FormData();
-      
-      // Convert programs and yearLevel to integers
-      Object.entries(formDataa).forEach(([key, value]) => {
-        if (value !== null && value !== "") {
-          if (key === 'programs' || key === 'yearLevel') {
-            formDataToSend.append(key, parseInt(value));
-          } else {
-            formDataToSend.append(key, value);
-          }
-        }
+  
+      // ✅ Optional debug log
+      console.log("Submitting enrollment:", {
+        programs: formDataa.programs,
+        yearLevel: formDataa.yearLevel,
+        semester: formDataa.semester,
+        academic_year: formDataa.academic_year
       });
-
+  
+      const formDataToSend = new FormData();
+      formDataToSend.append('programs', Number(formDataa.programs));
+      formDataToSend.append('yearLevel', Number(formDataa.yearLevel));
+      formDataToSend.append('semester', formDataa.semester);
+      formDataToSend.append('academic_year', formDataa.academic_year);
+  
+      if (formDataa.idpic) formDataToSend.append('idpic', formDataa.idpic);
+      if (formDataa.birthCertificateDoc) formDataToSend.append('birthCertificateDoc', formDataa.birthCertificateDoc);
+      if (formDataa.form137Doc) formDataToSend.append('form137Doc', formDataa.form137Doc);
+  
       const response = await axios.put("/api/enroll", formDataToSend, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`
         }
       });
-
+  
       if (response.data) {
-        setStatusMessage({ 
-          message: response.data.message || "Enrollment successful!", 
-          type: "success" 
+        setStatusMessage({
+          message: response.data.message || "Enrollment successful!",
+          type: "success"
         });
         setIsVisible(true);
         setIsEnrolled(true);
         setOpenEnrollment(false);
-
+  
         setFormDataa({
           programs: "",
           yearLevel: "",
@@ -326,7 +345,7 @@ const StudentProfile = () => {
           birthCertificateDoc: null,
           form137Doc: null,
         });
-
+  
         await fetchStudentData();
       }
     } catch (error) {
@@ -335,10 +354,10 @@ const StudentProfile = () => {
         response: error.response?.data,
         status: error.response?.status
       });
-
-      setStatusMessage({ 
-        message: error.response?.data?.error || "Enrollment failed. Please try again.", 
-        type: "error" 
+  
+      setStatusMessage({
+        message: error.response?.data?.error || "Enrollment failed. Please try again.",
+        type: "error"
       });
       setIsVisible(true);
     } finally {
@@ -346,6 +365,7 @@ const StudentProfile = () => {
       setTimeout(() => setIsVisible(false), 4000);
     }
   };
+  
   
 
   // Replace the current loading state
