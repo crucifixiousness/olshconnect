@@ -299,20 +299,27 @@ const RegistrarEnrollment = () => {
                 </div>
 
                 <div className="document-preview">
-                  <div className="document-title">
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Birth Certificate
-                    </Typography>
-                  </div>
-                  {selectedEnrollment.birthCertificateDoc ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.birthCertificateDoc}`} 
-                      alt="Birth Certificate" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No birth certificate uploaded</div>
-                  )}
+  <div className="document-title">
+    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+      Birth Certificate
+    </Typography>
+  </div>
+  {selectedEnrollment.birthCertificateDoc ? (
+    <object
+      data={`data:application/pdf;base64,${selectedEnrollment.birthCertificateDoc}`}
+      type="application/pdf"
+      width="100%"
+      height="500px"
+    >
+      <img
+        src={`data:image/jpeg;base64,${selectedEnrollment.birthCertificateDoc}`}
+        alt="Birth Certificate"
+        style={{ width: '100%', borderRadius: '8px' }}
+      />
+    </object>
+  ) : (
+    <div className="no-doc-message">No birth certificate uploaded</div>
+  )}
                 </div>
 
                 <div className="document-preview">
@@ -322,15 +329,23 @@ const RegistrarEnrollment = () => {
                     </Typography>
                   </div>
                   {selectedEnrollment.form137Doc ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.form137Doc}`} 
-                      alt="Form 137" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
+                    <object
+                      data={`data:application/pdf;base64,${selectedEnrollment.form137Doc}`}
+                      type="application/pdf"
+                      width="100%"
+                      height="500px"
+                    >
+                      <img
+                        src={`data:image/jpeg;base64,${selectedEnrollment.form137Doc}`}
+                        alt="Form 137"
+                        style={{ width: '100%', borderRadius: '8px' }}
+                      />
+                    </object>
                   ) : (
                     <div className="no-doc-message">No Form 137 uploaded</div>
                   )}
                 </div>
+
               </div>
 
               <Button 
