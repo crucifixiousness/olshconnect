@@ -33,7 +33,7 @@ const InstructorSchedule = () => {
         }
 
         const token = localStorage.getItem("token");
-        const response = await axios.get(`http://localhost:4000/instructor-courses/${staff_id}`, {
+        const response = await axios.get(`/api/instructor-subjects?staff_id=${staff_id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
