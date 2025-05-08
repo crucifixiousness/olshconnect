@@ -52,9 +52,13 @@ module.exports = async (req, res) => {
         });
       });
 
-      if (!fields.programs || !fields.yearLevel || !fields.semester || !fields.academic_year) {
-        return res.status(400).json({ 
-          error: "Program, year level, semester, and academic year are required" 
+      // Convert string values to integers where needed
+      const programs = parseInt(fields.programs);
+      const yearLevel = parseInt(fields.yearLevel);
+
+      if (isNaN(programs) || isNaN(yearLevel)) {
+        return res.status(400).json({
+          error: "Invalid program or year level format"
         });
       }
 
@@ -63,7 +67,7 @@ module.exports = async (req, res) => {
 
       const programResult = await client.query(
         "SELECT program_id FROM program WHERE program_id = $1",
-        [fields.programs]
+        [programs]
       );
 
       if (programResult.rows.length === 0) {
