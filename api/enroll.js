@@ -1,18 +1,9 @@
 // api/enroll.js
 
 const { Pool } = require('pg');
-const multer = require('multer');
+const formidable = require('formidable');
 const jwt = require('jsonwebtoken');
-
-const storage = multer.memoryStorage();
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
-}).fields([
-  { name: 'idpic', maxCount: 1 },
-  { name: 'birthCertificateDoc', maxCount: 1 },
-  { name: 'form137Doc', maxCount: 1 }
-]);
+const fs = require('fs').promises;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -21,30 +12,41 @@ const pool = new Pool({
   },
 });
 
-const authenticateJWT = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+const authenticateToken = (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
   if (!token) {
-    return res.status(403).json({ error: "No token provided" });
+    throw new Error('No token provided');
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: "Invalid token" });
-    }
-    req.user = user;
-    next();
-  });
+  return jwt.verify(token, process.env.JWT_SECRET);
 };
 
-const handler = async (req, res) => {
+module.exports = async (req, res) => {
   if (req.method === 'PUT') {
     let client;
     try {
+      const decoded = authenticateToken(req, res);
+      req.user = decoded;
       const { id } = req.user;
-      const { programs, yearLevel, semester, academic_year } = req.body;
-      
-      // Validate all required fields
-      if (!programs || !yearLevel || !semester || !academic_year) {
+
+      const form = formidable({
+        maxFileSize: 50 * 1024 * 1024, // 50MB limit
+        allowEmptyFiles: false,
+        filter: ({ mimetype }) => {
+          return mimetype && (mimetype.includes('image/') || mimetype === 'application/pdf');
+        }
+      });
+
+      const [fields, files] = await new Promise((resolve, reject) => {
+        form.parse(req, (err, fields, files) => {
+          if (err) reject(err);
+          resolve([fields, files]);
+        });
+      });
+
+      if (!fields.programs || !fields.yearLevel || !fields.semester || !fields.academic_year) {
         return res.status(400).json({ 
           error: "Program, year level, semester, and academic year are required" 
         });
@@ -53,10 +55,9 @@ const handler = async (req, res) => {
       client = await pool.connect();
       await client.query('BEGIN');
 
-      // Check if program exists
       const programResult = await client.query(
         "SELECT program_id FROM program WHERE program_id = $1",
-        [programs]
+        [fields.programs]
       );
 
       if (programResult.rows.length === 0) {
@@ -66,34 +67,33 @@ const handler = async (req, res) => {
         });
       }
 
-      // Get year_id based on program and year level
       const yearResult = await client.query(
         "SELECT year_id FROM program_year WHERE program_id = $1 AND year_level = $2",
-        [programs, yearLevel]
+        [fields.programs, fields.yearLevel]
       );
 
       let year_id;
       if (yearResult.rows.length === 0) {
-        const paddedYearLevel = String(yearLevel).padStart(2, '0');
-        year_id = parseInt(programs + paddedYearLevel);
+        const paddedYearLevel = String(fields.yearLevel).padStart(2, '0');
+        year_id = parseInt(fields.programs + paddedYearLevel);
         
         await client.query(
           "INSERT INTO program_year (year_id, program_id, year_level) VALUES ($1, $2, $3)",
-          [year_id, programs, yearLevel]
+          [year_id, fields.programs, fields.yearLevel]
         );
       } else {
         year_id = yearResult.rows[0].year_id;
       }
 
-      // Process file uploads with proper error handling
-      const idpic = req.files?.idpic?.[0]?.buffer;
-      const birthCertificateDoc = req.files?.birthCertificateDoc?.[0]?.buffer;
-      const form137Doc = req.files?.form137Doc?.[0]?.buffer;
+      const idpic = files.idpic ? await fs.readFile(files.idpic[0].filepath) : null;
+      const birthCertificateDoc = files.birthCertificateDoc ? 
+        await fs.readFile(files.birthCertificateDoc[0].filepath) : null;
+      const form137Doc = files.form137Doc ? 
+        await fs.readFile(files.form137Doc[0].filepath) : null;
 
-      // Check for existing enrollment with specific semester
       const existingEnrollment = await client.query(
         "SELECT enrollment_id FROM enrollments WHERE student_id = $1 AND academic_year = $2 AND semester = $3",
-        [id, academic_year, semester]
+        [id, fields.academic_year, fields.semester]
       );
 
       if (existingEnrollment.rows.length > 0) {
@@ -103,7 +103,6 @@ const handler = async (req, res) => {
         });
       }
 
-      // Insert enrollment record with RETURNING clause
       const enrollmentResult = await client.query(
         `INSERT INTO enrollments 
          (student_id, program_id, year_id, semester, enrollment_status, 
@@ -111,17 +110,22 @@ const handler = async (req, res) => {
           payment_status, academic_year) 
          VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8)
          RETURNING enrollment_id`,
-        [id, programs, year_id, semester, idpic, birthCertificateDoc, form137Doc, academic_year]
+        [id, fields.programs, year_id, fields.semester, idpic, birthCertificateDoc, form137Doc, fields.academic_year]
       );
 
       await client.query('COMMIT');
+
+      // Clean up temp files
+      await Promise.all(Object.values(files).map(fileArray => 
+        fileArray.map(file => fs.unlink(file.filepath))
+      ).flat());
       
       res.json({ 
         message: "Enrollment submitted successfully",
         status: "Pending",
         enrollment_id: enrollmentResult.rows[0].enrollment_id,
-        semester: semester,
-        academic_year: academic_year
+        semester: fields.semester,
+        academic_year: fields.academic_year
       });
     } catch (error) {
       if (client) {
@@ -140,17 +144,4 @@ const handler = async (req, res) => {
   } else {
     res.status(405).json({ message: 'Method not allowed' });
   }
-};
-
-module.exports = (req, res) => {
-  authenticateJWT(req, res, () => {
-    upload(req, res, (err) => {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ error: "File upload error" });
-      } else if (err) {
-        return res.status(500).json({ error: "Server error during file upload" });
-      }
-      handler(req, res);
-    });
-  });
 };
