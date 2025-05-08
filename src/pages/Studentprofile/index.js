@@ -291,10 +291,14 @@ const StudentProfile = () => {
 
       const formDataToSend = new FormData();
       
-      // Append all form fields
+      // Convert programs and yearLevel to integers
       Object.entries(formDataa).forEach(([key, value]) => {
         if (value !== null && value !== "") {
-          formDataToSend.append(key, value);
+          if (key === 'programs' || key === 'yearLevel') {
+            formDataToSend.append(key, parseInt(value));
+          } else {
+            formDataToSend.append(key, value);
+          }
         }
       });
 
