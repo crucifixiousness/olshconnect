@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
 
       const yearResult = await client.query(
         "SELECT year_id FROM program_year WHERE program_id = $1 AND year_level = $2",
-        [fields.programs, fields.yearLevel]
+        [programs, yearLevel]
       );
 
       let year_id;
@@ -89,7 +89,7 @@ module.exports = async (req, res) => {
         
         await client.query(
           "INSERT INTO program_year (year_id, program_id, year_level) VALUES ($1, $2, $3)",
-          [year_id, fields.programs, fields.yearLevel]
+          [year_id, programs, yearLevel]
         );
       } else {
         year_id = yearResult.rows[0].year_id;
@@ -120,7 +120,7 @@ module.exports = async (req, res) => {
           payment_status, academic_year) 
          VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8)
          RETURNING enrollment_id`,
-        [id, fields.programs, year_id, fields.semester, idpic, birthCertificateDoc, form137Doc, fields.academic_year]
+        [id, programs, year_id, fields.semester, idpic, birthCertificateDoc, form137Doc, fields.academic_year]
       );
 
       await client.query('COMMIT');
