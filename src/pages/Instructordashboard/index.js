@@ -101,13 +101,14 @@ const InstructorDashboard = () => {
     );
   }
 
-  const formatTime = (time) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
+  // Remove or comment out the formatTime function since we're getting formatted time from API
+  // const formatTime = (time) => {
+  //   return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+  //     hour: 'numeric',
+  //     minute: '2-digit',
+  //     hour12: true
+  //   });
+  // };
 
   return (
     <div className="right-content w-100">
@@ -156,7 +157,7 @@ const InstructorDashboard = () => {
                       {todaySchedule.map((course, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            {formatTime(course.start_time)} - {formatTime(course.end_time)}
+                            {course.start_time} - {course.end_time}
                           </TableCell>
                           <TableCell>
                             <div>{course.course_code}</div>
