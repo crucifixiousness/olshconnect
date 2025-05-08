@@ -33,13 +33,13 @@ module.exports = async (req, res) => {
             e.enrollment_id as _id,
             e.student_id,
             e.program_id as programs,
-            py.year_level as yearLevel,
+            py.year_level,
             e.semester,
             e.enrollment_status as status,
             e.academic_year,
-            encode(e.idpic, 'base64') as idpic,
-            encode(e.birth_certificate_doc, 'base64') as birthCertificateDoc,
-            encode(e.form137_doc, 'base64') as form137Doc,
+            e.idpic,
+            e.birth_certificate_doc,
+            e.form137_doc,
             s.first_name,
             s.middle_name,
             s.last_name,
@@ -50,16 +50,34 @@ module.exports = async (req, res) => {
           ORDER BY e.enrollment_date DESC`
         );
 
-        // Transform the data and format student info
-        const enrollments = rows.map(row => ({
-          ...row,
-          student: {
-            firstName: row.first_name,
-            middleName: row.middle_name,
-            lastName: row.last_name,
-            suffix: row.suffix
-          }
-        }));
+        console.log('Raw data check:', rows.map(row => ({
+          hasIdPic: !!row.idpic,
+          hasBirthCert: !!row.birthCertificateDoc,
+          hasForm137: !!row.form137Doc
+        })));
+
+        // Transform the binary data to base64 and format student info
+        const enrollments = rows.map(row => {
+          // Log raw document data
+          console.log('Processing document data:', {
+            idpicType: row.idpic ? typeof row.idpic : 'null',
+            birthCertType: row.birthCertificateDoc ? typeof row.birthCertificateDoc : 'null',
+            form137Type: row.form137Doc ? typeof row.form137Doc : 'null'
+          });
+
+          return {
+            ...row,
+            idpic: row.idpic ? Buffer.from(row.idpic).toString('base64') : null,
+            birth_certificate_doc: row.birth_certificate_doc ? Buffer.from(row.birth_certificate_doc).toString('base64') : null,
+            form137_doc: row.form137_doc ? Buffer.from(row.form137_doc).toString('base64') : null,
+            student: {
+              firstName: row.first_name,
+              middleName: row.middle_name,
+              lastName: row.last_name,
+              suffix: row.suffix
+            }
+          };
+        });
 
         // Log transformed data
         console.log('Transformed data check:', enrollments.map(e => ({
