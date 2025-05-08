@@ -16,6 +16,11 @@ const ClassManagement = () => {
 
   const formatTime = (time) => {
     if (!time) return '';
+    // If time already includes AM/PM, return as is
+    if (time.includes('AM') || time.includes('PM')) {
+      return time;
+    }
+    // Otherwise, format the time
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
