@@ -262,7 +262,7 @@ const StudentProfile = () => {
       
       if (missingFields.length > 0) {
         setStatusMessage({ 
-          message: "Please fill in all required fields", 
+          message: `Please fill in: ${missingFields.join(', ')}`, 
           type: "error" 
         });
         setIsVisible(true);
@@ -271,13 +271,14 @@ const StudentProfile = () => {
   
       try {
           const formDataToSend = new FormData();
+          
+          // Append all form fields
           Object.keys(formDataa).forEach((key) => {
               if (formDataa[key] !== null && formDataa[key] !== "") {
                   formDataToSend.append(key, formDataa[key]);
               }
           });
-  
-          // Remove hardcoded values since they're now part of formDataa
+
           const response = await axios.put("/api/enroll", formDataToSend, {
               headers: { 
                   "Content-Type": "multipart/form-data", 
@@ -285,53 +286,56 @@ const StudentProfile = () => {
               },
           });
   
-          // Show success message
-          setStatusMessage({ message: "Enrollment successful!", type: "success" });
-          setIsVisible(true);
-          setOpenEnrollment(true);
-          setIsEnrolled(true);
-  
-          // Update student data to reflect new profile picture
-          if (formDataa.idpic) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setStudentData(prev => ({
-                ...prev,
-                enrollment: {
-                  ...prev.enrollment,
-                  idpic: reader.result.split(',')[1] // Get base64 part only
-                }
-              }));
-            };
-            reader.readAsDataURL(formDataa.idpic);
+          if (response.data) {
+              setStatusMessage({ 
+                  message: response.data.message || "Enrollment successful!", 
+                  type: "success" 
+              });
+              setIsVisible(true);
+              setIsEnrolled(true);
+              setOpenEnrollment(false); // Close the modal after success
+
+              // Update student data to reflect new profile picture
+              if (formDataa.idpic) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setStudentData(prev => ({
+                    ...prev,
+                    enrollment: {
+                      ...prev.enrollment,
+                      idpic: reader.result.split(',')[1]
+                    }
+                  }));
+                };
+                reader.readAsDataURL(formDataa.idpic);
+              }
+
+              // Clear form fields
+              setFormDataa({
+                programs: "",
+                yearLevel: "",
+                semester: "",
+                academic_year: "",
+                idpic: null,
+                birthCertificateDoc: null,
+                form137Doc: null,
+              });
+
+              // Refresh student data
+              await fetchStudentData();
           }
-  
-          // Clear form fields
-          // Update the form reset to include new fields
-          setFormDataa({
-            programs: "",
-            yearLevel: "",
-            semester: "",           // Add this
-            academic_year: "",      // Add this
-            idpic: null,
-            birthCertificateDoc: null,
-            form137Doc: null,
-          });
-  
-          // Refresh student data from server
-          fetchStudentData();
           
       } catch (error) {
-          console.error(error);
-  
-          // Show error message
-          setStatusMessage({ message: "Enrollment failed. Please try again.", type: "error" });
+          console.error('Enrollment Error:', error.response?.data || error.message);
+          setStatusMessage({ 
+              message: error.response?.data?.error || "Enrollment failed. Please try again.", 
+              type: "error" 
+          });
           setIsVisible(true);
       } finally {
           // Hide the notification after 3 seconds
           setTimeout(() => {
               setIsVisible(false);
-              setOpen(false);
           }, 4000);
       }
   };
