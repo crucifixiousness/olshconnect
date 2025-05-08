@@ -48,6 +48,11 @@ const RegistrarEnrollment = () => {
   };
 
   const handleViewDetails = (enrollment) => {
+    console.log('Document Data:', {
+      idpic: !!enrollment.idpic,
+      birthCert: !!enrollment.birthCertificateDoc,
+      form137: !!enrollment.form137Doc,
+    });
     setSelectedEnrollment(enrollment);
     setOpen(true);
   };
