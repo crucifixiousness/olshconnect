@@ -1,4 +1,4 @@
-// api/enroll.js
+// api/enroll
 
 const { Pool } = require('pg');
 const multer = require('multer');
