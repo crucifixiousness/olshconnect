@@ -1,5 +1,3 @@
-// api/enroll
-
 const { Pool } = require('pg');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -38,7 +36,7 @@ const authenticateJWT = (req, res, next) => {
 
 const handler = async (req, res) => {
   if (req.method === 'PUT') {
-    let client;
+    let connection;
     try {
       const { id } = req.user;
       const { programs, yearLevel } = req.body;
@@ -56,76 +54,71 @@ const handler = async (req, res) => {
         });
       }
 
-      client = await pool.connect();
-      await client.query('BEGIN');
+      connection = await pool.getConnection();
+      await connection.beginTransaction();
 
-      // Get year_id based on program and year level
-      const yearResult = await client.query(
-        "SELECT year_id FROM program_year WHERE program_id = $1 AND year_level = $2",
-        [programs, yearLevel]
-      );
-
-      let year_id;
-      if (yearResult.rows.length === 0) {
-        const paddedYearLevel = String(yearLevel).padStart(2, '0');
-        year_id = parseInt(programs + paddedYearLevel);
-        
-        await client.query(
-          "INSERT INTO program_year (year_id, program_id, year_level) VALUES ($1, $2, $3)",
-          [year_id, programs, yearLevel]
+      try {
+        const [yearResult] = await connection.query(
+          "SELECT year_id FROM program_year WHERE program_id = ? AND year_level = ?",
+          [programs, yearLevel]
         );
-      } else {
-        year_id = yearResult.rows[0].year_id;
-      }
 
-      // Process file uploads
-      const idpic = req.files?.idpic?.[0]?.buffer || null;
-      const birthCertificateDoc = req.files?.birthCertificateDoc?.[0]?.buffer || null;
-      const form137Doc = req.files?.form137Doc?.[0]?.buffer || null;
+        let year_id;
+        if (yearResult.length === 0) {
+          const paddedYearLevel = String(yearLevel).padStart(2, '0');
+          year_id = parseInt(programs + paddedYearLevel);
+          
+          await connection.query(
+            "INSERT INTO program_year (year_id, program_id, year_level) VALUES (?, ?, ?)",
+            [year_id, programs, yearLevel]
+          );
+        } else {
+          year_id = yearResult[0].year_id;
+        }
 
-      // Check for existing enrollment
-      const existingEnrollment = await client.query(
-        "SELECT enrollment_id FROM enrollments WHERE student_id = $1 AND academic_year = $2",
-        [id, academic_year]
-      );
+        const idpic = req.files?.idpic?.[0]?.buffer || null;
+        const birthCertificateDoc = req.files?.birthCertificateDoc?.[0]?.buffer || null;
+        const form137Doc = req.files?.form137Doc?.[0]?.buffer || null;
 
-      if (existingEnrollment.rows.length > 0) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({
-          error: "Student is already enrolled for this academic year"
+        const [existingEnrollment] = await connection.query(
+          "SELECT enrollment_id FROM enrollments WHERE student_id = ? AND academic_year = ?",
+          [id, academic_year]
+        );
+
+        if (existingEnrollment.length > 0) {
+          return res.status(400).json({
+            error: "Student is already enrolled for this academic year"
+          });
+        }
+
+        await connection.execute(
+          `INSERT INTO enrollments 
+           (student_id, program_id, year_id, semester, enrollment_status, 
+            enrollment_date, idpic, birth_certificate_doc, form137_doc, 
+            payment_status, academic_year) 
+           VALUES (?, ?, ?, ?, 'Pending', NOW(), ?, ?, ?, 'Unpaid', ?)`,
+          [id, programs, year_id, semester, idpic, birthCertificateDoc, form137Doc, academic_year]
+        );
+
+        await connection.commit();
+        res.json({ 
+          message: "Enrollment submitted successfully",
+          status: "Pending",
+          semester: semester,
+          academic_year: academic_year
         });
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
       }
-
-      // Insert enrollment record
-      await client.query(
-        `INSERT INTO enrollments 
-         (student_id, program_id, year_id, semester, enrollment_status, 
-          enrollment_date, idpic, birth_certificate_doc, form137_doc, 
-          payment_status, academic_year) 
-         VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8)`,
-        [id, programs, year_id, semester, idpic, birthCertificateDoc, form137Doc, academic_year]
-      );
-
-      await client.query('COMMIT');
-      res.json({ 
-        message: "Enrollment submitted successfully",
-        status: "Pending",
-        semester: semester,
-        academic_year: academic_year
-      });
     } catch (error) {
-      if (client) {
-        await client.query('ROLLBACK');
-      }
       console.error("Error in enrollment:", error);
       res.status(500).json({ 
         error: "Failed to process enrollment",
         details: error.message 
       });
-    } finally {
-      if (client) {
-        client.release();
-      }
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
