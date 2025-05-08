@@ -64,6 +64,13 @@ module.exports = async (req, res) => {
           }
         }));
 
+        // Add debug logging
+        console.log('Document check:', enrollments.map(e => ({
+          hasIdPic: !!e.idpic,
+          hasBirthCert: !!e.birthCertificateDoc,
+          hasForm137: !!e.form137Doc
+        })));
+
         res.json(enrollments);
       } finally {
         client.release();
