@@ -21,7 +21,7 @@ const RegistrarEnrollment = () => {
 
   const fetchEnrollments = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:4000/registrar/enrollments', {
+      const response = await axios.get(`/api/registrar-enrollments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEnrollments(response.data);
@@ -38,12 +38,11 @@ const RegistrarEnrollment = () => {
 
   const handleVerify = async (enrollmentId) => {
     try {
-      await axios.put(`http://localhost:4000/registrar/verify-enrollment/${enrollmentId}`, {}, {
+      await axios.put(`/api/verify-enrollment?id=${enrollmentId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchEnrollments(); // Refresh the list
     } catch (error) {
-      // Keep error handling consistent
       console.error('Error verifying enrollment:', error);
     }
   };
