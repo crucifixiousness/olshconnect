@@ -1,7 +1,7 @@
 // api/enroll.js
 
 const { Pool } = require('pg');
-const formidable = require('formidable');
+const { formidable } = require('formidable'); // Changed this line
 const jwt = require('jsonwebtoken');
 const fs = require('fs').promises;
 
@@ -31,8 +31,8 @@ module.exports = async (req, res) => {
       req.user = decoded;
       const { id } = req.user;
 
-      const form = formidable({
-        maxFileSize: 50 * 1024 * 1024, // 50MB limit
+      const form = new formidable({ // Added 'new' keyword
+        maxFileSize: 50 * 1024 * 1024,
         allowEmptyFiles: false,
         filter: ({ mimetype }) => {
           return mimetype && (mimetype.includes('image/') || mimetype === 'application/pdf');
