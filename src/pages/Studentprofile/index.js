@@ -255,85 +255,92 @@ const StudentProfile = () => {
   };
 
   const handleEnroll = async (e) => {
-      e.preventDefault();
+    e.preventDefault();
+    setLoading(true);
 
+    try {
+      // Validate required fields
       const requiredFields = ['programs', 'yearLevel', 'semester', 'academic_year'];
       const missingFields = requiredFields.filter(field => !formDataa[field]);
       
       if (missingFields.length > 0) {
         setStatusMessage({ 
-          message: "Please fill in all required fields", 
+          message: `Required fields missing: ${missingFields.join(', ')}`, 
           type: "error" 
         });
         setIsVisible(true);
+        setLoading(false);
         return;
       }
-  
-      try {
-          const formDataToSend = new FormData();
-          Object.keys(formDataa).forEach((key) => {
-              if (formDataa[key] !== null && formDataa[key] !== "") {
-                  formDataToSend.append(key, formDataa[key]);
-              }
-          });
-  
-          // Remove hardcoded values since they're now part of formDataa
-          const response = await axios.put("/api/enroll", formDataToSend, {
-              headers: { 
-                  "Content-Type": "multipart/form-data", 
-                  Authorization: `Bearer ${token}` 
-              },
-          });
-  
-          // Show success message
-          setStatusMessage({ message: "Enrollment successful!", type: "success" });
-          setIsVisible(true);
-          setOpenEnrollment(true);
-          setIsEnrolled(true);
-  
-          // Update student data to reflect new profile picture
-          if (formDataa.idpic) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setStudentData(prev => ({
-                ...prev,
-                enrollment: {
-                  ...prev.enrollment,
-                  idpic: reader.result.split(',')[1] // Get base64 part only
-                }
-              }));
-            };
-            reader.readAsDataURL(formDataa.idpic);
-          }
-  
-          // Clear form fields
-          // Update the form reset to include new fields
-          setFormDataa({
-            programs: "",
-            yearLevel: "",
-            semester: "",           // Add this
-            academic_year: "",      // Add this
-            idpic: null,
-            birthCertificateDoc: null,
-            form137Doc: null,
-          });
-  
-          // Refresh student data from server
-          fetchStudentData();
-          
-      } catch (error) {
-          console.error(error);
-  
-          // Show error message
-          setStatusMessage({ message: "Enrollment failed. Please try again.", type: "error" });
-          setIsVisible(true);
-      } finally {
-          // Hide the notification after 3 seconds
-          setTimeout(() => {
-              setIsVisible(false);
-              setOpen(false);
-          }, 4000);
+
+      // Validate files
+      const maxSize = 50 * 1024 * 1024; // 50MB to match backend
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+      
+      const files = {
+        idpic: formDataa.idpic,
+        birthCertificateDoc: formDataa.birthCertificateDoc,
+        form137Doc: formDataa.form137Doc
+      };
+
+      for (const [key, file] of Object.entries(files)) {
+        if (file && (!allowedTypes.includes(file.type) || file.size > maxSize)) {
+          throw new Error(`${key}: Must be JPG, PNG or PDF under 50MB`);
+        }
       }
+
+      const formDataToSend = new FormData();
+      
+      // Append all form fields
+      Object.entries(formDataa).forEach(([key, value]) => {
+        if (value !== null && value !== "") {
+          formDataToSend.append(key, value);
+        }
+      });
+
+      const response = await axios.put("/api/enroll", formDataToSend, {
+        headers: { 
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data) {
+        setStatusMessage({ 
+          message: response.data.message || "Enrollment successful!", 
+          type: "success" 
+        });
+        setIsVisible(true);
+        setIsEnrolled(true);
+        setOpenEnrollment(false);
+
+        setFormDataa({
+          programs: "",
+          yearLevel: "",
+          semester: "",
+          academic_year: "",
+          idpic: null,
+          birthCertificateDoc: null,
+          form137Doc: null,
+        });
+
+        await fetchStudentData();
+      }
+    } catch (error) {
+      console.error('Enrollment Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
+      setStatusMessage({ 
+        message: error.response?.data?.error || "Enrollment failed. Please try again.", 
+        type: "error" 
+      });
+      setIsVisible(true);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setIsVisible(false), 4000);
+    }
   };
   
 
