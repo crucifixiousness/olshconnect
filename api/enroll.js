@@ -5,6 +5,12 @@ const formidable = require('formidable');
 const jwt = require('jsonwebtoken');
 const fs = require('fs').promises;
 
+export const config = {
+  api: {
+    bodyParser: false, // Required for formidable to parse multipart form-data
+  },
+};
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -31,7 +37,7 @@ module.exports = async (req, res) => {
       req.user = decoded;
       const { id } = req.user;
 
-      const form = formidable({
+      const form = new formidable.IncomingForm({
         maxFileSize: 50 * 1024 * 1024, // 50MB limit
         allowEmptyFiles: false,
         filter: ({ mimetype }) => {
