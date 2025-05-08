@@ -48,11 +48,6 @@ const RegistrarEnrollment = () => {
   };
 
   const handleViewDetails = (enrollment) => {
-    console.log('Document Data:', {
-      idpic: !!enrollment.idpic,
-      birthCert: !!enrollment.birthCertificateDoc,
-      form137: !!enrollment.form137Doc,
-    });
     setSelectedEnrollment(enrollment);
     setOpen(true);
   };
@@ -259,7 +254,7 @@ const RegistrarEnrollment = () => {
                   sx={{ fontWeight: 500 }}
                   data-testid="modal-year-level"
                 >
-                  {selectedEnrollment.yearLevel}
+                  {selectedEnrollment.year_level}
                 </Typography>
               </div>
 
@@ -304,27 +299,20 @@ const RegistrarEnrollment = () => {
                 </div>
 
                 <div className="document-preview">
-  <div className="document-title">
-    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-      Birth Certificate
-    </Typography>
-  </div>
-  {selectedEnrollment.birthCertificateDoc ? (
-    <object
-      data={`data:application/pdf;base64,${selectedEnrollment.birthCertificateDoc}`}
-      type="application/pdf"
-      width="100%"
-      height="500px"
-    >
-      <img
-        src={`data:image/jpeg;base64,${selectedEnrollment.birthCertificateDoc}`}
-        alt="Birth Certificate"
-        style={{ width: '100%', borderRadius: '8px' }}
-      />
-    </object>
-  ) : (
-    <div className="no-doc-message">No birth certificate uploaded</div>
-  )}
+                  <div className="document-title">
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      Birth Certificate
+                    </Typography>
+                  </div>
+                  {selectedEnrollment.birth_certificate_doc ? (
+                    <img 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.birth_certificate_doc}`} 
+                      alt="Birth Certificate" 
+                      style={{ width: '100%', borderRadius: '8px' }}
+                    />
+                  ) : (
+                    <div className="no-doc-message">No birth certificate uploaded</div>
+                  )}
                 </div>
 
                 <div className="document-preview">
@@ -333,24 +321,16 @@ const RegistrarEnrollment = () => {
                       Form 137
                     </Typography>
                   </div>
-                  {selectedEnrollment.form137Doc ? (
-                    <object
-                      data={`data:application/pdf;base64,${selectedEnrollment.form137Doc}`}
-                      type="application/pdf"
-                      width="100%"
-                      height="500px"
-                    >
-                      <img
-                        src={`data:image/jpeg;base64,${selectedEnrollment.form137Doc}`}
-                        alt="Form 137"
-                        style={{ width: '100%', borderRadius: '8px' }}
-                      />
-                    </object>
+                  {selectedEnrollment.form137_doc ? (
+                    <img 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.form137_doc}`} 
+                      alt="Form 137" 
+                      style={{ width: '100%', borderRadius: '8px' }}
+                    />
                   ) : (
                     <div className="no-doc-message">No Form 137 uploaded</div>
                   )}
                 </div>
-
               </div>
 
               <Button 
