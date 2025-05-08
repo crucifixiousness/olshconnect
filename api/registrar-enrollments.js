@@ -1,361 +1,85 @@
-import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box } from '@mui/material';
-import { useState, useEffect, useCallback } from 'react';
-import { FaEye } from "react-icons/fa";
-import { FaCheck } from "react-icons/fa";
-import Searchbar from '../../components/Searchbar';
-import axios from 'axios';
+const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 
-const RegistrarEnrollment = () => {
-  const [showBy, setshowBy] = useState('');
-  const [showProgramBy, setProgramBy] = useState('');
-  const [enrollments, setEnrollments] = useState([]);
-  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
-  const [open, setOpen] = useState(false);
-  const token = localStorage.getItem('token');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
-  const formatStudentName = (firstName, middleName, lastName, suffix) => {
-    const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
-    const suffixText = suffix ? ` ${suffix}` : '';
-    return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
-  };
+const authenticateToken = (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  const fetchEnrollments = useCallback(async () => {
-    try {
-      const response = await axios.get(`/api/registrar-enrollments`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setEnrollments(response.data);
-    } catch (error) {
-      const err = new Error('Failed to fetch enrollments');
-      console.error('Error fetching enrollments:', err);
-      setEnrollments([]);
-    }
-  }, [token]); 
+  if (!token) {
+    throw new Error('No token provided');
+  }
 
-  useEffect(() => {
-    fetchEnrollments();
-  }, [fetchEnrollments]);
-
-  const handleVerify = async (enrollmentId) => {
-    try {
-      await axios.put(`/api/verify-enrollment?id=${enrollmentId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchEnrollments(); // Refresh the list
-    } catch (error) {
-      console.error('Error verifying enrollment:', error);
-    }
-  };
-
-  const handleViewDetails = (enrollment) => {
-    setSelectedEnrollment(enrollment);
-    setOpen(true);
-  };
-
-  const programMapping = {
-    '1': 'BSIT',
-    '2': 'BSHM',
-    '3': 'EDUCATION',
-    '4': 'BSOAD',
-    '5': 'BSCRIM'
-  };
-
-  // Add filtered enrollments computation
-  // Update the filtered enrollments computation
-  const filteredEnrollments = enrollments.filter(enrollment => {
-    if (!showProgramBy) return true;
-    
-    // Handle both numeric and string program codes
-    const programName = enrollment.program_name || programMapping[enrollment.programs];
-    return programName === showProgramBy;
-  });
-
-  return (
-    <div className="right-content w-100" data-testid="registrar-enrollment-page">
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0" data-testid="page-title">Enrollment Verification</h3>      
-      </div>
-
-      <div className="card shadow border-0 p-3 mt-1">
-        <div className="card shadow border-0 p-3 mt-1">
-          <Searchbar data-testid="enrollment-searchbar"/>
-          <h3 className="hd" data-testid="list-title">List</h3>
-
-          <div className="row cardFilters mt-3">
-            <div className="col-md-3">
-              <h4>SHOW BY</h4>
-              <FormControl size='small' className='w-100'>
-                <Select
-                  data-testid="sort-select"
-                  value={showBy}
-                  onChange={(e)=>setshowBy(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value="" data-testid="sort-default">
-                    <em>Default</em>
-                  </MenuItem>
-                  <MenuItem value="asc" data-testid="sort-asc">
-                    A - Z
-                  </MenuItem>
-                  <MenuItem value="desc" data-testid="sort-desc">
-                    Z - A
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-
-            <div className="col-md-3">
-              <h4>PROGRAM</h4>
-              <FormControl size='small' className='w-100'>
-                <Select
-                  data-testid="program-select"
-                  value={showProgramBy}
-                  onChange={(e)=>setProgramBy(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value="" data-testid="program-default">
-                    <em>Program</em>
-                  </MenuItem>
-                  <MenuItem value="BSED" data-testid="program-bsed">BSeD</MenuItem>
-                  <MenuItem value="BSIT" data-testid="program-bsit">BSIT</MenuItem>
-                  <MenuItem value="BSHM" data-testid="program-bshm">BSHM</MenuItem>
-                  <MenuItem value="BSOAD" data-testid="program-bsoad">BSOAd</MenuItem>
-                  <MenuItem value="BSCRIM" data-testid="program-bscrim">BSCRIM</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-          </div>
-
-          <div className='table-responsive mt-3'>
-            <table className='table table-bordered v-align' data-testid="enrollments-table">
-              <thead className='thead-dark'>
-                <tr>
-                  <th>STUDENT NAME</th>
-                  <th>YEAR LEVEL</th>
-                  <th>PROGRAM</th>
-                  <th>STATUS</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEnrollments.map((enrollment, index) => (
-                  <tr key={enrollment._id} data-testid={`enrollment-row-${index}`}>
-                    <td data-testid={`student-name-${index}`}>{formatStudentName(
-                      enrollment.student.firstName,
-                      enrollment.student.middleName,
-                      enrollment.student.lastName,
-                      enrollment.student.suffix
-                    )}</td>
-                    <td data-testid={`year-level-${index}`}>{enrollment.yearLevel}</td>
-                    <td data-testid={`program-${index}`}>
-                      {enrollment.program_name || programMapping[enrollment.programs]}
-                    </td>
-                    <td data-testid={`status-${index}`}>{enrollment.status}</td>
-                    <td className='action'>
-                      <div className='actions d-flex align-items-center'>
-                        <Button 
-                          data-testid={`view-button-${index}`}
-                          className="secondary" 
-                          color="secondary"
-                          onClick={() => handleViewDetails(enrollment)}
-                        >
-                          <FaEye/>
-                        </Button>
-                        {enrollment.status === 'Pending' && (
-                          <Button 
-                            data-testid={`verify-button-${index}`}
-                            className="success" 
-                            color="success"
-                            onClick={() => handleVerify(enrollment._id)}
-                          >
-                            <FaCheck/>
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className='d-flex tableFooter'>
-              <Pagination 
-                data-testid="pagination"
-                count={10} 
-                color="primary" 
-                className='pagination' 
-                showFirstButton 
-                showLastButton 
-              />
-            </div>
-          </div>          
-        </div>
-      </div>
-
-      <Modal 
-        open={open} 
-        onClose={() => setOpen(false)}
-        data-testid="enrollment-details-modal"
-      >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 600,
-          bgcolor: 'background.paper',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          borderRadius: 4,
-          p: 0,
-          maxHeight: '90vh',
-          overflow: 'auto'
-        }}>
-          {selectedEnrollment && (
-            <div className="enrollment-details" data-testid="enrollment-details">
-              <div className="enrollment-details-header">
-                <Typography variant="h5" sx={{ 
-                  fontWeight: 'bold',
-                  color: '#c70202'
-                }}>
-                  Enrollment Details
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Student Name</Typography>
-                <Typography 
-                  variant="body1" 
-                  sx={{ fontWeight: 500 }}
-                  data-testid="modal-student-name"
-                >
-                  {formatStudentName(
-                    selectedEnrollment.student.firstName,
-                    selectedEnrollment.student.middleName,
-                    selectedEnrollment.student.lastName,
-                    selectedEnrollment.student.suffix
-                  )}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Program</Typography>
-                <Typography 
-                  variant="body1" 
-                  sx={{ fontWeight: 500 }}
-                  data-testid="modal-program"
-                >
-                  {programMapping[selectedEnrollment.programs] || selectedEnrollment.programs}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Year Level</Typography>
-                <Typography 
-                  variant="body1" 
-                  sx={{ fontWeight: 500 }}
-                  data-testid="modal-year-level"
-                >
-                  {selectedEnrollment.yearLevel}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Semester</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedEnrollment.semester}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Academic Year</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedEnrollment.academic_year}
-                </Typography>
-              </div>
-              
-              <div className="enrollment-docs-section">
-                <Typography variant="h6" sx={{ 
-                  mb: 2,
-                  color: '#c70202',
-                  fontWeight: 'bold'
-                }}>
-                  Required Documents
-                </Typography>
-                
-                <div className="document-preview">
-                  <div className="document-title">
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Student ID Picture
-                    </Typography>
-                  </div>
-                  {selectedEnrollment.idpic ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.idpic}`} 
-                      alt="Student ID" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No ID picture uploaded</div>
-                  )}
-                </div>
-
-                <div className="document-preview">
-                  <div className="document-title">
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Birth Certificate
-                    </Typography>
-                  </div>
-                  {selectedEnrollment.birthCertificateDoc ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.birthCertificateDoc}`} 
-                      alt="Birth Certificate" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No birth certificate uploaded</div>
-                  )}
-                </div>
-
-                <div className="document-preview">
-                  <div className="document-title">
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Form 137
-                    </Typography>
-                  </div>
-                  {selectedEnrollment.form137Doc ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.form137Doc}`} 
-                      alt="Form 137" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No Form 137 uploaded</div>
-                  )}
-                </div>
-              </div>
-
-              <Button 
-                data-testid="modal-close-button"
-                variant="contained" 
-                fullWidth 
-                sx={{ 
-                  mt: 3,
-                  bgcolor: '#c70202',
-                  '&:hover': {
-                    bgcolor: '#a00000',
-                  },
-                  height: '45px',
-                  fontWeight: 'bold'
-                }}
-                onClick={() => setOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-          )}
-        </Box>
-      </Modal>
-    </div>
-  );
+  return jwt.verify(token, process.env.JWT_SECRET);
 };
 
-export default RegistrarEnrollment;
+module.exports = async (req, res) => {
+  if (req.method === 'GET') {
+    try {
+      const decoded = authenticateToken(req, res);
+      req.user = decoded;
+
+      const client = await pool.connect();
+      
+      try {
+        const { rows } = await client.query(
+          `SELECT 
+            e.enrollment_id as _id,
+            e.student_id,
+            e.program_id as programs,
+            py.year_level as yearLevel,
+            e.semester,
+            e.enrollment_status as status,
+            e.academic_year,
+            e.idpic,
+            e.birth_certificate_doc as birthCertificateDoc,
+            e.form137_doc as form137Doc,
+            s.first_name,
+            s.middle_name,
+            s.last_name,
+            s.suffix
+          FROM enrollments e
+          JOIN students s ON e.student_id = s.id
+          JOIN program_year py ON e.year_id = py.year_id
+          ORDER BY e.enrollment_date DESC`
+        );
+
+        // Transform the binary data to base64 and format student info
+        const enrollments = rows.map(row => ({
+          ...row,
+          idpic: row.idpic ? Buffer.from(row.idpic).toString('base64') : null,
+          birthCertificateDoc: row.birthCertificateDoc ? Buffer.from(row.birthCertificateDoc).toString('base64') : null,
+          form137Doc: row.form137Doc ? Buffer.from(row.form137Doc).toString('base64') : null,
+          student: {
+            firstName: row.first_name,
+            middleName: row.middle_name,
+            lastName: row.last_name,
+            suffix: row.suffix
+          }
+        }));
+
+        // Add debug logging
+        console.log('Document check:', enrollments.map(e => ({
+          hasIdPic: !!e.idpic,
+          hasBirthCert: !!e.birthCertificateDoc,
+          hasForm137: !!e.form137Doc
+        })));
+
+        res.json(enrollments);
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error("Error fetching enrollments:", error);
+      res.status(500).json({ error: "Failed to fetch enrollments" });
+    }
+  } else {
+    res.status(405).json({ message: 'Method not allowed' });
+  }
+};
