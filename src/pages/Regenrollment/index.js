@@ -261,14 +261,14 @@ const RegistrarEnrollment = () => {
               <div className="enrollment-info-item">
                 <Typography variant="subtitle2" sx={{ color: '#666' }}>Semester</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedEnrollment.semester}
+                  {JSON.parse(selectedEnrollment.semester)}
                 </Typography>
               </div>
 
               <div className="enrollment-info-item">
                 <Typography variant="subtitle2" sx={{ color: '#666' }}>Academic Year</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedEnrollment.academic_year}
+                  {JSON.parse(selectedEnrollment.academic_year)}
                 </Typography>
               </div>
               
