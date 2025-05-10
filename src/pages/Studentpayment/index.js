@@ -30,29 +30,20 @@ const StudentPayment = () => {
       setError(null);
       const token = localStorage.getItem('token');
       
-      console.log('Fetching payments...');
       const response = await axios.get('/api/student-payments', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      console.log('API Response:', response.data);
-      
       if (response.data && response.data.length > 0) {
         const paymentData = response.data[0];
-        console.log('Payment Data:', paymentData);
-        console.log('Breakdown:', paymentData.breakdown);
+        const formattedPayment = {
+          ...paymentData,
+          description: `Tuition Fee - ${paymentData.program_name} (${paymentData.semester.replace(/[{"}]/g, '')} Semester)`
+        };
         
-        setPayments(response.data);
-        setTotalBalance(paymentData.breakdown.total);
-        setBreakdown({
-          tuition: paymentData.breakdown.tuition,
-          misc: paymentData.breakdown.misc,
-          lab: paymentData.breakdown.lab,
-          other: paymentData.breakdown.other
-        });
-      } else {
-        console.log('No payment data received');
-        setError('No payment information available.');
+        setPayments([formattedPayment]);
+        setTotalBalance(formattedPayment.amount);
+        setBreakdown(formattedPayment.breakdown);
       }
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
