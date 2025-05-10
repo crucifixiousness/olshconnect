@@ -23,24 +23,26 @@ module.exports = async (req, res) => {
   if (req.method === 'PUT') {
     try {
       const decoded = authenticateToken(req, res);
-      req.user = decoded;
-      
       const enrollmentId = req.query.id;
       
-      const [result] = await pool.execute(
+      const result = await pool.query(
         `UPDATE enrollments 
          SET enrollment_status = 'Verified', 
              verified_at = NOW(),
-             verified_by = ?
-         WHERE enrollment_id = ?`,
-        [req.user.id, enrollmentId]
+             verified_by = $1
+         WHERE enrollment_id = $2
+         RETURNING *`,
+        [decoded.id, enrollmentId]
       );
 
-      if (result.affectedRows === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ error: "Enrollment not found" });
       }
 
-      res.json({ message: "Enrollment verified successfully" });
+      res.json({ 
+        success: true,
+        message: "Enrollment verified successfully" 
+      });
     } catch (error) {
       console.error("Error verifying enrollment:", error);
       res.status(500).json({ error: "Failed to verify enrollment" });
