@@ -187,7 +187,6 @@ const RegistrarEnrollment = () => {
                   <th>ACTION</th>
                 </tr>
               </thead>
-              // Update the tbody to use paginatedEnrollments
               <tbody>
                 {/* Update to use paginatedEnrollments */}
                 {paginatedEnrollments.map((enrollment, index) => (
@@ -198,7 +197,7 @@ const RegistrarEnrollment = () => {
                       enrollment.student.lastName,
                       enrollment.student.suffix
                     )}</td>
-                    <td data-testid={`year-level-${index}`}>{enrollment.yearLevel}</td>
+                    <td data-testid={`year-level-${index}`}>{enrollment.year_level}</td>
                     <td data-testid={`program-${index}`}>
                       {enrollment.program_name || programMapping[enrollment.programs]}
                     </td>
