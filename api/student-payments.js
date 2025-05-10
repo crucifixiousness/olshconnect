@@ -31,51 +31,43 @@ module.exports = async (req, res) => {
     console.log('Student ID from token:', studentId);
 
     const result = await pool.query(`
-        SELECT 
-          e.enrollment_id,
-          e.semester,
-          e.total_fee,
-          e.payment_status,
-          e.next_payment_date,
-          p.program_name,
-          COALESCE(tf.tuition_amount, 0) as tuition_amount,
-          COALESCE(tf.misc_fees, 0) as misc_fees,
-          COALESCE(tf.lab_fees, 0) as lab_fees,
-          COALESCE(tf.other_fees, 0) as other_fees
-        FROM enrollments e
-        JOIN program p ON e.program_id = p.program_id
-        LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
-          AND e.year_id = tf.year_level
-          AND e.semester = tf.semester
-          AND e.academic_year = tf.academic_year
-        WHERE e.student_id = $1 AND e.enrollment_status = 'Verified'
-        ORDER BY e.enrollment_date DESC
-        LIMIT 1
-      `, [studentId]);
-
-    console.log('Database query result:', result.rows);
-
-    if (result.rows.length === 0) {
-      console.log('No enrollment found for student:', studentId);
-      return res.json([]);
-    }
-
-    const currentEnrollment = result.rows[0];
+      SELECT 
+        e.enrollment_id,
+        e.semester,
+        e.total_fee,
+        e.payment_status,
+        e.next_payment_date,
+        e.remaining_balance,
+        p.program_name,
+        tf.tuition_amount,
+        tf.misc_fees,
+        tf.lab_fees,
+        tf.other_fees
+      FROM enrollments e
+      JOIN program p ON e.program_id = p.program_id
+      LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
+        AND e.year_id = tf.year_level
+        AND e.semester = tf.semester
+        AND e.academic_year = tf.academic_year
+      WHERE e.student_id = $1 
+        AND e.enrollment_status = 'Verified'
+      ORDER BY e.enrollment_date DESC
+      LIMIT 1
+    `, [studentId]);
 
     const paymentData = [{
-      id: currentEnrollment.enrollment_id,
-      semester: currentEnrollment.semester,
-      program_name: currentEnrollment.program_name,
-      description: `Tuition Fee - ${currentEnrollment.program_name}`,
-      dueDate: currentEnrollment.next_payment_date || 'End of Semester',
-      amount: parseFloat(currentEnrollment.total_fee || 0),
-      status: currentEnrollment.payment_status || 'Unpaid',
+      id: result.rows[0].enrollment_id,
+      semester: result.rows[0].semester,
+      program_name: result.rows[0].program_name,
+      dueDate: result.rows[0].next_payment_date || 'End of Semester',
+      amount: parseFloat(result.rows[0].total_fee || 0),
+      status: result.rows[0].payment_status || 'Unpaid',
       breakdown: {
-        total: parseFloat(currentEnrollment.total_fee || 0),
-        tuition: parseFloat(currentEnrollment.tuition_amount || 0),
-        misc: parseFloat(currentEnrollment.misc_fees || 0),
-        lab: parseFloat(currentEnrollment.lab_fees || 0),
-        other: parseFloat(currentEnrollment.other_fees || 0)
+        total: parseFloat(result.rows[0].total_fee || 0),
+        tuition: parseFloat(result.rows[0].tuition_amount || 0),
+        misc: parseFloat(result.rows[0].misc_fees || 0),
+        lab: parseFloat(result.rows[0].lab_fees || 0),
+        other: parseFloat(result.rows[0].other_fees || 0)
       }
     }];
 
