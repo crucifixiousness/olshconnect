@@ -54,22 +54,24 @@ module.exports = async (req, res) => {
     }
 
     const currentEnrollment = result.rows[0];
-    const totalAmount = parseFloat(currentEnrollment.tuition_amount || 0) +
-                       parseFloat(currentEnrollment.misc_fees || 0) +
-                       parseFloat(currentEnrollment.lab_fees || 0) +
-                       parseFloat(currentEnrollment.other_fees || 0);
+    const totalAmount = parseFloat(currentEnrollment.total_fee || 0);
+    const tuitionAmount = parseFloat(currentEnrollment.tuition_amount || 0);
+    const miscAmount = parseFloat(currentEnrollment.misc_fees || 0);
+    const labAmount = parseFloat(currentEnrollment.lab_fees || 0);
+    const otherAmount = parseFloat(currentEnrollment.other_fees || 0);
 
     const paymentData = [{
       id: currentEnrollment.enrollment_id,
       description: `Tuition Fee - ${currentEnrollment.program_name} (${currentEnrollment.semester} Semester)`,
-      dueDate: 'End of Semester',
+      dueDate: currentEnrollment.next_payment_date || 'End of Semester',
       amount: totalAmount,
       status: currentEnrollment.payment_status || 'Unpaid',
       breakdown: {
-        tuition: parseFloat(currentEnrollment.tuition_amount || 0),
-        misc: parseFloat(currentEnrollment.misc_fees || 0),
-        lab: parseFloat(currentEnrollment.lab_fees || 0),
-        other: parseFloat(currentEnrollment.other_fees || 0)
+        total: totalAmount,
+        tuition: tuitionAmount,
+        misc: miscAmount,
+        lab: labAmount,
+        other: otherAmount
       }
     }];
 
