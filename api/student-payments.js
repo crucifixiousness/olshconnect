@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -7,13 +8,25 @@ const pool = new Pool({
   }
 });
 
+const authenticateToken = (req) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    throw new Error('No token provided');
+  }
+
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const studentId = req.query.studentId;
+    const decoded = authenticateToken(req);
+    const studentId = decoded.id;
     
     const result = await pool.query(`
       SELECT 
@@ -31,7 +44,7 @@ module.exports = async (req, res) => {
         AND py.year_level = tf.year_level 
         AND e.semester = tf.semester
         AND e.academic_year = tf.academic_year
-      WHERE e.student_id = $1
+      WHERE e.student_id = $1 AND e.enrollment_status = 'Verified'
       ORDER BY e.enrollment_date DESC
       LIMIT 1
     `, [studentId]);
