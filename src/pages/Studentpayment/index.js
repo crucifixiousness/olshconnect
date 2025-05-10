@@ -145,7 +145,7 @@ const StudentPayment = () => {
               {payments.map((payment) => (
                 <tr key={payment.id}>
                   <td>{payment.description}</td>
-                  <td>{new Date(payment.dueDate).toLocaleDateString()}</td>
+                  <td>{payment.dueDate}</td>
                   <td>₱{payment.amount.toFixed(2)}</td>
                   <td>
                     <Chip 
