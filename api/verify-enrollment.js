@@ -27,12 +27,10 @@ module.exports = async (req, res) => {
       
       const result = await pool.query(
         `UPDATE enrollments 
-         SET enrollment_status = 'Verified', 
-             verified_at = NOW(),
-             verified_by = $1
-         WHERE enrollment_id = $2
+         SET enrollment_status = 'Verified'
+         WHERE enrollment_id = $1
          RETURNING *`,
-        [decoded.id, enrollmentId]
+        [enrollmentId]
       );
 
       if (result.rowCount === 0) {
