@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
         tf.lab_fees,
         tf.other_fees
       FROM enrollments e
-      program p ON e.program_id = p.program_id
+      JOIN program p ON e.program_id = p.program_id
       LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
         AND e.year_id = tf.year_level
         AND e.semester = tf.semester
