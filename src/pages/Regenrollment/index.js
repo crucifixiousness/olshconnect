@@ -39,23 +39,27 @@ const RegistrarEnrollment = () => {
   const handleVerify = async (enrollmentId) => {
     try {
       console.log('Verifying enrollment:', enrollmentId);
-      const response = await axios.put(`/api/verify-enrollment`, 
-        { enrollmentId: enrollmentId },
-        {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+      const response = await axios.put(`/api/verify-enrollment?id=${enrollmentId}`, {}, {
+        headers: { 
+          Authorization: `Bearer ${token}`
         }
-      );
+      });
       
       if (response.data.success) {
-        fetchEnrollments(); // Refresh the list after successful verification
-      } else {
-        console.error('Verification failed:', response.data.message);
+        setSnackbar({
+          open: true,
+          message: "Enrollment verified successfully",
+          severity: "success"
+        });
+        fetchEnrollments();
       }
     } catch (error) {
       console.error('Error verifying enrollment:', error.response?.data || error.message);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error || "Failed to verify enrollment",
+        severity: "error"
+      });
     }
   };
 
