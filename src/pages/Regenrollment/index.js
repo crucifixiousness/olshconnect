@@ -17,6 +17,18 @@ const RegistrarEnrollment = () => {
     message: '',
     severity: 'success'
   });
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Update the pagination logic to use filteredEnrollments
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedEnrollments = filteredEnrollments.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(filteredEnrollments.length / rowsPerPage);
 
   const formatStudentName = (firstName, middleName, lastName, suffix) => {
     const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
@@ -163,8 +175,9 @@ const RegistrarEnrollment = () => {
                   <th>ACTION</th>
                 </tr>
               </thead>
+              // Update the tbody to use paginatedEnrollments
               <tbody>
-                {filteredEnrollments.map((enrollment, index) => (
+                {paginatedEnrollments.map((enrollment, index) => (
                   <tr key={enrollment._id} data-testid={`enrollment-row-${index}`}>
                     <td data-testid={`student-name-${index}`}>{formatStudentName(
                       enrollment.student.firstName,
@@ -206,7 +219,9 @@ const RegistrarEnrollment = () => {
             <div className='d-flex tableFooter'>
               <Pagination 
                 data-testid="pagination"
-                count={10} 
+                count={pageCount}
+                page={page}
+                onChange={handlePageChange} 
                 color="primary" 
                 className='pagination' 
                 showFirstButton 
