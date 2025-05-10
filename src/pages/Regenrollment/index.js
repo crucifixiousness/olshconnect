@@ -25,6 +25,16 @@ const RegistrarEnrollment = () => {
   };
 
   // Update the pagination logic to use filteredEnrollments
+  // Move filteredEnrollments before pagination logic
+  const filteredEnrollments = enrollments.filter(enrollment => {
+    if (!showProgramBy) return true;
+    
+    // Handle both numeric and string program codes
+    const programName = enrollment.program_name || programMapping[enrollment.programs];
+    return programName === showProgramBy;
+  });
+  
+  // Now use filteredEnrollments for pagination
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const paginatedEnrollments = filteredEnrollments.slice(startIndex, endIndex);
@@ -93,16 +103,6 @@ const RegistrarEnrollment = () => {
     '4': 'BSOAD',
     '5': 'BSCRIM'
   };
-
-  // Add filtered enrollments computation
-  // Update the filtered enrollments computation
-  const filteredEnrollments = enrollments.filter(enrollment => {
-    if (!showProgramBy) return true;
-    
-    // Handle both numeric and string program codes
-    const programName = enrollment.program_name || programMapping[enrollment.programs];
-    return programName === showProgramBy;
-  });
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -177,6 +177,7 @@ const RegistrarEnrollment = () => {
               </thead>
               // Update the tbody to use paginatedEnrollments
               <tbody>
+                {/* Update to use paginatedEnrollments */}
                 {paginatedEnrollments.map((enrollment, index) => (
                   <tr key={enrollment._id} data-testid={`enrollment-row-${index}`}>
                     <td data-testid={`student-name-${index}`}>{formatStudentName(
