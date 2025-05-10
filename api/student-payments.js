@@ -45,21 +45,15 @@ module.exports = async (req, res) => {
         tf.other_fees
       FROM enrollments e
       JOIN program p ON e.program_id = p.program_id
-      JOIN tuition_fees tf ON e.program_id = tf.program_id 
+      LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
         AND e.year_id = tf.year_level
-        AND e.semester::varchar = tf.semester::varchar
-        AND e.academic_year::varchar = tf.academic_year::varchar
+        AND e.semester = tf.semester
+        AND e.academic_year = tf.academic_year
       WHERE e.student_id = $1 
         AND e.enrollment_status = 'Verified'
       ORDER BY e.enrollment_date DESC
       LIMIT 1
     `, [studentId]);
-
-    console.log('Query result:', result.rows[0]);
-
-    if (result.rows.length === 0) {
-      return res.json([]);
-    }
 
     const paymentData = [{
       id: result.rows[0].enrollment_id,
