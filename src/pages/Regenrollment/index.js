@@ -29,6 +29,9 @@ const RegistrarEnrollment = () => {
   const [rowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [yearLevel, setYearLevel] = useState('');
+
+
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
@@ -39,22 +42,48 @@ const RegistrarEnrollment = () => {
     return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
   };
 
-  const filteredEnrollments = enrollments.filter(enrollment => {
-    const matchesProgram = !showProgramBy || 
-      (enrollment.program_name || programMapping[enrollment.programs]) === showProgramBy;
-    
-    const searchString = formatStudentName(
-      enrollment.student.firstName,
-      enrollment.student.middleName,
-      enrollment.student.lastName,
-      enrollment.student.suffix
-    ).toLowerCase();
-    
-    const matchesSearch = !searchTerm || 
-      searchString.includes(searchTerm.toLowerCase());
+  // Update the filteredEnrollments logic
+  const filteredEnrollments = enrollments
+    // First apply all filters
+    .filter(enrollment => {
+      const matchesProgram = !showProgramBy || 
+        (enrollment.program_name || programMapping[enrollment.programs]) === showProgramBy;
+      
+      const matchesYear = !yearLevel || enrollment.year_level === parseInt(yearLevel);
+      
+      const searchString = formatStudentName(
+        enrollment.student.firstName,
+        enrollment.student.middleName,
+        enrollment.student.lastName,
+        enrollment.student.suffix
+      ).toLowerCase();
+      
+      const matchesSearch = !searchTerm || searchString.includes(searchTerm.toLowerCase());
 
-    return matchesProgram && matchesSearch;
-  });
+      return matchesProgram && matchesSearch && matchesYear;
+    })
+    // Then apply sorting to filtered results
+    .sort((a, b) => {
+      if (!showBy) return 0;
+      
+      // Get full names for comparison
+      const nameA = formatStudentName(
+        a.student.firstName,
+        a.student.middleName,
+        a.student.lastName,
+        a.student.suffix
+      ).toLowerCase();
+      
+      const nameB = formatStudentName(
+        b.student.firstName,
+        b.student.middleName,
+        b.student.lastName,
+        b.student.suffix
+      ).toLowerCase();
+
+      // Apply sorting
+      return showBy === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
   
   // Now use filteredEnrollments for pagination
   const startIndex = (page - 1) * rowsPerPage;
@@ -134,26 +163,43 @@ const RegistrarEnrollment = () => {
           <div className="row cardFilters mt-3">
             <div className="col-md-3">
               <h4>SHOW BY</h4>
+                <FormControl size='small' className='w-100'>
+                  <Select
+                    data-testid="sort-select"
+                    value={showBy}
+                    onChange={(e)=>setshowBy(e.target.value)}
+                    displayEmpty
+                  >
+                    <MenuItem value="" data-testid="sort-default">
+                      <em>Default</em>
+                    </MenuItem>
+                    <MenuItem value="asc" data-testid="sort-asc">
+                      A - Z
+                    </MenuItem>
+                    <MenuItem value="desc" data-testid="sort-desc">
+                      Z - A
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+            </div>
+            <div className="col-md-3">
+              <h4>YEAR LEVEL</h4>
               <FormControl size='small' className='w-100'>
                 <Select
-                  data-testid="sort-select"
-                  value={showBy}
-                  onChange={(e)=>setshowBy(e.target.value)}
+                  value={yearLevel}
+                  onChange={(e) => setYearLevel(e.target.value)}
                   displayEmpty
                 >
-                  <MenuItem value="" data-testid="sort-default">
-                    <em>Default</em>
+                  <MenuItem value="">
+                    <em>All Years</em>
                   </MenuItem>
-                  <MenuItem value="asc" data-testid="sort-asc">
-                    A - Z
-                  </MenuItem>
-                  <MenuItem value="desc" data-testid="sort-desc">
-                    Z - A
-                  </MenuItem>
+                  <MenuItem value="1">1st Year</MenuItem>
+                  <MenuItem value="2">2nd Year</MenuItem>
+                  <MenuItem value="3">3rd Year</MenuItem>
+                  <MenuItem value="4">4th Year</MenuItem>
                 </Select>
               </FormControl>
             </div>
-
             <div className="col-md-3">
               <h4>PROGRAM</h4>
               <FormControl size='small' className='w-100'>
