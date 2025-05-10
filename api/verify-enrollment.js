@@ -25,18 +25,58 @@ module.exports = async (req, res) => {
       const decoded = authenticateToken(req, res);
       const enrollmentId = req.query.id;
       console.log('Request query:', req.query); // Debug log
-      console.log('Enrollment ID received:', enrollmentId);
+      console.log('Enrollment ID received:', enrollmentId); // Debug log
       
       if (!enrollmentId) {
         return res.status(400).json({ error: "Enrollment ID is required" });
       }
 
+      // Get enrollment details first
+      const enrollmentResult = await pool.query(
+        `SELECT program_id, year_id, semester, academic_year 
+         FROM enrollments 
+         WHERE enrollment_id = $1`,
+        [enrollmentId]
+      );
+
+      if (enrollmentResult.rows.length === 0) {
+        return res.status(404).json({ error: "Enrollment not found" });
+      }
+
+      const enrollment = enrollmentResult.rows[0];
+
+      // Get tuition fees
+      const feesResult = await pool.query(
+        `SELECT tuition_amount, misc_fees, lab_fees, other_fees 
+         FROM tuition_fees 
+         WHERE program_id = $1 
+         AND year_level = $2 
+         AND semester = $3 
+         AND academic_year = $4`,
+        [enrollment.program_id, enrollment.year_id, enrollment.semester, enrollment.academic_year]
+      );
+
+      if (feesResult.rows.length === 0) {
+        return res.status(404).json({ error: "Tuition fees not configured" });
+      }
+
+      // Calculate total fees
+      const fees = feesResult.rows[0];
+      const totalFee = parseFloat(fees.tuition_amount) +
+                      parseFloat(fees.misc_fees) +
+                      parseFloat(fees.lab_fees) +
+                      parseFloat(fees.other_fees);
+
+      // Update enrollment with fees and status
       const result = await pool.query(
         `UPDATE enrollments 
-         SET enrollment_status = 'Verified'
-         WHERE enrollment_id = $1
+         SET enrollment_status = 'Verified',
+             total_fee = $1,
+             remaining_balance = $2,
+             payment_status = 'Unpaid'
+         WHERE enrollment_id = $3
          RETURNING *`,
-        [enrollmentId]
+        [totalFee, totalFee, enrollmentId]
       );
       
       console.log('Query result:', result); // Debug log
