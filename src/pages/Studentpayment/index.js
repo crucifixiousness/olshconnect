@@ -11,6 +11,7 @@ const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalBalance, setTotalBalance] = useState(0);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchPayments();
@@ -19,6 +20,7 @@ const StudentPayment = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
       
       const response = await axios.get('/api/student-payments', {
@@ -29,13 +31,19 @@ const StudentPayment = () => {
       
       if (response.data && response.data.length > 0) {
         setTotalBalance(response.data[0].amount);
+      } else {
+        setError('No payment information available. Your enrollment might still be pending verification.');
       }
     } catch (error) {
       console.error('Error fetching payments:', error);
+      setError('Failed to fetch payment information. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Add this after the loading check
+
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -59,7 +67,21 @@ const StudentPayment = () => {
       </div>
     );
   }
-
+  
+  if (error) {
+    return (
+      <div className="right-content w-100" data-testid="student-payment">
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="hd mt-2 pb-0">Payment Information</h3>
+        </div>
+        <div className="card shadow border-0 p-3 mt-3">
+          <div className="alert alert-info" role="alert">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="right-content w-100" data-testid="student-payment">
       <div className="card shadow border-0 p-3 mt-1">
