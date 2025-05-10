@@ -24,7 +24,13 @@ module.exports = async (req, res) => {
     try {
       const decoded = authenticateToken(req, res);
       const enrollmentId = req.query.id;
+
+      console.log('Received enrollment ID:', enrollmentId);
       
+      if (!enrollmentId) {
+        return res.status(400).json({ error: "Enrollment ID is required" });
+      }
+
       const result = await pool.query(
         `UPDATE enrollments 
          SET enrollment_status = 'Verified'
