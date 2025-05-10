@@ -61,11 +61,12 @@ module.exports = async (req, res) => {
     }
 
     const currentEnrollment = result.rows[0];
-    const semester = JSON.parse(currentEnrollment.semester);
 
     const paymentData = [{
       id: currentEnrollment.enrollment_id,
-      description: `Tuition Fee - ${currentEnrollment.program_name} (${semester} Semester)`,
+      semester: currentEnrollment.semester,
+      program_name: currentEnrollment.program_name,
+      description: `Tuition Fee - ${currentEnrollment.program_name}`,
       dueDate: currentEnrollment.next_payment_date || 'End of Semester',
       amount: parseFloat(currentEnrollment.total_fee || 0),
       status: currentEnrollment.payment_status || 'Unpaid',
