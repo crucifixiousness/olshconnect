@@ -65,23 +65,52 @@ module.exports = async (req, res) => {
       other: result.rows[0]?.other_fees
     });
 
+    // Add debugging for the query parameters
+    const enrollmentQuery = await pool.query(`
+      SELECT e.*, py.year_level 
+      FROM enrollments e
+      JOIN program_year py ON e.year_id = py.year_id
+      WHERE e.enrollment_id = $1`, 
+      [3]
+    );
+    console.log('Enrollment details:', enrollmentQuery.rows[0]);
+
+    // Then query tuition fees
+    const feesQuery = await pool.query(`
+      SELECT * FROM tuition_fees 
+      WHERE program_id = $1 
+      AND year_level = $2 
+      AND semester = $3`,
+      [
+        enrollmentQuery.rows[0].program_id,
+        enrollmentQuery.rows[0].year_level,
+        enrollmentQuery.rows[0].semester.replace(/[{"}]/g, '')
+      ]
+    );
+    console.log('Tuition fees found:', feesQuery.rows[0]);
+
+    // Then construct the response
+    const enrollment = enrollmentQuery.rows[0];
+    const fees = feesQuery.rows[0];
+    
     const paymentData = [{
-      id: result.rows[0].enrollment_id,
-      semester: result.rows[0].semester,
-      program_name: result.rows[0].program_name,
-      dueDate: result.rows[0].next_payment_date || 'End of Semester',
-      amount: parseFloat(result.rows[0].total_fee || 0),
-      status: result.rows[0].payment_status || 'Unpaid',
+      id: enrollment.enrollment_id,
+      semester: enrollment.semester,
+      program_name: enrollment.program_name,
+      description: `Tuition Fee - ${enrollment.program_name} (${enrollment.semester.replace(/[{"}]/g, '')} Semester)`,
+      dueDate: enrollment.next_payment_date || 'End of Semester',
+      amount: parseFloat(enrollment.total_fee || 0),
+      status: enrollment.payment_status || 'Unpaid',
       breakdown: {
-        total: parseFloat(result.rows[0].total_fee || 0),
-        tuition: parseFloat(result.rows[0].tuition_amount || 0),
-        misc: parseFloat(result.rows[0].misc_fees || 0),
-        lab: parseFloat(result.rows[0].lab_fees || 0),
-        other: parseFloat(result.rows[0].other_fees || 0)
+        total: parseFloat(enrollment.total_fee || 0),
+        tuition: parseFloat(fees?.tuition_amount || 0),
+        misc: parseFloat(fees?.misc_fees || 0),
+        lab: parseFloat(fees?.lab_fees || 0),
+        other: parseFloat(fees?.other_fees || 0)
       }
     }];
 
-    console.log('Final payment data:', paymentData);
+    console.log('Final payment data:', paymentData[0]);
     res.json(paymentData);
   } catch (error) {
     console.error("Error fetching payment details:", error);
