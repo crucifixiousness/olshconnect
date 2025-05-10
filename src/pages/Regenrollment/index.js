@@ -43,7 +43,9 @@ const RegistrarEnrollment = () => {
 
   const handleVerify = async (enrollmentId) => {
     try {
-      console.log('Verifying enrollment:', enrollmentId);
+      console.log('Enrollment ID to verify:', enrollmentId); // Debug log
+      console.log('Full enrollment object:', enrollment); // Add this to check the structure
+      
       const response = await axios.put(`/api/verify-enrollment?id=${enrollmentId}`, {}, {
         headers: { 
           Authorization: `Bearer ${token}`
@@ -191,7 +193,7 @@ const RegistrarEnrollment = () => {
                             data-testid={`verify-button-${index}`}
                             className="success" 
                             color="success"
-                            onClick={() => handleVerify(enrollment.enrollment_id)}
+                            onClick={() => handleVerify(enrollment._id)}
                           >
                             <FaCheck/>
                           </Button>
