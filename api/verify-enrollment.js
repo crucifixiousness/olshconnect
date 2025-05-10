@@ -24,8 +24,8 @@ module.exports = async (req, res) => {
     try {
       const decoded = authenticateToken(req, res);
       const enrollmentId = req.query.id;
-
-      console.log('Received enrollment ID:', enrollmentId);
+      console.log('Request query:', req.query); // Debug log
+      console.log('Enrollment ID received:', enrollmentId); // Debug log
       
       if (!enrollmentId) {
         return res.status(400).json({ error: "Enrollment ID is required" });
@@ -38,6 +38,8 @@ module.exports = async (req, res) => {
          RETURNING *`,
         [enrollmentId]
       );
+      
+      console.log('Query result:', result); // Debug log
 
       if (result.rowCount === 0) {
         return res.status(404).json({ error: "Enrollment not found" });
