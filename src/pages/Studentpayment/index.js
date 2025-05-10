@@ -19,15 +19,14 @@ const StudentPayment = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token'); // Get JWT token from localStorage
-      const response = await axios.get(`http://localhost:4000/payments`, {
-        headers: {
-          'Authorization': `Bearer ${token}` // Add token to request headers
-        }
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.get('/api/student-payments', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
+      
       setPayments(response.data);
       
-      // Set total balance from the first payment (current enrollment)
       if (response.data && response.data.length > 0) {
         setTotalBalance(response.data[0].amount);
       }
