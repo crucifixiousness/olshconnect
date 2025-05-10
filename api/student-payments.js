@@ -67,9 +67,10 @@ module.exports = async (req, res) => {
 
     // Add debugging for the query parameters
     const enrollmentQuery = await pool.query(`
-      SELECT e.*, py.year_level 
+      SELECT e.*, py.year_level, p.program_name
       FROM enrollments e
       JOIN program_year py ON e.year_id = py.year_id
+      JOIN program p ON e.program_id = p.program_id
       WHERE e.enrollment_id = $1`, 
       [3]
     );
@@ -98,7 +99,7 @@ module.exports = async (req, res) => {
       semester: enrollment.semester,
       program_name: enrollment.program_name,
       description: `Tuition Fee - ${enrollment.program_name} (${enrollment.semester.replace(/[{"}]/g, '')} Semester)`,
-      dueDate: enrollment.next_payment_date || 'End of Semester',
+      dueDate: 'End of Semester',
       amount: parseFloat(enrollment.total_fee || 0),
       status: enrollment.payment_status || 'Unpaid',
       breakdown: {
