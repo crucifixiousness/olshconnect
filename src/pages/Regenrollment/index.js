@@ -44,7 +44,6 @@ const RegistrarEnrollment = () => {
   const handleVerify = async (enrollmentId) => {
     try {
       console.log('Enrollment ID to verify:', enrollmentId); // Debug log
-      console.log('Full enrollment object:', enrollment); // Add this to check the structure
       
       const response = await axios.put(`/api/verify-enrollment?id=${enrollmentId}`, {}, {
         headers: { 
