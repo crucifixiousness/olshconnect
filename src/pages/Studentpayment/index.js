@@ -30,17 +30,23 @@ const StudentPayment = () => {
       setError(null);
       const token = localStorage.getItem('token');
       
+      console.log('Fetching payments with token:', token);
       const response = await axios.get('/api/student-payments', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
+      console.log('API Response:', response.data);
+      
       if (response.data && response.data.length > 0) {
         const paymentData = response.data[0];
+        console.log('Payment breakdown received:', paymentData.breakdown);
+        
         const formattedPayment = {
           ...paymentData,
           description: `Tuition Fee - ${paymentData.program_name} (${paymentData.semester.replace(/[{"}]/g, '')} Semester)`
         };
         
+        console.log('Formatted payment data:', formattedPayment);
         setPayments([formattedPayment]);
         setTotalBalance(formattedPayment.amount);
         setBreakdown(formattedPayment.breakdown);
