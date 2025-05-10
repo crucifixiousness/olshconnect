@@ -1,4 +1,4 @@
-import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box } from '@mui/material';
+import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import { FaEye } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa";
@@ -12,6 +12,11 @@ const RegistrarEnrollment = () => {
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [open, setOpen] = useState(false);
   const token = localStorage.getItem('token');
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const formatStudentName = (firstName, middleName, lastName, suffix) => {
     const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
@@ -85,6 +90,10 @@ const RegistrarEnrollment = () => {
     const programName = enrollment.program_name || programMapping[enrollment.programs];
     return programName === showProgramBy;
   });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   return (
     <div className="right-content w-100" data-testid="registrar-enrollment-page">
@@ -370,6 +379,21 @@ const RegistrarEnrollment = () => {
           )}
         </Box>
       </Modal>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
