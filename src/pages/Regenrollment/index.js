@@ -38,12 +38,24 @@ const RegistrarEnrollment = () => {
 
   const handleVerify = async (enrollmentId) => {
     try {
-      await axios.put(`/api/verify-enrollment?id=${enrollmentId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchEnrollments(); // Refresh the list
+      console.log('Verifying enrollment:', enrollmentId);
+      const response = await axios.put(`/api/verify-enrollment`, 
+        { enrollmentId: enrollmentId },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        fetchEnrollments(); // Refresh the list after successful verification
+      } else {
+        console.error('Verification failed:', response.data.message);
+      }
     } catch (error) {
-      console.error('Error verifying enrollment:', error);
+      console.error('Error verifying enrollment:', error.response?.data || error.message);
     }
   };
 
@@ -166,7 +178,7 @@ const RegistrarEnrollment = () => {
                             data-testid={`verify-button-${index}`}
                             className="success" 
                             color="success"
-                            onClick={() => handleVerify(enrollment._id)}
+                            onClick={() => handleVerify(enrollment.enrollment_id)}
                           >
                             <FaCheck/>
                           </Button>
