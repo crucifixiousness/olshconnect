@@ -33,9 +33,10 @@ module.exports = async (req, res) => {
 
       // Get enrollment details first
       const enrollmentResult = await pool.query(
-        `SELECT program_id, year_id, semester, academic_year 
-         FROM enrollments 
-         WHERE enrollment_id = $1`,
+        `SELECT e.*, py.year_level
+         FROM enrollments e
+         JOIN program_year py ON e.year_id = py.year_id
+         WHERE e.enrollment_id = $1`,
         [enrollmentId]
       );
 
@@ -44,17 +45,30 @@ module.exports = async (req, res) => {
       }
 
       const enrollment = enrollmentResult.rows[0];
+      console.log('Enrollment details:', enrollment);
 
-      // Get tuition fees
+      // Get tuition fees with corrected query
       const feesResult = await pool.query(
         `SELECT tuition_amount, misc_fees, lab_fees, other_fees 
          FROM tuition_fees 
          WHERE program_id = $1 
          AND year_level = $2 
-         AND semester = $3 
+         AND semester = $3::varchar 
          AND academic_year = $4`,
-        [enrollment.program_id, enrollment.year_id, enrollment.semester, enrollment.academic_year]
+        [
+          enrollment.program_id, 
+          enrollment.year_level,
+          enrollment.semester.replace(/[{"}]/g, ''), // Clean the semester string
+          enrollment.academic_year.replace(/[{"}]/g, '') // Clean the academic year string
+        ]
       );
+
+      console.log('Fee query params:', {
+        program_id: enrollment.program_id,
+        year_level: enrollment.year_level,
+        semester: enrollment.semester.replace(/[{"}]/g, ''),
+        academic_year: enrollment.academic_year.replace(/[{"}]/g, '')
+      });
 
       if (feesResult.rows.length === 0) {
         return res.status(404).json({ error: "Tuition fees not configured" });
