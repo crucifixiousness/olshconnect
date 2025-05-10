@@ -5,7 +5,15 @@ import { FaCheck } from "react-icons/fa";
 import Searchbar from '../../components/Searchbar';
 import axios from 'axios';
 
-const RegistrarEnrollment = () => {
+const RegistrarEnrollment = () => {  
+  const programMapping = {
+    '1': 'BSIT',
+    '2': 'BSHM',
+    '3': 'Education',
+    '4': 'BSOAd',
+    '5': 'BSCrim'
+  };
+
   const [showBy, setshowBy] = useState('');
   const [showProgramBy, setProgramBy] = useState('');
   const [enrollments, setEnrollments] = useState([]);
@@ -96,14 +104,6 @@ const RegistrarEnrollment = () => {
     setOpen(true);
   };
 
-  const programMapping = {
-    '1': 'BSIT',
-    '2': 'BSHM',
-    '3': 'EDUCATION',
-    '4': 'BSOAD',
-    '5': 'BSCRIM'
-  };
-
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -154,11 +154,11 @@ const RegistrarEnrollment = () => {
                   <MenuItem value="" data-testid="program-default">
                     <em>Program</em>
                   </MenuItem>
-                  <MenuItem value="BSED" data-testid="program-bsed">BSeD</MenuItem>
+                  <MenuItem value="Education" data-testid="program-bsed">EDUCATION</MenuItem>
                   <MenuItem value="BSIT" data-testid="program-bsit">BSIT</MenuItem>
                   <MenuItem value="BSHM" data-testid="program-bshm">BSHM</MenuItem>
-                  <MenuItem value="BSOAD" data-testid="program-bsoad">BSOAd</MenuItem>
-                  <MenuItem value="BSCRIM" data-testid="program-bscrim">BSCRIM</MenuItem>
+                  <MenuItem value="BSOAd" data-testid="program-bsoad">BSOAd</MenuItem>
+                  <MenuItem value="BSCrim" data-testid="program-bscrim">BSCRIM</MenuItem>
                 </Select>
               </FormControl>
             </div>
