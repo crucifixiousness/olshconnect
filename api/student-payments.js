@@ -31,25 +31,27 @@ module.exports = async (req, res) => {
     console.log('Student ID from token:', studentId);
 
     const result = await pool.query(`
-      SELECT 
-        e.*,
-        p.program_name,
-        tf.tuition_amount,
-        tf.misc_fees,
-        tf.lab_fees,
-        tf.other_fees,
-        py.year_level
-      FROM enrollments e
-      JOIN program p ON e.program_id = p.program_id
-      JOIN program_year py ON e.year_id = py.year_id
-      LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
-        AND py.year_level = tf.year_level 
-        AND e.semester = tf.semester
-        AND e.academic_year = tf.academic_year
-      WHERE e.student_id = $1 AND e.enrollment_status = 'Verified'
-      ORDER BY e.enrollment_date DESC
-      LIMIT 1
-    `, [studentId]);
+        SELECT 
+          e.enrollment_id,
+          e.semester,
+          e.total_fee,
+          e.payment_status,
+          e.next_payment_date,
+          p.program_name,
+          COALESCE(tf.tuition_amount, 0) as tuition_amount,
+          COALESCE(tf.misc_fees, 0) as misc_fees,
+          COALESCE(tf.lab_fees, 0) as lab_fees,
+          COALESCE(tf.other_fees, 0) as other_fees
+        FROM enrollments e
+        JOIN program p ON e.program_id = p.program_id
+        LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
+          AND e.year_id = tf.year_level
+          AND e.semester = tf.semester
+          AND e.academic_year = tf.academic_year
+        WHERE e.student_id = $1 AND e.enrollment_status = 'Verified'
+        ORDER BY e.enrollment_date DESC
+        LIMIT 1
+      `, [studentId]);
 
     console.log('Database query result:', result.rows);
 
@@ -59,34 +61,20 @@ module.exports = async (req, res) => {
     }
 
     const currentEnrollment = result.rows[0];
-    console.log('Current enrollment:', currentEnrollment);
-
-    const totalAmount = parseFloat(currentEnrollment.total_fee || 0);
-    const tuitionAmount = parseFloat(currentEnrollment.tuition_amount || 0);
-    const miscAmount = parseFloat(currentEnrollment.misc_fees || 0);
-    const labAmount = parseFloat(currentEnrollment.lab_fees || 0);
-    const otherAmount = parseFloat(currentEnrollment.other_fees || 0);
-
-    console.log('Calculated amounts:', {
-      total: totalAmount,
-      tuition: tuitionAmount,
-      misc: miscAmount,
-      lab: labAmount,
-      other: otherAmount
-    });
+    const semester = JSON.parse(currentEnrollment.semester);
 
     const paymentData = [{
       id: currentEnrollment.enrollment_id,
-      description: `Tuition Fee - ${currentEnrollment.program_name} (${currentEnrollment.semester} Semester)`,
+      description: `Tuition Fee - ${currentEnrollment.program_name} (${semester} Semester)`,
       dueDate: currentEnrollment.next_payment_date || 'End of Semester',
-      amount: totalAmount,
+      amount: parseFloat(currentEnrollment.total_fee || 0),
       status: currentEnrollment.payment_status || 'Unpaid',
       breakdown: {
-        total: totalAmount,
-        tuition: tuitionAmount,
-        misc: miscAmount,
-        lab: labAmount,
-        other: otherAmount
+        total: parseFloat(currentEnrollment.total_fee || 0),
+        tuition: parseFloat(currentEnrollment.tuition_amount || 0),
+        misc: parseFloat(currentEnrollment.misc_fees || 0),
+        lab: parseFloat(currentEnrollment.lab_fees || 0),
+        other: parseFloat(currentEnrollment.other_fees || 0)
       }
     }];
 
