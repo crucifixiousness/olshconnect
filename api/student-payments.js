@@ -1,0 +1,68 @@
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+module.exports = async (req, res) => {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const studentId = req.query.studentId;
+    
+    const result = await pool.query(`
+      SELECT 
+        e.*,
+        p.program_name,
+        tf.tuition_amount,
+        tf.misc_fees,
+        tf.lab_fees,
+        tf.other_fees,
+        py.year_level
+      FROM enrollments e
+      JOIN program p ON e.program_id = p.program_id
+      JOIN program_year py ON e.year_id = py.year_id
+      LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
+        AND py.year_level = tf.year_level 
+        AND e.semester = tf.semester
+        AND e.academic_year = tf.academic_year
+      WHERE e.student_id = $1
+      ORDER BY e.enrollment_date DESC
+      LIMIT 1
+    `, [studentId]);
+
+    if (result.rows.length === 0) {
+      return res.json([]);
+    }
+
+    const currentEnrollment = result.rows[0];
+    const totalAmount = parseFloat(currentEnrollment.tuition_amount || 0) +
+                       parseFloat(currentEnrollment.misc_fees || 0) +
+                       parseFloat(currentEnrollment.lab_fees || 0) +
+                       parseFloat(currentEnrollment.other_fees || 0);
+
+    const paymentData = [{
+      id: currentEnrollment.enrollment_id,
+      description: `Tuition Fee - ${currentEnrollment.program_name} (${currentEnrollment.semester} Semester)`,
+      dueDate: 'End of Semester',
+      amount: totalAmount,
+      status: currentEnrollment.payment_status || 'Unpaid',
+      breakdown: {
+        tuition: parseFloat(currentEnrollment.tuition_amount || 0),
+        misc: parseFloat(currentEnrollment.misc_fees || 0),
+        lab: parseFloat(currentEnrollment.lab_fees || 0),
+        other: parseFloat(currentEnrollment.other_fees || 0)
+      }
+    }];
+
+    res.json(paymentData);
+  } catch (error) {
+    console.error("Error fetching payment details:", error);
+    res.status(500).json({ error: "Failed to fetch payment details" });
+  }
+};
