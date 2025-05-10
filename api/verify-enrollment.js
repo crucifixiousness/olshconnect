@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
       const decoded = authenticateToken(req, res);
       const enrollmentId = req.query.id;
       console.log('Request query:', req.query); // Debug log
-      console.log('Enrollment ID received:', enrollmentId); // Debug log
+      console.log('Enrollment ID received:', enrollmentId);
       
       if (!enrollmentId) {
         return res.status(400).json({ error: "Enrollment ID is required" });
