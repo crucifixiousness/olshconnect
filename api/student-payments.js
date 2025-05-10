@@ -28,6 +28,8 @@ module.exports = async (req, res) => {
     const decoded = authenticateToken(req);
     const studentId = decoded.id;
     
+    console.log('Student ID from token:', studentId);
+
     const result = await pool.query(`
       SELECT 
         e.*,
@@ -49,16 +51,29 @@ module.exports = async (req, res) => {
       LIMIT 1
     `, [studentId]);
 
+    console.log('Database query result:', result.rows);
+
     if (result.rows.length === 0) {
+      console.log('No enrollment found for student:', studentId);
       return res.json([]);
     }
 
     const currentEnrollment = result.rows[0];
+    console.log('Current enrollment:', currentEnrollment);
+
     const totalAmount = parseFloat(currentEnrollment.total_fee || 0);
     const tuitionAmount = parseFloat(currentEnrollment.tuition_amount || 0);
     const miscAmount = parseFloat(currentEnrollment.misc_fees || 0);
     const labAmount = parseFloat(currentEnrollment.lab_fees || 0);
     const otherAmount = parseFloat(currentEnrollment.other_fees || 0);
+
+    console.log('Calculated amounts:', {
+      total: totalAmount,
+      tuition: tuitionAmount,
+      misc: miscAmount,
+      lab: labAmount,
+      other: otherAmount
+    });
 
     const paymentData = [{
       id: currentEnrollment.enrollment_id,
@@ -75,6 +90,7 @@ module.exports = async (req, res) => {
       }
     }];
 
+    console.log('Final payment data:', paymentData);
     res.json(paymentData);
   } catch (error) {
     console.error("Error fetching payment details:", error);
