@@ -27,19 +27,33 @@ const RegistrarEnrollment = () => {
   });
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
 
-  // Update the pagination logic to use filteredEnrollments
-  // Move filteredEnrollments before pagination logic
+  const formatStudentName = (firstName, middleName, lastName, suffix) => {
+    const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
+    const suffixText = suffix ? ` ${suffix}` : '';
+    return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
+  };
+
   const filteredEnrollments = enrollments.filter(enrollment => {
-    if (!showProgramBy) return true;
+    const matchesProgram = !showProgramBy || 
+      (enrollment.program_name || programMapping[enrollment.programs]) === showProgramBy;
     
-    // Handle both numeric and string program codes
-    const programName = enrollment.program_name || programMapping[enrollment.programs];
-    return programName === showProgramBy;
+    const searchString = formatStudentName(
+      enrollment.student.firstName,
+      enrollment.student.middleName,
+      enrollment.student.lastName,
+      enrollment.student.suffix
+    ).toLowerCase();
+    
+    const matchesSearch = !searchTerm || 
+      searchString.includes(searchTerm.toLowerCase());
+
+    return matchesProgram && matchesSearch;
   });
   
   // Now use filteredEnrollments for pagination
@@ -47,12 +61,6 @@ const RegistrarEnrollment = () => {
   const endIndex = startIndex + rowsPerPage;
   const paginatedEnrollments = filteredEnrollments.slice(startIndex, endIndex);
   const pageCount = Math.ceil(filteredEnrollments.length / rowsPerPage);
-
-  const formatStudentName = (firstName, middleName, lastName, suffix) => {
-    const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
-    const suffixText = suffix ? ` ${suffix}` : '';
-    return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
-  };
 
   const fetchEnrollments = useCallback(async () => {
     try {
@@ -116,7 +124,11 @@ const RegistrarEnrollment = () => {
 
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
-          <Searchbar data-testid="enrollment-searchbar"/>
+          <Searchbar 
+            value={searchTerm}
+            onChange={setSearchTerm}
+            data-testid="enrollment-searchbar"
+          />
           <h3 className="hd" data-testid="list-title">List</h3>
 
           <div className="row cardFilters mt-3">
