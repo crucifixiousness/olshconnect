@@ -27,16 +27,24 @@ const StudentPayment = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      setPayments(response.data);
-      
       if (response.data && response.data.length > 0) {
-        setTotalBalance(response.data[0].amount);
+        const paymentData = response.data[0];
+        setPayments(response.data);
+        setTotalBalance(paymentData.breakdown.total);
+        
+        // Update breakdown display
+        setBreakdown({
+          tuition: paymentData.breakdown.tuition,
+          misc: paymentData.breakdown.misc,
+          lab: paymentData.breakdown.lab,
+          other: paymentData.breakdown.other
+        });
       } else {
-        setError('No payment information available. Your enrollment might still be pending verification.');
+        setError('No payment information available.');
       }
     } catch (error) {
       console.error('Error fetching payments:', error);
-      setError('Failed to fetch payment information. Please try again later.');
+      setError('Failed to fetch payment information.');
     } finally {
       setLoading(false);
     }
