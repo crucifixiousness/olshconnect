@@ -30,16 +30,20 @@ const StudentPayment = () => {
       setError(null);
       const token = localStorage.getItem('token');
       
+      console.log('Fetching payments...');
       const response = await axios.get('/api/student-payments', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
+      console.log('API Response:', response.data);
+      
       if (response.data && response.data.length > 0) {
         const paymentData = response.data[0];
+        console.log('Payment Data:', paymentData);
+        console.log('Breakdown:', paymentData.breakdown);
+        
         setPayments(response.data);
         setTotalBalance(paymentData.breakdown.total);
-        
-        // Update breakdown display
         setBreakdown({
           tuition: paymentData.breakdown.tuition,
           misc: paymentData.breakdown.misc,
@@ -47,10 +51,11 @@ const StudentPayment = () => {
           other: paymentData.breakdown.other
         });
       } else {
+        console.log('No payment data received');
         setError('No payment information available.');
       }
     } catch (error) {
-      console.error('Error fetching payments:', error);
+      console.error('Error details:', error.response?.data || error.message);
       setError('Failed to fetch payment information.');
     } finally {
       setLoading(false);
