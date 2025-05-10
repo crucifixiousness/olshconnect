@@ -9,9 +9,16 @@ import axios from 'axios';
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [totalBalance, setTotalBalance] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [breakdown, setBreakdown] = useState({
+    tuition: 0,
+    misc: 0,
+    lab: 0,
+    other: 0
+  });
+
 
   useEffect(() => {
     fetchPayments();
