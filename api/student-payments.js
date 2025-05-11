@@ -32,6 +32,7 @@ module.exports = async (req, res) => {
 
     console.log('Fetching enrollment data for student:', studentId);
 
+    // Get the initial enrollment data
     const result = await pool.query(`
       SELECT 
         e.enrollment_id,
@@ -44,11 +45,9 @@ module.exports = async (req, res) => {
         tf.tuition_amount,
         tf.misc_fees,
         tf.lab_fees,
-        tf.other_fees,
-        py.year_level
+        tf.other_fees
       FROM enrollments e
       JOIN program p ON e.program_id = p.program_id
-      JOIN program_year py ON e.year_id = py.year_id
       LEFT JOIN tuition_fees tf ON e.program_id = tf.program_id 
         AND e.year_id = tf.year_level
         AND e.semester = tf.semester
@@ -60,25 +59,37 @@ module.exports = async (req, res) => {
     `, [studentId]);
 
     if (!result.rows.length) {
-      return res.json([]);  // Return empty array if no verified enrollment
+      return res.json([]); // Return empty if no verified enrollment
     }
 
-    const enrollment = result.rows[0];
-    
-    // Get tuition fees
+    // Use the enrollment_id from the first query
+    const enrollmentQuery = await pool.query(`
+      SELECT e.*, py.year_level, p.program_name
+      FROM enrollments e
+      JOIN program_year py ON e.year_id = py.year_id
+      JOIN program p ON e.program_id = p.program_id
+      WHERE e.enrollment_id = $1`, 
+      [result.rows[0].enrollment_id]  // Use dynamic enrollment_id instead of hardcoded 3
+    );
+    console.log('Enrollment details:', enrollmentQuery.rows[0]);
+
+    // Then query tuition fees
     const feesQuery = await pool.query(`
       SELECT * FROM tuition_fees 
       WHERE program_id = $1 
       AND year_level = $2 
       AND semester = $3`,
       [
-        enrollment.program_id,
-        enrollment.year_level,
-        enrollment.semester.replace(/[{"}]/g, '')
+        enrollmentQuery.rows[0].program_id,
+        enrollmentQuery.rows[0].year_level,
+        enrollmentQuery.rows[0].semester.replace(/[{"}]/g, '')
       ]
     );
+    console.log('Tuition fees found:', feesQuery.rows[0]);
 
-    const fees = feesQuery.rows[0] || {};
+    // Then construct the response
+    const enrollment = enrollmentQuery.rows[0];
+    const fees = feesQuery.rows[0];
     
     const paymentData = [{
       id: enrollment.enrollment_id,
