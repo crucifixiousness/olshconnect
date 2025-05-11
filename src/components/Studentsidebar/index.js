@@ -23,9 +23,18 @@ const StudentSidebar = () => {
 
     // Logout function to remove user data and redirect
   const handleLogout = () => {
-    localStorage.removeItem("user"); // Remove user data from localStorage
-    navigate("/homepage"); // Redirect to homepage
+    // Clear all cached data
+    localStorage.removeItem('paymentData');
+    localStorage.removeItem('paymentDataTimestamp');
+    localStorage.removeItem('studentProfileData');
+    localStorage.removeItem('studentProfileTimestamp');
+    // Clear auth data
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    // Redirect to homepage
+    navigate('/homepage');
   };
+
   return (
     <div className="sidebar">
       <ul>
