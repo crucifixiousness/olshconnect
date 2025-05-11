@@ -109,12 +109,31 @@ const StudentProfile = () => {
   
   const fetchStudentData = useCallback(async () => {
     try {
+      // Check cache first
+      const cachedData = localStorage.getItem('studentProfileData');
+      const cacheTimestamp = localStorage.getItem('studentProfileTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        const parsedData = JSON.parse(cachedData);
+        setStudentData(parsedData);
+        setFormData(parsedData);
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get("/api/studentprofile", {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
       });
+
+      // Cache the new data
+      localStorage.setItem('studentProfileData', JSON.stringify(response.data));
+      localStorage.setItem('studentProfileTimestamp', Date.now().toString());
+      
       setStudentData(response.data);
       setFormData(response.data);
       setLoading(false);
@@ -236,15 +255,19 @@ const StudentProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Create a new object that explicitly includes empty values
       const dataToSubmit = {
         ...formData,
-        suffix: formData.suffix || null, // Explicitly set null if empty
+        suffix: formData.suffix || null,
       };
 
       const response = await axios.put("/api/updatestudentprofile", dataToSubmit, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Clear cache after successful update
+      localStorage.removeItem('studentProfileData');
+      localStorage.removeItem('studentProfileTimestamp');
+      
       setStudentData(response.data);
       setOpen(false);
       setIsEditing(false);
