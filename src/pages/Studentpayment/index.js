@@ -28,25 +28,38 @@ const StudentPayment = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('token');
       
-      console.log('Fetching payments with token:', token);
+      // Check cache first
+      const cachedData = localStorage.getItem('paymentData');
+      const cacheTimestamp = localStorage.getItem('paymentDataTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        const parsedData = JSON.parse(cachedData);
+        setPayments([parsedData]);
+        setTotalBalance(parsedData.amount);
+        setBreakdown(parsedData.breakdown);
+        setLoading(false);
+        return;
+      }
+
+      const token = localStorage.getItem('token');
       const response = await axios.get('/api/student-payments', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      console.log('API Response:', response.data);
-      
       if (response.data && response.data.length > 0) {
         const paymentData = response.data[0];
-        console.log('Payment breakdown received:', paymentData.breakdown);
-        
         const formattedPayment = {
           ...paymentData,
           description: `Tuition Fee - ${paymentData.program_name} (${paymentData.semester.replace(/[{"}]/g, '')} Semester)`
         };
         
-        console.log('Formatted payment data:', formattedPayment);
+        // Cache the formatted payment data
+        localStorage.setItem('paymentData', JSON.stringify(formattedPayment));
+        localStorage.setItem('paymentDataTimestamp', Date.now().toString());
+        
         setPayments([formattedPayment]);
         setTotalBalance(formattedPayment.amount);
         setBreakdown(formattedPayment.breakdown);
