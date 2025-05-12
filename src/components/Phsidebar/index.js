@@ -3,7 +3,7 @@ import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { HiOutlineDesktopComputer } from "react-icons/hi";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 
@@ -11,6 +11,7 @@ const ProgramHeadSidebar = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isStudentMenuOpen, setIsStudentMenuOpen] = useState(false);
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(false);
+  const navigate = useNavigate();  // Add this
 
   const handleTabClick = (index) => {
     setActiveTab(index);
@@ -24,6 +25,19 @@ const ProgramHeadSidebar = () => {
   const toggleCourseMenu = (index) => {
     setActiveTab(index);
     setIsCourseMenuOpen(!isCourseMenuOpen);
+  };
+
+  const handleLogout = () => {
+      // Clear all cached data
+      localStorage.removeItem('assignedCoursesData');
+      localStorage.removeItem('assignedCoursesTimestamp');
+      // Clear auth data
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('program_id');
+      localStorage.removeItem('staff_id');
+      // Redirect to homepage
+      navigate('/homepage');
   };
 
   return (
@@ -80,7 +94,9 @@ const ProgramHeadSidebar = () => {
         <div className='logoutWrap'>
           <Link to={"/homepage"}>
             <div className='logoutBox'>
-              <Button variant="contained"><HiOutlineLogout />Logout</Button>
+              <Button variant="contained" onClick={handleLogout}>
+                <HiOutlineLogout />Logout
+              </Button>
             </div>
           </Link>
         </div>
