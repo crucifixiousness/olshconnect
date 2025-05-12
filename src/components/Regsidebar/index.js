@@ -4,13 +4,19 @@ import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
 
+const RegistrarSidebar = () => {
+  const navigate = useNavigate();
 
-const RegistrarSidebar = () =>{
+  const handleLogout = () => {
+    localStorage.clear();
+
+    navigate('/homepage');
+  };
   // eslint-disable-next-line
   const [activeTab, setActiveTab] = useState(0);
   const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
@@ -96,16 +102,13 @@ const RegistrarSidebar = () =>{
           </ul>
 
           <br/>
-          <div className='logoutWrap'>
-              <Link to={"/homepage"}>
+            <div className='logoutWrap'>
               <div className='logoutBox'>
-                  <Button variant="contained"><HiOutlineLogout/>Logout</Button>
+                <Button variant="contained" onClick={handleLogout}>
+                  <HiOutlineLogout/>Logout
+                </Button>
               </div>
-              </Link>
-          </div>
-          
-
-
+            </div>
         </div>
       </>
     )
