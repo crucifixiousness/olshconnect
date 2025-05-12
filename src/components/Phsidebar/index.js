@@ -28,15 +28,7 @@ const ProgramHeadSidebar = () => {
   };
 
   const handleLogout = () => {
-      // Clear all cached data
-      localStorage.removeItem('assignedCoursesData');
-      localStorage.removeItem('assignedCoursesTimestamp');
-      // Clear auth data
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      localStorage.removeItem('program_id');
-      localStorage.removeItem('staff_id');
-      // Redirect to homepage
+      localStorage.clear();
       navigate('/homepage');
   };
 
@@ -92,13 +84,11 @@ const ProgramHeadSidebar = () => {
 
         <br />
         <div className='logoutWrap'>
-          <Link to={"/homepage"}>
             <div className='logoutBox'>
               <Button variant="contained" onClick={handleLogout}>
                 <HiOutlineLogout />Logout
               </Button>
             </div>
-          </Link>
         </div>
       </div>
     </>
