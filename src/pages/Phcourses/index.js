@@ -242,12 +242,36 @@ const AssignCourses = () => {
   const fetchAssignedCourses = useCallback(async () => {
     if (!program_id) return;
     try {
-      const response = await axios.get(`/api/program-courses?program_id=${program_id}`); // Fixed: Using actual program_id
+      // Check cache first
+      const cachedData = localStorage.getItem('assignedCoursesData');
+      const cacheTimestamp = localStorage.getItem('assignedCoursesTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        setAssignedCourses(JSON.parse(cachedData));
+        return;
+      }
+
+      const response = await axios.get(`/api/program-courses?program_id=${program_id}`);
+      
+      // Cache the data
+      localStorage.setItem('assignedCoursesData', JSON.stringify(response.data));
+      localStorage.setItem('assignedCoursesTimestamp', Date.now().toString());
+      
       setAssignedCourses(response.data);
     } catch (error) {
       console.error("Error fetching assigned courses:", error);
     }
   }, [program_id]);
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('assignedCoursesData');
+      localStorage.removeItem('assignedCoursesTimestamp');
+    };
+  }, []);
   
   // Then update the useEffects that use fetchAssignedCourses
   useEffect(() => {
