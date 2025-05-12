@@ -45,34 +45,57 @@ const Signup = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      // Disable the submit button during login
+      e.target.querySelector('button[type="submit"]').disabled = true;
+
       const response = await axios.post('/api/loginstaff', credentials);
       const { token, user } = response.data;
-  
-      // Store complete user data in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', user.role);
-      localStorage.setItem('program_id', user.program_id);
-      localStorage.setItem('staff_id', user.staff_id); // Add this line
-      localStorage.setItem('user', JSON.stringify(user)); // Store complete user object
-  
-      setUser(user);
-      setRole(user.role);
+
+      // Prepare all data before any state updates
+      const userData = {
+        token,
+        user,
+        role: user.role
+      };
+
+      // Update localStorage first
+      Object.entries({
+        token: userData.token,
+        role: userData.role,
+        program_id: user.program_id,
+        staff_id: user.staff_id,
+        user: JSON.stringify(user)
+      }).forEach(([key, value]) => {
+        if (value) localStorage.setItem(key, value);
+      });
+
+      // Update all context states in one batch
+      await Promise.resolve();
+      setUser(userData.user);
+      setRole(userData.role);
       setIsLogin(true);
-  
-      // Redirect based on role
-      if (user.role === 'admin') {
-        navigate('/dashboard');
-      } else if (user.role === 'instructor') {
-        navigate('/instructor-dashboard');
-      } else if (user.role === 'registrar') {
-        navigate('/registrar-dashboard');
-      } else if (user.role === 'finance') {
-        navigate('/finance-dashboard');
-      } else if (user.role === 'program head') {
-        navigate('/programhead-dashboard');
+
+      // Determine redirect path
+      const paths = {
+        'admin': '/dashboard',
+        'instructor': '/instructor-dashboard',
+        'registrar': '/registrar-dashboard',
+        'finance': '/finance-dashboard',
+        'program head': '/programhead-dashboard'
+      };
+
+      // Navigate after state updates are complete
+      const redirectPath = paths[userData.role];
+      if (redirectPath) {
+        await Promise.resolve();
+        navigate(redirectPath, { replace: true });
       }
+
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      // Re-enable the submit button
+      e.target.querySelector('button[type="submit"]').disabled = false;
     }
   };
   
