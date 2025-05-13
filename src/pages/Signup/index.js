@@ -17,7 +17,7 @@ const Signup = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  const { isLogin, setIsLogin, setUser, setRole } = useContext(MyContext);
+  const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   const context = useContext(MyContext);
 
@@ -45,29 +45,35 @@ const Signup = () => {
       const response = await axios.post('/api/loginstaff', credentials);
       const { token, user } = response.data;
   
-      // First batch: localStorage updates
+      // Clear any existing data first
+      localStorage.clear();
+      
+      // Set token first and wait for it to be set
       await new Promise(resolve => {
-        setTimeout(() => {
-          localStorage.setItem('token', token);
-          localStorage.setItem('role', user.role);
-          localStorage.setItem('program_id', user.program_id);
-          localStorage.setItem('staff_id', user.staff_id);
-          localStorage.setItem('user', JSON.stringify(user));
-          resolve();
-        }, 300);
+        localStorage.setItem('token', token);
+        context.setToken(token); // Add setToken to your context destructuring
+        resolve();
       });
 
-      // Second batch: context updates
+      // Set remaining data
+      localStorage.setItem('role', user.role);
+      localStorage.setItem('program_id', user.program_id);
+      localStorage.setItem('staff_id', user.staff_id);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // Update context states in order
       await new Promise(resolve => {
+        setRole(user.role);
         setTimeout(() => {
           setUser(user);
-          setRole(user.role);
-          setIsLogin(true);
-          resolve();
-        }, 300);
+          setTimeout(() => {
+            setIsLogin(true);
+            resolve();
+          }, 100);
+        }, 100);
       });
 
-      // Third batch: navigation
+      // Navigate after all states are confirmed set
       const paths = {
         'admin': '/dashboard',
         'instructor': '/instructor-dashboard',
@@ -76,10 +82,8 @@ const Signup = () => {
         'program head': '/programhead-dashboard'
       };
 
-      setTimeout(() => {
-        const redirectPath = paths[user.role] || '/dashboard';
-        navigate(redirectPath, { replace: true });
-      }, 300);
+      const redirectPath = paths[user.role] || '/dashboard';
+      window.location.href = redirectPath; // Using direct navigation instead of React Router
 
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
