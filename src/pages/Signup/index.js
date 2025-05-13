@@ -35,40 +35,60 @@ const Signup = () => {
     setCredentials({ ...credentials, [name]: value });
   };
 
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await axios.post('/api/loginstaff', credentials);
       const { token, user } = response.data;
   
-      // Store complete user data in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', user.role);
-      localStorage.setItem('program_id', user.program_id);
-      localStorage.setItem('staff_id', user.staff_id); // Add this line
-      localStorage.setItem('user', JSON.stringify(user)); // Store complete user object
-  
-      setUser(user);
-      setRole(user.role);
-      setIsLogin(true);
-  
-      // Redirect based on role
-      if (user.role === 'admin') {
-        navigate('/dashboard');
-      } else if (user.role === 'instructor') {
-        navigate('/instructor-dashboard');
-      } else if (user.role === 'registrar') {
-        navigate('/registrar-dashboard');
-      } else if (user.role === 'finance') {
-        navigate('/finance-dashboard');
-      } else if (user.role === 'program head') {
-        navigate('/programhead-dashboard');
-      }
+      // First batch: localStorage updates
+      await new Promise(resolve => {
+        setTimeout(() => {
+          localStorage.setItem('token', token);
+          localStorage.setItem('role', user.role);
+          localStorage.setItem('program_id', user.program_id);
+          localStorage.setItem('staff_id', user.staff_id);
+          localStorage.setItem('user', JSON.stringify(user));
+          resolve();
+        }, 300);
+      });
+
+      // Second batch: context updates
+      await new Promise(resolve => {
+        setTimeout(() => {
+          setUser(user);
+          setRole(user.role);
+          setIsLogin(true);
+          resolve();
+        }, 300);
+      });
+
+      // Third batch: navigation
+      const paths = {
+        'admin': '/dashboard',
+        'instructor': '/instructor-dashboard',
+        'registrar': '/registrar-dashboard',
+        'finance': '/finance-dashboard',
+        'program head': '/programhead-dashboard'
+      };
+
+      setTimeout(() => {
+        const redirectPath = paths[user.role] || '/dashboard';
+        navigate(redirectPath, { replace: true });
+      }, 300);
+
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
+  // Update the submit button in the form
 
   return (
     <>
@@ -136,7 +156,13 @@ const Signup = () => {
                   </div>
 
                   <div className='form-group'>
-                    <Button className="btn-blue btn-lg w-100 btn-big" type="submit">Sign in</Button>
+                  <Button 
+                    className="btn-blue btn-lg w-100 btn-big" 
+                    type="submit" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Signing in...' : 'Sign in'}
+                  </Button>
                   </div>
                 </form>
               </div>
