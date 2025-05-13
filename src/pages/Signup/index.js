@@ -36,12 +36,9 @@ const Signup = () => {
   };
 
   useEffect(() => {
+    // Redirect to dashboard if already logged in
     if (isLogin) {
-      // Delay redirection slightly to avoid rapid state-based rerenders
-      const timeout = setTimeout(() => {
-        navigate('/dashboard');
-      }, 100);
-      return () => clearTimeout(timeout);
+      navigate('/dashboard');
     }
   }, [isLogin, navigate]);
 
