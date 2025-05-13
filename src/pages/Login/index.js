@@ -17,7 +17,7 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const context = useContext(MyContext);
   const navigate = useNavigate();
-  const { setUser, setIsLogin, setRole } = useContext(MyContext);
+  const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   useEffect(() => {
       context.setIsHideComponents(true);
@@ -32,40 +32,51 @@ const Login = () => {
     setCredentials({ ...credentials, [name]: value });
     };
 
+    // Add loading state
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post('/api/loginstudent', credentials);
-            console.log('Login response:', response);
+      e.preventDefault();
+      setIsLoading(true);
+      try {
+        const response = await axios.post('/api/loginstudent', credentials);
+        const { token, user } = response.data;
     
-            const { token, user } = response.data;
+        // Clear any existing data first
+        localStorage.clear();
+        
+        // Set token first and wait for it to be set
+        await new Promise(resolve => {
+          localStorage.setItem('token', token);
+          setToken(token);
+          resolve();
+        });
     
-            if (!user.role) {
-                console.error('Role is undefined in the API response.');
-                setErrorMessage('Unexpected error occurred. Please contact support.');
-                return;
-            }
+        // Set remaining data
+        localStorage.setItem('role', user.role);
+        localStorage.setItem('student_id', user.student_id);
+        localStorage.setItem('user', JSON.stringify(user));
     
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', user.role);
-            localStorage.setItem('user', JSON.stringify(user));
-    
+        // Update context states in order
+        await new Promise(resolve => {
+          setRole(user.role);
+          setTimeout(() => {
             setUser(user);
-            setRole(user.role);
-            setIsLogin(true);
+            setTimeout(() => {
+              setIsLogin(true);
+              resolve();
+            }, 100);
+          }, 100);
+        });
     
-            console.log('App State Update:', {
-                token,
-                role: user.role,
-                user,
-                isHideComponents: context.isHideComponents,
-            });
+        // Navigate to student dashboard
+        window.location.href = '/student-dashboard';
     
-            navigate(user.role === 'student' ? '/student-dashboard' : '/dashboard');
-        } catch (error) {
-            console.error('Login Error:', error.response?.data);
-            setErrorMessage(error.response?.data?.error || 'Login failed. Please try again.');
-        }
+      } catch (error) {
+        setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     };
     
 
