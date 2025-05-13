@@ -9,6 +9,7 @@ import { VscEyeClosed } from "react-icons/vsc";
 import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const Signup = () => {
   const [inputIndex, setInputIndex] = useState(null);
@@ -164,7 +165,14 @@ const Signup = () => {
                     className="btn-blue btn-lg w-100 btn-big" 
                     type="submit" 
                     disabled={isLoading}
+                    sx={{ 
+                      display: 'flex', 
+                      gap: '10px',
+                      alignItems: 'center',
+                      justifyContent: 'center' 
+                    }}
                   >
+                    {isLoading && <CircularProgress size={20} color="inherit" />}
                     {isLoading ? 'Signing in...' : 'Sign in'}
                   </Button>
                   </div>
