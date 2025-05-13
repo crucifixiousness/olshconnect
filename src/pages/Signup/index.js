@@ -35,13 +35,6 @@ const Signup = () => {
     setCredentials({ ...credentials, [name]: value });
   };
 
-  useEffect(() => {
-    // Redirect to dashboard if already logged in
-    if (isLogin) {
-      navigate('/dashboard');
-    }
-  }, [isLogin, navigate]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
