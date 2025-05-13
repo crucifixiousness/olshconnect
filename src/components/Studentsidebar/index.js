@@ -24,13 +24,7 @@ const StudentSidebar = () => {
     // Logout function to remove user data and redirect
   const handleLogout = () => {
     // Clear all cached data
-    localStorage.removeItem('paymentData');
-    localStorage.removeItem('paymentDataTimestamp');
-    localStorage.removeItem('studentProfileData');
-    localStorage.removeItem('studentProfileTimestamp');
-    // Clear auth data
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.clear();
     // Redirect to homepage
     navigate('/homepage');
   };
@@ -108,13 +102,11 @@ const StudentSidebar = () => {
       </ul>
 
       <div className='logoutWrap'>
-        <Link to="/homepage">
           <div className='logoutBox'>
             <Button variant="contained" onClick={handleLogout}>
               <HiOutlineLogout /> Logout
             </Button>
           </div>
-        </Link>
       </div>
     </div>
   );
