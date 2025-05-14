@@ -41,7 +41,7 @@ const AcademicRecords = () => {
         {/* Personal Information */}
         <div className="mt-3">
           <h4>Personal Information</h4>
-          <p><strong>Name:</strong> {user?.firstName} {user?.lastName}</p>
+          <p><strong>Name:</strong> {user?.lastName}, {user?.firstName} {user?.middleName?.charAt(0)}. </p>
           <p><strong>Student No:</strong> {user?.id}</p>
           <p><strong>Program:</strong> BSIT</p>
           <p><strong>Year Level:</strong> 3rd Year</p>
