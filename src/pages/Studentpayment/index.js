@@ -53,7 +53,6 @@ const StudentPayment = () => {
         const paymentData = response.data[0];
         const formattedPayment = {
           ...paymentData,
-          description: `Tuition Fee - ${paymentData.program_name} (${paymentData.semester.replace(/[{"}]/g, '')} Semester)`
         };
         
         // Cache the formatted payment data
