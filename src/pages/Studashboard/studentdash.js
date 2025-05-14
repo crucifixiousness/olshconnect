@@ -7,7 +7,7 @@ const StuDashboard = () => {
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
-  const { user, isLogin } = useContext(MyContext);
+  const { user } = useContext(MyContext);
   /* eslint-disable no-unused-vars */
   const context = useContext(MyContext);
 
@@ -19,11 +19,11 @@ const StuDashboard = () => {
   return (
     <div className="right-content w-100">
       {
-        isLogin && (
-      <div className="card shadow border-0 p-3 mt-1">      
-        <h3 className="hd mt-2 pb-0">Hi, {user?.firstName}</h3>
-        <p className="text-muted">Welcome back, @{user?.username}</p>
-      </div>
+        user.username && user.firstName && (
+          <div className="card shadow border-0 p-3 mt-1">      
+            <h3 className="hd mt-2 pb-0">Hi, {user.firstName}</h3>
+            <p className="text-muted">Welcome back, @{user.username}</p>
+          </div>
         )
       }
         
