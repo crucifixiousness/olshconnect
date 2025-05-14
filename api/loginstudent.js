@@ -54,6 +54,8 @@ module.exports = async (req, res) => {
           id: user.id,
           username: user.username,
           firstName: user.first_name,
+          middleName: user.middle_name,
+          lastName: user.last_name,
           fullName: `${user.first_name} ${user.last_name}`,
           role: user.role,
           idpic: idpicBase64,
