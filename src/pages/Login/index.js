@@ -21,6 +21,12 @@ const Login = () => {
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   useEffect(() => {
+    if (isLogin) {
+      window.location.href = '/student-dashboard';
+    }
+  }, [isLogin]);
+
+  useEffect(() => {
       context.setIsHideComponents(true);
   }, [context]);
   
@@ -69,8 +75,7 @@ const Login = () => {
             }, 100);
           }, 100);
         });
-    
-        // Navigate to student dashboard
+
         window.location.href = '/student-dashboard';
     
       } catch (error) {
@@ -80,7 +85,6 @@ const Login = () => {
       }
     };
     
-
   return (
     <>
         <img src={loginbackground} alt="samp" className='loginBg' />
