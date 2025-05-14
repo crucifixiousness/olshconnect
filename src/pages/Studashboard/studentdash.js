@@ -19,7 +19,7 @@ const StuDashboard = () => {
   return (
     <div className="right-content w-100">
       {
-        user.username && user.firstName && (
+        user && user.firstName && (
           <div className="card shadow border-0 p-3 mt-1">      
             <h3 className="hd mt-2 pb-0">Hi, {user.firstName}</h3>
             <p className="text-muted">Welcome back, @{user.username}</p>
