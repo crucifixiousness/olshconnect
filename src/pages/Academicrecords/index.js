@@ -27,12 +27,12 @@ const AcademicRecords = () => {
   return (
     <div className="right-content w-100">
       {/* Header Section */}
-      {context.isLogin !== false ? (
+      {user && user.firstName && (
         <div className="card shadow border-0 p-3 mt-1">
           <h3 className="hd mt-2 pb-0" data-testid="page-title">Academic Records</h3>
           <p className="text-muted">Welcome to your Academic Records, {user?.firstName}</p>
         </div>
-      ) : null}
+      )}
 
       {/* Academic Records Section */}
       <div className="card shadow border-0 p-3 mt-3">
