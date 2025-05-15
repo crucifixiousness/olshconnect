@@ -95,19 +95,28 @@ const RequestDocument = () => {
   const handleAddRequest = async (e) => {
     e.preventDefault();
   
-    const { id, doc_type } = newRequest;
+    const { doc_type } = newRequest;
   
-    if (!id || !doc_type) {
+    if (!doc_type) {
       setSnackbar({
         open: true,
-        message: 'Both student ID and document type are required.',
+        message: 'Document type is required.',
         severity: 'error'
       });
       return;
     }
   
     try {
-      const response = await axios.post("http://localhost:4000/requests", newRequest);
+      const token = localStorage.getItem('token');
+      const response = await axios.post("/api/requesting-document", 
+        { doc_type }, 
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       
       if (response.status === 201) {
         setRequestList([...requestList, response.data]);
