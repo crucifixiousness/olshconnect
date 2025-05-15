@@ -15,7 +15,6 @@ const RequestDocument = () => {
   const handleOpen = () => setShowRequestModal(true);
   const handleClose = () => setShowRequestModal(false);
   const context = useContext(MyContext);
-  // eslint-disable-next-line
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,7 +66,10 @@ const RequestDocument = () => {
         console.error("No user ID found");
         return;
       }
-      const response = await axios.get(`http://localhost:4000/requests/student/${user.id}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/request-document', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       setRequestList(response.data);
     } catch (error) {
       console.error("Error fetching request data:", error);
