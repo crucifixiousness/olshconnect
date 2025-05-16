@@ -1,12 +1,6 @@
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
-const NodeCache = require('node-cache');
-
-// Initialize cache with 30 minutes TTL
-const pdfCache = new NodeCache({ stdTTL: 1800 });
-
-const { Readable } = require('stream');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -37,16 +31,6 @@ module.exports = async (req, res) => {
 
     if (!req_id) {
       return res.status(400).json({ message: 'Request ID is required' });
-    }
-
-    // Check cache first
-    const cachedPDF = pdfCache.get(req_id);
-    if (cachedPDF) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Length', cachedPDF.length);
-      res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
-      res.setHeader('X-Cache', 'HIT');
-      return res.end(cachedPDF);
     }
 
     // Fetch request and student details
@@ -121,14 +105,10 @@ module.exports = async (req, res) => {
     doc.end();
     const pdfBuffer = await pdfPromise;
 
-    // Cache the PDF buffer before sending
-    pdfCache.set(req_id, pdfBuffer);
-    
-    // Send the PDF with cache miss header
+    // Send the PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', pdfBuffer.length);
     res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
-    res.setHeader('X-Cache', 'MISS');
     res.end(pdfBuffer);
 
   } catch (error) {
