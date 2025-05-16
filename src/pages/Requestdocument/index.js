@@ -9,6 +9,7 @@ import { FaEye } from "react-icons/fa";
 import { IconButton, Dialog } from '@mui/material';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
+import { useRef } from 'react';
 
 const RequestDocument = () => {
   // eslint-disable-next-line
@@ -23,6 +24,7 @@ const RequestDocument = () => {
 
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const pdfCache = useRef(new Map());
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -147,6 +149,14 @@ const RequestDocument = () => {
 
   const handleViewDocument = async (request) => {
     try {
+      // Check cache first
+      const cachedPdf = pdfCache.current.get(request.req_id);
+      if (cachedPdf) {
+        setPdfUrl(cachedPdf);
+        setShowPdfModal(true);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/generate-document`, {
         params: { req_id: request.req_id },
@@ -154,17 +164,20 @@ const RequestDocument = () => {
           'Authorization': `Bearer ${token}` 
         },
         responseType: 'arraybuffer',
-        validateStatus: false // Add this to handle all status codes
+        validateStatus: false
       });
 
       if (response.status !== 200) {
-        // Convert array buffer to text for error message
         const errorMessage = new TextDecoder().decode(response.data);
         throw new Error(errorMessage);
       }
 
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Cache the PDF URL
+      pdfCache.current.set(request.req_id, pdfUrl);
+      
       setPdfUrl(pdfUrl);
       setShowPdfModal(true);
     } catch (error) {
@@ -174,6 +187,14 @@ const RequestDocument = () => {
         message: error.message || 'Failed to load document',
         severity: 'error'
       });
+    }
+  };
+
+  const handleClosePdfModal = () => {
+    setShowPdfModal(false);
+    // Don't revoke cached URLs
+    if (pdfUrl && !pdfCache.current.has(pdfUrl)) {
+      URL.revokeObjectURL(pdfUrl);
     }
   };
 
@@ -277,7 +298,7 @@ const RequestDocument = () => {
 
       <Dialog
       open={showPdfModal}
-      onClose={() => setShowPdfModal(false)}
+      onClose={handleClosePdfModal}
       maxWidth="md"
       fullWidth
     >
