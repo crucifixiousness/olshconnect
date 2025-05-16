@@ -18,7 +18,7 @@ const DocumentRequests = () => {
   const fetchRequests = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:4000/requests/all', {
+      const response = await axios.get('/api/requests-all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setRequests(response.data);
@@ -30,7 +30,7 @@ const DocumentRequests = () => {
   const handleStatusUpdate = async (reqId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:4000/requests/${reqId}/status`, 
+      await axios.put(`/api/update-request-status?req_id=${reqId}`, 
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
