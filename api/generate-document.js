@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
         p.program_name
       FROM documentrequest dr
       JOIN students s ON dr.id = s.id
-      JOIN programs p ON s.program_id = p.program_id
+      JOIN program p ON s.program_id = p.program_id
       WHERE dr.req_id = $1 AND dr.req_status = 'Approved'
     `, [req_id]);
 
