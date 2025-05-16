@@ -290,7 +290,7 @@ const RequestDocument = () => {
         >
           Download PDF
         </Button>
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
           {pdfUrl && (
             <Viewer fileUrl={pdfUrl} />
           )}
