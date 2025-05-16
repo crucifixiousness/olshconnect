@@ -30,6 +30,10 @@ module.exports = async (req, res) => {
     const decoded = authenticateToken(req);
     const { req_id } = req.query;
 
+    if (!req_id) {
+      return res.status(400).json({ message: 'Request ID is required' });
+    }
+
     // Fetch request and student details
     const result = await pool.query(`
       SELECT 
@@ -63,30 +67,26 @@ module.exports = async (req, res) => {
       }
     });
 
-    // Collect PDF data as base64
-    // Create PDF buffer
-    let chunks = [];
+    // Create buffer for PDF data
+    const chunks = [];
     doc.on('data', chunk => chunks.push(chunk));
 
     const pdfPromise = new Promise((resolve, reject) => {
-      doc.on('end', () => {
-        const pdfBuffer = Buffer.concat(chunks);
-        resolve(pdfBuffer);
-      });
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
     });
 
-    // Add your PDF content
+    // Add PDF content
     doc.fontSize(18).text('OUR LADY OF SACRED HEART COLLEGE', { align: 'center' });
     doc.fontSize(12).text('Poblacion, San Jose, Occidental Mindoro', { align: 'center' });
     doc.moveDown(2);
 
+    // Add document content based on type
     if (student.doc_type === 'Certificate of Grades') {
       doc.fontSize(16).text('CERTIFICATION OF GRADES', { align: 'center' });
       doc.moveDown(2);
       doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''}`, { align: 'justify' });
       doc.text(`is a student of ${student.program_name} of this institution.`, { align: 'justify' });
-      // Add more content specific to grades certificate
     } else if (student.doc_type === 'Good Moral Certificate') {
       doc.fontSize(16).text('CERTIFICATE OF GOOD MORAL CHARACTER', { align: 'center' });
       doc.moveDown(2);
@@ -94,33 +94,25 @@ module.exports = async (req, res) => {
       doc.text(`is a student of ${student.program_name} of this institution and has shown good moral character during their stay.`, { align: 'justify' });
     }
 
-    // Add footer
+    // Add footer and signature
+    doc.moveDown(2);
     doc.fontSize(10).text('This certification is issued upon request of the above-named student for whatever legal purpose it may serve.', { align: 'justify' });
     doc.moveDown(3);
-
-    // Add signatory
     doc.fontSize(12).text('JUAN DELA CRUZ', { align: 'center' });
     doc.fontSize(10).text('Registrar', { align: 'center' });
 
-    // Finalize PDF
+    // End the document and get the buffer
     doc.end();
-
-    // Get PDF buffer
     const pdfBuffer = await pdfPromise;
 
-    // Send PDF directly
+    // Send the PDF
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', pdfBuffer.length);
     res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
-    res.send(pdfBuffer);
-
-    // Send response as JSON with base64 data
-    res.status(200).json({
-      data: base64PDF,
-      filename: `document_${req_id}.pdf`
-    });
+    res.end(pdfBuffer);
 
   } catch (error) {
     console.error('Error generating PDF:', error);
-    res.status(500).json({ message: 'Error generating document' });
+    res.status(500).json({ message: 'Error generating document: ' + error.message });
   }
 };
