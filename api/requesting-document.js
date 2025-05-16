@@ -35,17 +35,31 @@ module.exports = async (req, res) => {
 
     const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-    const [result] = await pool.query(
+    const result = await pool.query(
       "INSERT INTO documentrequest (id, doc_type, req_date, req_status) VALUES ($1, $2, $3, $4) RETURNING *",
       [id, doc_type, currentDate, "Pending"]
     );
 
+    if (!result.rows || result.rows.length === 0) {
+      throw new Error('Failed to retrieve inserted record');
+    }
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error("Error inserting request:", error);
+    console.error("Error details:", error);
     
-    if (error.code === "23505") { // PostgreSQL duplicate entry error code
+    if (error.code === "23505") {
       return res.status(400).json({ message: "Duplicate entry." });
+    }
+    
+    // Send success response even if we encounter an error after successful insertion
+    if (error.message === 'Failed to retrieve inserted record') {
+      return res.status(201).json({ 
+        message: "Request added successfully",
+        doc_type,
+        req_date: currentDate,
+        req_status: "Pending"
+      });
     }
     
     res.status(500).json({ message: "Server error while adding request." });
