@@ -151,11 +151,14 @@ const RequestDocument = () => {
       const response = await axios.get(`/api/generate-document/${request.req_id}`, {
         headers: { 
           'Authorization': `Bearer ${token}` 
-        },
-        responseType: 'blob'
+        }
       });
 
-      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      // Convert base64 to blob
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(response.data.data), c => c.charCodeAt(0))],
+        { type: 'application/pdf' }
+      );
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPdfUrl(pdfUrl);
       setShowPdfModal(true);
