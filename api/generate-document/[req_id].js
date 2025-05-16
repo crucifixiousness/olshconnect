@@ -51,7 +51,8 @@ module.exports = async (req, res) => {
 
     const student = result.rows[0];
 
-    // Create PDF
+    // Create PDF buffer
+    const chunks = [];
     const doc = new PDFDocument({
       size: 'A4',
       margins: {
@@ -59,18 +60,19 @@ module.exports = async (req, res) => {
         bottom: 50,
         left: 72,
         right: 72
-      }
+      },
+      bufferPages: true
     });
 
-    // Set response headers
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
-
-    // Pipe the PDF directly to the response
-    doc.pipe(res);
-
-    // Add school logo
-    // doc.image('path/to/logo.png', 250, 50, { width: 100 });
+    // Collect PDF data chunks
+    doc.on('data', chunks.push.bind(chunks));
+    doc.on('end', () => {
+      const pdfData = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', Buffer.byteLength(pdfData));
+      res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
+      res.end(pdfData);
+    });
 
     // Add content based on document type
     doc.fontSize(18).text('OUR LADY OF SACRED HEART COLLEGE', { align: 'center' });
