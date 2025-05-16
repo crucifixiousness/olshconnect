@@ -5,6 +5,10 @@ import { FaCirclePlus } from "react-icons/fa6";
 import { Snackbar, Alert, CircularProgress } from '@mui/material';
 import { useCallback } from 'react';
 import { MyContext } from '../../App';
+import { FaEye } from "react-icons/fa";
+import { IconButton, Dialog } from '@mui/material';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
 
 const RequestDocument = () => {
   // eslint-disable-next-line
@@ -16,6 +20,9 @@ const RequestDocument = () => {
   const handleClose = () => setShowRequestModal(false);
   const context = useContext(MyContext);
   const [loading, setLoading] = useState(true);
+
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [showPdfModal, setShowPdfModal] = useState(false);
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -137,6 +144,42 @@ const RequestDocument = () => {
       });
     }
   };
+
+  const handleViewDocument = async (request) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/generate-document/${request.req_id}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}` 
+        },
+        responseType: 'blob'
+      });
+
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfUrl(pdfUrl);
+      setShowPdfModal(true);
+    } catch (error) {
+      console.error('Error fetching PDF:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load document',
+        severity: 'error'
+      });
+    }
+  };
+
+  // Add this function to handle PDF download
+  const handleDownload = () => {
+    if (pdfUrl) {
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = 'document.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
   if (loading) {
     return (
       <div className="right-content w-100">
@@ -146,6 +189,7 @@ const RequestDocument = () => {
       </div>
     );
   }
+
   // Add this component before the closing div of your return statement
   return (
     <div className="right-content w-100">
@@ -174,20 +218,33 @@ const RequestDocument = () => {
                 <th>Document Type</th>
                 <th>Date of Request</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
             {paginatedRequests.length > 0 ? (
               paginatedRequests.map((request) => (
-                <tr key={request.req_id}> {/* Use request_id from backend */}
+                <tr key={request.req_id}>
                   <td>{request.doc_type}</td>
                   <td>{new Date(request.req_date).toLocaleDateString()}</td>
                   <td>{request.req_status}</td>
+                  <td>
+                    {request.req_status === 'Approved' && (
+                      <IconButton
+                        onClick={() => handleViewDocument(request)}
+                        color="primary"
+                        size="small"
+                        title="View Document"
+                      >
+                        <FaEye />
+                      </IconButton>
+                    )}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="3" style={{ textAlign: "center" }} data-testid="no-requests-message">
+                <td colSpan="4" style={{ textAlign: "center" }} data-testid="no-requests-message">
                   No document requests available.
                 </td>
               </tr>
@@ -209,6 +266,37 @@ const RequestDocument = () => {
           </div>
         </div>
       </div>
+
+      <Dialog
+      open={showPdfModal}
+      onClose={() => setShowPdfModal(false)}
+      maxWidth="md"
+      fullWidth
+    >
+      <Box sx={{ height: '80vh', position: 'relative' }}>
+        <Button
+          onClick={handleDownload}
+          variant="contained"
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 1,
+            bgcolor: '#c70202',
+            '&:hover': {
+              bgcolor: '#a00000',
+            }
+          }}
+        >
+          Download PDF
+        </Button>
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+          {pdfUrl && (
+            <Viewer fileUrl={pdfUrl} />
+          )}
+        </Worker>
+      </Box>
+    </Dialog>
 
       {/* Request Document Modal */}
       <Modal
