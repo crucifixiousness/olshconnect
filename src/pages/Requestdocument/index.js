@@ -69,16 +69,41 @@ const RequestDocument = () => {
 
 
 
+  // Add this near other useRef declarations
+  const requestDataCache = useRef({
+    data: null,
+    timestamp: null,
+    ttl: 5 * 60 * 1000 // 5 minutes cache TTL
+  });
+
   const fetchRequestData = useCallback(async () => {
     try {
       if (!user || !user.id) {
         console.error("No user ID found");
         return;
       }
+
+      // Check if cache is valid
+      const now = Date.now();
+      if (requestDataCache.current.data && 
+          requestDataCache.current.timestamp && 
+          (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
+        setRequestList(requestDataCache.current.data);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/request-document', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+
+      // Update cache
+      requestDataCache.current = {
+        data: response.data,
+        timestamp: now,
+        ttl: 5 * 60 * 1000
+      };
+
       setRequestList(response.data);
     } catch (error) {
       console.error("Error fetching request data:", error);
