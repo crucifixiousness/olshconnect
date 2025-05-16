@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
+const { Readable } = require('stream');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -51,8 +52,7 @@ module.exports = async (req, res) => {
 
     const student = result.rows[0];
 
-    // Create PDF buffer
-    const chunks = [];
+    // Create PDF
     const doc = new PDFDocument({
       size: 'A4',
       margins: {
@@ -60,21 +60,25 @@ module.exports = async (req, res) => {
         bottom: 50,
         left: 72,
         right: 72
-      },
-      bufferPages: true
+      }
     });
 
-    // Collect PDF data chunks
-    doc.on('data', chunks.push.bind(chunks));
-    doc.on('end', () => {
-      const pdfData = Buffer.concat(chunks);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Length', Buffer.byteLength(pdfData));
-      res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
-      res.end(pdfData);
+    // Create a buffer to store the PDF
+    let buffers = [];
+
+    // Handle the PDF stream
+    doc.on('data', buffers.push.bind(buffers));
+    
+    // Return promise to ensure PDF is complete
+    const pdfPromise = new Promise((resolve, reject) => {
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve(pdfBuffer);
+      });
+      doc.on('error', reject);
     });
 
-    // Add content based on document type
+    // Add your PDF content
     doc.fontSize(18).text('OUR LADY OF SACRED HEART COLLEGE', { align: 'center' });
     doc.fontSize(12).text('Poblacion, San Jose, Occidental Mindoro', { align: 'center' });
     doc.moveDown(2);
@@ -102,6 +106,20 @@ module.exports = async (req, res) => {
 
     // Finalize PDF
     doc.end();
+
+    // Wait for PDF to be generated
+    const pdfBuffer = await pdfPromise;
+
+    // Send the PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Content-Disposition', `inline; filename=document_${req_id}.pdf`);
+    
+    // Create a readable stream from the buffer and pipe it to the response
+    const stream = new Readable();
+    stream.push(pdfBuffer);
+    stream.push(null);
+    stream.pipe(res);
 
   } catch (error) {
     console.error('Error generating PDF:', error);
