@@ -63,17 +63,15 @@ module.exports = async (req, res) => {
       }
     });
 
-    // Create a buffer to store the PDF
-    let buffers = [];
+    // Collect PDF data as base64
+    let chunks = [];
+    doc.on('data', chunk => chunks.push(chunk));
 
-    // Handle the PDF stream
-    doc.on('data', buffers.push.bind(buffers));
-    
-    // Return promise to ensure PDF is complete
     const pdfPromise = new Promise((resolve, reject) => {
       doc.on('end', () => {
-        const pdfBuffer = Buffer.concat(buffers);
-        resolve(pdfBuffer);
+        const pdfData = Buffer.concat(chunks);
+        const base64Data = pdfData.toString('base64');
+        resolve(base64Data);
       });
       doc.on('error', reject);
     });
@@ -107,19 +105,14 @@ module.exports = async (req, res) => {
     // Finalize PDF
     doc.end();
 
-    // Wait for PDF to be generated
-    const pdfBuffer = await pdfPromise;
+    // Get base64 PDF data
+    const base64PDF = await pdfPromise;
 
-    // Send the PDF
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.setHeader('Content-Disposition', `inline; filename=document_${req_id}.pdf`);
-    
-    // Create a readable stream from the buffer and pipe it to the response
-    const stream = new Readable();
-    stream.push(pdfBuffer);
-    stream.push(null);
-    stream.pipe(res);
+    // Send response as JSON with base64 data
+    res.status(200).json({
+      data: base64PDF,
+      filename: `document_${req_id}.pdf`
+    });
 
   } catch (error) {
     console.error('Error generating PDF:', error);
