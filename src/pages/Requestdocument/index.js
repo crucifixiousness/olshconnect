@@ -153,8 +153,15 @@ const RequestDocument = () => {
         headers: { 
           'Authorization': `Bearer ${token}` 
         },
-        responseType: 'arraybuffer'
+        responseType: 'arraybuffer',
+        validateStatus: false // Add this to handle all status codes
       });
+
+      if (response.status !== 200) {
+        // Convert array buffer to text for error message
+        const errorMessage = new TextDecoder().decode(response.data);
+        throw new Error(errorMessage);
+      }
 
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -164,7 +171,7 @@ const RequestDocument = () => {
       console.error('Error fetching PDF:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to load document',
+        message: error.message || 'Failed to load document',
         severity: 'error'
       });
     }
