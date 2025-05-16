@@ -148,17 +148,15 @@ const RequestDocument = () => {
   const handleViewDocument = async (request) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/generate-document/${request.req_id}`, {
+      const response = await axios.get(`/api/generate-document`, {
+        params: { req_id: request.req_id },
         headers: { 
           'Authorization': `Bearer ${token}` 
-        }
+        },
+        responseType: 'arraybuffer'
       });
 
-      // Convert base64 to blob
-      const pdfBlob = new Blob(
-        [Uint8Array.from(atob(response.data.data), c => c.charCodeAt(0))],
-        { type: 'application/pdf' }
-      );
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPdfUrl(pdfUrl);
       setShowPdfModal(true);
