@@ -130,12 +130,13 @@ module.exports = async (req, res) => {
     
     // Table headers with adjusted positions
     doc.fontSize(10);
-    doc.text('COURSE', startX + 5, startY + 5);
-    doc.text('CODE', startX + 5, startY + 15);
-    doc.text('DESCRIPTIVE TITLE', startX + columnWidths.code + 5, startY + 5);
-    doc.text('RATINGS', startX + columnWidths.code + columnWidths.title + 5, startY + 5);
-    doc.text('CREDITS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, startY + 5);
-    doc.text('REMARKS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, startY + 5);
+    // Adjust COURSE CODE header to be properly aligned
+    doc.text('COURSE', startX + 5, startY + 3);
+    doc.text('CODE', startX + 5, startY + 11);
+    doc.text('DESCRIPTIVE TITLE', startX + columnWidths.code + 5, startY + 7);
+    doc.text('RATINGS', startX + columnWidths.code + columnWidths.title + 5, startY + 7);
+    doc.text('CREDITS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, startY + 7);
+    doc.text('REMARKS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, startY + 7);
 
     // Semester header
     doc.fontSize(10).text('2nd Semester 2023-2024', startX + 5, startY - 15);
