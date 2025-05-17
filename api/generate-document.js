@@ -103,42 +103,42 @@ module.exports = async (req, res) => {
     const startX = 50;
     const startY = doc.y;
     
-    // Draw table borders
-    doc.rect(startX, startY, 500, 20).stroke(); // Header row
+    // Draw table borders and headers with proper spacing
+    const columnWidths = {
+      code: 70,      // COURSE CODE width
+      title: 220,    // DESCRIPTIVE TITLE width
+      rating: 60,    // RATINGS width
+      credits: 60,   // CREDITS width
+      remarks: 90    // REMARKS width
+    };
     
-    // Table headers
+    // Draw main table border
+    doc.rect(startX, startY, 500, 20).stroke();
+    
+    // Table headers with adjusted positions
     doc.fontSize(10);
     doc.text('COURSE', startX + 5, startY + 5);
     doc.text('CODE', startX + 5, startY + 15);
-    doc.text('DESCRIPTIVE TITLE', startX + 80, startY + 5);
-    doc.text('RATINGS', startX + 300, startY + 5);
-    doc.text('CREDITS', startX + 360, startY + 5);
-    doc.text('REMARKS', startX + 420, startY + 5);
+    doc.text('DESCRIPTIVE TITLE', startX + columnWidths.code + 5, startY + 5);
+    doc.text('RATINGS', startX + columnWidths.code + columnWidths.title + 5, startY + 5);
+    doc.text('CREDITS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, startY + 5);
+    doc.text('REMARKS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, startY + 5);
 
     // Semester header
     doc.fontSize(10).text('2nd Semester 2023-2024', startX + 5, startY - 15);
 
-    // Sample course data (replace with actual data from database)
-    const courseData = [
-      { code: 'SIA102', title: 'Systems Integration and Architecture (Advanced SIA)', rating: '1.57', credits: '3', remarks: 'Passed' },
-      { code: 'WS101', title: 'Web Systems and technologies 1', rating: '1.88', credits: '3', remarks: 'Passed' },
-      { code: 'GE11', title: 'Gender and society', rating: '1.25', credits: '3', remarks: 'Passed' },
-      { code: 'IAS101', title: 'Information Assurance and Security 1', rating: '1.75', credits: '3', remarks: 'Passed' },
-      { code: 'IPT102', title: 'Integrative Programming and Technologies', rating: '1.50', credits: '3', remarks: 'Passed' },
-      { code: 'NET102', title: 'Networking 2 (Advanced Networking)', rating: '1.00', credits: '3', remarks: 'Passed' },
-      { code: 'PE301', title: 'Event-Driven Programming', rating: '1.15', credits: '3', remarks: 'Passed' },
-      { code: 'SPT1', title: 'Specialization 1-Computer Programming 3', rating: '1.63', credits: '3', remarks: 'Passed' },
-      { code: 'SPT2', title: 'Specialization 2-Fundamentals of Mobile Programming', rating: '1.38', credits: '3', remarks: 'Passed' }
-    ];
-
+    // Course data rendering with adjusted positions
     let currentY = startY + 20;
     courseData.forEach(course => {
       doc.rect(startX, currentY, 500, 20).stroke();
       doc.text(course.code, startX + 5, currentY + 5);
-      doc.text(course.title, startX + 80, currentY + 5);
-      doc.text(course.rating, startX + 300, currentY + 5); // Added rating display
-      doc.text(course.credits, startX + 360, currentY + 5);
-      doc.text(course.remarks, startX + 420, currentY + 5);
+      doc.text(course.title, startX + columnWidths.code + 5, currentY + 5, {
+        width: columnWidths.title - 10,
+        align: 'left'
+      });
+      doc.text(course.rating, startX + columnWidths.code + columnWidths.title + 5, currentY + 5);
+      doc.text(course.credits, startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, currentY + 5);
+      doc.text(course.remarks, startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, currentY + 5);
       currentY += 20;
     });
 
