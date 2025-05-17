@@ -120,15 +120,15 @@ module.exports = async (req, res) => {
 
     // Sample course data (replace with actual data from database)
     const courseData = [
-      { code: 'SIA102', title: 'Systems Integration and Architecture (Advanced SIA)', credits: '3', remarks: 'Passed' },
-      { code: 'WS101', title: 'Web Systems and technologies 1', credits: '3', remarks: 'Passed' },
-      { code: 'GE11', title: 'Gender and society', credits: '3', remarks: 'Passed' },
-      { code: 'IAS101', title: 'Information Assurance and Security 1', credits: '3', remarks: 'Passed' },
-      { code: 'IPT102', title: 'Integrative Programming and Technologies', credits: '3', remarks: 'Passed' },
-      { code: 'NET102', title: 'Networking 2 (Advanced Networking)', credits: '3', remarks: 'Passed' },
-      { code: 'PE301', title: 'Event-Driven Programming', credits: '3', remarks: 'Passed' },
-      { code: 'SPT1', title: 'Specialization 1-Computer Programming 3', credits: '3', remarks: 'Passed' },
-      { code: 'SPT2', title: 'Specialization 2-Fundamentals of Mobile Programming', credits: '3', remarks: 'Passed' }
+      { code: 'SIA102', title: 'Systems Integration and Architecture (Advanced SIA)', rating: '1.57', credits: '3', remarks: 'Passed' },
+      { code: 'WS101', title: 'Web Systems and technologies 1', rating: '1.88', credits: '3', remarks: 'Passed' },
+      { code: 'GE11', title: 'Gender and society', rating: '1.25', credits: '3', remarks: 'Passed' },
+      { code: 'IAS101', title: 'Information Assurance and Security 1', rating: '1.75', credits: '3', remarks: 'Passed' },
+      { code: 'IPT102', title: 'Integrative Programming and Technologies', rating: '1.50', credits: '3', remarks: 'Passed' },
+      { code: 'NET102', title: 'Networking 2 (Advanced Networking)', rating: '1.00', credits: '3', remarks: 'Passed' },
+      { code: 'PE301', title: 'Event-Driven Programming', rating: '1.15', credits: '3', remarks: 'Passed' },
+      { code: 'SPT1', title: 'Specialization 1-Computer Programming 3', rating: '1.63', credits: '3', remarks: 'Passed' },
+      { code: 'SPT2', title: 'Specialization 2-Fundamentals of Mobile Programming', rating: '1.38', credits: '3', remarks: 'Passed' }
     ];
 
     let currentY = startY + 20;
@@ -136,6 +136,7 @@ module.exports = async (req, res) => {
       doc.rect(startX, currentY, 500, 20).stroke();
       doc.text(course.code, startX + 5, currentY + 5);
       doc.text(course.title, startX + 80, currentY + 5);
+      doc.text(course.rating, startX + 300, currentY + 5); // Added rating display
       doc.text(course.credits, startX + 360, currentY + 5);
       doc.text(course.remarks, startX + 420, currentY + 5);
       currentY += 20;
