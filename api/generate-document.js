@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
+const { Readable } = require('stream');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -77,22 +78,79 @@ module.exports = async (req, res) => {
     });
 
     // Add PDF content
-    doc.fontSize(18).text('OUR LADY OF SACRED HEART COLLEGE', { align: 'center' });
-    doc.fontSize(12).text('Poblacion, San Jose, Occidental Mindoro', { align: 'center' });
+    // Add logo and header
+    doc.fontSize(16).text('Our Lady of the Sacred Heart College of Guimba, Inc.', { align: 'center' });
+    doc.fontSize(12).text('Guimba, Nueva Ecija', { align: 'center' });
+    doc.fontSize(10).text('Tel Nos.: (044)-611-0533 / Fax: (044)-611-0026', { align: 'center' });
+    doc.moveDown(1);
+
+    // BSIT Department and Certification header
+    doc.fontSize(14).text('BSIT DEPARTMENT', { align: 'center' });
+    doc.fontSize(14).text('CERTIFICATION OF GRADES', { align: 'center' });
+    doc.moveDown(1);
+
+    doc.fontSize(12).text('TO WHOM IT MAY CONCERN:', { align: 'left' });
+    doc.moveDown(1);
+
+    // Student information
+    doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''} is presently enrolled as a First Year College, a Bachelor of Science in Information Technology student and this is an UNOFFICIAL COPY of his/her grades during the 1st Semester A.Y 2022-2023 as indicated with corresponding units earned:`, { align: 'justify' });
+    doc.moveDown(1);
+
+    // Create table headers
+    const startX = 72;
+    const startY = doc.y;
+    doc.fontSize(10);
+    
+    // Draw table headers
+    doc.text('COURSE CODE', startX, startY);
+    doc.text('DESCRIPTIVE TITLE', startX + 80, startY);
+    doc.text('RATING', startX + 300, startY);
+    doc.text('CREDITS', startX + 360, startY);
+    doc.text('REMARKS', startX + 420, startY);
+
+    // Add horizontal line after headers
+    doc.moveTo(startX, startY + 20).lineTo(startX + 480, startY + 20).stroke();
+
+    // Fetch and display grades (you'll need to modify your SQL query to get this data)
+    // This is a placeholder - you'll need to add actual grade data from your database
+    const courseData = [
+      { code: 'CC101', title: 'Introduction to Computing', rating: '1.64', credits: '3', remarks: 'Passed' },
+      { code: 'CC102', title: 'Computer Programming 1', rating: '1.80', credits: '3', remarks: 'Passed' },
+      // Add other courses as needed
+    ];
+
+    let currentY = startY + 30;
+    courseData.forEach(course => {
+      doc.text(course.code, startX, currentY);
+      doc.text(course.title, startX + 80, currentY);
+      doc.text(course.rating, startX + 300, currentY);
+      doc.text(course.credits, startX + 360, currentY);
+      doc.text(course.remarks, startX + 420, currentY);
+      currentY += 20;
+    });
+
+    doc.moveDown(4);
+    
+    // Add issuance text
+    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    doc.fontSize(10).text(`Issued for the above named student for his/her references purposes only this ${currentDate} here at OLSHCO, Guimba, Nueva Ecija.`, { align: 'justify' });
+    
     doc.moveDown(2);
 
-    // Add document content based on type
-    if (student.doc_type === 'Certificate of Grades') {
-      doc.fontSize(16).text('CERTIFICATION OF GRADES', { align: 'center' });
-      doc.moveDown(2);
-      doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''}`, { align: 'justify' });
-      doc.text(`is a student of ${student.program_name} of this institution.`, { align: 'justify' });
-    } else if (student.doc_type === 'Good Moral Certificate') {
-      doc.fontSize(16).text('CERTIFICATE OF GOOD MORAL CHARACTER', { align: 'center' });
-      doc.moveDown(2);
-      doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''}`, { align: 'justify' });
-      doc.text(`is a student of ${student.program_name} of this institution and has shown good moral character during their stay.`, { align: 'justify' });
-    }
+    // Add signatories
+    doc.fontSize(12).text('Prepared by:', startX + 50, doc.y);
+    doc.moveDown(2);
+    doc.fontSize(12).text('JENNIFER JOY K. DOMINGO', startX + 50, doc.y);
+    doc.fontSize(10).text('Adviser BSIT', startX + 50, doc.y);
+
+    doc.fontSize(12).text('Checked by:', startX + 300, doc.y - 45);
+    doc.moveDown(2);
+    doc.fontSize(12).text('JOEL P. ALTURA', startX + 300, doc.y - 45);
+    doc.fontSize(10).text('Program Head', startX + 300, doc.y);
+
+    // Add note at the bottom
+    doc.moveDown(2);
+    doc.fontSize(8).text('Note: This copy of grades is for student references only. Valid copy of grades will be issued by the registrar\'s Office upon request.', { align: 'left' });
 
     // Add footer and signature
     doc.moveDown(2);
