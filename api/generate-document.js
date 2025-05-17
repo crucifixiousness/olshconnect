@@ -61,10 +61,10 @@ module.exports = async (req, res) => {
     const doc = new PDFDocument({
       size: 'A4',
       margins: {
-        top: 50,
-        bottom: 50,
-        left: 72,
-        right: 72
+        top: 30,
+        bottom: 30,
+        left: 50,
+        right: 50
       }
     });
 
@@ -81,72 +81,83 @@ module.exports = async (req, res) => {
     // Add logo and header
     doc.fontSize(16).text('Our Lady of the Sacred Heart College of Guimba, Inc.', { align: 'center' });
     doc.fontSize(12).text('Guimba, Nueva Ecija', { align: 'center' });
-    doc.fontSize(10).text('Tel Nos.: (044)-611-0533 / Fax: (044)-611-0026', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text('Student\'s Copy only', { align: 'right' });
+    
     doc.moveDown(1);
-
-    // BSIT Department and Certification header
+    
+    // Department and title
     doc.fontSize(14).text('BSIT DEPARTMENT', { align: 'center' });
+    doc.moveDown(0.5);
     doc.fontSize(14).text('CERTIFICATION OF GRADES', { align: 'center' });
     doc.moveDown(1);
 
     doc.fontSize(12).text('TO WHOM IT MAY CONCERN:', { align: 'left' });
     doc.moveDown(1);
 
-    // Student information
-    doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''} is presently enrolled as a First Year College, a Bachelor of Science in Information Technology student and this is an UNOFFICIAL COPY of his/her grades during the 1st Semester A.Y 2022-2023 as indicated with corresponding units earned:`, { align: 'justify' });
+    // Student information - adjusted text
+    doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''} is presently enrolled as a Third Year College, a Bachelor of Science in Information Technology student and this is an UN OFFICIAL COPY of his/her grades during the 2nd Semester A.Y 2023-2024 as indicated with corresponding units earned:`, { align: 'justify' });
     doc.moveDown(1);
 
-    // Create table headers
-    const startX = 72;
+    // Table headers with adjusted spacing
+    const startX = 50;
     const startY = doc.y;
-    doc.fontSize(10);
     
-    // Draw table headers
-    doc.text('COURSE CODE', startX, startY);
-    doc.text('DESCRIPTIVE TITLE', startX + 80, startY);
-    doc.text('RATING', startX + 300, startY);
-    doc.text('CREDITS', startX + 360, startY);
-    doc.text('REMARKS', startX + 420, startY);
+    // Draw table borders
+    doc.rect(startX, startY, 500, 20).stroke(); // Header row
+    
+    // Table headers
+    doc.fontSize(10);
+    doc.text('COURSE', startX + 5, startY + 5);
+    doc.text('CODE', startX + 5, startY + 15);
+    doc.text('DESCRIPTIVE TITLE', startX + 80, startY + 5);
+    doc.text('RATINGS', startX + 300, startY + 5);
+    doc.text('CREDITS', startX + 360, startY + 5);
+    doc.text('REMARKS', startX + 420, startY + 5);
 
-    // Add horizontal line after headers
-    doc.moveTo(startX, startY + 20).lineTo(startX + 480, startY + 20).stroke();
+    // Semester header
+    doc.fontSize(10).text('2nd Semester 2023-2024', startX + 5, startY - 15);
 
-    // Fetch and display grades (you'll need to modify your SQL query to get this data)
-    // This is a placeholder - you'll need to add actual grade data from your database
+    // Sample course data (replace with actual data from database)
     const courseData = [
-      { code: 'CC101', title: 'Introduction to Computing', rating: '1.64', credits: '3', remarks: 'Passed' },
-      { code: 'CC102', title: 'Computer Programming 1', rating: '1.80', credits: '3', remarks: 'Passed' },
-      // Add other courses as needed
+      { code: 'SIA102', title: 'Systems Integration and Architecture (Advanced SIA)', credits: '3', remarks: 'Passed' },
+      { code: 'WS101', title: 'Web Systems and technologies 1', credits: '3', remarks: 'Passed' },
+      { code: 'GE11', title: 'Gender and society', credits: '3', remarks: 'Passed' },
+      { code: 'IAS101', title: 'Information Assurance and Security 1', credits: '3', remarks: 'Passed' },
+      { code: 'IPT102', title: 'Integrative Programming and Technologies', credits: '3', remarks: 'Passed' },
+      { code: 'NET102', title: 'Networking 2 (Advanced Networking)', credits: '3', remarks: 'Passed' },
+      { code: 'PE301', title: 'Event-Driven Programming', credits: '3', remarks: 'Passed' },
+      { code: 'SPT1', title: 'Specialization 1-Computer Programming 3', credits: '3', remarks: 'Passed' },
+      { code: 'SPT2', title: 'Specialization 2-Fundamentals of Mobile Programming', credits: '3', remarks: 'Passed' }
     ];
 
-    let currentY = startY + 30;
+    let currentY = startY + 20;
     courseData.forEach(course => {
-      doc.text(course.code, startX, currentY);
-      doc.text(course.title, startX + 80, currentY);
-      doc.text(course.rating, startX + 300, currentY);
-      doc.text(course.credits, startX + 360, currentY);
-      doc.text(course.remarks, startX + 420, currentY);
+      doc.rect(startX, currentY, 500, 20).stroke();
+      doc.text(course.code, startX + 5, currentY + 5);
+      doc.text(course.title, startX + 80, currentY + 5);
+      doc.text(course.credits, startX + 360, currentY + 5);
+      doc.text(course.remarks, startX + 420, currentY + 5);
       currentY += 20;
     });
 
+    // Add GPA row
+    doc.rect(startX, currentY, 500, 20).stroke();
+    doc.text('GPA', startX + 5, currentY + 5);
+
+    // Footer text
     doc.moveDown(4);
-    
-    // Add issuance text
-    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    doc.fontSize(10).text(`Issued for the above named student for his/her references purposes only this ${currentDate} here at OLSHCO, Guimba, Nueva Ecija.`, { align: 'justify' });
+    doc.fontSize(10).text('Issued for the above named student for his/her references purposes only this October 16, 2023 here at', { align: 'left' });
+    doc.text('OLSHCO, Guimba, Nueva Ecija.', { align: 'left' });
     
     doc.moveDown(2);
 
-    // Add signatories
-    doc.fontSize(12).text('Prepared by:', startX + 50, doc.y);
+    // Signatory
+    doc.moveDown(1);
+    doc.fontSize(12).text('Checked by:', { align: 'right' });
     doc.moveDown(2);
-    doc.fontSize(12).text('JENNIFER JOY K. DOMINGO', startX + 50, doc.y);
-    doc.fontSize(10).text('Adviser BSIT', startX + 50, doc.y);
-
-    doc.fontSize(12).text('Checked by:', startX + 300, doc.y - 45);
-    doc.moveDown(2);
-    doc.fontSize(12).text('JOEL P. ALTURA', startX + 300, doc.y - 45);
-    doc.fontSize(10).text('Program Head', startX + 300, doc.y);
+    doc.fontSize(12).text('Joel P. Altura', { align: 'right' });
+    doc.fontSize(10).text('PROGRAM HEAD', { align: 'right' });
 
     // Add note at the bottom
     doc.moveDown(2);
