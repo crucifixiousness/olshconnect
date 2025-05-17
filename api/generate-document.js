@@ -143,16 +143,30 @@ module.exports = async (req, res) => {
     // Course data rendering with adjusted positions
     let currentY = startY + 20;
     courseData.forEach(course => {
-      doc.rect(startX, currentY, 500, 20).stroke();
-      doc.text(course.code, startX + 5, currentY + 5);
-      doc.text(course.title, startX + columnWidths.code + 5, currentY + 5, {
-        width: columnWidths.title - 10,
+      // Calculate required height for the title
+      const titleWidth = columnWidths.title - 10;
+      const titleHeight = doc.heightOfString(course.title, {
+        width: titleWidth,
         align: 'left'
       });
-      doc.text(course.rating, startX + columnWidths.code + columnWidths.title + 5, currentY + 5);
-      doc.text(course.credits, startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, currentY + 5);
-      doc.text(course.remarks, startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, currentY + 5);
-      currentY += 20;
+      const rowHeight = Math.max(20, titleHeight + 10); // Minimum 20, or more if needed
+
+      // Draw row border with dynamic height
+      doc.rect(startX, currentY, 500, rowHeight).stroke();
+      
+      // Position text vertically centered if single line, or at top if multiple lines
+      const textY = titleHeight <= 15 ? currentY + (rowHeight - 10) / 2 : currentY + 5;
+      
+      doc.text(course.code, startX + 5, textY);
+      doc.text(course.title, startX + columnWidths.code + 5, textY, {
+        width: titleWidth,
+        align: 'left'
+      });
+      doc.text(course.rating, startX + columnWidths.code + columnWidths.title + 5, textY);
+      doc.text(course.credits, startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, textY);
+      doc.text(course.remarks, startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, textY);
+      
+      currentY += rowHeight;
     });
 
     // Add GPA row
