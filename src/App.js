@@ -39,6 +39,7 @@ import StudentPayment from './pages/Studentpayment';
 import TuitionManagement from './pages/Tuitionfeemanage';
 import PaymentVerification from './pages/Paymentverification';
 import CounterPayment from './pages/CounterPayment';
+import PaymentHistory from './pages/PaymentHistory';
 
 const MyContext = createContext();
 
@@ -173,6 +174,7 @@ function App() {
               <Route path="/finance-dashboard" exact={true} element={<ProtectedRoute element={<FinanceDashboard />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/student-balance" exact={true} element={<ProtectedRoute element={<StudentBalance />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/counter-payment" exact={true} element={<ProtectedRoute element={<CounterPayment />} requiredRole="finance" redirectTo="/stafflogin" />} />
+              <Route path="/payment-history" exact={true} element={<ProtectedRoute element={<PaymentHistory />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/tuition-management" exact={true} element={<ProtectedRoute element={<TuitionManagement />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/payment-verification" exact={true} element={<ProtectedRoute element={<PaymentVerification />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/programhead-dashboard" exact={true} element={<ProtectedRoute element={<ProgramHeadDashboard />} requiredRole="program head" redirectTo="/stafflogin" />} />
