@@ -103,7 +103,7 @@ module.exports = async (req, res) => {
       SET payment_status = $1,
           amount_paid = $2,
           remaining_balance = $3,
-          last_payment_date = CURRENT_TIMESTAMP
+          next_payment_date = CURRENT_TIMESTAMP + INTERVAL '1 month'
       WHERE enrollment_id = $4`,
       [paymentStatus, totalAmountPaid, remainingBalance, enrollment_id]
     );
