@@ -24,12 +24,10 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  let client;
   try {
     const decoded = authenticateToken(req);
-    client = await pool.connect();
 
-    const result = await client.query(`
+    const result = await pool.query(`
       SELECT 
         pt.transaction_id,
         pt.reference_number,
@@ -45,13 +43,24 @@ module.exports = async (req, res) => {
       ORDER BY pt.payment_date DESC
     `, [decoded.id]);
 
-    // Return the query result directly
-    res.status(200).json(result.rows);
+    // Add debug logging
+    console.log('Student ID:', decoded.id);
+    console.log('Query result:', result.rows);
+
+    return res.status(200).json(result.rows);
 
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to fetch payment history' });
-  } finally {
-    if (client) client.release();
+    // Detailed error logging
+    console.error('Detailed error:', {
+      message: error.message,
+      stack: error.stack,
+      query: error.query,
+      parameters: error.parameters
+    });
+    
+    return res.status(500).json({ 
+      error: 'Failed to fetch payment history',
+      details: error.message 
+    });
   }
 };
