@@ -1,396 +1,287 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
+  TextField, 
+  Button, 
+  Grid, 
   Paper, 
-  Button,
-  Chip,
-  CircularProgress,
-  Tab,
-  Tabs,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
+  Typography, 
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  IconButton
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Modal,
+  Box
 } from '@mui/material';
+import { FaSearch, FaPrint, FaHistory } from 'react-icons/fa';
 import axios from 'axios';
-import { PhotoCamera } from '@mui/icons-material';
 
-const StudentPayment = () => {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [totalBalance, setTotalBalance] = useState(0);
-  const [breakdown, setBreakdown] = useState({
-    tuition: 0,
-    misc: 0,
-    lab: 0,
-    other: 0
-  });
+const CounterPayment = () => {
+  const [studentInfo, setStudentInfo] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
-  const [activeTab, setActiveTab] = useState(0);
-  const [openReceiptDialog, setOpenReceiptDialog] = useState(false);
-  const [receiptData, setReceiptData] = useState({
-    receipt_number: '',
-    amount_paid: '',
-    payment_date: '',
-    payment_method: '',
-    remarks: ''
-  });
-  const [receiptImage, setReceiptImage] = useState(null);
+  const token = localStorage.getItem('token');
 
-  const handleReceiptSubmit = async () => {
+  const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 800,
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+  };
+
+  const handleSearch = async () => {
     try {
-      const formData = new FormData();
-      formData.append('receipt_image', receiptImage);
-      formData.append('receipt_data', JSON.stringify(receiptData));
-      
-      const token = localStorage.getItem('token');
-      await axios.post('/api/enrollment-payment', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+      if (!searchQuery) {
+        alert('Please enter a search term');
+        return;
+      }
+
+      const response = await axios.get(`/api/search-student?q=${searchQuery}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      setOpenReceiptDialog(false);
-      fetchPaymentHistory(); // Refresh payment history
+      // Log the search response for debugging
+      console.log('Search Response:', response.data);
+
+      if (!response.data.enrollmentId) {  // Changed from enrollment_id to enrollmentId
+        alert('No active enrollment found for this student');
+        return;
+      }
+
+      setStudentInfo({
+        ...response.data,
+        enrollment_id: response.data.enrollmentId  // Add this mapping
+      });
     } catch (error) {
-      console.error('Error submitting receipt:', error);
-      setError('Failed to submit receipt.');
+      console.error('Search Error:', error);
+      alert(error.response?.data?.error || 'Error searching student');
     }
   };
 
-  useEffect(() => {
-    fetchPayments();
-    fetchPaymentHistory();
-  }, []);
-
-  const fetchPaymentHistory = async () => {
+  const handlePayment = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/payment-history', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Add validation checks
+      if (!studentInfo) {
+        alert('Please search for a student first');
+        return;
+      }
+
+      if (!paymentAmount || paymentAmount <= 0) {
+        alert('Please enter a valid payment amount');
+        return;
+      }
+
+      if (!paymentMethod) {
+        alert('Please select a payment method');
+        return;
+      }
+
+      // Log the request data for debugging
+      console.log('Payment Request:', {
+        enrollment_id: studentInfo.enrollment_id,
+        amount_paid: paymentAmount,
+        payment_method: paymentMethod
       });
-      
+
+      const response = await axios.post('/api/counter-payment', {
+        enrollment_id: studentInfo.enrollment_id,
+        amount_paid: paymentAmount,
+        payment_method: paymentMethod,
+        reference_number: null
+      }, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        alert('Payment processed successfully');
+        setPaymentAmount('');
+        setPaymentMethod('');
+        handleSearch(); // Refresh student info
+      }
+    } catch (error) {
+      console.error('Payment Error Details:', {
+        data: error.response?.data,
+        status: error.response?.status,
+        requestData: error.config?.data
+      });
+      alert(error.response?.data?.error || 'Error processing payment');
+    }
+  };
+
+  const handleViewHistory = async () => {
+    try {
+      const response = await axios.get(`/api/get-verified-enrollments?studentId=${studentInfo.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPaymentHistory(response.data);
+      setShowHistory(true);
     } catch (error) {
       console.error('Error fetching payment history:', error);
     }
   };
 
-  const fetchPayments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Check cache first
-      const cachedData = localStorage.getItem('paymentData');
-      const cacheTimestamp = localStorage.getItem('paymentDataTimestamp');
-      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
-      // Use cache if it's less than 5 minutes old
-      if (cachedData && cacheAge && cacheAge < 300000) {
-        const parsedData = JSON.parse(cachedData);
-        setPayments([parsedData]);
-        setTotalBalance(parsedData.remaining_balance || 0); // Changed from amount to remaining_balance
-        setBreakdown(parsedData.breakdown);
-        setLoading(false);
-        return;
-      }
-
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/student-payments', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.data && response.data.length > 0) {
-        const paymentData = response.data[0];
-        const formattedPayment = {
-          ...paymentData,
-          remaining_balance: paymentData.remaining_balance || 0 // Ensure remaining_balance exists
-        };
-        
-        // Cache the formatted payment data
-        localStorage.setItem('paymentData', JSON.stringify(formattedPayment));
-        localStorage.setItem('paymentDataTimestamp', Date.now().toString());
-        
-        setPayments([formattedPayment]);
-        setTotalBalance(formattedPayment.remaining_balance || 0); // Changed from amount to remaining_balance
-        setBreakdown(formattedPayment.breakdown);
-      }
-    } catch (error) {
-      console.error('Error details:', error.response?.data || error.message);
-      setError('Failed to fetch payment information.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add this after the loading check
-
-
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'overdue':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="right-content w-100" data-testid="student-payment">
-        <div className="card shadow border-0 p-3 mt-1">
-          <h3 className="hd mt-2 pb-0">Payment Information</h3>
-        </div>
-        <div className="card shadow border-0 p-3 mt-3">
-          <div className="alert alert-info" role="alert">
-            {error}
-          </div>
-        </div>
-      </div>
-    );
-  }
   return (
-    <div className="right-content w-100" data-testid="student-payment">
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">
-          Payment Information
-        </h3>
-      </div>
+    <div className="right-content w-100">
+      <div className="card shadow border-0 p-3">
+        <Typography variant="h5" className="mb-4">Counter Payment</Typography>
 
-      <div className="card shadow border-0 p-3 mt-3">
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-            <Tab label="Current Balance" />
-            <Tab label="Payment History" />
-          </Tabs>
-        </Box>
+        {/* Search Student Section */}
+        <Paper elevation={3} className="p-3 mb-4">
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={8}>
+              <TextField
+                fullWidth
+                label="Search Student (ID or Name)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <Button 
+                variant="contained" 
+                startIcon={<FaSearch />}
+                onClick={handleSearch}
+                fullWidth
+              >
+                Search
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
 
-        {activeTab === 0 ? (
-          <>
-            {/* Existing Payment Summary and Current Balance Table */}
-            <div className="mb-3">
-              <h4 className="hd">Payment Summary</h4>
-              <Paper elevation={0} className="p-3 bg-light" data-testid="payment-summary">
-                <div className="row">
-                  <div className="col-md-6">
-                    <h5>Remaining Balance: ₱{totalBalance.toFixed(2)}</h5>
-                  </div>
-                  <div className="col-md-6">
-                    <h5>Breakdown:</h5>
-                    {payments[0]?.breakdown && (
-                      <div className="ms-3">
-                        <p>Tuition Fee: ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
-                        <p>Miscellaneous: ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
-                        <p>Laboratory: ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
-                        <p>Other Fees: ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Paper>
-            </div>
-
-            <div className="table-responsive mt-3">
-              <table className="table table-bordered v-align" data-testid="payment-table">
-                <thead className="thead-dark">
-                  <tr>
-                    <th data-testid="header-description">Description</th>
-                    <th data-testid="header-due-date">Due Date</th>
-                    <th data-testid="header-amount">Amount</th>
-                    <th data-testid="header-status">Status</th>
-                    <th data-testid="header-action">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment) => (
-                    <tr key={payment.id}>
-                      <td>{payment.description}</td>
-                      <td>{payment.dueDate}</td>
-                      <td>₱{payment.amount.toFixed(2)}</td>
-                      <td>
-                        <Chip 
-                          label={payment.status}
-                          color={getStatusColor(payment.status)}
-                          size="small"
-                        />
-                      </td>
-                      <td>
-                        <Button
-                          variant="contained"
-                          className="success"
-                          size="small"
-                          disabled={payment.status.toLowerCase() === 'paid'}
-                          sx={{
-                            bgcolor: '#c70202',
-                            '&:hover': {
-                              bgcolor: '#a00000',
-                            }
-                          }}
-                        >
-                          Pay Now
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <div className="table-responsive">
-            <table className="table table-bordered v-align">
-              <thead className="thead-dark">
-                <tr>
-                  <th>Receipt No.</th>
-                  <th>Date</th>
-                  <th>Description</th>
-                  <th>Amount Paid</th>
-                  <th>Payment Method</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paymentHistory.map((transaction) => (
-                  <tr key={transaction.transaction_id}>
-                    <td>{transaction.reference_number}</td>
-                    <td>{new Date(transaction.payment_date).toLocaleDateString()}</td>
-                    <td>{transaction.remarks}</td>
-                    <td>₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
-                    <td>{transaction.payment_method}</td>
-                    <td>
-                      <Chip 
-                        label={transaction.payment_status}
-                        color={getStatusColor(transaction.payment_status)}
-                        size="small"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* Student Information */}
+        {studentInfo && (
+          <Paper elevation={3} className="p-3 mb-4">
+            <Typography variant="h6" className="mb-3">Student Information</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography>Name: {studentInfo.fullName}</Typography>
+                <Typography>Student ID: {studentInfo.studentId}</Typography>
+                <Typography>Program: {studentInfo.program}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography>Total Fee: ₱{studentInfo.totalFee?.toLocaleString()}</Typography>
+                <Typography>Amount Paid: ₱{studentInfo.amountPaid?.toLocaleString()}</Typography>
+                <Typography>Balance: ₱{studentInfo.balance?.toLocaleString()}</Typography>
+              </Grid>
+            </Grid>
+          </Paper>
         )}
-        <Dialog open={openReceiptDialog} onClose={() => setOpenReceiptDialog(false)}>
-        <DialogTitle>Submit Payment Receipt</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Receipt Number"
-            value={receiptData.receipt_number}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              receipt_number: e.target.value
-            })}
-            margin="normal"
-          />
-          
-          <TextField
-            fullWidth
-            label="Amount Paid"
-            type="number"
-            value={receiptData.amount_paid}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              amount_paid: e.target.value
-            })}
-            margin="normal"
-          />
 
-          <TextField
-            fullWidth
-            label="Payment Date"
-            type="date"
-            value={receiptData.payment_date}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              payment_date: e.target.value
-            })}
-            InputLabelProps={{ shrink: true }}
-            margin="normal"
-          />
+        {/* Payment Form */}
+        {studentInfo && (
+          <Paper elevation={3} className="p-3 mb-4">
+            <Typography variant="h6" className="mb-3">Payment Details</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Amount"
+                  type="number"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Payment Method</InputLabel>
+                  <Select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <MenuItem value="Cash">Cash</MenuItem>
+                    <MenuItem value="Check">Check</MenuItem>
+                    <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} className="mt-3">
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={handlePayment}
+                  className="me-2"
+                >
+                  Process Payment
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<FaPrint />}
+                >
+                  Print Receipt
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<FaHistory />}
+                  onClick={handleViewHistory}
+                  className="ms-2"
+                >
+                  View History
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
+        )}
 
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Payment Method</InputLabel>
-            <Select
-              value={receiptData.payment_method}
-              onChange={(e) => setReceiptData({
-                ...receiptData,
-                payment_method: e.target.value
-              })}
-            >
-              <MenuItem value="cash">Cash</MenuItem>
-              <MenuItem value="check">Check</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            fullWidth
-            label="Remarks"
-            multiline
-            rows={2}
-            value={receiptData.remarks}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              remarks: e.target.value
-            })}
-            margin="normal"
-          />
-
-          <input
-            accept="image/*"
-            style={{ display: 'none' }}
-            id="receipt-image-upload"
-            type="file"
-            onChange={(e) => setReceiptImage(e.target.files[0])}
-          />
-          <label htmlFor="receipt-image-upload">
-            <IconButton color="primary" component="span">
-              <PhotoCamera />
-            </IconButton>
-            {receiptImage?.name || 'Upload Receipt Image'}
-          </label>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenReceiptDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleReceiptSubmit}
-            disabled={!receiptData.receipt_number || !receiptData.amount_paid}
-            sx={{
-              bgcolor: '#c70202',
-              color: 'white',
-              '&:hover': { bgcolor: '#a00000' }
-            }}
-          >
-            Submit Receipt
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Payment History Modal */}
+        <Modal
+          open={showHistory}
+          onClose={() => setShowHistory(false)}
+        >
+          <Box sx={modalStyle}>
+            <Typography variant="h6" className="mb-3">Payment History</Typography>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Method</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Receipt</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paymentHistory.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
+                      <TableCell>₱{payment.amount.toLocaleString()}</TableCell>
+                      <TableCell>{payment.method}</TableCell>
+                      <TableCell>{payment.status}</TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outlined" 
+                          size="small"
+                          startIcon={<FaPrint />}
+                        >
+                          Print
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Modal>
       </div>
     </div>
   );
 };
 
-export default StudentPayment;
+export default CounterPayment;
