@@ -43,7 +43,7 @@ const CounterPayment = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await axios.get(`http://localhost:4000/students/search?q=${searchQuery}`, {
+      const response = await axios.get(`/api/search-student?q=${searchQuery}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStudentInfo(response.data);
@@ -54,7 +54,7 @@ const CounterPayment = () => {
 
   const handlePayment = async () => {
     try {
-      await axios.post('http://localhost:4000/payments/counter', {
+      await axios.post('/api/counter-payment', {
         studentId: studentInfo.id,
         amount: paymentAmount,
         paymentMethod,
@@ -72,7 +72,7 @@ const CounterPayment = () => {
 
   const handleViewHistory = async () => {
     try {
-      const response = await axios.get(`http://localhost:4000/payments/history/${studentInfo.id}`, {
+      const response = await axios.get(`/api/get-verified-enrollments?studentId=${studentInfo.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPaymentHistory(response.data);
