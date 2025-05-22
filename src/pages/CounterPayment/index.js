@@ -43,12 +43,27 @@ const CounterPayment = () => {
 
   const handleSearch = async () => {
     try {
+      if (!searchQuery) {
+        alert('Please enter a search term');
+        return;
+      }
+
       const response = await axios.get(`/api/search-student?q=${searchQuery}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Log the search response for debugging
+      console.log('Search Response:', response.data);
+
+      if (!response.data.enrollment_id) {
+        alert('No active enrollment found for this student');
+        return;
+      }
+
       setStudentInfo(response.data);
     } catch (error) {
-      console.error('Error searching student:', error);
+      console.error('Search Error:', error);
+      alert(error.response?.data?.error || 'Error searching student');
     }
   };
 
