@@ -27,15 +27,20 @@ module.exports = async (req, res) => {
   let client;
   try {
     const decoded = authenticateToken(req);
-    const { staff_id } = decoded;
+    const { id: staff_id } = decoded; // Changed from staff_id to id
+
     const { enrollment_id, amount_paid, payment_method, reference_number } = req.body;
+
+    if (!enrollment_id || !amount_paid || !payment_method) {
+      return res.status(400).json({ error: 'Missing required payment details' });
+    }
 
     client = await pool.connect();
     await client.query('BEGIN');
 
-    // Get enrollment details
+    // Get enrollment details with student info
     const enrollmentResult = await client.query(
-      `SELECT e.*, s.first_name, s.last_name 
+      `SELECT e.*, s.first_name, s.last_name, s.id as student_id
        FROM enrollments e
        JOIN students s ON e.student_id = s.id
        WHERE e.enrollment_id = $1 
@@ -83,11 +88,11 @@ module.exports = async (req, res) => {
       [
         enrollment_id,
         enrollment.student_id,
-        amount_paid,
+        parseFloat(amount_paid),
         payment_method,
-        reference_number,
+        reference_number || null,
         `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`,
-        'Completed',
+        paymentStatus,
         staff_id
       ]
     );
