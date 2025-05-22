@@ -54,22 +54,53 @@ const CounterPayment = () => {
 
   const handlePayment = async () => {
     try {
-      await axios.post('/api/counter-payment', {
-        enrollment_id: studentInfo.enrollment_id,  // Changed from studentId
-        amount_paid: paymentAmount,               // Changed from amount
-        payment_method: paymentMethod,            // Kept the same
-        reference_number: null                    // Added this field
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Add validation checks
+      if (!studentInfo) {
+        alert('Please search for a student first');
+        return;
+      }
+
+      if (!paymentAmount || paymentAmount <= 0) {
+        alert('Please enter a valid payment amount');
+        return;
+      }
+
+      if (!paymentMethod) {
+        alert('Please select a payment method');
+        return;
+      }
+
+      // Log the request data for debugging
+      console.log('Payment Request:', {
+        enrollment_id: studentInfo.enrollment_id,
+        amount_paid: paymentAmount,
+        payment_method: paymentMethod
       });
-      
-      // Reset form and refresh student info
-      setPaymentAmount('');
-      setPaymentMethod('');
-      handleSearch();
+
+      const response = await axios.post('/api/counter-payment', {
+        enrollment_id: studentInfo.enrollment_id,
+        amount_paid: paymentAmount,
+        payment_method: paymentMethod,
+        reference_number: null
+      }, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        alert('Payment processed successfully');
+        setPaymentAmount('');
+        setPaymentMethod('');
+        handleSearch(); // Refresh student info
+      }
     } catch (error) {
-      console.error('Error processing payment:', error);
-      // Add error message display
+      console.error('Payment Error Details:', {
+        data: error.response?.data,
+        status: error.response?.status,
+        requestData: error.config?.data
+      });
       alert(error.response?.data?.error || 'Error processing payment');
     }
   };
