@@ -95,9 +95,10 @@ module.exports = async (req, res) => {
       id: enrollment.enrollment_id,
       semester: enrollment.semester,
       program_name: enrollment.program_name,
-      description: `Tuition Fee - ${enrollment.program_name} - ${enrollment.year_level} (${enrollment.semester.replace(/[{"}]/g, '')} Semester)`,
+      description: `Tuition Fee - ${enrollment.program_name} Year ${enrollment.year_level} (${enrollment.semester.replace(/[{"}]/g, '')} Semester)`,
       dueDate: 'End of Semester',
       amount: parseFloat(enrollment.total_fee || 0),
+      remaining_balance: parseFloat(enrollment.remaining_balance || 0),  // Add this line
       status: enrollment.payment_status || 'Unpaid',
       breakdown: {
         total: parseFloat(enrollment.total_fee || 0),
