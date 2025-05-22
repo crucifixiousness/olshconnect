@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
         pt.payment_method,
         pt.payment_status,
         pt.remarks,
-        a.first_name || ' ' || a.last_name as processed_by_name
+        a.full_name as processed_by_name
       FROM payment_transactions pt
       LEFT JOIN admins a ON pt.processed_by = a.staff_id
       WHERE pt.student_id = $1
