@@ -55,18 +55,22 @@ const CounterPayment = () => {
   const handlePayment = async () => {
     try {
       await axios.post('/api/counter-payment', {
-        studentId: studentInfo.id,
-        amount: paymentAmount,
-        paymentMethod,
+        enrollment_id: studentInfo.enrollment_id,  // Changed from studentId
+        amount_paid: paymentAmount,               // Changed from amount
+        payment_method: paymentMethod,            // Kept the same
+        reference_number: null                    // Added this field
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       // Reset form and refresh student info
       setPaymentAmount('');
       setPaymentMethod('');
       handleSearch();
     } catch (error) {
       console.error('Error processing payment:', error);
+      // Add error message display
+      alert(error.response?.data?.error || 'Error processing payment');
     }
   };
 
