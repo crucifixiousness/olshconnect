@@ -55,12 +55,15 @@ const CounterPayment = () => {
       // Log the search response for debugging
       console.log('Search Response:', response.data);
 
-      if (!response.data.enrollment_id) {
+      if (!response.data.enrollmentId) {  // Changed from enrollment_id to enrollmentId
         alert('No active enrollment found for this student');
         return;
       }
 
-      setStudentInfo(response.data);
+      setStudentInfo({
+        ...response.data,
+        enrollment_id: response.data.enrollmentId  // Add this mapping
+      });
     } catch (error) {
       console.error('Search Error:', error);
       alert(error.response?.data?.error || 'Error searching student');
