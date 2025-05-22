@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { IoDocuments } from "react-icons/io5";
 import { FaMoneyBillTransfer } from "react-icons/fa6"; // Add this import
+import { FaHistory } from 'react-icons/fa';
 
 
 const FinanceSidebar = () =>{
@@ -91,6 +92,17 @@ const FinanceSidebar = () =>{
                 </Button>
               </Link>              
             </li>
+
+            {/* Add Payment History menu item */}
+            <li>
+              <Link to="/payment-history">
+                <Button className={`w-100 ${activeTab===5 ? 'active' : ''}`} onClick={()=>handleTabClick(5)}>
+                  <span className='icon'><FaHistory /></span>
+                    Payment History
+                  <span className='arrow'><FaAnglesRight /></span>
+                </Button>
+              </Link>              
+            </li>
           </ul>
 
           <br/>
@@ -101,6 +113,9 @@ const FinanceSidebar = () =>{
               </div>
               </Link>
           </div>
+          
+
+
         </div>
       </>
     )
