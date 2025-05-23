@@ -56,7 +56,14 @@ module.exports = async (req, res) => {
     }
 
     const enrollment = enrollmentResult.rows[0];
+    
+    // Generate reference number
+    const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, '');
+    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const generatedRefNumber = `PAY${dateStr}${randomNum}`;
+
     const currentAmountPaid = parseFloat(enrollment.amount_paid || 0);
+    
     const newPaymentAmount = parseFloat(amount_paid);
     const totalAmountPaid = currentAmountPaid + newPaymentAmount;
     const totalFee = parseFloat(enrollment.total_fee);
@@ -90,7 +97,7 @@ module.exports = async (req, res) => {
         enrollment.student_id,
         parseFloat(amount_paid),
         payment_method,
-        reference_number || null,
+        generatedRefNumber, // Use generated reference number
         `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`,
         paymentStatus,
         staff_id
