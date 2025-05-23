@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
+import { FaPrint } from 'react-icons/fa';
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -146,6 +147,76 @@ const StudentPayment = () => {
       default:
         return 'default';
     }
+  };
+
+  const handlePrintReceipt = (transaction) => {
+    const receiptContent = `
+      <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="/src/asset/images/officialolshcologo.png" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px;"/>
+          <h2 style="color: #003366; margin: 5px 0;">Our Lady of the Sacred Heart College</h2>
+          <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
+          <h3 style="color: #003366; margin: 15px 0;">Official Receipt</h3>
+        </div>
+        <div style="border-top: 2px solid #003366; border-bottom: 2px solid #003366; padding: 15px 0; margin: 15px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 5px 0;"><strong>Receipt No:</strong></td>
+              <td>${transaction.reference_number}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Date:</strong></td>
+              <td>${new Date(transaction.payment_date).toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
+              <td>₱${parseFloat(transaction.amount_paid).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Payment Method:</strong></td>
+              <td>${transaction.payment_method}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Description:</strong></td>
+              <td>${transaction.remarks}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Status:</strong></td>
+              <td>${transaction.payment_status}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Processed By:</strong></td>
+              <td>${transaction.processed_by_name}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official receipt. Please keep this for your records.</p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Payment Receipt</title>
+        </head>
+        <body style="margin: 0; padding: 20px;">
+          ${receiptContent}
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              }
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   if (loading) {
@@ -286,6 +357,16 @@ const StudentPayment = () => {
                         color={getStatusColor(transaction.payment_status)}
                         size="small"
                       />
+                    </td>
+                    <td>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handlePrintReceipt(transaction)}
+                        startIcon={<FaPrint />}
+                      >
+                        Print
+                      </Button>
                     </td>
                   </tr>
                 ))}
