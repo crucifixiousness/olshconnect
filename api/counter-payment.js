@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     const decoded = authenticateToken(req);
     const { id: staff_id } = decoded; // Changed from staff_id to id
 
-    const { enrollment_id, amount_paid, payment_method, reference_number } = req.body;
+    const { enrollment_id, amount_paid, payment_method, reference_number, remarks } = req.body;
 
     if (!enrollment_id || !amount_paid || !payment_method) {
       return res.status(400).json({ error: 'Missing required payment details' });
@@ -111,7 +111,7 @@ module.exports = async (req, res) => {
         paymentDate,
         payment_method,
         generatedRefNumber,
-        `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`,
+        remarks || `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`, // Use provided remarks or fallback
         paymentStatus,
         staff_id
       ]
