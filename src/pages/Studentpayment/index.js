@@ -139,11 +139,11 @@ const StudentPayment = () => {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'paid':
+      case 'fully paid':
         return 'success';
-      case 'pending':
+      case 'partial':
         return 'warning';
-      case 'overdue':
+      case 'unpaid':
         return 'error';
       default:
         return 'default';
