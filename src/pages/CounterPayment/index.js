@@ -95,20 +95,11 @@ const CounterPayment = () => {
         payment_method: paymentMethod
       });
 
-      // Check if this is the first payment
-      const historyResponse = await axios.get(`/api/get-verified-enrollments?studentId=${studentInfo.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const isFirstPayment = historyResponse.data.length === 0;
-      const remarks = isFirstPayment ? "For Enrollment" : "Counter payment";
-
       const response = await axios.post('/api/counter-payment', {
         enrollment_id: studentInfo.enrollment_id,
         amount_paid: paymentAmount,
         payment_method: paymentMethod,
-        reference_number: null,
-        remarks: remarks  // Add the conditional remarks
+        reference_number: null
       }, {
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -123,11 +114,7 @@ const CounterPayment = () => {
         handleSearch(); // Refresh student info
       }
     } catch (error) {
-      console.error('Payment Error Details:', {
-        data: error.response?.data,
-        status: error.response?.status,
-        requestData: error.config?.data
-      });
+      console.error('Payment Error Details:', error);
       alert(error.response?.data?.error || 'Error processing payment');
     }
   };
