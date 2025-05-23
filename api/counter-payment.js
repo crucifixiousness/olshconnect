@@ -57,9 +57,20 @@ module.exports = async (req, res) => {
 
     const enrollment = enrollmentResult.rows[0];
     
-    // Get current date for both payment_date and reference number
-    const paymentDate = new Date();
-    const dateStr = paymentDate.toISOString().slice(2,10).replace(/-/g, '');
+    // Get current date in Philippines timezone (UTC+8)
+    const paymentDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const dateStr = paymentDate.toLocaleDateString('en-US', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'Asia/Manila'
+    }).split('/').reverse()[0] + // year
+        paymentDate.toLocaleDateString('en-US', {
+          month: '2-digit',
+          day: '2-digit',
+          timeZone: 'Asia/Manila'
+        }).split('/').join(''); // month and day
+    
     const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const generatedRefNumber = `PAY${dateStr}${randomNum}`;
 
@@ -97,7 +108,7 @@ module.exports = async (req, res) => {
         enrollment_id,
         enrollment.student_id,
         parseFloat(amount_paid),
-        paymentDate,  // Use the same date object
+        paymentDate,
         payment_method,
         generatedRefNumber,
         `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`,
