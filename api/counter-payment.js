@@ -57,7 +57,11 @@ module.exports = async (req, res) => {
 
     const enrollment = enrollmentResult.rows[0];
     
-    // Get current date in Philippines timezone (UTC+8)
+    // Check if this is the first payment
+    const isFirstPayment = parseFloat(enrollment.amount_paid || 0) === 0;
+    const paymentRemarks = isFirstPayment ? "For Enrollment" : `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`;
+
+    // Get current date in Philippines timezone...
     const paymentDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
     const dateStr = paymentDate.toLocaleDateString('en-US', {
       year: '2-digit',
@@ -111,7 +115,7 @@ module.exports = async (req, res) => {
         paymentDate,
         payment_method,
         generatedRefNumber,
-        remarks || `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`, // Use provided remarks or fallback
+        paymentRemarks,
         paymentStatus,
         staff_id
       ]
