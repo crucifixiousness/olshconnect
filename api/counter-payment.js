@@ -57,8 +57,9 @@ module.exports = async (req, res) => {
 
     const enrollment = enrollmentResult.rows[0];
     
-    // Generate reference number
-    const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, '');
+    // Get current date for both payment_date and reference number
+    const paymentDate = new Date();
+    const dateStr = paymentDate.toISOString().slice(2,10).replace(/-/g, '');
     const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const generatedRefNumber = `PAY${dateStr}${randomNum}`;
 
@@ -90,14 +91,15 @@ module.exports = async (req, res) => {
         remarks,
         payment_status,
         processed_by
-      ) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7, $8)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING transaction_id`,
       [
         enrollment_id,
         enrollment.student_id,
         parseFloat(amount_paid),
+        paymentDate,  // Use the same date object
         payment_method,
-        generatedRefNumber, // Use generated reference number
+        generatedRefNumber,
         `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`,
         paymentStatus,
         staff_id
