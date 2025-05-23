@@ -21,7 +21,7 @@ import {
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
 import { FaPrint } from 'react-icons/fa';
-import officialolshcologo from '../../assets/images/officialolshcologo.png';
+import officialolshcologo from '../../asset/images/officialolshcologo.png';
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
