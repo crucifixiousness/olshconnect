@@ -21,6 +21,7 @@ import {
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
 import { FaPrint } from 'react-icons/fa';
+import officialolshcologo from '../../assets/images/officialolshcologo.png';
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -150,11 +151,11 @@ const StudentPayment = () => {
   };
 
   const handlePrintReceipt = (transaction) => {
-    const receiptContent = `
-      <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="/src/asset/images/officialolshcologo.png" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px;"/>
-          <h2 style="color: #003366; margin: 5px 0;">Our Lady of the Sacred Heart College</h2>
+      const receiptContent = `
+        <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px; object-fit: contain;"/>
+            <h2 style="color: #003366; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
           <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
           <h3 style="color: #003366; margin: 15px 0;">Official Receipt</h3>
         </div>
