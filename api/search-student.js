@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
       FROM students s
       LEFT JOIN enrollments e ON s.id = e.student_id
       LEFT JOIN program p ON e.program_id = p.program_id
-      WHERE e.enrollment_status = 'Verified'
+      WHERE e.enrollment_status IN ('Verified', 'For Payment', 'Enrolled')
       AND (
         LOWER(s.first_name) LIKE LOWER($1) OR
         LOWER(s.last_name) LIKE LOWER($1) OR
