@@ -82,26 +82,29 @@ const StudentProfile = () => {
   ];
 
   useEffect(() => {
-    if (studentData?.enrollment) {
-      switch (studentData.enrollment.status) {
-        case 'Registered':
-          setActiveStep(0);
-          break;
-        case 'Pending':
-          setActiveStep(1);
-          break;
-        case 'Verified':
-          setActiveStep(2);
-          break;
-        case 'For Payment':
-          setActiveStep(3);
-          break;
-        case 'Enrolled':
-          setActiveStep(4);
-          break;
-        default:
-          setActiveStep(0);
+    if (studentData) {
+      // Set registration step as completed by default for logged-in students
+      let currentStep = 1; // Start at 1 since registration is complete
+
+      if (studentData?.enrollment) {
+        switch (studentData.enrollment.status) {
+          case 'Pending':
+            currentStep = 1; // Enrollment submitted
+            break;
+          case 'Verified':
+            currentStep = 2; // Enrollment verified
+            break;
+          case 'For Payment':
+            currentStep = 3; // Ready for payment
+            break;
+          case 'Enrolled':
+            currentStep = 4; // Fully enrolled
+            break;
+          default:
+            currentStep = 1; // Default to registration complete
+        }
       }
+      setActiveStep(currentStep);
     }
   }, [studentData]);
 
