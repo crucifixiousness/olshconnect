@@ -57,9 +57,44 @@ module.exports = async (req, res) => {
 
     const enrollment = enrollmentResult.rows[0];
     
+    const currentAmountPaid = parseFloat(enrollment.amount_paid || 0);
+    const newPaymentAmount = parseFloat(amount_paid);
+    const totalAmountPaid = currentAmountPaid + newPaymentAmount;
+    const totalFee = parseFloat(enrollment.total_fee);
+    const remainingBalance = totalFee - totalAmountPaid;
+
+    let paymentStatus;
+    if (totalAmountPaid >= totalFee) {
+      paymentStatus = 'Fully Paid';
+    } else if (totalAmountPaid > 0) {
+      paymentStatus = 'Partial';
+    } else {
+      paymentStatus = 'Unpaid';
+    }
+
     // Check if this is the first payment
     const isFirstPayment = parseFloat(enrollment.amount_paid || 0) === 0;
     const paymentRemarks = isFirstPayment ? "For Enrollment" : `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`;
+
+    // Update enrollment status and payment details
+    await client.query(`
+      UPDATE enrollments 
+      SET amount_paid = $1,
+          remaining_balance = $2,
+          payment_status = $3,
+          enrollment_status = CASE 
+            WHEN $4 = true THEN 'For Payment'
+            ELSE enrollment_status 
+          END
+      WHERE enrollment_id = $5`,
+      [
+        totalAmountPaid,
+        remainingBalance,
+        paymentStatus,
+        isFirstPayment,
+        enrollment_id
+      ]
+    );
 
     // Get current date in Philippines timezone...
     const paymentDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
@@ -77,22 +112,6 @@ module.exports = async (req, res) => {
     
     const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const generatedRefNumber = `PAY${dateStr}${randomNum}`;
-
-    const currentAmountPaid = parseFloat(enrollment.amount_paid || 0);
-    
-    const newPaymentAmount = parseFloat(amount_paid);
-    const totalAmountPaid = currentAmountPaid + newPaymentAmount;
-    const totalFee = parseFloat(enrollment.total_fee);
-    const remainingBalance = totalFee - totalAmountPaid;
-
-    let paymentStatus;
-    if (totalAmountPaid >= totalFee) {
-      paymentStatus = 'Fully Paid';
-    } else if (totalAmountPaid > 0) {
-      paymentStatus = 'Partial';
-    } else {
-      paymentStatus = 'Unpaid';
-    }
 
     // Insert payment transaction
     const result = await client.query(`
