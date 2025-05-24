@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
         AND e.semester = tf.semester
         AND e.academic_year = tf.academic_year
       WHERE e.student_id = $1 
-        AND e.enrollment_status = 'Verified'
+        AND e.enrollment_status IN ('Verified', 'For Payment', 'Enrolled')
       ORDER BY e.enrollment_date DESC
       LIMIT 1
     `, [studentId]);
