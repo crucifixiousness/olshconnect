@@ -84,7 +84,7 @@ const StudentProfile = () => {
   useEffect(() => {
     if (studentData) {
       // Set registration step as completed by default for logged-in students
-      let currentStep = 1; // Start at 1 since registration is complete
+      let currentStep = 0; // Start at 1 since registration is complete
 
       if (studentData?.enrollment) {
         switch (studentData.enrollment.status) {
@@ -101,7 +101,7 @@ const StudentProfile = () => {
             currentStep = 4; // Fully enrolled
             break;
           default:
-            currentStep = 1; // Default to registration complete
+            currentStep = 0; // Default to registration complete
         }
       }
       setActiveStep(currentStep);
