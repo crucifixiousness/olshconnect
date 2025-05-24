@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
       FROM enrollments e
       JOIN students s ON e.student_id = s.id
       JOIN program p ON e.program_id = p.program_id
-      WHERE e.enrollment_status = 'Verified'
+      WHERE e.enrollment_status IN ('Verified', 'For Payment', 'Enrolled')
       ORDER BY e.enrollment_date DESC
     `);
 
