@@ -139,11 +139,11 @@ const StudentPayment = () => {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'fully paid':
+      case 'paid':
         return 'success';
-      case 'partial':
+      case 'pending':
         return 'warning';
-      case 'unpaid':
+      case 'overdue':
         return 'error';
       default:
         return 'default';
@@ -151,73 +151,97 @@ const StudentPayment = () => {
   };
 
   const handlePrintReceipt = (transaction) => {
-      const receiptContent = `
-        <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px; object-fit: contain;"/>
-            <h2 style="color: #003366; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
-          <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
-          <h3 style="color: #003366; margin: 15px 0;">Official Receipt</h3>
-        </div>
-        <div style="border-top: 2px solid #003366; border-bottom: 2px solid #003366; padding: 15px 0; margin: 15px 0;">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 5px 0;"><strong>Receipt No:</strong></td>
-              <td>${transaction.reference_number}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Date:</strong></td>
-              <td>${new Date(transaction.payment_date).toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
-              <td>₱${parseFloat(transaction.amount_paid).toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Payment Method:</strong></td>
-              <td>${transaction.payment_method}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Description:</strong></td>
-              <td>${transaction.remarks}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Status:</strong></td>
-              <td>${transaction.payment_status}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Processed By:</strong></td>
-              <td>${transaction.processed_by_name}</td>
-            </tr>
-          </table>
-        </div>
-        <div style="text-align: center; margin-top: 30px;">
-          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official receipt. Please keep this for your records.</p>
-          <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
-        </div>
-      </div>
-    `;
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
+    const receiptContent = `
       <html>
         <head>
           <title>Payment Receipt</title>
-        </head>
-        <body style="margin: 0; padding: 20px;">
-          ${receiptContent}
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              }
+          <style>
+            @page {
+              size: 148mm 210mm; /* A5 size */
+              margin: 10mm;
             }
-          </script>
+            body {
+              width: 148mm;
+              height: 210mm;
+              margin: 0;
+              padding: 10mm;
+              font-family: Arial;
+            }
+            .receipt-container {
+              max-width: 128mm; /* A5 width minus margins */
+              margin: 0 auto;
+            }
+            .logo {
+              width: 80px;
+              height: 80px;
+              object-fit: contain;
+            }
+            /* ... rest of your existing styles ... */
+          </style>
+        </head>
+        <body>
+          <div class="receipt-container">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <img src="${officialolshcologo}" alt="OLSHCO Logo" class="logo"/>
+              <h2 style="color: #003366; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
+              <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
+              <h3 style="color: #003366; margin: 15px 0;">Official Receipt</h3>
+            </div>
+            <div style="border-top: 2px solid #003366; border-bottom: 2px solid #003366; padding: 15px 0; margin: 15px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Receipt No:</strong></td>
+                  <td>${transaction.reference_number}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Date:</strong></td>
+                  <td>${new Date(transaction.payment_date).toLocaleDateString()}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
+                  <td>₱${parseFloat(transaction.amount_paid).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Payment Method:</strong></td>
+                  <td>${transaction.payment_method}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Description:</strong></td>
+                  <td>${transaction.remarks}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Status:</strong></td>
+                  <td>${transaction.payment_status}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Processed By:</strong></td>
+                  <td>${transaction.processed_by_name}</td>
+                </tr>
+              </table>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+              <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official receipt. Please keep this for your records.</p>
+              <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+            </div>
+          </div>
         </body>
       </html>
-    `);
-    printWindow.document.close();
+    `;
+
+    // Create a Blob from the HTML content
+    const blob = new Blob([receiptContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Receipt-${transaction.reference_number}.html`;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   if (loading) {
