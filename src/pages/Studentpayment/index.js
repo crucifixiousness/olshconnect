@@ -23,6 +23,7 @@ import { PhotoCamera } from '@mui/icons-material';
 import { FaPrint } from 'react-icons/fa';
 import officialolshcologo from '../../asset/images/officialolshcologo.png';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -151,54 +152,78 @@ const StudentPayment = () => {
     }
   };
 
-  const handlePrintReceipt = (transaction) => {
-    // Create new PDF document in A5 size (148x210mm)
-    const doc = new jsPDF({
-      format: 'a5',
-      unit: 'mm'
-    });
+  const handlePrintReceipt = async (transaction) => {
+    // Create a temporary div to render the receipt
+    const receiptDiv = document.createElement('div');
+    receiptDiv.innerHTML = `
+      <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px; object-fit: contain;"/>
+          <h2 style="color: #003366; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
+          <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
+          <h3 style="color: #003366; margin: 15px 0;">Official Receipt</h3>
+        </div>
+        <div style="border-top: 2px solid #003366; border-bottom: 2px solid #003366; padding: 15px 0; margin: 15px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 5px 0;"><strong>Receipt No:</strong></td>
+              <td>${transaction.reference_number}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Date:</strong></td>
+              <td>${new Date(transaction.payment_date).toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
+              <td>₱${parseFloat(transaction.amount_paid).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Payment Method:</strong></td>
+              <td>${transaction.payment_method}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Description:</strong></td>
+              <td>${transaction.remarks}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Status:</strong></td>
+              <td>${transaction.payment_status}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Processed By:</strong></td>
+              <td>${transaction.processed_by_name}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official receipt. Please keep this for your records.</p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(receiptDiv);
 
-    // Add logo
-    const logoWidth = 30;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const logoX = (pageWidth - logoWidth) / 2;
-    doc.addImage(officialolshcologo, 'PNG', logoX, 10, logoWidth, logoWidth);
+    try {
+      // Convert the HTML to canvas
+      const canvas = await html2canvas(receiptDiv, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
 
-    // Add header text
-    doc.setFontSize(16);
-    doc.setTextColor(0, 51, 102); // #003366
-    doc.text('Our Lady of the Sacred Heart College of Guimba Inc.', pageWidth/2, 50, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.setTextColor(102, 102, 102); // #666
-    doc.text('Guimba, Nueva Ecija', pageWidth/2, 57, { align: 'center' });
-    
-    doc.setFontSize(14);
-    doc.setTextColor(0, 51, 102);
-    doc.text('Official Receipt', pageWidth/2, 67, { align: 'center' });
+      // Create PDF (A5 size)
+      const pdf = new jsPDF('p', 'mm', 'a5');
+      
+      // Add the canvas as image
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
 
-    // Add receipt details
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    const startY = 80;
-    const lineHeight = 7;
-    
-    doc.text(`Receipt No: ${transaction.reference_number}`, 20, startY);
-    doc.text(`Date: ${new Date(transaction.payment_date).toLocaleDateString()}`, 20, startY + lineHeight);
-    doc.text(`Amount Paid: ₱${parseFloat(transaction.amount_paid).toFixed(2)}`, 20, startY + lineHeight * 2);
-    doc.text(`Payment Method: ${transaction.payment_method}`, 20, startY + lineHeight * 3);
-    doc.text(`Description: ${transaction.remarks}`, 20, startY + lineHeight * 4);
-    doc.text(`Status: ${transaction.payment_status}`, 20, startY + lineHeight * 5);
-    doc.text(`Processed By: ${transaction.processed_by_name}`, 20, startY + lineHeight * 6);
-
-    // Add footer
-    doc.setFontSize(8);
-    doc.setTextColor(102, 102, 102);
-    doc.text('This is your official receipt. Please keep this for your records.', pageWidth/2, 180, { align: 'center' });
-    doc.text('Thank you for your payment!', pageWidth/2, 185, { align: 'center' });
-
-    // Save the PDF
-    doc.save(`Receipt-${transaction.reference_number}.pdf`);
+      // Download the PDF
+      pdf.save(`Receipt-${transaction.reference_number}.pdf`);
+    } finally {
+      // Clean up
+      document.body.removeChild(receiptDiv);
+    }
   };
 
   if (loading) {
