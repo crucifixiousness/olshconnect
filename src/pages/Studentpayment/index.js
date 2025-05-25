@@ -21,7 +21,7 @@ import {
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
 import { FaPrint } from 'react-icons/fa';
-import officialolshcologo from '../../asset/images/officialolshcologo.png';
+import officialolshcologo from '../../assets/images/officialolshcologo.png';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -153,82 +153,86 @@ const StudentPayment = () => {
   };
 
   const handlePrintReceipt = async (transaction) => {
-      const receiptDiv = document.createElement('div');
-      receiptDiv.innerHTML = `
-        <div style="font-family: Arial; padding: 20px; width: 148mm; margin: 0 auto;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 80px; height: 80px; margin-bottom: 20px;"/>
-            <h2 style="color: #000066; margin: 5px 0; font-size: 20px;">Our Lady of the Sacred Heart</h2>
-            <h2 style="color: #000066; margin: 5px 0; font-size: 20px;">College of Guimba Inc.</h2>
-            <p style="color: #000; margin: 5px 0; font-size: 14px;">Guimba, Nueva Ecija</p>
-            <h3 style="color: #000; margin: 25px 0 15px; font-size: 18px;">Official Receipt</h3>
-            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+    // Create temporary container for the receipt
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="font-family: Arial; padding: 20px; width: 148mm;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 80px; height: 80px; margin-bottom: 10px;"/>
+          <h2 style="color: #000066; margin: 5px 0; font-size: 20px;">Our Lady of the Sacred Heart</h2>
+          <h2 style="color: #000066; margin: 5px 0; font-size: 20px;">College of Guimba Inc.</h2>
+          <p style="color: #000; margin: 5px 0; font-size: 14px;">Guimba, Nueva Ecija</p>
+          <h3 style="color: #000; margin: 25px 0 15px; font-size: 18px;">Official Receipt</h3>
+          <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+        </div>
+        
+        <div style="padding: 0 20px; font-size: 14px; line-height: 2;">
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Receipt No:</div>
+            <div>${transaction.reference_number}</div>
           </div>
-          
-          <div style="padding: 0 20px; font-size: 14px; line-height: 2;">
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Receipt No:</div>
-              <div>${transaction.reference_number}</div>
-            </div>
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Date:</div>
-              <div>${new Date(transaction.payment_date).toLocaleDateString()}</div>
-            </div>
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Amount Paid:</div>
-              <div>₱${parseFloat(transaction.amount_paid).toFixed(2)}</div>
-            </div>
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Payment Method:</div>
-              <div>${transaction.payment_method}</div>
-            </div>
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Description:</div>
-              <div>${transaction.remarks}</div>
-            </div>
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Status:</div>
-              <div>${transaction.payment_status}</div>
-            </div>
-            <div style="display: flex; margin-bottom: 10px;">
-              <div style="width: 120px;">Processed By:</div>
-              <div>${transaction.processed_by_name}</div>
-            </div>
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Date:</div>
+            <div>${new Date(transaction.payment_date).toLocaleDateString()}</div>
           </div>
-          
-          <div style="border-top: 1px solid #000; width: 80%; margin: 30px auto;"></div>
-          
-          <div style="text-align: center; margin-top: 30px;">
-            <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official receipt. Please keep this for your records.</p>
-            <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Amount Paid:</div>
+            <div>₱${parseFloat(transaction.amount_paid).toFixed(2)}</div>
+          </div>
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Payment Method:</div>
+            <div>${transaction.payment_method}</div>
+          </div>
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Description:</div>
+            <div>${transaction.remarks}</div>
+          </div>
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Status:</div>
+            <div>${transaction.payment_status}</div>
+          </div>
+          <div style="display: flex; margin-bottom: 10px;">
+            <div style="width: 120px;">Processed By:</div>
+            <div>${transaction.processed_by_name}</div>
           </div>
         </div>
-      `;
-      
-      document.body.appendChild(receiptDiv);
-  
-      try {
-        // Convert the HTML to canvas
-        const canvas = await html2canvas(receiptDiv, {
-          scale: 2,
-          useCORS: true,
-          logging: false
-        });
-  
-        // Create PDF (A5 size)
-        const pdf = new jsPDF('p', 'mm', 'a5');
+
+        <div style="border-top: 1px solid #000; width: 80%; margin: 30px auto;"></div>
         
-        // Add the canvas as image
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
-  
-        // Download the PDF
-        pdf.save(`Receipt-${transaction.reference_number}.pdf`);
-      } finally {
-        // Clean up
-        document.body.removeChild(receiptDiv);
-      }
-    };
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official receipt. Please keep this for your records.</p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    try {
+      // Convert HTML to canvas
+      const canvas = await html2canvas(container.firstChild, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+
+      // Create PDF (A5 size)
+      const pdf = new jsPDF({
+        format: 'a5',
+        unit: 'mm',
+        orientation: 'portrait'
+      });
+
+      // Add the canvas as image
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
+
+      // Download PDF
+      pdf.save(`Receipt-${transaction.reference_number}.pdf`);
+    } finally {
+      // Clean up
+      document.body.removeChild(container);
+    }
+  };
 
   if (loading) {
     return (
@@ -484,5 +488,4 @@ const StudentPayment = () => {
     </div>
   );
 };
-
 export default StudentPayment;
