@@ -7,6 +7,7 @@ import {
   Tab,
   Tabs,
   Box,
+  Typography,
   Dialog,
   DialogTitle,
   DialogContent,
