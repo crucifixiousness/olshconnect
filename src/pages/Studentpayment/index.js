@@ -17,6 +17,7 @@ import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
 import { FaPrint } from 'react-icons/fa';
 import officialolshcologo from '../../asset/images/officialolshcologo.png';
+import { Snackbar, Alert } from '@mui/material';
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -35,10 +36,20 @@ const StudentPayment = () => {
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [receiptImage, setReceiptImage] = useState(null);
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
   const handleReceiptSubmit = async () => {
     try {
       if (!receiptImage) {
-        setError('Please select a receipt image to upload');
+        setSnackbar({
+          open: true,
+          message: 'Please select a receipt image to upload',
+          severity: 'error'
+        });
         return;
       }
       
@@ -54,11 +65,20 @@ const StudentPayment = () => {
       
       setOpenVerifyDialog(false);
       setReceiptImage(null);
+      setSnackbar({
+        open: true,
+        message: 'Receipt uploaded successfully! Please wait for verification.',
+        severity: 'success'
+      });
       fetchPayments();
       fetchPaymentHistory();
     } catch (error) {
       console.error('Upload Error:', error);
-      setError(error.response?.data?.details || 'Failed to upload receipt');
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.details || 'Failed to upload receipt',
+        severity: 'error'
+      });
     }
   };
   useEffect(() => {
@@ -129,16 +149,13 @@ const StudentPayment = () => {
     }
   };
 
-  // Add this after the loading check
-
-
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'paid':
+      case 'Fully Paid':
         return 'success';
-      case 'pending':
+      case 'Partial':
         return 'warning';
-      case 'overdue':
+      case 'Unpaid':
         return 'error';
       default:
         return 'default';
@@ -431,6 +448,21 @@ const StudentPayment = () => {
           </DialogActions>
         </Dialog>
       </div>
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
