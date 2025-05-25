@@ -121,6 +121,7 @@ const StudentPayment = () => {
         const paymentData = response.data[0];
         const formattedPayment = {
           ...paymentData,
+          enrollment_id: paymentData.enrollment_id,
           remaining_balance: paymentData.remaining_balance || 0 // Ensure remaining_balance exists
         };
         
