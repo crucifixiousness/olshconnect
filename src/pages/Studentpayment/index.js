@@ -48,22 +48,23 @@ const StudentPayment = () => {
     try {
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
-      formData.append('payment_id', selectedPayment.enrollment_id);
+      // Make sure we're passing a valid enrollment_id
+      formData.append('enrollment_id', selectedPayment.enrollment_id.toString());
       
       const token = localStorage.getItem('token');
       await axios.post('/api/enrollment-payment', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         }
       });
-
+  
       setOpenVerifyDialog(false);
       setReceiptImage(null);
       fetchPayments();
       fetchPaymentHistory();
     } catch (error) {
-      console.error('Error submitting receipt:', error);
-      setError('Failed to submit receipt.');
+      console.error('Error submitting receipt:', error.response?.data || error);
+      setError(error.response?.data?.details || 'Failed to submit receipt.');
     }
   };
 
@@ -315,7 +316,10 @@ const StudentPayment = () => {
                           size="small"
                           disabled={payment.status.toLowerCase() === 'paid'}
                           onClick={() => {
-                            setSelectedPayment(payment);
+                            setSelectedPayment({
+                              ...payment,
+                              enrollment_id: payment.enrollment_id // Make sure this property exists
+                            });
                             setOpenVerifyDialog(true);
                           }}
                           sx={{
@@ -325,7 +329,7 @@ const StudentPayment = () => {
                             }
                           }}
                         >
-                          Verify Enrollment
+                          Upload Receipt
                         </Button>
                       </td>
                     </tr>
