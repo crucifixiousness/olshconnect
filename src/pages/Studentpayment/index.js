@@ -31,14 +31,6 @@ const StudentPayment = () => {
   });
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
-  const [openReceiptDialog, setOpenReceiptDialog] = useState(false);
-  const [receiptData, setReceiptData] = useState({
-    receipt_number: '',
-    amount_paid: '',
-    payment_date: '',
-    payment_method: '',
-    remarks: ''
-  });
   
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -56,16 +48,18 @@ const StudentPayment = () => {
       formData.append('enrollment_id', selectedPayment.enrollment_id);
       
       const token = localStorage.getItem('token');
-      const response = await axios.post('/api/enrollment-payment', formData, {
+      const response = await axios.put('/api/enrollment-payment', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
   
-      if (response.data.receipt_id) {
+      if (response.data.enrollment_id) {
         setOpenVerifyDialog(false);
         setReceiptImage(null);
         setSelectedPayment(null);
+        fetchPayments();
         fetchPaymentHistory();
       }
     } catch (error) {
