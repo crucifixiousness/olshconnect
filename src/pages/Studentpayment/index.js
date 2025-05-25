@@ -33,7 +33,6 @@ const StudentPayment = () => {
   const [activeTab, setActiveTab] = useState(0);
   
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
   const [receiptImage, setReceiptImage] = useState(null);
 
   const [enrollmentId, setEnrollmentId] = useState(null);
@@ -316,20 +315,20 @@ const StudentPayment = () => {
                       </td>
                       <td>
                         <Button
-                         variant="contained"
-                         size="small"
-                         onClick={() => {
-                           setSelectedPayment(payment);
-                           setOpenVerifyDialog(true);
-                         }}
-                         sx={{
-                           bgcolor: '#c70202',
-                           '&:hover': {
-                             bgcolor: '#a00000',
-                           }
-                         }}
-                       >
-                         Upload Receipt
+                          variant="contained"
+                          size="small"
+                          onClick={() => {
+                            setEnrollmentId(payment.enrollment_id); // Set enrollmentId instead of selectedPayment
+                            setOpenVerifyDialog(true);
+                          }}
+                          sx={{
+                            bgcolor: '#c70202',
+                            '&:hover': {
+                              bgcolor: '#a00000',
+                            }
+                          }}
+                        >
+                          Upload Receipt
                         </Button>
                       </td>
                     </tr>
