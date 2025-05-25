@@ -158,7 +158,7 @@ const StudentPayment = () => {
     container.innerHTML = `
       <div style="font-family: Arial; padding: 20px; width: 148mm;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 80px; height: 80px; margin-bottom: 10px;"/>
+          <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 80px; height: 80px; margin-bottom: 10px;" crossorigin="anonymous"/>
           <h2 style="color: #000066; margin: 5px 0; font-size: 20px;">Our Lady of the Sacred Heart</h2>
           <h2 style="color: #000066; margin: 5px 0; font-size: 20px;">College of Guimba Inc.</h2>
           <p style="color: #000; margin: 5px 0; font-size: 14px;">Guimba, Nueva Ecija</p>
@@ -208,26 +208,51 @@ const StudentPayment = () => {
     document.body.appendChild(container);
 
     try {
-      // Convert HTML to canvas
+      // Wait for image to load
+      await new Promise((resolve) => {
+        const img = container.querySelector('img');
+        if (img.complete) {
+          resolve();
+        } else {
+          img.onload = resolve;
+        }
+      });
+
+      // Convert HTML to canvas with improved settings
       const canvas = await html2canvas(container.firstChild, {
         scale: 2,
         useCORS: true,
-        logging: false
+        allowTaint: true,
+        foreignObjectRendering: true,
+        logging: true,
+        imageTimeout: 0,
+        onclone: (clonedDoc) => {
+          const img = clonedDoc.querySelector('img');
+          if (img) {
+            img.crossOrigin = 'anonymous';
+          }
+        }
       });
 
-      // Create PDF (A5 size)
+      // Create PDF with proper dimensions
+      const imgWidth = 148; // A5 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
       const pdf = new jsPDF({
         format: 'a5',
         unit: 'mm',
         orientation: 'portrait'
       });
 
-      // Add the canvas as image
+      // Add the canvas as image with proper scaling
       const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
 
       // Download PDF
       pdf.save(`Receipt-${transaction.reference_number}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
     } finally {
       // Clean up
       document.body.removeChild(container);
