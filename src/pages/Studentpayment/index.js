@@ -35,17 +35,8 @@ const StudentPayment = () => {
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [receiptImage, setReceiptImage] = useState(null);
 
-  const [enrollmentId, setEnrollmentId] = useState(null);
-
   const handleReceiptSubmit = async () => {
     try {
-      console.log('Current enrollmentId:', enrollmentId); // Debug log
-      console.log('Current payment data:', payments[0]); // Debug log
-      
-      if (!enrollmentId) {
-        setError('Enrollment ID is required. Please try again.');
-        return;
-      }
       if (!receiptImage) {
         setError('Please select a receipt image to upload');
         return;
@@ -53,7 +44,6 @@ const StudentPayment = () => {
       
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
-      formData.append('enrollment_id', enrollmentId);
       
       const token = localStorage.getItem('token');
       await axios.put('/api/enrollment-payment', formData, {
@@ -64,7 +54,6 @@ const StudentPayment = () => {
       
       setOpenVerifyDialog(false);
       setReceiptImage(null);
-      setEnrollmentId(null);
       fetchPayments();
       fetchPaymentHistory();
     } catch (error) {
@@ -72,7 +61,6 @@ const StudentPayment = () => {
       setError(error.response?.data?.details || 'Failed to upload receipt');
     }
   };
-
   useEffect(() => {
     fetchPayments();
     fetchPaymentHistory();
@@ -320,10 +308,7 @@ const StudentPayment = () => {
                         <Button
                           variant="contained"
                           size="small"
-                          onClick={() => {
-                            console.log('Payment data:', payment); // Debug log
-                            console.log('Enrollment ID:', payment.enrollment_id); // Debug log
-                            setEnrollmentId(payment.enrollment_id);
+                          onClick={() => {                            
                             setOpenVerifyDialog(true);
                           }}
                           sx={{
