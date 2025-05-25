@@ -39,7 +39,16 @@ const StudentPayment = () => {
   const handleReceiptSubmit = async () => {
     try {
       if (!selectedPayment?.enrollment_id) {
-        setError('Unable to process: Missing enrollment information. Please refresh the page and try again.');
+        const error = 'Unable to process: Missing enrollment information. Please refresh the page and try again.';
+        console.error('Validation Error:', error);
+        setError(error);
+        return;
+      }
+
+      if (!receiptImage) {
+        const error = 'Please select a receipt image to upload';
+        console.error('Validation Error:', error);
+        setError(error);
         return;
       }
 
@@ -54,7 +63,7 @@ const StudentPayment = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-  
+    
       if (response.data.enrollment_id) {
         setOpenVerifyDialog(false);
         setReceiptImage(null);
@@ -63,14 +72,19 @@ const StudentPayment = () => {
         fetchPaymentHistory();
       }
     } catch (error) {
-      console.error('Error:', error.response?.data);
-      // More descriptive error messages
       const errorMessage = error.response?.data?.details || 
         error.response?.data?.error || 
         'Failed to upload receipt. Please try again later.';
+      
+      console.error('Upload Error:', {
+        message: errorMessage,
+        details: error.response?.data,
+        error: error
+      });
+      
       setError(errorMessage);
-      // Show error in dialog
-      setTimeout(() => setError(null), 5000); // Clear error after 5 seconds
+      // Keep error visible in dialog
+      setOpenVerifyDialog(true);
     }
   };
 
@@ -384,15 +398,27 @@ const StudentPayment = () => {
             </table>
           </div>
         )}
-        <Dialog open={openVerifyDialog} onClose={() => setOpenVerifyDialog(false)}>
+        // Update Dialog component to show error
+        <Dialog open={openVerifyDialog} onClose={() => {
+          setOpenVerifyDialog(false);
+          setError(null); // Clear error when closing dialog
+        }}>
           <DialogTitle>Upload Payment Receipt</DialogTitle>
           <DialogContent>
+            {error && (
+              <div className="alert alert-danger mb-3" role="alert">
+                {error}
+              </div>
+            )}
             <input
               accept="image/*"
               style={{ display: 'none' }}
               id="receipt-image-upload"
               type="file"
-              onChange={(e) => setReceiptImage(e.target.files[0])}
+              onChange={(e) => {
+                setReceiptImage(e.target.files[0]);
+                setError(null); // Clear error when new file selected
+              }}
             />
             <label htmlFor="receipt-image-upload">
               <Button
