@@ -46,25 +46,31 @@ const StudentPayment = () => {
 
   const handleReceiptSubmit = async () => {
     try {
+      if (!selectedPayment?.enrollment_id) {
+        setError('Invalid enrollment data');
+        return;
+      }
+
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
-      // Make sure we're passing a valid enrollment_id
       formData.append('enrollment_id', selectedPayment.enrollment_id);
       
       const token = localStorage.getItem('token');
-      await axios.post('/api/enrollment-payment', formData, {
+      const response = await axios.post('/api/enrollment-payment', formData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
   
-      setOpenVerifyDialog(false);
-      setReceiptImage(null);
-      fetchPayments();
-      fetchPaymentHistory();
+      if (response.data.receipt_id) {
+        setOpenVerifyDialog(false);
+        setReceiptImage(null);
+        setSelectedPayment(null);
+        fetchPaymentHistory();
+      }
     } catch (error) {
-      console.error('Error submitting receipt:', error.response?.data || error);
-      setError(error.response?.data?.details || 'Failed to submit receipt.');
+      console.error('Error:', error.response?.data);
+      setError(error.response?.data?.details || 'Failed to upload receipt');
     }
   };
 
@@ -311,25 +317,20 @@ const StudentPayment = () => {
                       </td>
                       <td>
                         <Button
-                          variant="contained"
-                          className="success"
-                          size="small"
-                          disabled={payment.status.toLowerCase() === 'paid'}
-                          onClick={() => {
-                            setSelectedPayment({
-                              ...payment,
-                              enrollment_id: payment.enrollment_id // Make sure this property exists
-                            });
-                            setOpenVerifyDialog(true);
-                          }}
-                          sx={{
-                            bgcolor: '#c70202',
-                            '&:hover': {
-                              bgcolor: '#a00000',
-                            }
-                          }}
-                        >
-                          Upload Receipt
+                         variant="contained"
+                         size="small"
+                         onClick={() => {
+                           setSelectedPayment(payment);
+                           setOpenVerifyDialog(true);
+                         }}
+                         sx={{
+                           bgcolor: '#c70202',
+                           '&:hover': {
+                             bgcolor: '#a00000',
+                           }
+                         }}
+                       >
+                         Upload Receipt
                         </Button>
                       </td>
                     </tr>
