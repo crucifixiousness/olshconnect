@@ -1,4 +1,5 @@
-import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box } from '@mui/material';
+// Update imports
+import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import { FaEye } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa";
@@ -14,54 +15,78 @@ const PaymentVerification = () => {
   const [open, setOpen] = useState(false);
   const token = localStorage.getItem('token');
 
-  // Wrap fetchPayments in useCallback
+  // Add snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Update fetchPayments to fetch enrollment payments
   const fetchPayments = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:4000/payments/pending', {
+      const response = await axios.get('/api/enrollment-for-verification', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPayments(response.data);
     } catch (error) {
-      console.error('Error fetching payments:', error);
+      console.error('Error fetching enrollment payments:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to fetch enrollment payments',
+        severity: 'error'
+      });
     }
-  }, [token]); // Add token as dependency since it's used inside
+  }, [token]);
 
-  // Update the useEffect to include fetchPayments in dependencies
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
-
+  // Update verification handler
   const handleVerify = async (paymentId) => {
     try {
-      await axios.put(`http://localhost:4000/payments/verify/${paymentId}`, {}, {
+      await axios.put(`http://localhost:4000/verify-enrollment-payment/${paymentId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
+      });
+      setSnackbar({
+        open: true,
+        message: 'Student officially enrolled successfully',
+        severity: 'success'
       });
       fetchPayments();
     } catch (error) {
-      console.error('Error verifying payment:', error);
+      console.error('Error verifying enrollment:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to verify enrollment',
+        severity: 'error'
+      });
     }
   };
 
+  // Update rejection handler
   const handleReject = async (paymentId) => {
     try {
-      await axios.put(`http://localhost:4000/payments/reject/${paymentId}`, {}, {
+      await axios.put(`http://localhost:4000/reject-enrollment-payment/${paymentId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
+      });
+      setSnackbar({
+        open: true,
+        message: 'Enrollment payment rejected',
+        severity: 'warning'
       });
       fetchPayments();
     } catch (error) {
-      console.error('Error rejecting payment:', error);
+      console.error('Error rejecting enrollment:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to reject enrollment',
+        severity: 'error'
+      });
     }
-  };
-
-  const handleViewDetails = (payment) => {
-    setSelectedPayment(payment);
-    setOpen(true);
   };
 
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Payment Verification</h3>      
+        <h3 className="hd mt-2 pb-0">Enrollment Payment Verification</h3>      
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
@@ -111,9 +136,9 @@ const PaymentVerification = () => {
               <thead className='thead-dark'>
                 <tr>
                   <th>STUDENT NAME</th>
-                  <th>AMOUNT</th>
-                  <th>PAYMENT METHOD</th>
-                  <th>STATUS</th>
+                  <th>PROGRAM</th>
+                  <th>YEAR LEVEL</th>
+                  <th>ENROLLMENT STATUS</th>
                   <th>ACTION</th>
                 </tr>
               </thead>
@@ -121,24 +146,26 @@ const PaymentVerification = () => {
                 {payments.map((payment) => (
                   <tr key={payment._id}>
                     <td>{payment.studentName}</td>
-                    <td>₱{payment.amount.toLocaleString()}</td>
-                    <td>{payment.paymentMethod}</td>
-                    <td>{payment.status}</td>
+                    <td>{payment.program}</td>
+                    <td>{payment.yearLevel}</td>
+                    <td>{payment.enrollmentStatus}</td>
                     <td className='action'>
                       <div className='actions d-flex align-items-center'>
                         <Button 
                           className="secondary" 
                           color="secondary"
                           onClick={() => handleViewDetails(payment)}
+                          title="View Enrollment Receipt"
                         >
                           <FaEye/>
                         </Button>
-                        {payment.status === 'Pending' && (
+                        {payment.enrollmentStatus === 'Pending' && (
                           <>
                             <Button 
                               className="success" 
                               color="success"
                               onClick={() => handleVerify(payment._id)}
+                              title="Mark as Officially Enrolled"
                             >
                               <FaCheck/>
                             </Button>
@@ -146,6 +173,7 @@ const PaymentVerification = () => {
                               className="error" 
                               color="error"
                               onClick={() => handleReject(payment._id)}
+                              title="Reject Enrollment"
                             >
                               <IoClose/>
                             </Button>
@@ -174,67 +202,36 @@ const PaymentVerification = () => {
           bgcolor: 'background.paper',
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           borderRadius: 4,
-          p: 0,
+          p: 4,
           maxHeight: '90vh',
           overflow: 'auto'
         }}>
           {selectedPayment && (
             <div className="enrollment-details">
-              <div className="enrollment-details-header">
-                <Typography variant="h5" sx={{ 
-                  fontWeight: 'bold',
-                  color: '#c70202'
-                }}>
-                  Payment Details
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Student Name</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedPayment.studentName}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Amount</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  ₱{selectedPayment.amount.toLocaleString()}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Payment Method</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedPayment.paymentMethod}
-                </Typography>
-              </div>
-
-              <div className="enrollment-info-item">
-                <Typography variant="subtitle2" sx={{ color: '#666' }}>Reference Number</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {selectedPayment.referenceNumber}
-                </Typography>
-              </div>
-
               <div className="enrollment-docs-section">
                 <Typography variant="h6" sx={{ 
                   mb: 2,
                   color: '#c70202',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  textAlign: 'center'
                 }}>
-                  Payment Proof
+                  Enrollment Payment Receipt
                 </Typography>
                 
                 <div className="document-preview">
                   {selectedPayment.proofOfPayment ? (
                     <img 
                       src={`data:image/jpeg;base64,${selectedPayment.proofOfPayment}`} 
-                      alt="Payment Proof" 
-                      style={{ width: '100%', borderRadius: '8px' }}
+                      alt="Payment Receipt" 
+                      style={{ 
+                        width: '100%', 
+                        borderRadius: '8px',
+                        maxHeight: '70vh',
+                        objectFit: 'contain'
+                      }}
                     />
                   ) : (
-                    <div className="no-doc-message">No payment proof uploaded</div>
+                    <div className="no-doc-message">No payment receipt uploaded</div>
                   )}
                 </div>
               </div>
