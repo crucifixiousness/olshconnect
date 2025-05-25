@@ -28,12 +28,13 @@ const authenticateToken = (req, res) => {
 };
 
 module.exports = async (req, res) => {
-  if (req.method === 'PUT') {
-    let client;
-    try {
-      const decoded = authenticateToken(req, res);
-      req.user = decoded;
+  let client;
+  try {
+    const decoded = authenticateToken(req, res);
+    req.user = decoded;
+    client = await pool.connect();
 
+    if (req.method === 'PUT') {
       const form = new formidable.IncomingForm({
         maxFileSize: 5 * 1024 * 1024,
         allowEmptyFiles: false,
@@ -52,13 +53,22 @@ module.exports = async (req, res) => {
       }
 
       const receiptImage = await fs.readFile(files.receipt_image[0].filepath);
-      const enrollmentId = parseInt(fields.enrollment_id);
 
-      if (isNaN(enrollmentId)) {
-        throw new Error('Invalid enrollment ID');
+      // Get enrollment ID from student's current enrollment
+      const enrollmentResult = await client.query(
+        `SELECT enrollment_id 
+         FROM enrollments 
+         WHERE student_id = $1 
+         ORDER BY enrollment_id DESC 
+         LIMIT 1`,
+        [req.user.id]
+      );
+
+      if (enrollmentResult.rows.length === 0) {
+        throw new Error('No enrollment found');
       }
 
-      client = await pool.connect();
+      const enrollmentId = enrollmentResult.rows[0].enrollment_id;
 
       const result = await client.query(
         `UPDATE enrollments 
@@ -69,7 +79,7 @@ module.exports = async (req, res) => {
       );
 
       if (result.rows.length === 0) {
-        throw new Error('Enrollment not found or unauthorized');
+        throw new Error('Failed to update enrollment');
       }
 
       // Cleanup temp file
@@ -79,17 +89,16 @@ module.exports = async (req, res) => {
         message: "Receipt uploaded successfully",
         enrollment_id: result.rows[0].enrollment_id
       });
-
-    } catch (error) {
-      console.error("Error:", error);
-      res.status(500).json({ 
-        error: "Failed to upload receipt",
-        details: error.message 
-      });
-    } finally {
-      if (client) client.release();
+    } else {
+      res.status(405).json({ message: 'Method not allowed' });
     }
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ 
+      error: "Failed to process request",
+      details: error.message 
+    });
+  } finally {
+    if (client) client.release();
   }
 };
