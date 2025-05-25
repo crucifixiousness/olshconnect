@@ -28,15 +28,33 @@ module.exports = async (req, res) => {
     // Verify token
     authenticateToken(req);
 
-    // Fetch enrollments with uploaded receipts, correct status and remarks
+    // Debug query to check data
+    const debugResult = await pool.query(`
+      SELECT COUNT(*) as total_count
+      FROM enrollments e
+      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
+      WHERE e.enrollment_status = 'For Payment'
+    `);
+    console.log('Debug - Total For Payment enrollments:', debugResult.rows[0].total_count);
+
+    const debugResult2 = await pool.query(`
+      SELECT COUNT(*) as total_count
+      FROM enrollments e
+      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
+      WHERE e.enrollment_status = 'For Payment'
+      AND pt.remarks = 'For Enrollment'
+    `);
+    console.log('Debug - Total matching enrollments:', debugResult2.rows[0].total_count);
+
+    // Main query with exact field names matching frontend
     const result = await pool.query(`
-      SELECT 
-        e.enrollment_id AS _id,
-        CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
-        p.program_name as program,
-        py.year_level,
-        e.enrollment_status,
-        encode(e.enrollment_payment_receipt, 'base64') as proof_of_payment
+      SELECT DISTINCT
+        e.enrollment_id AS "_id",
+        CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as "studentName",
+        p.program_name as "program",
+        py.year_level as "yearLevel",
+        e.enrollment_status as "enrollmentStatus",
+        encode(e.enrollment_payment_receipt, 'base64') as "proofOfPayment"
       FROM enrollments e
       JOIN students s ON e.student_id = s.id
       JOIN program p ON e.program_id = p.program_id
@@ -45,12 +63,22 @@ module.exports = async (req, res) => {
       WHERE e.enrollment_payment_receipt IS NOT NULL
       AND e.enrollment_status = 'For Payment'
       AND pt.remarks = 'For Enrollment'
-      ORDER BY student_name ASC
+      ORDER BY "studentName" ASC
     `);
 
-    // Transform the data to match frontend expectations
-    const enrollments = result.rows;
-    res.status(200).json(enrollments);
+    console.log('Debug - Query results:', {
+      rowCount: result.rowCount,
+      firstRow: result.rows[0] ? {
+        _id: result.rows[0]._id,
+        studentName: result.rows[0].studentName,
+        program: result.rows[0].program,
+        yearLevel: result.rows[0].yearLevel,
+        enrollmentStatus: result.rows[0].enrollmentStatus
+      } : null
+    });
+
+    // Send the results directly without transformation
+    res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error fetching enrollments:', error);
     console.error('Error details:', {
