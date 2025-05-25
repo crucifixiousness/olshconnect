@@ -22,6 +22,11 @@ const PaymentVerification = () => {
     severity: 'success'
   });
 
+  const handleViewDetails = (payment) => {
+  setSelectedPayment(payment);
+  setOpen(true);
+  };
+
   // Update fetchPayments to fetch enrollment payments
   const fetchPayments = useCallback(async () => {
     try {
