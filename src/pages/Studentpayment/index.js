@@ -7,17 +7,11 @@ import {
   Tab,
   Tabs,
   Box,
-  Typography,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton
+  Typography
 } from '@mui/material';
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
@@ -54,19 +48,19 @@ const StudentPayment = () => {
     try {
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
-      formData.append('payment_id', selectedPayment.id);
+      formData.append('payment_id', selectedPayment.enrollment_id);
       
       const token = localStorage.getItem('token');
       await axios.post('/api/enrollment-payment', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
         }
       });
 
       setOpenVerifyDialog(false);
       setReceiptImage(null);
       fetchPayments();
+      fetchPaymentHistory();
     } catch (error) {
       console.error('Error submitting receipt:', error);
       setError('Failed to submit receipt.');
