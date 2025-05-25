@@ -36,55 +36,39 @@ const StudentPayment = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [receiptImage, setReceiptImage] = useState(null);
 
+  const [enrollmentId, setEnrollmentId] = useState(null);
+
   const handleReceiptSubmit = async () => {
     try {
-      if (!selectedPayment?.enrollment_id) {
-        const error = 'Unable to process: Missing enrollment information. Please refresh the page and try again.';
-        console.error('Validation Error:', error);
-        setError(error);
+      if (!enrollmentId) {
+        setError('Enrollment ID is required. Please try again.');
         return;
       }
-
+  
       if (!receiptImage) {
-        const error = 'Please select a receipt image to upload';
-        console.error('Validation Error:', error);
-        setError(error);
+        setError('Please select a receipt image to upload');
         return;
       }
-
+  
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
-      formData.append('enrollment_id', selectedPayment.enrollment_id);
+      formData.append('enrollment_id', enrollmentId);
       
       const token = localStorage.getItem('token');
-      const response = await axios.put('/api/enrollment-payment', formData, {
+      await axios.put('/api/enrollment-payment', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+          'Authorization': `Bearer ${token}`
         }
       });
-    
-      if (response.data.enrollment_id) {
-        setOpenVerifyDialog(false);
-        setReceiptImage(null);
-        setSelectedPayment(null);
-        fetchPayments();
-        fetchPaymentHistory();
-      }
+  
+      setOpenVerifyDialog(false);
+      setReceiptImage(null);
+      setEnrollmentId(null);
+      fetchPayments();
+      fetchPaymentHistory();
     } catch (error) {
-      const errorMessage = error.response?.data?.details || 
-        error.response?.data?.error || 
-        'Failed to upload receipt. Please try again later.';
-      
-      console.error('Upload Error:', {
-        message: errorMessage,
-        details: error.response?.data,
-        error: error
-      });
-      
-      setError(errorMessage);
-      // Keep error visible in dialog
-      setOpenVerifyDialog(true);
+      console.error('Upload Error:', error);
+      setError(error.response?.data?.details || 'Failed to upload receipt');
     }
   };
 
