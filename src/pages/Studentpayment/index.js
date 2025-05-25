@@ -39,7 +39,7 @@ const StudentPayment = () => {
   const handleReceiptSubmit = async () => {
     try {
       if (!selectedPayment?.enrollment_id) {
-        setError('Invalid enrollment data');
+        setError('Unable to process: Missing enrollment information. Please refresh the page and try again.');
         return;
       }
 
@@ -64,7 +64,13 @@ const StudentPayment = () => {
       }
     } catch (error) {
       console.error('Error:', error.response?.data);
-      setError(error.response?.data?.details || 'Failed to upload receipt');
+      // More descriptive error messages
+      const errorMessage = error.response?.data?.details || 
+        error.response?.data?.error || 
+        'Failed to upload receipt. Please try again later.';
+      setError(errorMessage);
+      // Show error in dialog
+      setTimeout(() => setError(null), 5000); // Clear error after 5 seconds
     }
   };
 
