@@ -44,6 +44,10 @@ const PaymentVerification = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
+
   // Update verification handler
   const handleVerify = async (paymentId) => {
     try {
@@ -261,6 +265,19 @@ const PaymentVerification = () => {
           )}
         </Box>
       </Modal>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          variant='filled'
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
