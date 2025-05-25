@@ -12,6 +12,7 @@ import { FaSchool } from "react-icons/fa";
 import { FaUserEdit } from "react-icons/fa";
 import { MenuItem, Select, FormControl } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
 
 const formatFullName = (studentData) => {
   if (!studentData) return "N/A";
@@ -34,6 +35,11 @@ const formatFullName = (studentData) => {
 };
 
 const StudentProfile = () => {
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   const generateAcademicYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -67,11 +73,9 @@ const StudentProfile = () => {
     semester: '',           // Add this
     academic_year: ''       // Add this
   });
-  
-  const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
-  const [_isVisible, setIsVisible] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
 
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  
   const [activeStep, setActiveStep] = useState(0);
   const steps = [
     'Registration',
@@ -82,29 +86,26 @@ const StudentProfile = () => {
   ];
 
   useEffect(() => {
-    if (studentData) {
-      // Set registration step as completed by default for logged-in students
-      let currentStep = 0; // Start at 1 since registration is complete
-
-      if (studentData?.enrollment) {
-        switch (studentData.enrollment.status) {
-          case 'Pending':
-            currentStep = 1; // Enrollment submitted
-            break;
-          case 'Verified':
-            currentStep = 2; // Enrollment verified
-            break;
-          case 'For Payment':
-            currentStep = 3; // Ready for payment
-            break;
-          case 'Enrolled':
-            currentStep = 4; // Fully enrolled
-            break;
-          default:
-            currentStep = 0; // Default to registration complete
-        }
+    if (studentData?.enrollment) {
+      switch (studentData.enrollment.status) {
+        case 'Registered':
+          setActiveStep(0);
+          break;
+        case 'Pending':
+          setActiveStep(1);
+          break;
+        case 'Verified':
+          setActiveStep(2);
+          break;
+        case 'For Payment':
+          setActiveStep(3);
+          break;
+        case 'Enrolled':
+          setActiveStep(4);
+          break;
+        default:
+          setActiveStep(0);
       }
-      setActiveStep(currentStep);
     }
   }, [studentData]);
 
@@ -146,9 +147,10 @@ const StudentProfile = () => {
         response: error.response?.data,
         status: error.response?.status
       });
-      setStatusMessage({ 
-        message: `Failed to load profile: ${error.response?.data?.error || error.message}`, 
-        type: "error" 
+      setSnackbar({
+        open: true,
+        message: `Failed to load profile: ${error.response?.data?.error || error.message}`,
+        severity: 'error'
       });
       setLoading(false);
     }
@@ -274,9 +276,22 @@ const StudentProfile = () => {
       setStudentData(response.data);
       setOpen(false);
       setIsEditing(false);
-      fetchStudentData();
+      await fetchStudentData();
+      
+      // Add success notification
+      setSnackbar({
+        open: true,
+        message: "Profile updated successfully!",
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Error updating student data:', error);
+      // Add error notification
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error || "Failed to update profile. Please try again.",
+        severity: 'error'
+      });
     }
   };
 
@@ -292,11 +307,11 @@ const StudentProfile = () => {
       );
   
       if (missingFields.length > 0) {
-        setStatusMessage({
+        setSnackbar({
+          open: true,
           message: `Required fields missing: ${missingFields.join(', ')}`,
-          type: "error"
+          severity: 'error'
         });
-        setIsVisible(true);
         setLoading(false);
         return;
       }
@@ -304,11 +319,11 @@ const StudentProfile = () => {
       // ✅ Semester validation
       const validSemesters = ['1st', '2nd', 'Summer'];
       if (!validSemesters.includes(formDataa.semester)) {
-        setStatusMessage({
+        setSnackbar({
+          open: true,
           message: "Invalid semester selected.",
-          type: "error"
+          severity: 'error'
         });
-        setIsVisible(true);
         setLoading(false);
         return;
       }
@@ -354,11 +369,11 @@ const StudentProfile = () => {
       });
   
       if (response.data) {
-        setStatusMessage({
+        setSnackbar({
+          open: true,
           message: response.data.message || "Enrollment successful!",
-          type: "success"
+          severity: 'success'
         });
-        setIsVisible(true);
         setIsEnrolled(true);
         setOpenEnrollment(false);
   
@@ -375,26 +390,17 @@ const StudentProfile = () => {
         await fetchStudentData();
       }
     } catch (error) {
-      console.error('Enrollment Error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-  
-      setStatusMessage({
-        message: error.response?.data?.error || "Enrollment failed. Please try again.",
-        type: "error"
-      });
-      setIsVisible(true);
+      console.error('Enrollment Error:', error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Enrollment failed. Please try again.",
+          severity: 'error'
+        });
     } finally {
       setLoading(false);
-      setTimeout(() => setIsVisible(false), 4000);
     }
   };
   
-  
-
-  // Replace the current loading state
   if (loading) {
     return (
       <div className="right-content w-100">
@@ -834,21 +840,6 @@ const StudentProfile = () => {
           }}>
             Enrollment Form
           </Typography>
-
-          {/* Add error message display */}
-          {statusMessage.type === "error" && (
-            <div role="alert" className="error-message" style={{
-              color: '#d32f2f',
-              backgroundColor: '#ffebee',
-              padding: '10px',
-              borderRadius: '4px',
-              marginBottom: '20px'
-            }}>
-              {statusMessage.message}
-            </div>
-          )}
-
-          {!isEnrolled ? (
             <form onSubmit={handleEnroll} data-testid="enrollment-form">
               <div className="registration-section">
                 <Typography variant="h6" className="section-title">
@@ -862,8 +853,7 @@ const StudentProfile = () => {
                     inputProps={{ 'aria-label': 'programs' }}
                     data-testid="program-select"
                   >
-                    <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
-                    <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Education</MenuItem>
                     <MenuItem value={3}>Bachelor of Science in Hospitality Management</MenuItem>
                     <MenuItem value={1}>Bachelor of Science in Information Technology</MenuItem>
                     <MenuItem value={4}>Bachelor of Science in Office Administration</MenuItem>
@@ -995,22 +985,24 @@ const StudentProfile = () => {
               >
                 Submit Enrollment
               </Button>
-            </form>
-          ) : (
-            <Typography
-              variant="h6"
-              align="center"
-              sx={{ 
-                color: statusMessage.type === "success" ? "#2e7d32" : "#d32f2f",
-                fontWeight: "bold",
-                mt: 4 
-              }}
-            >
-              {statusMessage.message}
-            </Typography>
-          )}
+            </form>      
         </Box>
       </Modal>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
