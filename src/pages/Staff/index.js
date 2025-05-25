@@ -232,6 +232,7 @@ const Staff = () => {
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
+          variant="filled"
           sx={{ width: '100%' }}
         >
           {snackbar.message}
