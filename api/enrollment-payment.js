@@ -59,11 +59,17 @@ module.exports = async (req, res) => {
         throw new Error('Receipt image is required');
       }
 
+      // Convert enrollment_id to integer and validate
+      const enrollmentId = parseInt(fields.enrollment_id);
+      if (isNaN(enrollmentId)) {
+        throw new Error('Invalid enrollment ID');
+      }
+
       const result = await client.query(
         `INSERT INTO enrollment_payment_receipts (enrollment_id, receipt_image)
          VALUES ($1, $2)
          RETURNING receipt_id`,
-        [fields.payment_id, receiptImage]
+        [enrollmentId, receiptImage]
       );
 
       await client.query('COMMIT');
