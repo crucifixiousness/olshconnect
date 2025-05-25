@@ -28,14 +28,14 @@ const authenticateToken = (req, res) => {
 };
 
 module.exports = async (req, res) => {
-  if (req.method === 'POST') {
+  if (req.method === 'PUT') { // Changed to PUT since we're updating
     let client;
     try {
       const decoded = authenticateToken(req, res);
       req.user = decoded;
 
       const form = new formidable.IncomingForm({
-        maxFileSize: 5 * 1024 * 1024, // 5MB limit
+        maxFileSize: 5 * 1024 * 1024,
         allowEmptyFiles: false,
         filter: ({ mimetype }) => {
           return mimetype && mimetype.includes('image/');
@@ -59,18 +59,24 @@ module.exports = async (req, res) => {
         throw new Error('Receipt image is required');
       }
 
-      // Convert enrollment_id to integer and validate
       const enrollmentId = parseInt(fields.enrollment_id);
       if (isNaN(enrollmentId)) {
         throw new Error('Invalid enrollment ID');
       }
 
+      // Update enrollment with receipt image
       const result = await client.query(
-        `INSERT INTO enrollment_payment_receipts (enrollment_id, receipt_image)
-         VALUES ($1, $2)
-         RETURNING receipt_id`,
-        [enrollmentId, receiptImage]
+        `UPDATE enrollments 
+         SET enrollment_payment_receipt = $1,
+             payment_status = 'Pending Verification'
+         WHERE enrollment_id = $2
+         RETURNING enrollment_id`,
+        [receiptImage, enrollmentId]
       );
+
+      if (result.rows.length === 0) {
+        throw new Error('Enrollment not found');
+      }
 
       await client.query('COMMIT');
 
@@ -81,7 +87,7 @@ module.exports = async (req, res) => {
       
       res.json({ 
         message: "Receipt uploaded successfully",
-        receipt_id: result.rows[0].receipt_id
+        enrollment_id: result.rows[0].enrollment_id
       });
     } catch (error) {
       if (client) {
