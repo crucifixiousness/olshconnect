@@ -7,7 +7,6 @@ import {
   Tab,
   Tabs,
   Box,
-  Typography,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -45,16 +44,16 @@ const StudentPayment = () => {
     payment_method: '',
     remarks: ''
   });
-  const [receiptImage, setReceiptImage] = useState(null);
-
+  
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [receiptImage, setReceiptImage] = useState(null);
 
   const handleReceiptSubmit = async () => {
     try {
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
-      formData.append('receipt_data', JSON.stringify(receiptData));
+      formData.append('payment_id', selectedPayment.id);
       
       const token = localStorage.getItem('token');
       await axios.post('/api/enrollment-payment', formData, {
@@ -64,8 +63,9 @@ const StudentPayment = () => {
         }
       });
 
-      setOpenReceiptDialog(false);
-      fetchPaymentHistory(); // Refresh payment history
+      setOpenVerifyDialog(false);
+      setReceiptImage(null);
+      fetchPayments();
     } catch (error) {
       console.error('Error submitting receipt:', error);
       setError('Failed to submit receipt.');
@@ -384,59 +384,8 @@ const StudentPayment = () => {
           </div>
         )}
         <Dialog open={openVerifyDialog} onClose={() => setOpenVerifyDialog(false)}>
-          <DialogTitle>Verify Enrollment Payment</DialogTitle>
+          <DialogTitle>Upload Payment Receipt</DialogTitle>
           <DialogContent>
-            <TextField
-              fullWidth
-              label="Receipt Number"
-              value={receiptData.receipt_number}
-              onChange={(e) => setReceiptData({
-                ...receiptData,
-                receipt_number: e.target.value
-              })}
-              margin="normal"
-            />
-            
-            <TextField
-              fullWidth
-              label="Amount Paid"
-              type="number"
-              value={receiptData.amount_paid}
-              onChange={(e) => setReceiptData({
-                ...receiptData,
-                amount_paid: e.target.value
-              })}
-              margin="normal"
-            />
-
-            <TextField
-              fullWidth
-              label="Payment Date"
-              type="date"
-              value={receiptData.payment_date}
-              onChange={(e) => setReceiptData({
-                ...receiptData,
-                payment_date: e.target.value
-              })}
-              InputLabelProps={{ shrink: true }}
-              margin="normal"
-            />
-
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Payment Method</InputLabel>
-              <Select
-                value={receiptData.payment_method}
-                onChange={(e) => setReceiptData({
-                  ...receiptData,
-                  payment_method: e.target.value
-                })}
-              >
-                <MenuItem value="cash">Cash</MenuItem>
-                <MenuItem value="gcash">GCash</MenuItem>
-                <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
-              </Select>
-            </FormControl>
-
             <input
               accept="image/*"
               style={{ display: 'none' }}
@@ -465,19 +414,12 @@ const StudentPayment = () => {
             <Button onClick={() => {
               setOpenVerifyDialog(false);
               setReceiptImage(null);
-              setReceiptData({
-                receipt_number: '',
-                amount_paid: '',
-                payment_date: '',
-                payment_method: '',
-                remarks: ''
-              });
             }}>
               Cancel
             </Button>
             <Button 
               onClick={handleReceiptSubmit}
-              disabled={!receiptData.receipt_number || !receiptData.amount_paid || !receiptImage}
+              disabled={!receiptImage}
               sx={{
                 bgcolor: '#c70202',
                 color: 'white',
