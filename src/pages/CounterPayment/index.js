@@ -1,27 +1,15 @@
 import { useState } from 'react';
-import { 
-  TextField, 
-  Button, 
-  Grid, 
-  Paper, 
-  Typography, 
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Modal,
-  Box
-} from '@mui/material';
+import { TextField, Button, Grid, Paper, Typography, FormControl, InputLabel, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Snackbar, Alert} from '@mui/material';
 import { FaSearch, FaPrint, FaHistory } from 'react-icons/fa';
 import axios from 'axios';
 
 const CounterPayment = () => {
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
   const [studentInfo, setStudentInfo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -41,10 +29,15 @@ const CounterPayment = () => {
     p: 4,
   };
 
+  // Update handleSearch function
   const handleSearch = async () => {
     try {
       if (!searchQuery) {
-        alert('Please enter a search term');
+        setSnackbar({
+          open: true,
+          message: 'Please enter a search term',
+          severity: 'warning'
+        });
         return;
       }
 
@@ -52,48 +45,57 @@ const CounterPayment = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Log the search response for debugging
-      console.log('Search Response:', response.data);
-
-      if (!response.data.enrollmentId) {  // Changed from enrollment_id to enrollmentId
-        alert('No active enrollment found for this student');
+      if (!response.data.enrollmentId) {
+        setSnackbar({
+          open: true,
+          message: 'No active enrollment found for this student',
+          severity: 'error'
+        });
         return;
       }
 
       setStudentInfo({
         ...response.data,
-        enrollment_id: response.data.enrollmentId  // Add this mapping
+        enrollment_id: response.data.enrollmentId
       });
     } catch (error) {
       console.error('Search Error:', error);
-      alert(error.response?.data?.error || 'Error searching student');
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error || 'Error searching student',
+        severity: 'error'
+      });
     }
   };
 
   const handlePayment = async () => {
     try {
-      // Add validation checks
       if (!studentInfo) {
-        alert('Please search for a student first');
+        setSnackbar({
+          open: true,
+          message: 'Please search for a student first',
+          severity: 'warning'
+        });
         return;
       }
 
       if (!paymentAmount || paymentAmount <= 0) {
-        alert('Please enter a valid payment amount');
+        setSnackbar({
+          open: true,
+          message: 'Please enter a valid payment amount',
+          severity: 'warning'
+        });
         return;
       }
 
       if (!paymentMethod) {
-        alert('Please select a payment method');
+        setSnackbar({
+          open: true,
+          message: 'Please select a payment method',
+          severity: 'warning'
+        });
         return;
       }
-
-      // Log the request data for debugging
-      console.log('Payment Request:', {
-        enrollment_id: studentInfo.enrollment_id,
-        amount_paid: paymentAmount,
-        payment_method: paymentMethod
-      });
 
       const response = await axios.post('/api/counter-payment', {
         enrollment_id: studentInfo.enrollment_id,
@@ -108,16 +110,40 @@ const CounterPayment = () => {
       });
 
       if (response.data.success) {
-        alert('Payment processed successfully');
+        setSnackbar({
+          open: true,
+          message: 'Payment processed successfully',
+          severity: 'success'
+        });
         setPaymentAmount('');
         setPaymentMethod('');
-        handleSearch(); // Refresh student info
+        handleSearch();
       }
     } catch (error) {
       console.error('Payment Error Details:', error);
-      alert(error.response?.data?.error || 'Error processing payment');
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error || 'Error processing payment',
+        severity: 'error'
+      });
     }
   };
+
+  // Add this at the end of your return statement, before the final closing div
+  <Snackbar
+    open={snackbar.open}
+    autoHideDuration={6000}
+    onClose={() => setSnackbar({ ...snackbar, open: false })}
+    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+  >
+    <Alert
+      onClose={() => setSnackbar({ ...snackbar, open: false })}
+      severity={snackbar.severity}
+      sx={{ width: '100%' }}
+    >
+      {snackbar.message}
+    </Alert>
+  </Snackbar>
 
   const handleViewHistory = async () => {
     try {
