@@ -28,7 +28,7 @@ const authenticateToken = (req, res) => {
 };
 
 module.exports = async (req, res) => {
-  if (req.method === 'PUT') { // Changed to PUT since we're updating
+  if (req.method === 'PUT') {
     let client;
     try {
       const decoded = authenticateToken(req, res);
@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
 
       const [fields, files] = await new Promise((resolve, reject) => {
         form.parse(req, (err, fields, files) => {
-          if (err) reject(err);
+          if (err) reject(new Error(`File upload error: ${err.message}`));
           resolve([fields, files]);
         });
       });
@@ -56,12 +56,22 @@ module.exports = async (req, res) => {
         await fs.readFile(files.receipt_image[0].filepath) : null;
 
       if (!receiptImage) {
-        throw new Error('Receipt image is required');
+        throw new Error('Receipt image is required. Please select an image file.');
       }
 
       const enrollmentId = parseInt(fields.enrollment_id);
       if (isNaN(enrollmentId)) {
-        throw new Error('Invalid enrollment ID');
+        throw new Error('Invalid enrollment ID format. Please try again.');
+      }
+
+      // Check if enrollment exists and belongs to the student
+      const enrollmentCheck = await client.query(
+        'SELECT enrollment_id FROM enrollments WHERE enrollment_id = $1 AND student_id = $2',
+        [enrollmentId, req.user.id]
+      );
+
+      if (enrollmentCheck.rows.length === 0) {
+        throw new Error('Enrollment not found or you do not have permission to update it.');
       }
 
       // Update enrollment with receipt image
@@ -69,14 +79,10 @@ module.exports = async (req, res) => {
         `UPDATE enrollments 
          SET enrollment_payment_receipt = $1,
              payment_status = 'Pending Verification'
-         WHERE enrollment_id = $2
+         WHERE enrollment_id = $2 AND student_id = $3
          RETURNING enrollment_id`,
-        [receiptImage, enrollmentId]
+        [receiptImage, enrollmentId, req.user.id]
       );
-
-      if (result.rows.length === 0) {
-        throw new Error('Enrollment not found');
-      }
 
       await client.query('COMMIT');
 
