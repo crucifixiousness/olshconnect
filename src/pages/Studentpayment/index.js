@@ -39,16 +39,18 @@ const StudentPayment = () => {
 
   const handleReceiptSubmit = async () => {
     try {
+      console.log('Current enrollmentId:', enrollmentId); // Debug log
+      console.log('Current payment data:', payments[0]); // Debug log
+      
       if (!enrollmentId) {
         setError('Enrollment ID is required. Please try again.');
         return;
       }
-  
       if (!receiptImage) {
         setError('Please select a receipt image to upload');
         return;
       }
-  
+      
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
       formData.append('enrollment_id', enrollmentId);
@@ -59,7 +61,7 @@ const StudentPayment = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-  
+      
       setOpenVerifyDialog(false);
       setReceiptImage(null);
       setEnrollmentId(null);
@@ -116,6 +118,7 @@ const StudentPayment = () => {
       
       if (response.data && response.data.length > 0) {
         const paymentData = response.data[0];
+        console.log('Raw payment data:', paymentData);
         const formattedPayment = {
           ...paymentData,
           enrollment_id: paymentData.enrollment_id,
@@ -318,7 +321,9 @@ const StudentPayment = () => {
                           variant="contained"
                           size="small"
                           onClick={() => {
-                            setEnrollmentId(payment.enrollment_id); // Set enrollmentId instead of selectedPayment
+                            console.log('Payment data:', payment); // Debug log
+                            console.log('Enrollment ID:', payment.enrollment_id); // Debug log
+                            setEnrollmentId(payment.enrollment_id);
                             setOpenVerifyDialog(true);
                           }}
                           sx={{
