@@ -5,8 +5,14 @@ import axios from 'axios';
 import { FaEye } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { Snackbar, Alert } from '@mui/material';
 
 const Staff = () => {
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
@@ -39,12 +45,6 @@ const Staff = () => {
     setNewStaff({ ...newStaff, [e.target.name]: e.target.value });
   };
 
-  const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
-  const [isVisible, setIsVisible] = useState(false);
-  const [isCreated, setIsCreated] = useState(false);
-
-  // Add new staff
-  // Modify handleAddStaff function
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -53,7 +53,11 @@ const Staff = () => {
   
     // Ensure program is selected when role is Program Head or Instructor
     if ((role === "program head" || role === "instructor") && !program_id) {
-      alert(`Please select a program for the ${role === "program head" ? "Program Head" : "Instructor"}.`);
+      setSnackbar({
+        open: true,
+        message: `Please select a program for the ${role === "program head" ? "Program Head" : "Instructor"}.`,
+        severity: 'warning'
+      });
       setIsLoading(false);
       return;
     }
@@ -76,23 +80,28 @@ const Staff = () => {
       });
   
       if (response.ok) {
-        setStatusMessage({ message: "Account Added!", type: "success" });
-        setIsVisible(true);
-        setShowAddStaffModal(true);
-        setIsCreated(true);
-        fetchStaffData(); // Reload the staff list
+        setSnackbar({
+          open: true,
+          message: 'Staff account created successfully!',
+          severity: 'success'
+        });
+        setShowAddStaffModal(false);
+        fetchStaffData();
       } else {
-        setStatusMessage({ message: "Registration failed. Please try again.", type: "error" });
-        setIsVisible(true);
+        setSnackbar({
+          open: true,
+          message: 'Registration failed. Please try again.',
+          severity: 'error'
+        });
       }
     } catch (error) {
       console.error("Error during the request:", error);
-      alert("Server error. Please try again later.");
+      setSnackbar({
+        open: true,
+        message: 'Server error. Please try again later.',
+        severity: 'error'
+      });
     } finally {
-      setTimeout(() => {
-        setIsVisible(false);
-        setShowAddStaffModal(false);
-      }, 2000);
       setIsLoading(false);
     }
   };
@@ -172,7 +181,6 @@ const Staff = () => {
           style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', maxWidth: '500px', width: '100%',
           }}>
           <h3>Create Staff Account</h3>
-          {!isCreated ? (
           <form onSubmit={handleAddStaff}>
             <TextField label="Full Name" name="full_name" value={newStaff.full_name} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-full_name"/>
             <TextField label="Username" name="staff_username" value={newStaff.staff_username} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-staff_username"/>
@@ -206,17 +214,6 @@ const Staff = () => {
                 </Select>
               </FormControl>
             )}
-
-            {isVisible && (
-              <Typography
-                variant="body1"
-                align="center"
-                sx={{ color: statusMessage.type === "success" ? "green" : "red", mt: 2 }}
-              >
-                {statusMessage.message}
-              </Typography>
-            )}
-
             <div className="d-flex justify-content-end mt-3">
               <Button onClick={() => setShowAddStaffModal(false)}>Cancel</Button>
               <Button type="submit" color="primary" variant="contained" disabled={isLoading} data-testid="submit-button">
@@ -224,18 +221,22 @@ const Staff = () => {
               </Button>
             </div>
           </form>
-          ) : (
-            <Typography
-                variant="h6"
-                align="center"
-                sx={{ color: "green", fontWeight: "bold", mt: 4 }}
-            >
-                {statusMessage.message}
-            </Typography>
-        )}
         </div>
       </Modal>
-
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
