@@ -100,7 +100,7 @@ const StudentProfile = () => {
         case 'For Payment':
           setActiveStep(3);
           break;
-        case 'Enrolled':
+        case 'Officially Enrolled':
           setActiveStep(4);
           break;
         default:
@@ -853,7 +853,8 @@ const StudentProfile = () => {
                     inputProps={{ 'aria-label': 'programs' }}
                     data-testid="program-select"
                   >
-                    <MenuItem value={2}>Bachelor of Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
                     <MenuItem value={3}>Bachelor of Science in Hospitality Management</MenuItem>
                     <MenuItem value={1}>Bachelor of Science in Information Technology</MenuItem>
                     <MenuItem value={4}>Bachelor of Science in Office Administration</MenuItem>
