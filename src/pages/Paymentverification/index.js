@@ -31,28 +31,31 @@ const PaymentVerification = () => {
   const fetchPayments = useCallback(async () => {
     try {
       const response = await axios.get('/api/enrollment-for-verification', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      console.log('Fetched payments:', response.data); // Debug log
       setPayments(response.data);
     } catch (error) {
-      console.error('Error fetching enrollment payments:', error);
+      console.error('Full error:', error.response || error);
       setSnackbar({
         open: true,
-        message: 'Failed to fetch enrollment payments',
+        message: error.response?.data?.error || 'Failed to fetch enrollment payments',
         severity: 'error'
       });
     }
   }, [token]);
 
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
-
   // Update verification handler
   const handleVerify = async (paymentId) => {
     try {
-      await axios.put(`http://localhost:4000/verify-enrollment-payment/${paymentId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.put(`/api/verify-enrollment-payment/${paymentId}`, {}, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       setSnackbar({
         open: true,
@@ -73,8 +76,11 @@ const PaymentVerification = () => {
   // Update rejection handler
   const handleReject = async (paymentId) => {
     try {
-      await axios.put(`http://localhost:4000/reject-enrollment-payment/${paymentId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.put(`/api/reject-enrollment-payment/${paymentId}`, {}, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       setSnackbar({
         open: true,
@@ -91,6 +97,10 @@ const PaymentVerification = () => {
       });
     }
   };
+
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
 
   return (
     <div className="right-content w-100">
