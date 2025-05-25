@@ -46,6 +46,9 @@ const StudentPayment = () => {
   });
   const [receiptImage, setReceiptImage] = useState(null);
 
+  const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
   const handleReceiptSubmit = async () => {
     try {
       const formData = new FormData();
@@ -315,6 +318,10 @@ const StudentPayment = () => {
                           className="success"
                           size="small"
                           disabled={payment.status.toLowerCase() === 'paid'}
+                          onClick={() => {
+                            setSelectedPayment(payment);
+                            setOpenVerifyDialog(true);
+                          }}
                           sx={{
                             bgcolor: '#c70202',
                             '&:hover': {
@@ -322,7 +329,7 @@ const StudentPayment = () => {
                             }
                           }}
                         >
-                          Pay Now
+                          Verify Enrollment
                         </Button>
                       </td>
                     </tr>
@@ -375,101 +382,111 @@ const StudentPayment = () => {
             </table>
           </div>
         )}
-        <Dialog open={openReceiptDialog} onClose={() => setOpenReceiptDialog(false)}>
-        <DialogTitle>Submit Payment Receipt</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Receipt Number"
-            value={receiptData.receipt_number}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              receipt_number: e.target.value
-            })}
-            margin="normal"
-          />
-          
-          <TextField
-            fullWidth
-            label="Amount Paid"
-            type="number"
-            value={receiptData.amount_paid}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              amount_paid: e.target.value
-            })}
-            margin="normal"
-          />
-
-          <TextField
-            fullWidth
-            label="Payment Date"
-            type="date"
-            value={receiptData.payment_date}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              payment_date: e.target.value
-            })}
-            InputLabelProps={{ shrink: true }}
-            margin="normal"
-          />
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Payment Method</InputLabel>
-            <Select
-              value={receiptData.payment_method}
+        <Dialog open={openVerifyDialog} onClose={() => setOpenVerifyDialog(false)}>
+          <DialogTitle>Verify Enrollment Payment</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              label="Receipt Number"
+              value={receiptData.receipt_number}
               onChange={(e) => setReceiptData({
                 ...receiptData,
-                payment_method: e.target.value
+                receipt_number: e.target.value
               })}
+              margin="normal"
+            />
+            
+            <TextField
+              fullWidth
+              label="Amount Paid"
+              type="number"
+              value={receiptData.amount_paid}
+              onChange={(e) => setReceiptData({
+                ...receiptData,
+                amount_paid: e.target.value
+              })}
+              margin="normal"
+            />
+
+            <TextField
+              fullWidth
+              label="Payment Date"
+              type="date"
+              value={receiptData.payment_date}
+              onChange={(e) => setReceiptData({
+                ...receiptData,
+                payment_date: e.target.value
+              })}
+              InputLabelProps={{ shrink: true }}
+              margin="normal"
+            />
+
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Payment Method</InputLabel>
+              <Select
+                value={receiptData.payment_method}
+                onChange={(e) => setReceiptData({
+                  ...receiptData,
+                  payment_method: e.target.value
+                })}
+              >
+                <MenuItem value="cash">Cash</MenuItem>
+                <MenuItem value="gcash">GCash</MenuItem>
+                <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+              </Select>
+            </FormControl>
+
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="receipt-image-upload"
+              type="file"
+              onChange={(e) => setReceiptImage(e.target.files[0])}
+            />
+            <label htmlFor="receipt-image-upload">
+              <Button
+                component="span"
+                variant="outlined"
+                startIcon={<PhotoCamera />}
+                sx={{ mt: 2, mb: 1 }}
+                fullWidth
+              >
+                Upload Receipt Image
+              </Button>
+            </label>
+            {receiptImage && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Selected file: {receiptImage.name}
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setOpenVerifyDialog(false);
+              setReceiptImage(null);
+              setReceiptData({
+                receipt_number: '',
+                amount_paid: '',
+                payment_date: '',
+                payment_method: '',
+                remarks: ''
+              });
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleReceiptSubmit}
+              disabled={!receiptData.receipt_number || !receiptData.amount_paid || !receiptImage}
+              sx={{
+                bgcolor: '#c70202',
+                color: 'white',
+                '&:hover': { bgcolor: '#a00000' }
+              }}
             >
-              <MenuItem value="cash">Cash</MenuItem>
-              <MenuItem value="check">Check</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            fullWidth
-            label="Remarks"
-            multiline
-            rows={2}
-            value={receiptData.remarks}
-            onChange={(e) => setReceiptData({
-              ...receiptData,
-              remarks: e.target.value
-            })}
-            margin="normal"
-          />
-
-          <input
-            accept="image/*"
-            style={{ display: 'none' }}
-            id="receipt-image-upload"
-            type="file"
-            onChange={(e) => setReceiptImage(e.target.files[0])}
-          />
-          <label htmlFor="receipt-image-upload">
-            <IconButton color="primary" component="span">
-              <PhotoCamera />
-            </IconButton>
-            {receiptImage?.name || 'Upload Receipt Image'}
-          </label>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenReceiptDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleReceiptSubmit}
-            disabled={!receiptData.receipt_number || !receiptData.amount_paid}
-            sx={{
-              bgcolor: '#c70202',
-              color: 'white',
-              '&:hover': { bgcolor: '#a00000' }
-            }}
-          >
-            Submit Receipt
-          </Button>
-        </DialogActions>
-      </Dialog>
+              Submit for Verification
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </div>
   );
