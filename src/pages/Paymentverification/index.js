@@ -51,12 +51,15 @@ const PaymentVerification = () => {
   // Update verification handler
   const handleVerify = async (paymentId) => {
     try {
-      await axios.put(`/api/verify-enrollment-payment/${paymentId}`, {}, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      await axios.put('/api/verify-enrollment-receipt', 
+        { enrollmentId: paymentId },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
       setSnackbar({
         open: true,
         message: 'Student officially enrolled successfully',
@@ -76,12 +79,15 @@ const PaymentVerification = () => {
   // Update rejection handler
   const handleReject = async (paymentId) => {
     try {
-      await axios.put(`/api/reject-enrollment-payment/${paymentId}`, {}, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      await axios.put('/api/reject-enrollment', 
+        { enrollmentId: paymentId },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
       setSnackbar({
         open: true,
         message: 'Enrollment payment rejected',
@@ -178,7 +184,7 @@ const PaymentVerification = () => {
                         >
                           <FaEye/>
                         </Button>
-                        {payment.enrollmentStatus === 'Pending' && (
+                        {payment.enrollmentStatus === 'For Payment' && (
                           <>
                             <Button 
                               className="success" 
