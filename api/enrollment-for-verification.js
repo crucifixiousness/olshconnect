@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     // Verify token
     authenticateToken(req);
 
-    // Fetch enrollments with uploaded receipts and pending status
+    // Fetch enrollments with uploaded receipts, correct status and remarks
     const result = await pool.query(`
       SELECT 
         e.enrollment_id AS _id,
@@ -41,14 +41,15 @@ module.exports = async (req, res) => {
       JOIN students s ON e.student_id = s.id
       JOIN program p ON e.program_id = p.program_id
       JOIN program_year py ON e.year_id = py.year_id
+      JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
       WHERE e.enrollment_payment_receipt IS NOT NULL
-      AND e.enrollment_status = 'Pending'
+      AND e.enrollment_status = 'For Payment'
+      AND pt.remarks = 'For Enrollment'
       ORDER BY student_name ASC
     `);
 
     // Transform the data to match frontend expectations
     const enrollments = result.rows;
-
     res.status(200).json(enrollments);
   } catch (error) {
     console.error('Error fetching enrollments:', error);
