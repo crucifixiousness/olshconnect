@@ -49,7 +49,7 @@ const StudentPayment = () => {
       const formData = new FormData();
       formData.append('receipt_image', receiptImage);
       // Make sure we're passing a valid enrollment_id
-      formData.append('enrollment_id', selectedPayment.enrollment_id.toString());
+      formData.append('enrollment_id', selectedPayment.enrollment_id);
       
       const token = localStorage.getItem('token');
       await axios.post('/api/enrollment-payment', formData, {
