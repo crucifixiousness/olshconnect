@@ -7,6 +7,7 @@ import Pagination from '@mui/material/Pagination';
 import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import axios from 'axios';
+import { Snackbar, Alert } from '@mui/material';
 
 const DocumentRequests = () => {
   // eslint-disable-next-line
@@ -15,6 +16,14 @@ const DocumentRequests = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
 
+  // Add new state for snackbar
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Update fetchRequests function
   const fetchRequests = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -24,9 +33,15 @@ const DocumentRequests = () => {
       setRequests(response.data);
     } catch (error) {
       console.error('Error fetching requests:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to fetch document requests',
+        severity: 'error'
+      });
     }
   };
 
+  // Update handleStatusUpdate function
   const handleStatusUpdate = async (reqId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
@@ -34,10 +49,21 @@ const DocumentRequests = () => {
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
-      // Refresh the requests list after update
+      
+      setSnackbar({
+        open: true,
+        message: `Request ${newStatus.toLowerCase()} successfully`,
+        severity: 'success'
+      });
+      
       fetchRequests();
     } catch (error) {
       console.error('Error updating status:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to update request status',
+        severity: 'error'
+      });
     }
   };
 
@@ -62,6 +88,7 @@ const DocumentRequests = () => {
     return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
   };
 
+  // Add Snackbar component at the end of return statement, before the final closing div
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
@@ -169,6 +196,21 @@ const DocumentRequests = () => {
           </div>
         </div>
       </div>
+      
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
