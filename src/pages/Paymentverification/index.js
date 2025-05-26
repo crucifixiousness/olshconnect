@@ -285,6 +285,7 @@ const PaymentVerification = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}          
       >
         <Alert 
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
