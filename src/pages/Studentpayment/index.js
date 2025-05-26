@@ -322,10 +322,20 @@ const StudentPayment = () => {
                       <td>
                         <Button
                           variant="contained"
+                          size="small"
                           onClick={() => {                            
                             setOpenVerifyDialog(true);
                           }}
-                          className="upload-receipt"
+                          sx={{
+                            minWidth: '100px !important',
+                            height: '30px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            backgroundColor: '#0d6efd',
+                            '&:hover': {
+                              backgroundColor: '#0b5ed7'
+                            }
+                          }}
                         >
                           Upload Receipt
                         </Button>
