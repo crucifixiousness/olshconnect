@@ -16,10 +16,13 @@ const StudentBalance = () => {
   const [rowsPerPage] = useState(10);
   const [selectedSemester, setSelectedSemester] = useState('');
   
-
-  // Update fetchStudents function to use serverless API
+  const [loading, setLoading] = useState(true);
+  
   const fetchStudents = useCallback(async () => {
     try {
+      setLoading(true);
+      console.log('Fetching with params:', { program_id, yearLevel, selectedSemester }); // Debug log
+
       const response = await axios.get('/api/student-balances', {
         params: {
           program_id: program_id,
@@ -27,9 +30,13 @@ const StudentBalance = () => {
           semester: selectedSemester
         }
       });
+      
+      console.log('API Response:', response.data); // Debug log
       setStudents(response.data);
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Error fetching students:", error.response || error);
+    } finally {
+      setLoading(false);
     }
   }, [program_id, yearLevel, selectedSemester]);
 
@@ -146,18 +153,22 @@ const StudentBalance = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedStudents.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: "center" }}>Loading...</td>
+                </tr>
+              ) : paginatedStudents.length > 0 ? (
                 paginatedStudents.map((student, index) => (
-                  <tr key={index}>
+                  <tr key={student.student_id || index}>
                     <td>{student.student_id}</td>
                     <td>{`${student.first_name} ${student.last_name}`}</td>
                     <td>{student.year_level}</td>
                     <td>{student.program_name}</td>
-                    <td>₱{student.balance.toLocaleString()}</td>
-                    <td>{student.last_payment_date || 'No payments yet'}</td>
+                    <td>₱{parseFloat(student.balance).toLocaleString()}</td>
+                    <td>{student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}</td>
                     <td>
-                      <span className={`badge ${student.balance > 0 ? 'bg-danger' : 'bg-success'}`}>
-                        {student.balance > 0 ? 'With Balance' : 'Cleared'}
+                      <span className={`badge ${parseFloat(student.balance) > 0 ? 'bg-danger' : 'bg-success'}`}>
+                        {parseFloat(student.balance) > 0 ? 'With Balance' : 'Cleared'}
                       </span>
                     </td>
                     <td>
@@ -176,7 +187,7 @@ const StudentBalance = () => {
               ) : (
                 <tr>
                   <td colSpan="8" style={{ textAlign: "center" }}>
-                    No students with balance found{yearLevel ? ` for Year ${yearLevel}` : ''}.
+                    No students with balance found.
                   </td>
                 </tr>
               )}
