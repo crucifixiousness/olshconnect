@@ -388,10 +388,9 @@ const StudentPayment = () => {
             </table>
           </div>
         )}
-        // Update Dialog component to show error
         <Dialog open={openVerifyDialog} onClose={() => {
           setOpenVerifyDialog(false);
-          setError(null); // Clear error when closing dialog
+          setError(null); 
         }}>
           <DialogTitle>Upload Payment Receipt</DialogTitle>
           <DialogContent>
@@ -407,7 +406,7 @@ const StudentPayment = () => {
               type="file"
               onChange={(e) => {
                 setReceiptImage(e.target.files[0]);
-                setError(null); // Clear error when new file selected
+                setError(null);
               }}
             />
             <label htmlFor="receipt-image-upload">
@@ -448,21 +447,6 @@ const StudentPayment = () => {
           </DialogActions>
         </Dialog>
       </div>
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={6000} 
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 };
