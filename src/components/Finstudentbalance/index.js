@@ -17,16 +17,21 @@ const StudentBalance = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
   
 
-  // Fetch students with balance
+  // Update fetchStudents function to use serverless API
   const fetchStudents = useCallback(async () => {
-    if (!program_id) return;
     try {
-      const response = await axios.get(`http://localhost:4000/students/balance/${program_id}`);
+      const response = await axios.get('/api/student-balances', {
+        params: {
+          program_id: program_id,
+          year_level: yearLevel,
+          semester: selectedSemester
+        }
+      });
       setStudents(response.data);
     } catch (error) {
       console.error("Error fetching students:", error);
     }
-  }, [program_id]);
+  }, [program_id, yearLevel, selectedSemester]);
 
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
