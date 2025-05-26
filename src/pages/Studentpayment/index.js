@@ -315,11 +315,9 @@ const StudentPayment = () => {
                       <td>{payment.dueDate}</td>
                       <td>₱{payment.amount.toFixed(2)}</td>
                       <td>
-                        <Chip 
-                          label={payment.status}
-                          color={getStatusColor(payment.status)}
-                          size="small"
-                        />
+                        <span className={`badge ${payment.status.toLowerCase() === 'fully paid' ? 'bg-success' : payment.status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                          {payment.status}
+                        </span>
                       </td>
                       <td>
                         <Button
@@ -366,11 +364,9 @@ const StudentPayment = () => {
                     <td>₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
                     <td>{transaction.payment_method}</td>
                     <td>
-                      <Chip 
-                        label={transaction.payment_status}
-                        color={getStatusColor(transaction.payment_status)}
-                        size="small"
-                      />
+                      <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                        {transaction.payment_status}
+                      </span>
                     </td>
                     <td>
                       <Button
@@ -388,9 +384,10 @@ const StudentPayment = () => {
             </table>
           </div>
         )}
+        // Update Dialog component to show error
         <Dialog open={openVerifyDialog} onClose={() => {
           setOpenVerifyDialog(false);
-          setError(null); 
+          setError(null); // Clear error when closing dialog
         }}>
           <DialogTitle>Upload Payment Receipt</DialogTitle>
           <DialogContent>
@@ -406,7 +403,7 @@ const StudentPayment = () => {
               type="file"
               onChange={(e) => {
                 setReceiptImage(e.target.files[0]);
-                setError(null);
+                setError(null); // Clear error when new file selected
               }}
             />
             <label htmlFor="receipt-image-upload">
@@ -447,6 +444,21 @@ const StudentPayment = () => {
           </DialogActions>
         </Dialog>
       </div>
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
