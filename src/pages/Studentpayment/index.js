@@ -322,7 +322,6 @@ const StudentPayment = () => {
                       <td>
                         <Button
                           variant="contained"
-                          size="small"
                           onClick={() => {                            
                             setOpenVerifyDialog(true);
                           }}
