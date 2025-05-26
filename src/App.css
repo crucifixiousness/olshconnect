@@ -631,3 +631,17 @@ table.v-align td{vertical-align: middle !important;}
   border-bottom: 2px solid #c70202;
 }
 
+.table tbody .actions button.upload-receipt {
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 4px !important;
+  font-size: 12px !important;
+  background-color: #c70202;
+}
+
+.table tbody .actions button.upload-receipt:hover {
+  background-color: #a00000;
+}
+
+
