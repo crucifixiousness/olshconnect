@@ -132,18 +132,18 @@ const StudentBalance = () => {
               ) : filteredStudents.length > 0 ? (
                 paginatedStudents.map((student) => (
                   <tr key={student.student_id}>
-                    <td>{student.student_id}</td>
+                    <td className="text-center">{student.student_id}</td>
                     <td>{student.student_name}</td>
-                    <td>{student.year_level}</td>
-                    <td>{student.program_name}</td>
-                    <td>₱{parseFloat(student.balance).toLocaleString()}</td>
-                    <td>{student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}</td>
-                    <td>
+                    <td className="text-center">{student.year_level}</td>
+                    <td className="text-center">{student.program_name}</td>
+                    <td className="text-center">₱{parseFloat(student.balance).toLocaleString()}</td>
+                    <td className="text-center">{student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}</td>
+                    <td className="text-center">
                       <span className={`badge ${parseFloat(student.balance) > 0 ? 'bg-danger' : 'bg-success'}`}>
                         {parseFloat(student.balance) > 0 ? 'With Balance' : 'Cleared'}
                       </span>
                     </td>
-                    <td>
+                    <td className="text-center">
                       <div className="actions d-flex align-items-center gap-2">
                         <Button variant="contained" color="primary" size="small">
                           View Details
