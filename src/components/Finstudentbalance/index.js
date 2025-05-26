@@ -7,64 +7,34 @@ import { FaSearch } from 'react-icons/fa';
 
 const StudentBalance = () => {
   const [students, setStudents] = useState([]);
-  const [program_id, setProgramId] = useState(null);
-  //eslint-disable-next-line
-  const [program_name, setProgramName] = useState("");
-  const [searchParams] = useSearchParams();
-  const yearLevel = searchParams.get('year');
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
-  const [selectedSemester, setSelectedSemester] = useState('');
-  
-  const [loading, setLoading] = useState(true);
-  
+
   const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching with params:', { program_id, yearLevel, selectedSemester }); // Debug log
-
-      const response = await axios.get('/api/student-balances', {
-        params: {
-          program_id: program_id,
-          year_level: yearLevel,
-          semester: selectedSemester
-        }
-      });
-      
-      console.log('API Response:', response.data); // Debug log
+      const response = await axios.get('/api/student-balances');
       setStudents(response.data);
     } catch (error) {
-      console.error("Error fetching students:", error.response || error);
+      console.error("Error fetching students:", error);
     } finally {
       setLoading(false);
-    }
-  }, [program_id, yearLevel, selectedSemester]);
-
-  useEffect(() => {
-    const storedProgramId = localStorage.getItem("program_id");
-    if (storedProgramId) {
-      setProgramId(parseInt(storedProgramId));
     }
   }, []);
 
   useEffect(() => {
-    if (program_id) {
-      fetchStudents();
-    }
-  }, [fetchStudents, program_id]);
-
-  // Add this state for search
-  const [searchTerm, setSearchTerm] = useState('');
+    fetchStudents();
+  }, [fetchStudents]);
 
   const filteredStudents = students.filter(student => {
-    const yearMatch = yearLevel ? student.year_level === parseInt(yearLevel) : true;
     const semesterMatch = selectedSemester ? student.semester === selectedSemester : true;
     const searchMatch = searchTerm.toLowerCase() === '' ? true : 
-      student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.program_name.toLowerCase().includes(searchTerm.toLowerCase());
-    return yearMatch && semesterMatch && searchMatch;
+    return semesterMatch && searchMatch;
   });
 
   const handleSemesterChange = (event) => {
@@ -157,11 +127,11 @@ const StudentBalance = () => {
                 <tr>
                   <td colSpan="8" style={{ textAlign: "center" }}>Loading...</td>
                 </tr>
-              ) : paginatedStudents.length > 0 ? (
-                paginatedStudents.map((student, index) => (
-                  <tr key={student.student_id || index}>
+              ) : filteredStudents.length > 0 ? (
+                paginatedStudents.map((student) => (
+                  <tr key={student.student_id}>
                     <td>{student.student_id}</td>
-                    <td>{`${student.first_name} ${student.last_name}`}</td>
+                    <td>{student.student_name}</td>
                     <td>{student.year_level}</td>
                     <td>{student.program_name}</td>
                     <td>₱{parseFloat(student.balance).toLocaleString()}</td>
@@ -173,11 +143,7 @@ const StudentBalance = () => {
                     </td>
                     <td>
                       <div className="actions d-flex align-items-center gap-2">
-                        <Button 
-                          variant="contained" 
-                          color="primary" 
-                          size="small"
-                        >
+                        <Button variant="contained" color="primary" size="small">
                           View Details
                         </Button>
                       </div>
