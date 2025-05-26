@@ -326,12 +326,7 @@ const StudentPayment = () => {
                           onClick={() => {                            
                             setOpenVerifyDialog(true);
                           }}
-                          sx={{
-                            bgcolor: '#c70202',
-                            '&:hover': {
-                              bgcolor: '#a00000',
-                            }
-                          }}
+                          className="upload-receipt"
                         >
                           Upload Receipt
                         </Button>
@@ -384,7 +379,6 @@ const StudentPayment = () => {
             </table>
           </div>
         )}
-        // Update Dialog component to show error
         <Dialog open={openVerifyDialog} onClose={() => {
           setOpenVerifyDialog(false);
           setError(null); // Clear error when closing dialog
