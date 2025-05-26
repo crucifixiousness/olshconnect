@@ -632,16 +632,19 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .table tbody .actions button.upload-receipt {
-  min-width: 28px !important;
-  width: 28px !important;
-  height: 28px !important;
-  padding: 4px !important;
-  font-size: 12px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase;
+  font-weight: 500;
+  min-width: 100px !important;  /* Reduced width */
+  height: 30px !important;      /* Reduced height */
+  padding: 4px 8px !important;  /* Smaller padding */
+  font-size: 11px !important; 
   background-color: #c70202;
 }
 
 .table tbody .actions button.upload-receipt:hover {
   background-color: #a00000;
 }
+
 
 
