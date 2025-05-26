@@ -8,11 +8,29 @@ import { FaEye } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import Searchbar from '../../components/Searchbar';
+import axios from 'axios';
 
 
-const StudentList  = () => {
-  const [showBy, setshowBy] = useState('')
-  const [showCourseBy, setCourseBy] = useState('')
+const StudentList = () => {
+  const [showBy, setshowBy] = useState('');
+  const [showCourseBy, setCourseBy] = useState('');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await axios.get('/api/get-enrolled-students');
+        setStudents(response.data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   return (
     <div className="right-content w-100" data-testid="student-list">
@@ -84,32 +102,31 @@ const StudentList  = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Cee Jay P. Madayag</td>
-                                <td>3rd Year</td>
-                                <td>BSIT</td>
-                                <td>Male</td>
-                                <td className='action'>
+                            {loading ? (
+                              <tr>
+                                <td colSpan="5" className="text-center">Loading...</td>
+                              </tr>
+                            ) : students.length === 0 ? (
+                              <tr>
+                                <td colSpan="5" className="text-center">No enrolled students found</td>
+                              </tr>
+                            ) : (
+                              students.map((student) => (
+                                <tr key={student.id}>
+                                  <td>{student.student_name}</td>
+                                  <td>{student.year_level}</td>
+                                  <td>{student.program}</td>
+                                  <td>{student.sex}</td>
+                                  <td className='action'>
                                     <div className='actions d-flex align-items-center'>
-                                        <Button className="secondary" color="secondary" data-testid="view-button"><FaEye/></Button>
-                                        <Button className="success" color="success" data-testid="edit-button"><FaPencilAlt/></Button>
-                                        <Button className="error" color="error" data-testid="delete-button"><MdDelete/></Button>
+                                      <Button className="secondary" color="secondary"><FaEye/></Button>
+                                      <Button className="success" color="success"><FaPencilAlt/></Button>
+                                      <Button className="error" color="error"><MdDelete/></Button>
                                     </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Ken L. Magno</td>
-                                <td>3rd Year</td>
-                                <td>BSIT</td>
-                                <td>Male</td>
-                                <td className='action'>
-                                    <div className='actions d-flex align-items-center'>
-                                        <Button className="secondary" color="secondary"><FaEye/></Button>
-                                        <Button className="success" color="success">< FaPencilAlt/></Button>
-                                        <Button className="error" color="error"><MdDelete/></Button>
-                                    </div>
-                                </td>
-                            </tr>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
                         </tbody>
                   </table>
                   <div className='d-flex tableFooter'>
