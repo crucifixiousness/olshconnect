@@ -144,10 +144,10 @@ const DocumentRequests = () => {
                         request.suffix
                       )}
                     </td>
-                    <td>{request.doc_type}</td>
-                    <td>{new Date(request.req_date).toLocaleDateString()}</td>
-                    <td>{request.req_status}</td>
-                    <td className='action'>
+                    <td className="text-center">{request.doc_type}</td>
+                    <td className="text-center">{new Date(request.req_date).toLocaleDateString()}</td>
+                    <td className="text-center">{request.req_status}</td>
+                    <td className='action text-center'>
                       <div className='actions d-flex align-items-center'>
                         <Button 
                           className="success" 
