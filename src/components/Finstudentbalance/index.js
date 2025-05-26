@@ -12,6 +12,8 @@ const StudentBalance = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
+  const [searchParams] = useSearchParams();
+  const yearLevel = searchParams.get('year');
 
   const fetchStudents = useCallback(async () => {
     try {
