@@ -302,24 +302,24 @@ const StudentPayment = () => {
                 <thead className="thead-dark">
                   <tr>
                     <th data-testid="header-description">Description</th>
-                    <th data-testid="header-due-date">Due Date</th>
-                    <th data-testid="header-amount">Amount</th>
-                    <th data-testid="header-status">Status</th>
-                    <th data-testid="header-action">Action</th>
+                    <th data-testid="header-due-date" className="text-center">Due Date</th>
+                    <th data-testid="header-amount" className="text-center">Amount</th>
+                    <th data-testid="header-status" className="text-center">Status</th>
+                    <th data-testid="header-action" className="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {payments.map((payment) => (
                     <tr key={payment.id}>
                       <td>{payment.description}</td>
-                      <td>{payment.dueDate}</td>
-                      <td>₱{payment.amount.toFixed(2)}</td>
-                      <td>
+                      <td className="text-center">{payment.dueDate}</td>
+                      <td className="text-center">₱{payment.amount.toFixed(2)}</td>
+                      <td className="text-center">
                         <span className={`badge ${payment.status.toLowerCase() === 'fully paid' ? 'bg-success' : payment.status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
                           {payment.status}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <Button
                           variant="contained"
                           size="small"
@@ -331,9 +331,9 @@ const StudentPayment = () => {
                             height: '30px',
                             padding: '4px 8px',
                             fontSize: '11px',
-                            backgroundColor: '#0d6efd',
+                            backgroundColor: '#c70202',
                             '&:hover': {
-                              backgroundColor: '#0b5ed7'
+                              backgroundColor: '#a00000'
                             }
                           }}
                         >
@@ -352,27 +352,28 @@ const StudentPayment = () => {
               <thead className="thead-dark">
                 <tr>
                   <th>Receipt No.</th>
-                  <th>Date</th>
+                  <th className="text-center">Date</th>
                   <th>Description</th>
-                  <th>Amount Paid</th>
-                  <th>Payment Method</th>
-                  <th>Status</th>
+                  <th className="text-center">Amount Paid</th>
+                  <th className="text-center">Payment Method</th>
+                  <th className="text-center">Status</th>
+                  <th className="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paymentHistory.map((transaction) => (
                   <tr key={transaction.transaction_id}>
-                    <td>{transaction.reference_number}</td>
-                    <td>{new Date(transaction.payment_date).toLocaleDateString()}</td>
+                    <td className="text-center">{transaction.reference_number}</td>
+                    <td className="text-center">{new Date(transaction.payment_date).toLocaleDateString()}</td>
                     <td>{transaction.remarks}</td>
-                    <td>₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
-                    <td>{transaction.payment_method}</td>
-                    <td>
+                    <td className="text-center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
+                    <td className="text-center">{transaction.payment_method}</td>
+                    <td className="text-center">
                       <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
                         {transaction.payment_status}
                       </span>
                     </td>
-                    <td>
+                    <td className="text-center">
                       <Button
                         variant="outlined"
                         size="small"
