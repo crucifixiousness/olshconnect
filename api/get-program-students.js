@@ -12,20 +12,23 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { program_id, yearLevel, block, sortBy } = req.query;
+  const { program_id, yearLevel, block} = req.query;
 
   try {
     let query = `
       SELECT 
         s.id,
         CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
-        py.year_level,
-        s.block,
-        s.sex
+        COALESCE(py.year_level, 'Not Set') as year_level,
+        COALESCE(sb.block_name, 'Not Assigned') as block,
+        COALESCE(s.sex, 'Not Specified') as sex
       FROM students s
-      JOIN enrollments e ON s.id = e.student_id
-      JOIN program_year py ON e.year_id = py.year_id
-      WHERE e.program_id = $1 AND e.enrollment_status = 'Officially Enrolled'
+      LEFT JOIN enrollments e ON s.id = e.student_id
+      LEFT JOIN program_year py ON e.year_id = py.year_id
+      LEFT JOIN student_blocks sb ON e.block_id = sb.block_id
+      LEFT JOIN program p ON e.program_id = p.program_id
+      WHERE e.program_id = $1 
+      AND e.enrollment_status = 'Officially Enrolled'
     `;
 
     const params = [program_id];
@@ -39,12 +42,11 @@ module.exports = async (req, res) => {
 
     if (block) {
       paramCount++;
-      query += ` AND s.block = $${paramCount}`;
+      query += ` AND (sb.block_name = $${paramCount} OR sb.block_name IS NULL)`;
       params.push(block);
     }
 
-    // Handle sorting
-    query += ` ORDER BY student_name ${sortBy === 'desc' ? 'DESC' : 'ASC'}`;
+    query += ` ORDER BY student_name ASC`;
 
     const result = await pool.query(query, params);
     res.status(200).json(result.rows);
