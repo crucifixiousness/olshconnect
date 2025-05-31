@@ -146,9 +146,24 @@ const ProgramStudentList = () => {
                   students.map((student) => (
                     <tr key={student.id}>
                       <td>{student.student_name}</td>
-                      <td className="text-center">{student.year_level}</td>
-                      <td className="text-center">{student.block}</td>
-                      <td className="text-center">{student.sex}</td>
+                      <td className="text-center">
+                        {student.year_level === 'Not Set' ? 
+                          <span className="text-muted">Not Set</span> : 
+                          student.year_level
+                        }
+                      </td>
+                      <td className="text-center">
+                        {student.block === 'Not Assigned' ? 
+                          <span className="text-muted">Not Assigned</span> : 
+                          student.block
+                        }
+                      </td>
+                      <td className="text-center">
+                        {student.sex === 'Not Specified' ? 
+                          <span className="text-muted">Not Specified</span> : 
+                          student.sex
+                        }
+                      </td>
                       <td className="text-center">
                         <Button 
                           variant="contained"
