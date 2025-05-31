@@ -5,8 +5,9 @@ import Searchbar from '../../components/Searchbar';
 import axios from 'axios';
 
 const ProgramStudentList = () => {
-  const [yearLevel, setYearLevel] = useState('');
+  const [showBy, setshowBy] = useState('');
   const [block, setBlock] = useState('');
+  const [yearLevel, setYearLevel] = useState('');
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -26,26 +27,21 @@ const ProgramStudentList = () => {
 
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
-    
     if (storedProgramId) {
-      const programId = parseInt(storedProgramId, 10);
-      if (!isNaN(programId)) {
-        setProgramId(programId);
-        setProgramName(programMapping[programId] || "Unknown Program");
-      }
+      setProgramId(storedProgramId);
+      // You can set program name here based on your mapping
     }
   }, []);
 
   useEffect(() => {
     const fetchStudents = async () => {
-      if (!programId) return;
-      
       try {
-        const response = await axios.get(`/api/program-students`, {
+        const response = await axios.get('/api/get-program-students', {
           params: {
             program_id: programId,
             yearLevel,
-            block
+            block,
+            sortBy: showBy
           }
         });
         setStudents(response.data);
@@ -56,17 +52,15 @@ const ProgramStudentList = () => {
       }
     };
 
-    fetchStudents();
-  }, [programId, yearLevel, block]);
-
-  const handlePageChange = (event, newPage) => {
-    setPage(newPage);
-  };
+    if (programId) {
+      fetchStudents();
+    }
+  }, [programId, yearLevel, block, showBy]);
 
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="student-list">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Program Students</h3>      
+        <h3 className="hd mt-2 pb-0">Student List</h3>      
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
@@ -76,6 +70,23 @@ const ProgramStudentList = () => {
 
           <div className="row cardFilters mt-3">
             <div className="col-md-3">
+              <h4>SHOW BY</h4>
+              <FormControl size='small' className='w-100'>
+                <Select
+                  value={showBy}
+                  onChange={(e) => setshowBy(e.target.value)}
+                  displayEmpty
+                  inputProps={{ 'aria-label': 'Show by filter' }}
+                  className='w-100'
+                >
+                  <MenuItem value=""><em>Default</em></MenuItem>
+                  <MenuItem value="asc">A - Z</MenuItem>
+                  <MenuItem value="desc">Z - A</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+
+            <div className="col-md-3">
               <h4>YEAR LEVEL</h4>
               <FormControl size='small' className='w-100'>
                 <Select
@@ -84,7 +95,7 @@ const ProgramStudentList = () => {
                   displayEmpty
                   className='w-100'
                 >
-                  <MenuItem value="">All Years</MenuItem>
+                  <MenuItem value=""><em>All Years</em></MenuItem>
                   <MenuItem value="1">1st Year</MenuItem>
                   <MenuItem value="2">2nd Year</MenuItem>
                   <MenuItem value="3">3rd Year</MenuItem>
@@ -102,7 +113,7 @@ const ProgramStudentList = () => {
                   displayEmpty
                   className='w-100'
                 >
-                  <MenuItem value="">All Blocks</MenuItem>
+                  <MenuItem value=""><em>All Blocks</em></MenuItem>
                   <MenuItem value="A">Block A</MenuItem>
                   <MenuItem value="B">Block B</MenuItem>
                   <MenuItem value="C">Block C</MenuItem>
@@ -112,10 +123,9 @@ const ProgramStudentList = () => {
           </div>
 
           <div className='table-responsive mt-3'>
-            <table className='table table-bordered v-align'>
+            <table className='table table-bordered v-align' data-testid="student-table">
               <thead className='thead-dark'>
                 <tr>
-                  <th>STUDENT ID</th>
                   <th>STUDENT NAME</th>
                   <th className="text-center">YEAR LEVEL</th>
                   <th className="text-center">BLOCK</th>
@@ -126,54 +136,35 @@ const ProgramStudentList = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="text-center">Loading...</td>
+                    <td colSpan="5" className="text-center">Loading...</td>
                   </tr>
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center">No students found</td>
+                    <td colSpan="5" className="text-center">No enrolled students found</td>
                   </tr>
                 ) : (
-                  students
-                    .slice((page - 1) * rowsPerPage, page * rowsPerPage)
-                    .map((student) => (
-                      <tr key={student.id}>
-                        <td>{student.student_id}</td>
-                        <td>{student.student_name}</td>
-                        <td className="text-center">{student.year_level}</td>
-                        <td className="text-center">{student.block}</td>
-                        <td className="text-center">
-                          <span className={`badge ${student.status === 'Regular' ? 'bg-success' : 'bg-warning'}`}>
-                            {student.status}
-                          </span>
-                        </td>
-                        <td className="text-center">
-                          <Button 
-                            variant="contained"
-                            size="small"
-                            startIcon={<FaEye/>}
-                            sx={{
-                              bgcolor: '#0d6efd',
-                              '&:hover': { bgcolor: '#0b5ed7' }
-                            }}
-                          >
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
+                  students.map((student) => (
+                    <tr key={student.id}>
+                      <td>{student.student_name}</td>
+                      <td>{student.year_level}</td>
+                      <td>{student.block}</td>
+                      <td>
+                        <span className={`badge ${student.status === 'Regular' ? 'bg-success' : 'bg-warning'}`}>
+                          {student.status}
+                        </span>
+                      </td>
+                      <td className='action'>
+                        <div className='actions d-flex align-items-center'>
+                          <Button className="secondary" color="secondary"><FaEye/></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
             <div className='d-flex tableFooter'>
-              <Pagination 
-                count={Math.ceil(students.length / rowsPerPage)} 
-                page={page}
-                onChange={handlePageChange}
-                color="primary" 
-                className='pagination' 
-                showFirstButton 
-                showLastButton 
-              />
+              <Pagination count={10} color="primary" className='pagination' showFirstButton showLastButton />
             </div>
           </div>          
         </div>
