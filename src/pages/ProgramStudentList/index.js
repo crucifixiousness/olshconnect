@@ -38,14 +38,12 @@ const ProgramStudentList = () => {
       if (!programId) return;
       
       try {
-        // Only include non-empty filter values
+        // Only include non-empty filter values and ensure year_level is a number
         const params = {
           program_id: programId,
-          ...(yearLevel && { year_level: yearLevel }), // Changed yearLevel to year_level
-          ...(block && { block_name: block }) // Changed block to block_name
+          ...(yearLevel && yearLevel !== '' && { year_level: parseInt(yearLevel) }),
+          ...(block && block !== '' && { block_name: block })
         };
-
-        console.log('Request params:', params); // For debugging
 
         const response = await axios.get('/api/get-program-students', { params });
         setStudents(response.data);
@@ -59,6 +57,16 @@ const ProgramStudentList = () => {
 
     fetchStudents();
   }, [programId, yearLevel, block, showBy]);
+
+  const getYearSuffix = (year) => {
+    switch (year) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      case 4: return 'th';
+      default: return '';
+    }
+  };
 
   return (
     <div className="right-content w-100" data-testid="student-list">
@@ -99,10 +107,10 @@ const ProgramStudentList = () => {
                   className='w-100'
                 >
                   <MenuItem value=""><em>All Years</em></MenuItem>
-                  <MenuItem value="1">1st Year</MenuItem>
-                  <MenuItem value="2">2nd Year</MenuItem>
-                  <MenuItem value="3">3rd Year</MenuItem>
-                  <MenuItem value="4">4th Year</MenuItem>
+                  <MenuItem value={1}>1st Year</MenuItem>
+                  <MenuItem value={2}>2nd Year</MenuItem>
+                  <MenuItem value={3}>3rd Year</MenuItem>
+                  <MenuItem value={4}>4th Year</MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -150,20 +158,20 @@ const ProgramStudentList = () => {
                     <tr key={student.id}>
                       <td>{student.student_name}</td>
                       <td className="text-center">
-                        {student.year_level === 'Not Set' ? 
-                          <span className="text-muted">Not Set</span> : 
-                          student.year_level
+                        {student.year_level === 0 ? 
+                          <span className="text-muted">N/A</span> : 
+                          `${student.year_level}${getYearSuffix(student.year_level)} Year`
                         }
                       </td>
                       <td className="text-center">
-                        {student.block === 'Not Assigned' ? 
-                          <span className="text-muted">Not Assigned</span> : 
-                          student.block
+                        {student.block === 'N/A' ? 
+                          <span className="text-muted">N/A</span> : 
+                          `Block ${student.block}`
                         }
                       </td>
                       <td className="text-center">
-                        {student.sex === 'Not Specified' ? 
-                          <span className="text-muted">Not Specified</span> : 
+                        {student.sex === 'N/A' ? 
+                          <span className="text-muted">N/A</span> : 
                           student.sex
                         }
                       </td>
