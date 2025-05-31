@@ -35,29 +35,26 @@ const ProgramStudentList = () => {
 
   useEffect(() => {
     const fetchStudents = async () => {
+      if (!programId) return;
+      
       try {
         const response = await axios.get('/api/get-program-students', {
           params: {
             program_id: programId,
             yearLevel,
-            block,
-            sortBy: showBy
+            block
           }
         });
-        // Ensure we're setting an array
-        const studentData = response.data.students || response.data || [];
-        setStudents(Array.isArray(studentData) ? studentData : []);
+        setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
-        setStudents([]); // Set empty array on error
+        setStudents([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (programId) {
-      fetchStudents();
-    }
+    fetchStudents();
   }, [programId, yearLevel, block, showBy]);
 
   return (
@@ -65,12 +62,12 @@ const ProgramStudentList = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="hd mt-2 pb-0">Student List</h3>      
       </div>
-
+  
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
           <Searchbar/>
           <h3 className="hd">Student List - {programName}</h3>
-
+  
           <div className="row cardFilters mt-3">
             <div className="col-md-3">
               <h4>SHOW BY</h4>
@@ -88,7 +85,7 @@ const ProgramStudentList = () => {
                 </Select>
               </FormControl>
             </div>
-
+  
             <div className="col-md-3">
               <h4>YEAR LEVEL</h4>
               <FormControl size='small' className='w-100'>
@@ -106,7 +103,7 @@ const ProgramStudentList = () => {
                 </Select>
               </FormControl>
             </div>
-
+  
             <div className="col-md-3">
               <h4>BLOCK</h4>
               <FormControl size='small' className='w-100'>
@@ -124,7 +121,7 @@ const ProgramStudentList = () => {
               </FormControl>
             </div>
           </div>
-
+  
           <div className='table-responsive mt-3'>
             <table className='table table-bordered v-align' data-testid="student-table">
               <thead className='thead-dark'>
@@ -132,7 +129,7 @@ const ProgramStudentList = () => {
                   <th>STUDENT NAME</th>
                   <th className="text-center">YEAR LEVEL</th>
                   <th className="text-center">BLOCK</th>
-                  <th className="text-center">STATUS</th>
+                  <th className="text-center">SEX</th>
                   <th className="text-center">ACTION</th>
                 </tr>
               </thead>
@@ -141,7 +138,7 @@ const ProgramStudentList = () => {
                   <tr>
                     <td colSpan="5" className="text-center">Loading...</td>
                   </tr>
-                ) : !Array.isArray(students) || students.length === 0 ? (
+                ) : students.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="text-center">No enrolled students found</td>
                   </tr>
@@ -151,15 +148,19 @@ const ProgramStudentList = () => {
                       <td>{student.student_name}</td>
                       <td className="text-center">{student.year_level}</td>
                       <td className="text-center">{student.block}</td>
+                      <td className="text-center">{student.sex}</td>
                       <td className="text-center">
-                        <span className={`badge ${student.status === 'Regular' ? 'bg-success' : 'bg-warning'}`}>
-                          {student.status}
-                        </span>
-                      </td>
-                      <td className='action'>
-                        <div className='actions d-flex align-items-center'>
-                          <Button className="secondary" color="secondary"><FaEye/></Button>
-                        </div>
+                        <Button 
+                          variant="contained"
+                          size="small"
+                          startIcon={<FaEye/>}
+                          sx={{
+                            bgcolor: '#0d6efd',
+                            '&:hover': { bgcolor: '#0b5ed7' }
+                          }}
+                        >
+                          View
+                        </Button>
                       </td>
                     </tr>
                   ))
