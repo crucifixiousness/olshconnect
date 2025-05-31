@@ -38,13 +38,16 @@ const ProgramStudentList = () => {
       if (!programId) return;
       
       try {
-        const response = await axios.get('/api/get-program-students', {
-          params: {
-            program_id: programId,
-            yearLevel,
-            block
-          }
-        });
+        // Only include non-empty filter values
+        const params = {
+          program_id: programId,
+          ...(yearLevel && { year_level: yearLevel }), // Changed yearLevel to year_level
+          ...(block && { block_name: block }) // Changed block to block_name
+        };
+
+        console.log('Request params:', params); // For debugging
+
+        const response = await axios.get('/api/get-program-students', { params });
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
