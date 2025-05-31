@@ -29,7 +29,7 @@ const ProgramStudentList = () => {
     const storedProgramId = localStorage.getItem("program_id");
     if (storedProgramId) {
       setProgramId(storedProgramId);
-      // You can set program name here based on your mapping
+      setProgramName(programMapping[storedProgramId] || "Unknown Program");
     }
   }, []);
 
@@ -44,9 +44,12 @@ const ProgramStudentList = () => {
             sortBy: showBy
           }
         });
-        setStudents(response.data);
+        // Ensure we're setting an array
+        const studentData = response.data.students || response.data || [];
+        setStudents(Array.isArray(studentData) ? studentData : []);
       } catch (error) {
         console.error('Error fetching students:', error);
+        setStudents([]); // Set empty array on error
       } finally {
         setLoading(false);
       }
@@ -138,7 +141,7 @@ const ProgramStudentList = () => {
                   <tr>
                     <td colSpan="5" className="text-center">Loading...</td>
                   </tr>
-                ) : students.length === 0 ? (
+                ) : !Array.isArray(students) || students.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="text-center">No enrolled students found</td>
                   </tr>
@@ -146,9 +149,9 @@ const ProgramStudentList = () => {
                   students.map((student) => (
                     <tr key={student.id}>
                       <td>{student.student_name}</td>
-                      <td>{student.year_level}</td>
-                      <td>{student.block}</td>
-                      <td>
+                      <td className="text-center">{student.year_level}</td>
+                      <td className="text-center">{student.block}</td>
+                      <td className="text-center">
                         <span className={`badge ${student.status === 'Regular' ? 'bg-success' : 'bg-warning'}`}>
                           {student.status}
                         </span>
