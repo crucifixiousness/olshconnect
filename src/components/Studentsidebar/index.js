@@ -61,6 +61,15 @@ const StudentSidebar = () => {
               className={`w-100 ${activeTab === 0 ? 'active' : ''}`} 
               onClick={() => handleTabClick(0)}
               disabled={!isOfficiallyEnrolled}
+              sx={{ 
+                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
+                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
+                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                }
+              }}
             >
               <span className='icon'><RiDashboardHorizontalLine /></span>
               Dashboard
@@ -84,12 +93,22 @@ const StudentSidebar = () => {
               className={`w-100 ${activeTab === 1 ? 'active' : ''}`} 
               onClick={() => handleTabClick(1)}
               disabled={!isOfficiallyEnrolled}
+              sx={{ 
+                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
+                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
+                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                }
+              }}
             >
               <span className='icon'><FaBookOpen /></span>
               My Courses
             </Button>
           )}
         </li>
+        {/* Apply the same sx prop to other disabled buttons */}
         {/* Apply the same pattern to other menu items */}
         <li>
           {renderLink("/academic-records",
@@ -97,6 +116,15 @@ const StudentSidebar = () => {
               className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
               onClick={() => handleTabClick(2)}
               disabled={!isOfficiallyEnrolled}
+              sx={{ 
+                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
+                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
+                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                }
+              }}
             >
               <span className='icon'><IoDocuments /></span>
               Academic Records
@@ -109,6 +137,15 @@ const StudentSidebar = () => {
               className={`w-100 ${activeTab === 4 ? 'active' : ''}`} 
               onClick={() => handleTabClick(4)}
               disabled={!isOfficiallyEnrolled}
+              sx={{ 
+                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
+                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
+                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                }
+              }}
             >
               <span className='icon'><GiPapers /></span>
               Request Document
@@ -121,6 +158,15 @@ const StudentSidebar = () => {
               className={`w-100 ${activeTab === 5 ? 'active' : ''}`} 
               onClick={() => handleTabClick(5)}
               disabled={!isOfficiallyEnrolled}
+              sx={{ 
+                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
+                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
+                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                }
+              }}
             >
               <span className='icon'><FaMoneyBillWave /></span>
               Payment
