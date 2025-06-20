@@ -86,6 +86,12 @@ const StudentProfile = () => {
   ];
 
   useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const enrollmentStatus = userData?.enrollment_status || studentData?.enrollment?.status;
+    setIsEnrolled(enrollmentStatus === 'Officially Enrolled');
+  }, [studentData]);
+
+  useEffect(() => {
     if (studentData?.enrollment) {
       switch (studentData.enrollment.status) {
         case 'Registered':
@@ -426,7 +432,7 @@ const StudentProfile = () => {
       </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
         <h3 className="hd mt-2 pb-0" style={{ margin: 0 }}>Student Profile</h3>
-        {studentData?.enrollment_status !== 'Officially Enrolled' && (
+        {!isEnrolled && studentData?.enrollment?.status !== 'Officially Enrolled' && (
           <Button 
             variant="contained" 
             className='enrollbut' 
