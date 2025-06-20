@@ -4,7 +4,7 @@ import { FaBookOpen } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
 import { GiPapers } from "react-icons/gi";
@@ -13,9 +13,18 @@ import { FaMoneyBillWave } from "react-icons/fa";
 
 const StudentSidebar = () => {
   const [activeTab, setActiveTab] = useState(0);
+  const [isOfficiallyEnrolled, setIsOfficiallyEnrolled] = useState(false);
   // eslint-disable-next-line
   const context = useContext(MyContext);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkEnrollmentStatus = () => {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      setIsOfficiallyEnrolled(userData?.enrollment_status === 'Officially Enrolled');
+    };
+    checkEnrollmentStatus();
+  }, []);
 
   const handleTabClick = (index) => {
     setActiveTab(index);
@@ -24,7 +33,13 @@ const StudentSidebar = () => {
     // Logout function to remove user data and redirect
   const handleLogout = () => {
     // Clear all cached data
-    localStorage.clear();
+    localStorage.removeItem('paymentData');
+    localStorage.removeItem('paymentDataTimestamp');
+    localStorage.removeItem('studentProfileData');
+    localStorage.removeItem('studentProfileTimestamp');
+    // Clear auth data
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     // Redirect to homepage
     navigate('/homepage');
   };
@@ -37,6 +52,7 @@ const StudentSidebar = () => {
             <Button 
               className={`w-100 ${activeTab === 0 ? 'active' : ''}`} 
               onClick={() => handleTabClick(0)}
+              disabled={!isOfficiallyEnrolled}
             >
               <span className='icon'><RiDashboardHorizontalLine /></span>
               Dashboard
@@ -59,18 +75,19 @@ const StudentSidebar = () => {
             <Button 
               className={`w-100 ${activeTab === 1 ? 'active' : ''}`} 
               onClick={() => handleTabClick(1)}
+              disabled={!isOfficiallyEnrolled}
             >
               <span className='icon'><FaBookOpen /></span>
               My Courses
             </Button>
           </Link>
         </li>
-
         <li>
           <Link to="/academic-records">
             <Button 
               className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
               onClick={() => handleTabClick(2)}
+              disabled={!isOfficiallyEnrolled}
             >
               <span className='icon'><IoDocuments /></span>
               Academic Records
@@ -82,6 +99,7 @@ const StudentSidebar = () => {
             <Button 
               className={`w-100 ${activeTab === 4 ? 'active' : ''}`} 
               onClick={() => handleTabClick(4)}
+              disabled={!isOfficiallyEnrolled}
             >
               <span className='icon'><GiPapers /></span>
               Request Document
@@ -93,6 +111,7 @@ const StudentSidebar = () => {
             <Button 
               className={`w-100 ${activeTab === 5 ? 'active' : ''}`} 
               onClick={() => handleTabClick(5)}
+              disabled={!isOfficiallyEnrolled}
             >
               <span className='icon'><FaMoneyBillWave /></span>
               Payment
@@ -102,11 +121,13 @@ const StudentSidebar = () => {
       </ul>
 
       <div className='logoutWrap'>
+        <Link to="/homepage">
           <div className='logoutBox'>
             <Button variant="contained" onClick={handleLogout}>
               <HiOutlineLogout /> Logout
             </Button>
           </div>
+        </Link>
       </div>
     </div>
   );
