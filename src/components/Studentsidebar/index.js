@@ -12,7 +12,8 @@ import { FaMoneyBillWave } from "react-icons/fa";
 
 
 const StudentSidebar = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  // Remove the initial 0 value since we'll set it in useEffect
+  const [activeTab, setActiveTab] = useState(null);
   const [isOfficiallyEnrolled, setIsOfficiallyEnrolled] = useState(false);
   // eslint-disable-next-line
   const context = useContext(MyContext);
@@ -20,7 +21,10 @@ const StudentSidebar = () => {
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
-    setIsOfficiallyEnrolled(userData?.enrollment_status === 'Officially Enrolled');
+    const isEnrolled = userData?.enrollment_status === 'Officially Enrolled';
+    setIsOfficiallyEnrolled(isEnrolled);
+    // Set initial active tab based on enrollment status
+    setActiveTab(isEnrolled ? 0 : 3); // 0 for Dashboard, 3 for My Profile
   }, []);
 
   const handleTabClick = (index) => {
