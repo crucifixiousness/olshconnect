@@ -58,15 +58,19 @@ const Login = () => {
           enrollment_date: user.enrollment_date || null
         };
         localStorage.setItem('user', JSON.stringify(userDataToStore));
-
+    
         // Update context states
         setToken(token);
         setRole(user.role);
         setUser(userDataToStore);
         setIsLogin(true);
-
-        // Navigate to student dashboard
-        window.location.href = '/student-dashboard';
+    
+        // Redirect based on enrollment status
+        const redirectPath = userDataToStore.enrollment_status === 'Officially Enrolled' 
+          ? '/student-dashboard' 
+          : '/student-profile';
+        
+        window.location.href = redirectPath;
     
       } catch (error) {
         let errorMsg = 'Login failed. Please try again.';
