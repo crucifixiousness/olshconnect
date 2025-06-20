@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
       const client = await pool.connect();
       
       const studentQuery = `
-        SELECT s.*, e.idpic
+        SELECT s.*, e.idpic, e.enrollment_status, e.enrollment_date
         FROM students s
         LEFT JOIN enrollments e ON s.id = e.student_id
         WHERE s.username = $1
@@ -43,7 +43,12 @@ module.exports = async (req, res) => {
       const idpicBase64 = user.idpic ? Buffer.from(user.idpic).toString('base64') : null;
 
       const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
+        { 
+          id: user.id, 
+          username: user.username, 
+          role: user.role,
+          enrollment_status: user.enrollment_status 
+        },
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
@@ -54,11 +59,11 @@ module.exports = async (req, res) => {
           id: user.id,
           username: user.username,
           firstName: user.first_name,
-          middleName: user.middle_name,
-          lastName: user.last_name,
           fullName: `${user.first_name} ${user.last_name}`,
           role: user.role,
           idpic: idpicBase64,
+          enrollment_status: user.enrollment_status || 'Not Enrolled',
+          enrollment_date: user.enrollment_date
         },
       });
 
