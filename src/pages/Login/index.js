@@ -21,12 +21,6 @@ const Login = () => {
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   useEffect(() => {
-    if (isLogin) {
-      window.location.href = '/student-dashboard';
-    }
-  }, [isLogin]);
-
-  useEffect(() => {
       context.setIsHideComponents(true);
   }, [context]);
   
@@ -52,39 +46,40 @@ const Login = () => {
         // Clear any existing data first
         localStorage.clear();
         
-        // Set token first and wait for it to be set
-        await new Promise(resolve => {
-          localStorage.setItem('token', token);
-          setToken(token);
-          resolve();
-        });
-    
-        // Set remaining data
+        // Store token and user data
+        localStorage.setItem('token', token);
         localStorage.setItem('role', user.role);
         localStorage.setItem('student_id', user.student_id);
-        localStorage.setItem('user', JSON.stringify(user));
-    
-        // Update context states in order
-        await new Promise(resolve => {
-          setRole(user.role);
-          setTimeout(() => {
-            setUser(user);
-            setTimeout(() => {
-              setIsLogin(true);
-              resolve();
-            }, 100);
-          }, 100);
-        });
+        
+        // Store full user object including enrollment status
+        const userDataToStore = {
+          ...user,
+          enrollment_status: user.enrollment_status || 'Not Enrolled',
+          enrollment_date: user.enrollment_date || null
+        };
+        localStorage.setItem('user', JSON.stringify(userDataToStore));
 
+        // Update context states
+        setToken(token);
+        setRole(user.role);
+        setUser(userDataToStore);
+        setIsLogin(true);
+
+        // Navigate to student dashboard
         window.location.href = '/student-dashboard';
     
       } catch (error) {
-        setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+        let errorMsg = 'Login failed. Please try again.';
+        if (error.response?.data?.message) {
+          errorMsg = error.response.data.message;
+        }
+        setErrorMessage(errorMsg);
       } finally {
         setIsLoading(false);
       }
     };
     
+
   return (
     <>
         <img src={loginbackground} alt="samp" className='loginBg' />
