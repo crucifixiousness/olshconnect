@@ -100,7 +100,7 @@ const StudentProfile = () => {
         case 'For Payment':
           setActiveStep(3);
           break;
-        case 'Enrolled':
+        case 'Officially Enrolled':
           setActiveStep(4);
           break;
         default:
