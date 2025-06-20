@@ -41,11 +41,18 @@ const StudentSidebar = () => {
     navigate('/homepage');
   };
 
+  const renderLink = (to, button, requiresEnrollment = true) => {
+    if (requiresEnrollment && !isOfficiallyEnrolled) {
+      return button;
+    }
+    return <Link to={to}>{button}</Link>;
+  };
+
   return (
     <div className="sidebar">
       <ul>
         <li>
-          <Link to="/student-dashboard">
+          {renderLink("/student-dashboard",
             <Button 
               className={`w-100 ${activeTab === 0 ? 'active' : ''}`} 
               onClick={() => handleTabClick(0)}
@@ -54,10 +61,10 @@ const StudentSidebar = () => {
               <span className='icon'><RiDashboardHorizontalLine /></span>
               Dashboard
             </Button>
-          </Link>
+          )}
         </li>
         <li>
-          <Link to="/student-profile">
+          {renderLink("/student-profile",
             <Button 
               className={`w-100 ${activeTab === 3 ? 'active' : ''}`} 
               onClick={() => handleTabClick(3)}
@@ -65,10 +72,10 @@ const StudentSidebar = () => {
               <span className='icon'><PiStudentBold /></span>
               My Profile
             </Button>
-          </Link>
+          , false)} {/* false means this doesn't require enrollment */}
         </li>
         <li>
-          <Link to="/student-courses">
+          {renderLink("/student-courses",
             <Button 
               className={`w-100 ${activeTab === 1 ? 'active' : ''}`} 
               onClick={() => handleTabClick(1)}
@@ -77,10 +84,11 @@ const StudentSidebar = () => {
               <span className='icon'><FaBookOpen /></span>
               My Courses
             </Button>
-          </Link>
+          )}
         </li>
+        {/* Apply the same pattern to other menu items */}
         <li>
-          <Link to="/academic-records">
+          {renderLink("/academic-records",
             <Button 
               className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
               onClick={() => handleTabClick(2)}
@@ -89,10 +97,10 @@ const StudentSidebar = () => {
               <span className='icon'><IoDocuments /></span>
               Academic Records
             </Button>
-          </Link>
+          )}
         </li>
         <li>
-          <Link to="/request-document">
+          {renderLink("/request-document",
             <Button 
               className={`w-100 ${activeTab === 4 ? 'active' : ''}`} 
               onClick={() => handleTabClick(4)}
@@ -101,10 +109,10 @@ const StudentSidebar = () => {
               <span className='icon'><GiPapers /></span>
               Request Document
             </Button>
-          </Link>
+          )}
         </li>
         <li>
-          <Link to="/student-payment">
+          {renderLink("/student-payment",
             <Button 
               className={`w-100 ${activeTab === 5 ? 'active' : ''}`} 
               onClick={() => handleTabClick(5)}
@@ -113,7 +121,7 @@ const StudentSidebar = () => {
               <span className='icon'><FaMoneyBillWave /></span>
               Payment
             </Button>
-          </Link>
+          )}
         </li>
       </ul>
 
