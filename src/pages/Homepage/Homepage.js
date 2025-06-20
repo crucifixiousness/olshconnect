@@ -114,22 +114,21 @@ const Homepage = () => {
         else if (name === 'number' || name === 'guardianContactNo') {
             let validNumber = value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
     
-            // Ensure the number starts with "09" and restrict to 11 digits
+            // Ensure the number starts with "09" and is exactly 11 digits
             if (validNumber.length > 11) {
-                validNumber = validNumber.slice(0, 11); // Restrict to 11 digits
+                validNumber = validNumber.slice(0, 11);
             }
     
             if (validNumber.length === 1 && validNumber !== '0') {
-                validNumber = ''; // If the first digit is not 0, clear the field
+                validNumber = '';
             }
     
             if (validNumber.length === 2 && validNumber !== '09') {
-                validNumber = '09'; // Ensure the number starts with "09"
+                validNumber = '09';
             }
     
             setFormData({ ...formData, [name]: validNumber });
-    
-        } 
+        }
         // For other fields, no restriction
         else {
             setFormData({ ...formData, [name]: value });
@@ -139,6 +138,7 @@ const Homepage = () => {
     const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
     const [isVisible, setIsVisible] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [contactNumberError, setContactNumberError] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -149,6 +149,15 @@ const Homepage = () => {
             setSnackbar({
                 open: true,
                 message: "Please fill in all required fields",
+                severity: 'error'
+            });
+            return;
+        }
+        // Validate contact number length
+        if (formData.number && formData.number.length !== 11) {
+            setSnackbar({
+                open: true,
+                message: "Contact number must be 11 digits",
                 severity: 'error'
             });
             return;
@@ -409,7 +418,7 @@ const Homepage = () => {
                                                 </Typography>
                                                 <div className="mb-3">
                                                     <Grid container spacing={2}>
-                                                        <Grid item xs={3}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="First Name"
                                                                 fullWidth
@@ -421,7 +430,7 @@ const Homepage = () => {
                                                                 required
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={3}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Middle Name"
                                                                 fullWidth
@@ -432,7 +441,7 @@ const Homepage = () => {
                                                                 onChange={handleInputChange}
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={3}>
+                                                        <Grid item xs={6}>
                                                             <TextField
                                                                 label="Last Name"
                                                                 fullWidth
@@ -444,7 +453,7 @@ const Homepage = () => {
                                                                 required
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={3}>
+                                                        <Grid item xs={6}>
                                                             <TextField
                                                                 label="Suffix"
                                                                 fullWidth
@@ -565,6 +574,8 @@ const Homepage = () => {
                                                                 value={formData.number}
                                                                 onChange={handleInputChange}
                                                                 required
+                                                                error={!!contactNumberError}
+                                                                helperText={contactNumberError}
                                                             />
                                                         </Grid>
                                                     </Grid>
