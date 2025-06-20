@@ -54,6 +54,11 @@ const Login = () => {
         // Store full user object including enrollment status
         const userDataToStore = {
           ...user,
+          firstName: user.first_name,
+          middleName: user.middle_name,
+          lastName: user.last_name,
+          suffix: user.suffix,
+          role: user.role,
           enrollment_status: user.enrollment_status || 'Not Enrolled',
           enrollment_date: user.enrollment_date || null
         };
