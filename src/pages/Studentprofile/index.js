@@ -100,7 +100,7 @@ const StudentProfile = () => {
         case 'For Payment':
           setActiveStep(3);
           break;
-        case 'Officially Enrolled':
+        case 'Enrolled':
           setActiveStep(4);
           break;
         default:
@@ -426,15 +426,17 @@ const StudentProfile = () => {
       </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
         <h3 className="hd mt-2 pb-0" style={{ margin: 0 }}>Student Profile</h3>
-        <Button 
-          variant="contained" 
-          className='enrollbut' 
-          color="primary" 
-          onClick={handleOpenEnrollment}
-          data-testid="enroll-button"
-        >
-          <FaSchool/>Enroll Now!
-        </Button>
+        {studentData?.enrollment_status !== 'Officially Enrolled' && (
+          <Button 
+            variant="contained" 
+            className='enrollbut' 
+            color="primary" 
+            onClick={handleOpenEnrollment}
+            data-testid="enroll-button"
+          >
+            <FaSchool/>Enroll Now!
+          </Button>
+        )}
       </div>
       <div className="d-flex justify-content-end mb-3">
         <Button 
@@ -853,8 +855,7 @@ const StudentProfile = () => {
                     inputProps={{ 'aria-label': 'programs' }}
                     data-testid="program-select"
                   >
-                    <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
-                    <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Education</MenuItem>
                     <MenuItem value={3}>Bachelor of Science in Hospitality Management</MenuItem>
                     <MenuItem value={1}>Bachelor of Science in Information Technology</MenuItem>
                     <MenuItem value={4}>Bachelor of Science in Office Administration</MenuItem>
