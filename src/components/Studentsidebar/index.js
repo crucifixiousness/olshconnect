@@ -19,11 +19,8 @@ const StudentSidebar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkEnrollmentStatus = () => {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      setIsOfficiallyEnrolled(userData?.enrollment_status === 'Officially Enrolled');
-    };
-    checkEnrollmentStatus();
+    const userData = JSON.parse(localStorage.getItem('user'));
+    setIsOfficiallyEnrolled(userData?.enrollment_status === 'Officially Enrolled');
   }, []);
 
   const handleTabClick = (index) => {
