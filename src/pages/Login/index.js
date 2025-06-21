@@ -66,11 +66,6 @@ const Login = () => {
         // Format and store user data
         const userDataToStore = {
           ...user,
-          first_name: user.first_name || user.firstName,
-          middle_name: user.middle_name || user.middleName,
-          last_name: user.last_name || user.lastName,
-          suffix: user.suffix,
-          role: user.role,
           enrollment_status: user.enrollment_status || 'Not Enrolled',
           enrollment_date: user.enrollment_date || null
         };
