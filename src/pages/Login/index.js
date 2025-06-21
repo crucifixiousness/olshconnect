@@ -58,25 +58,20 @@ const Login = () => {
         // Clear any existing data first
         localStorage.clear();
         
-        // Store token and user data
+        // Store login state
+        localStorage.setItem('isLogin', 'true');
+        
+        // Store other data
         localStorage.setItem('token', token);
         localStorage.setItem('role', user.role);
         localStorage.setItem('student_id', user.student_id);
-        
-        // Format and store user data
-        const userDataToStore = {
-          ...user,
-          enrollment_status: user.enrollment_status || 'Not Enrolled',
-          enrollment_date: user.enrollment_date || null
-        };
-        
-        localStorage.setItem('user', JSON.stringify(userDataToStore));
-
-        // Update context states
+        localStorage.setItem('user', JSON.stringify(user));
+    
+        // Update context
         setToken(token);
         setRole(user.role);
-        setUser(userDataToStore);
-        setIsLogin(true); // This will trigger the useEffect for redirection
+        setUser(user);
+        setIsLogin(true);
     
       } catch (error) {
         let errorMsg = 'Login failed. Please try again.';
