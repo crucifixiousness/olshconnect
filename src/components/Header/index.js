@@ -14,29 +14,23 @@ import { MyContext } from "../../App";
 import React, { useState, useContext } from 'react';
 
 const formatFullName = (userData) => {
-  if (!userData) return 'N/A';
+  if (!userData || userData.role !== 'student') return userData?.fullName || 'N/A';
   
-  // For staff roles (instructors, program_head, etc.)
-  if (userData.role !== 'student') {
-    return userData.fullName || 'N/A';
+  let fullName = userData.firstName || "";
+  
+  if (userData.middleName && userData.middleName.trim()) {
+    fullName += ` ${userData.middleName.charAt(0)}.`;
   }
   
-  // For students - using snake_case format from database
-  let fullName = userData.first_name || "";
-  
-  if (userData.middle_name && userData.middle_name.trim()) {
-    fullName += ` ${userData.middle_name.charAt(0)}.`;
-  }
-  
-  if (userData.last_name) {
-    fullName += ` ${userData.last_name}`;
+  if (userData.lastName) {
+    fullName += ` ${userData.lastName}`;
   }
   
   if (userData.suffix && userData.suffix.trim()) {
     fullName += ` ${userData.suffix}`;
   }
   
-  return fullName || 'N/A';
+  return fullName;
 };
 
 const Header = () => {
