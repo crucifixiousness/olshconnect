@@ -11,7 +11,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import Logout from '@mui/icons-material/Logout';
 import { MyContext } from "../../App";
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 
 const formatFullName = (userData) => {
   if (!userData || userData.role !== 'student') return userData?.fullName || 'N/A';
@@ -97,6 +97,18 @@ const Header = () => {
     );
   };
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedIsLogin = localStorage.getItem('isLogin');
+    
+    if (storedUser && !user) {
+      context.setUser(JSON.parse(storedUser));
+    }
+    if (storedIsLogin === 'true' && !context.isLogin) {
+      context.setIsLogin(true);
+    }
+  }, []);
+
   return(
     <>
       <header className="d-flex align-items-center">
@@ -135,7 +147,7 @@ const Header = () => {
               </div>
               
               {
-                context.isLogin !== false ? (
+                (context.isLogin || localStorage.getItem('isLogin') === 'true') && (user || JSON.parse(localStorage.getItem('user'))) ? (
                   <div className="myAccWrapper">
                     <Button className="myAcc d-flex align-items-center" onClick={handleOpenAccDrop}>
                       <div className="userImg">
