@@ -12,25 +12,37 @@ import PersonAdd from '@mui/icons-material/PersonAdd';
 import Logout from '@mui/icons-material/Logout';
 import { MyContext } from "../../App";
 import React, { useState, useContext } from 'react';
+import Divider from '@mui/material/Divider';
 
 const formatFullName = (userData) => {
-  if (!userData || userData.role !== 'student') return userData?.fullName || 'N/A';
+  if (!userData) return 'N/A';
   
-  let fullName = userData.firstName || "";
-  
-  if (userData.middleName && userData.middleName.trim()) {
-    fullName += ` ${userData.middleName.charAt(0)}.`;
+  // For non-student roles
+  if (userData.role !== 'student') {
+    return userData.fullName || 'N/A';
   }
   
-  if (userData.lastName) {
-    fullName += ` ${userData.lastName}`;
+  // For students - handle both camelCase and snake_case
+  const firstName = userData.first_name || userData.firstName || '';
+  const middleName = userData.middle_name || userData.middleName || '';
+  const lastName = userData.last_name || userData.lastName || '';
+  const suffix = userData.suffix || '';
+  
+  let fullName = firstName;
+  
+  if (middleName && middleName.trim()) {
+    fullName += ` ${middleName.charAt(0)}.`;
   }
   
-  if (userData.suffix && userData.suffix.trim()) {
-    fullName += ` ${userData.suffix}`;
+  if (lastName && lastName.trim()) {
+    fullName += ` ${lastName}`;
   }
   
-  return fullName;
+  if (suffix && suffix.trim()) {
+    fullName += ` ${suffix}`;
+  }
+  
+  return fullName || 'N/A';
 };
 
 const Header = () => {
@@ -43,6 +55,9 @@ const Header = () => {
   const navigate = useNavigate();
 
   const context = useContext(MyContext);
+
+  console.log('User Data:', user); // Add this to check user data
+  console.log('Context:', context);
   
   const handleOpenAccDrop = (event) => {
     setAnchorEl(event.currentTarget);
@@ -119,9 +134,6 @@ const Header = () => {
                 </Button>
               </div>
             }
-
-            
-
             <div className="col-sm-7 d-flex align-items-center justify-content-end part3">              
 
               <div className="notifWrapper position-relative">
@@ -135,7 +147,7 @@ const Header = () => {
               </div>
               
               {
-                context.isLogin !== false ? (
+                context.isLogin !== false && user? (
                   <div className="myAccWrapper">
                     <Button className="myAcc d-flex align-items-center" onClick={handleOpenAccDrop}>
                       <div className="userImg">
@@ -145,9 +157,15 @@ const Header = () => {
                       </div>
 
                       <div className="userInfo res-hide">
-                        <h4>{user?.role === 'student' ? formatFullName(user) : user?.fullName || "Student Acc"}</h4>
+                        <h4>
+                          {user ? (
+                            user.role === 'student' 
+                              ? formatFullName(user) 
+                              : (user.fullName || "N/A")
+                          ) : "N/A"}
+                        </h4>
                         <p className="md-0">
-                          @{user?.username || user?.staff_username}
+                          @{user?.username || user?.staff_username || "N/A"}
                         </p>
                       </div>
                     </Button>
