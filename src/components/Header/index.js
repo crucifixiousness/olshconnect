@@ -1,4 +1,4 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import Button from '@mui/material/Button';
 import { MdOutlineMenu } from "react-icons/md";
@@ -39,7 +39,7 @@ const Header = () => {
   const openmyAcc = Boolean(anchorEl); 
   const [isOpenNotifDrop, setOpenNotifsDrop] =  useState(false);
   const openmyNotifs = Boolean(isOpenNotifDrop);
-  const { user, isLogin } = useContext(MyContext);
+  const { user } = useContext(MyContext);
   const navigate = useNavigate();
 
   const context = useContext(MyContext);
@@ -56,25 +56,6 @@ const Header = () => {
   const handleCloseNotifsDrop = (event) => {
     setOpenNotifsDrop(false);
   };
-
-  useEffect(() => {
-    // Skip if we're on the login page
-    if (location.pathname === '/login') {
-      return;
-    }
-
-    const storedUser = localStorage.getItem('user');
-    const storedIsLogin = localStorage.getItem('isLogin');
-    
-    // Only update context if it's not already set
-    if (storedUser && !user) {
-      const parsedUser = JSON.parse(storedUser);
-      context.setUser(parsedUser);
-    }
-    if (storedIsLogin === 'true' && !isLogin) {
-      context.setIsLogin(true);
-    }
-  }, [location.pathname, user, isLogin, context]);
 
   // Add this function to handle image display
   const getProfileImage = () => {
@@ -116,6 +97,18 @@ const Header = () => {
     );
   };
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedIsLogin = localStorage.getItem('isLogin');
+    
+    if (storedUser && !user) {
+      context.setUser(JSON.parse(storedUser));
+    }
+    if (storedIsLogin === 'true' && !context.isLogin) {
+      context.setIsLogin(true);
+    }
+  }, []);
+
   return(
     <>
       <header className="d-flex align-items-center">
@@ -154,7 +147,7 @@ const Header = () => {
               </div>
               
               {
-                isLogin && user ? (
+                (context.isLogin || localStorage.getItem('isLogin') === 'true') && (user || JSON.parse(localStorage.getItem('user'))) ? (
                   <div className="myAccWrapper">
                     <Button className="myAcc d-flex align-items-center" onClick={handleOpenAccDrop}>
                       <div className="userImg">
