@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import Button from '@mui/material/Button';
 import { MdOutlineMenu } from "react-icons/md";
@@ -97,7 +97,14 @@ const Header = () => {
     );
   };
 
+  const location = useLocation(); // Add this
+
   useEffect(() => {
+    // Don't run this effect on the login page
+    if (location.pathname === '/login') {
+      return;
+    }
+
     const storedUser = localStorage.getItem('user');
     const storedIsLogin = localStorage.getItem('isLogin');
     
@@ -107,7 +114,7 @@ const Header = () => {
     if (storedIsLogin === 'true' && !context.isLogin) {
       context.setIsLogin(true);
     }
-  }, []);
+  }, [location.pathname]); // Add location.pathname as dependency
 
   return(
     <>
