@@ -147,7 +147,7 @@ const Header = () => {
               </div>
               
               {
-                context.isLogin !== false && user? (
+                context.isLogin !== false ? (
                   <div className="myAccWrapper">
                     <Button className="myAcc d-flex align-items-center" onClick={handleOpenAccDrop}>
                       <div className="userImg">
