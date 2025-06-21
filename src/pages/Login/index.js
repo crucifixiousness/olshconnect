@@ -50,6 +50,7 @@ const Login = () => {
         localStorage.setItem('token', token);
         localStorage.setItem('role', user.role);
         localStorage.setItem('student_id', user.student_id);
+        localStorage.setItem('isLogin', 'true');
         
         // Format the user data properly
         const userDataToStore = {
