@@ -212,7 +212,19 @@ const Header = () => {
                         </ListItemIcon>
                         Reset Password
                       </MenuItem>
-                      <MenuItem  onClick={() => {handleCloseAccDrop(); navigate('/homepage');}}>
+                      <MenuItem onClick={() => {
+                        handleCloseAccDrop();
+                        // Clear all localStorage data
+                        localStorage.clear();
+                        
+                        // Reset context states
+                        context.setIsLogin(false);
+                        context.setUser(null);
+                        context.setToken(null);
+                        context.setRole(null);
+                        
+                        navigate('/homepage');
+                      }}>
                         <ListItemIcon>
                           <Logout fontSize="small" />
                         </ListItemIcon>
