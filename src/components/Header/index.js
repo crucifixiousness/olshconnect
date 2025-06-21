@@ -3,36 +3,40 @@ import logo from '../../asset/images/olshco-logo1.png';
 import Button from '@mui/material/Button';
 import { MdOutlineMenu } from "react-icons/md";
 import { MdMenuOpen } from "react-icons/md";
-import { FaBell } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { IoShieldHalfSharp } from "react-icons/io5";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import Logout from '@mui/icons-material/Logout';
 import { MyContext } from "../../App";
 import React, { useState, useContext } from 'react';
 
 const formatFullName = (userData) => {
-  if (!userData || userData.role !== 'student') return userData?.fullName || 'N/A';
+  if (!userData) return 'N/A';
   
-  let fullName = userData.firstName || "";
-  
-  if (userData.middleName && userData.middleName.trim()) {
-    fullName += ` ${userData.middleName.charAt(0)}.`;
+  // For staff roles (instructors, program_head, etc.)
+  if (userData.role !== 'student') {
+    return userData.fullName || 'N/A';
   }
   
-  if (userData.lastName) {
-    fullName += ` ${userData.lastName}`;
+  // For students - using snake_case format from database
+  let fullName = userData.first_name || "";
+  
+  if (userData.middle_name && userData.middle_name.trim()) {
+    fullName += ` ${userData.middle_name.charAt(0)}.`;
+  }
+  
+  if (userData.last_name) {
+    fullName += ` ${userData.last_name}`;
   }
   
   if (userData.suffix && userData.suffix.trim()) {
     fullName += ` ${userData.suffix}`;
   }
   
-  return fullName;
+  return fullName || 'N/A';
 };
 
 const Header = () => {
@@ -43,7 +47,6 @@ const Header = () => {
   const openmyNotifs = Boolean(isOpenNotifDrop);
   const { user } = useContext(MyContext);
   const navigate = useNavigate();
-  const [notifAnchorEl, setNotifAnchorEl] = useState(null);
 
   const context = useContext(MyContext);
   
@@ -54,11 +57,9 @@ const Header = () => {
     setAnchorEl(null);
   };
   const handleOpenNotifsDrop = (event) => {
-    setNotifAnchorEl(event.currentTarget);
     setOpenNotifsDrop(true);
   };
-  const handleCloseNotifsDrop = () => {
-    setNotifAnchorEl(null);
+  const handleCloseNotifsDrop = (event) => {
     setOpenNotifsDrop(false);
   };
 
@@ -130,7 +131,6 @@ const Header = () => {
             <div className="col-sm-7 d-flex align-items-center justify-content-end part3">              
 
               <div className="notifWrapper position-relative">
-                <Button className="rounded-circle mr-3" onClick={handleOpenNotifsDrop}><FaBell /></Button>
                 {
                   context.windowWidth <= 992 && (
                     <Button className="rounded-circle mr-3" onClick={() => context.openNav()}>
@@ -138,73 +138,10 @@ const Header = () => {
                     </Button>
                   )
                 }
-                  <Menu
-                  anchorEl={notifAnchorEl}
-                  className="notifs dropdown_list"
-                  id="notifs"
-                  open={openmyNotifs}
-                  onClose={handleCloseNotifsDrop}
-                  onClick={handleCloseNotifsDrop}
-                  PaperProps={{
-                    elevation: 0,
-                    sx: {
-                      width: 320,
-                      maxHeight: 500,
-                      overflow: 'visible',
-                      mt: 1.5,
-                      '&::before': {
-                        content: '""',
-                        display: 'block',
-                        position: 'absolute',
-                        top: 0,
-                        right: 14,
-                        width: 10,
-                        height: 10,
-                        bgcolor: 'background.paper',
-                        transform: 'translateY(-50%) rotate(45deg)',
-                        zIndex: 0,
-                      },
-                    },
-                  }}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                  > 
-                    <div className='head'>
-                        <h4>Notifications (100)</h4>
-                    </div> 
-                    <Divider className="notifDD"/>
-                      <div className="scroll">
-                          <MenuItem onClick={handleCloseNotifsDrop}>
-                          <div className="d-flex align-items-center">
-                            <div>
-                              <div className="userImg">
-                                  <span className="rounded-circle">
-                                      <img alt="dp" src=""/>
-                                  </span>
-                              </div>
-
-                              <div className="notifInfoDD">
-                                  <h4>
-                                    <span>
-                                      <b>DEAN</b>
-                                      currently enrolling
-                                      <b>sampling sampling</b>
-                                    </span>
-                                    <p className="text-sky">few seconds ago</p>
-                                  </h4>
-                              </div>
-                            </div>                                                                        
-                          </div>
-                          </MenuItem>
-                      </div>
-                      <div className="btn-blue-container">
-                          <Button className="btn-blue w-100">View All Notifications</Button>
-                      </div>                      
-                  </Menu>
               </div>
               
               {
-                user && (
+                context.isLogin !== false ? (
                   <div className="myAccWrapper">
                     <Button className="myAcc d-flex align-items-center" onClick={handleOpenAccDrop}>
                       <div className="userImg">
@@ -277,7 +214,7 @@ const Header = () => {
                       </MenuItem>
                     </Menu>
                   </div>
-                )
+                ) : null
               }             
             </div>
           </div>                                                 
