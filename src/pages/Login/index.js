@@ -36,6 +36,18 @@ const Login = () => {
     // Add loading state
     const [isLoading, setIsLoading] = useState(false);
 
+    // Add this useEffect after your existing useEffect
+    useEffect(() => {
+      if (isLogin) {
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
+          ? '/student-dashboard' 
+          : '/student-profile';
+        window.location.href = redirectPath;
+      }
+    }, [isLogin]);
+    
+    // Then modify your handleLogin function to remove the redirect logic
     const handleLogin = async (e) => {
       e.preventDefault();
       setIsLoading(true);
@@ -50,9 +62,8 @@ const Login = () => {
         localStorage.setItem('token', token);
         localStorage.setItem('role', user.role);
         localStorage.setItem('student_id', user.student_id);
-        localStorage.setItem('isLogin', 'true');
         
-        // Format the user data properly
+        // Format and store user data
         const userDataToStore = {
           ...user,
           first_name: user.first_name || user.firstName,
@@ -70,14 +81,7 @@ const Login = () => {
         setToken(token);
         setRole(user.role);
         setUser(userDataToStore);
-        setIsLogin(true);
-    
-        // Redirect based on enrollment status
-        const redirectPath = userDataToStore.enrollment_status === 'Officially Enrolled' 
-          ? '/student-dashboard' 
-          : '/student-profile';
-        
-        window.location.href = redirectPath;
+        setIsLogin(true); // This will trigger the useEffect for redirection
     
       } catch (error) {
         let errorMsg = 'Login failed. Please try again.';
