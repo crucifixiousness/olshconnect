@@ -41,16 +41,10 @@ import PaymentVerification from './pages/Paymentverification';
 import CounterPayment from './pages/CounterPayment';
 import PaymentHistory from './pages/PaymentHistory';
 import ProgramStudentList from './pages/ProgramStudentList';
-import { initSecurity } from './utils/security';
 
 const MyContext = createContext();
 
 function App() {
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      initSecurity();
-    }
-  }, []);
   // eslint-disable-next-line
   const [isToggleSidebar, setIsToggleSidebar] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
