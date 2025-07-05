@@ -46,35 +46,28 @@ const Signup = () => {
       const response = await axios.post('/api/loginstaff', credentials);
       const { token, user } = response.data;
   
-      // Clear any existing data first
+      // Clear existing data
       localStorage.clear();
       
-      // Set token first and wait for it to be set
-      await new Promise(resolve => {
-        localStorage.setItem('token', token);
-        context.setToken(token); // Add setToken to your context destructuring
-        resolve();
-      });
-
-      // Set remaining data
+      // Store new data
+      localStorage.setItem('isLogin', 'true');
+      localStorage.setItem('token', token);
       localStorage.setItem('role', user.role);
       localStorage.setItem('program_id', user.program_id);
       localStorage.setItem('staff_id', user.staff_id);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      // Update context states in order
-      await new Promise(resolve => {
-        setRole(user.role);
-        setTimeout(() => {
-          setUser(user);
-          setTimeout(() => {
-            setIsLogin(true);
-            resolve();
-          }, 100);
-        }, 100);
-      });
-
-      // Navigate after all states are confirmed set
+      localStorage.setItem('user', JSON.stringify({
+        ...user,
+        staff_username: user.staff_username || user.username,
+        fullName: user.fullName || user.staff_name
+      }));
+  
+      // Update context
+      setToken(token);
+      setRole(user.role);
+      setUser(user);
+      setIsLogin(true);
+  
+      // Navigate
       const paths = {
         'admin': '/dashboard',
         'instructor': '/instructor-dashboard',
@@ -82,10 +75,10 @@ const Signup = () => {
         'finance': '/finance-dashboard',
         'program head': '/programhead-dashboard'
       };
-
+  
       const redirectPath = paths[user.role] || '/dashboard';
-      window.location.href = redirectPath; // Using direct navigation instead of React Router
-
+      window.location.href = redirectPath;
+  
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
     } finally {
