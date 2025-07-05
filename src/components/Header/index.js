@@ -102,14 +102,35 @@ const Header = () => {
     const storedIsLogin = localStorage.getItem('isLogin');
     
     if (storedUser && !user) {
-      context.setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        context.setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
     }
     if (storedIsLogin === 'true' && !context.isLogin) {
       context.setIsLogin(true);
     }
-  }, []);
+  }, [context, user]);
 
-  return(
+  const getUsername = () => {
+    if (user?.role === 'student') {
+      return user?.username;
+    }
+    // For staff members
+    return user?.staff_username || user?.username || 'Staff';
+  };
+
+  const getName = () => {
+    if (user?.role === 'student') {
+      return formatFullName(user);
+    }
+    // For staff members
+    return user?.fullName || user?.staff_name || 'Staff Account';
+  };
+
+  return (
     <>
       <header className="d-flex align-items-center">
         <div className="container-fluid w-100">
@@ -157,9 +178,9 @@ const Header = () => {
                       </div>
 
                       <div className="userInfo res-hide">
-                        <h4>{user?.role === 'student' ? formatFullName(user) : user?.fullName || "Student Acc"}</h4>
+                        <h4>{getName()}</h4>
                         <p className="md-0">
-                          @{user?.username || user?.staff_username}
+                          @{getUsername()}
                         </p>
                       </div>
                     </Button>
