@@ -28,7 +28,10 @@ const Homepage = () => {
         return () => setIsHideComponents(true);
     }, [setIsHideComponents]);
 
-    const [showModal, setShowModal] = useState(false);
+    const [validationErrors, setValidationErrors] = useState({
+        userName: '',
+        password: ''
+    });
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -50,7 +53,37 @@ const Homepage = () => {
         setSnackbar({ ...snackbar, open: false });
       };
 
-    
+      const validateForm = () => {
+        const errors = {
+            userName: '',
+            password: ''
+        };
+        let isValid = true;
+
+        // Username validation (minimum 10 characters)
+        if (!formData.userName) {
+            errors.userName = 'Username is required';
+            isValid = false;
+        } else if (formData.userName.length < 10) {
+            errors.userName = 'Username must be at least 10 characters';
+            isValid = false;
+        }
+
+        // Password validation (minimum 10 characters with special characters)
+        if (!formData.password) {
+            errors.password = 'Password is required';
+            isValid = false;
+        } else if (formData.password.length < 10) {
+            errors.password = 'Password must be at least 10 characters';
+            isValid = false;
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+            errors.password = 'Password must contain uppercase, lowercase, number, and special character';
+            isValid = false;
+        }
+
+        setValidationErrors(errors);
+        return isValid;
+    };
 
     const [formData, setFormData] = useState({
         userName: '',
@@ -114,21 +147,35 @@ const Homepage = () => {
         else if (name === 'number' || name === 'guardianContactNo') {
             let validNumber = value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
     
-            // Ensure the number starts with "09" and is exactly 11 digits
+            // Ensure the number starts with "09" and restrict to 11 digits
             if (validNumber.length > 11) {
-                validNumber = validNumber.slice(0, 11);
+                validNumber = validNumber.slice(0, 11); // Restrict to 11 digits
             }
     
             if (validNumber.length === 1 && validNumber !== '0') {
-                validNumber = '';
+                validNumber = ''; // If the first digit is not 0, clear the field
             }
     
             if (validNumber.length === 2 && validNumber !== '09') {
-                validNumber = '09';
+                validNumber = '09'; // Ensure the number starts with "09"
+            }
+    
+            // Set error for contact number if less than 11 digits
+            if (name === 'number') {
+                if (validNumber.length > 0 && validNumber.length < 11) {
+                    setContactNumberError("Contact number must be 11 digits");
+                } else {
+                    setContactNumberError("");
+                }
             }
     
             setFormData({ ...formData, [name]: validNumber });
-        }
+            setValidationErrors({
+                ...validationErrors,
+                [name]: ''
+            });
+    
+        } 
         // For other fields, no restriction
         else {
             setFormData({ ...formData, [name]: value });
@@ -142,6 +189,15 @@ const Homepage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            setSnackbar({
+                open: true,
+                message: "Please fix the validation errors",
+                severity: 'error'
+            });
+            return;
+        }
     
         // Validate required fields
         if (!formData.userName || !formData.password || !formData.firstName || 
@@ -154,10 +210,10 @@ const Homepage = () => {
             return;
         }
         // Validate contact number length
-        if (formData.number && formData.number.length !== 11) {
+        if (formData.number.length !== 11) {
             setSnackbar({
                 open: true,
-                message: "Contact number must be 11 digits",
+                message: "Contact number must be exactly 11 digits",
                 severity: 'error'
             });
             return;
@@ -393,6 +449,8 @@ const Homepage = () => {
                                                             value={formData.userName}
                                                             onChange={handleInputChange}                                       
                                                             required
+                                                            error={!!validationErrors.userName}
+                                                            helperText={validationErrors.userName}
                                                             />
                                                         </Grid>
                                                         <Grid item xs={6}>
@@ -406,6 +464,8 @@ const Homepage = () => {
                                                             value={formData.password}
                                                             onChange={handleInputChange}
                                                             required
+                                                            error={!!validationErrors.password}
+                                                            helperText={validationErrors.password}
                                                             />
                                                         </Grid>                                    
                                                     </Grid>
