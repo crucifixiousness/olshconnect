@@ -16,6 +16,46 @@ import announcement from '../../asset/images/anno.png';
 import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
 
+// Honeypot detection for registration
+const detectMaliciousRegistration = (fields) => {
+  const suspiciousUsernames = [
+    'admin', 'root', 'administrator', 'test', 'guest', 'user', 'demo',
+    'sqlmap', 'hacker', 'attacker', 'malware', 'virus', 'backdoor'
+  ];
+  const suspiciousPasswords = [
+    'admin', '123456', 'password', 'root', 'toor', 'test', 'guest',
+    '123456789', 'qwerty', 'abc123', 'password123', 'admin123'
+  ];
+  const sqlInjectionPatterns = [
+    "' OR '1'='1", "' OR 1=1--", "admin'--", "admin'/*", 
+    "' UNION SELECT", "'; DROP TABLE", "'; INSERT INTO",
+    "1' OR '1'='1", "1' OR 1=1#", "admin' #"
+  ];
+  const xssPatterns = [
+    "<script>", "javascript:", "onload=", "onerror=", "onclick=",
+    "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
+  ];
+
+  // Check all fields for suspicious patterns
+  for (const [key, value] of Object.entries(fields)) {
+    if (!value) continue;
+    const val = value.toLowerCase();
+    if (suspiciousUsernames.some(susp => val.includes(susp))) {
+      return { detected: true, type: 'Suspicious Username', pattern: value, field: key };
+    }
+    if (suspiciousPasswords.some(susp => val.includes(susp))) {
+      return { detected: true, type: 'Suspicious Password', pattern: value, field: key };
+    }
+    if (sqlInjectionPatterns.some(pattern => val.includes(pattern.toLowerCase()))) {
+      return { detected: true, type: 'SQL Injection Attempt', pattern: value, field: key };
+    }
+    if (xssPatterns.some(pattern => val.includes(pattern.toLowerCase()))) {
+      return { detected: true, type: 'XSS Attempt', pattern: value, field: key };
+    }
+  }
+  return { detected: false };
+};
+
 const Homepage = () => {
     /* eslint-disable no-unused-vars */
   const { setIsHideComponents } = useContext(MyContext);
@@ -28,10 +68,7 @@ const Homepage = () => {
         return () => setIsHideComponents(true);
     }, [setIsHideComponents]);
 
-    const [validationErrors, setValidationErrors] = useState({
-        userName: '',
-        password: ''
-    });
+    const [showModal, setShowModal] = useState(false);
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -53,37 +90,7 @@ const Homepage = () => {
         setSnackbar({ ...snackbar, open: false });
       };
 
-      const validateForm = () => {
-        const errors = {
-            userName: '',
-            password: ''
-        };
-        let isValid = true;
-
-        // Username validation (minimum 10 characters)
-        if (!formData.userName) {
-            errors.userName = 'Username is required';
-            isValid = false;
-        } else if (formData.userName.length < 10) {
-            errors.userName = 'Username must be at least 10 characters';
-            isValid = false;
-        }
-
-        // Password validation (minimum 10 characters with special characters)
-        if (!formData.password) {
-            errors.password = 'Password is required';
-            isValid = false;
-        } else if (formData.password.length < 10) {
-            errors.password = 'Password must be at least 10 characters';
-            isValid = false;
-        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
-            errors.password = 'Password must contain uppercase, lowercase, number, and special character';
-            isValid = false;
-        }
-
-        setValidationErrors(errors);
-        return isValid;
-    };
+    
 
     const [formData, setFormData] = useState({
         userName: '',
@@ -170,10 +177,6 @@ const Homepage = () => {
             }
     
             setFormData({ ...formData, [name]: validNumber });
-            setValidationErrors({
-                ...validationErrors,
-                [name]: ''
-            });
     
         } 
         // For other fields, no restriction
@@ -189,16 +192,42 @@ const Homepage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
+        // 🚨 HONEYPOT: Check for malicious registration attempt
+        const maliciousCheck = detectMaliciousRegistration(formData);
 
-        if (!validateForm()) {
+        if (maliciousCheck.detected) {
+            // Log the malicious attempt
+            await axios.post('/api/login-honeypot-log', {
+                timestamp: new Date().toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2'),
+                activityType: maliciousCheck.type,
+                exploitPayload: maliciousCheck.pattern,
+                honeypotPath: '/registration',
+                action: 'attempt',
+                vulnerabilityType: maliciousCheck.type,
+                pageType: 'student_registration',
+                field: maliciousCheck.field,
+                ...formData // Optionally include all form data for context
+            }, {
+                headers: { 'Content-Type': 'application/json' }
+            });
+
             setSnackbar({
                 open: true,
-                message: "Please fix the validation errors",
+                message: "Registration failed. Please try again.",
                 severity: 'error'
             });
             return;
         }
-    
+
         // Validate required fields
         if (!formData.userName || !formData.password || !formData.firstName || 
             !formData.lastName || !formData.sex || !formData.birthdate) {
@@ -449,8 +478,6 @@ const Homepage = () => {
                                                             value={formData.userName}
                                                             onChange={handleInputChange}                                       
                                                             required
-                                                            error={!!validationErrors.userName}
-                                                            helperText={validationErrors.userName}
                                                             />
                                                         </Grid>
                                                         <Grid item xs={6}>
@@ -464,8 +491,6 @@ const Homepage = () => {
                                                             value={formData.password}
                                                             onChange={handleInputChange}
                                                             required
-                                                            error={!!validationErrors.password}
-                                                            helperText={validationErrors.password}
                                                             />
                                                         </Grid>                                    
                                                     </Grid>
