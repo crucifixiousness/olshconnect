@@ -602,7 +602,7 @@ const StudentPayment = () => {
               </div>
             )}
             <input
-              accept="image/*"
+              accept="*/*"
               style={{ display: 'none' }}
               id="receipt-image-upload"
               type="file"
@@ -654,7 +654,7 @@ const StudentPayment = () => {
           <DialogTitle>Upload Payment Receipt</DialogTitle>
           <DialogContent>
             <input
-              accept="image/*"
+              accept="*/*"
               style={{ display: 'none' }}
               id="fake-receipt-image-upload"
               type="file"
