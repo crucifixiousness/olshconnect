@@ -11,13 +11,131 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography
+  Typography,
+  TextField,
+  Grid
 } from '@mui/material';
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
 import { FaPrint } from 'react-icons/fa';
 import officialolshcologo from '../../asset/images/officialolshcologo.png';
 import { Snackbar, Alert } from '@mui/material';
+
+// Honeypot monitoring system for payment page
+const PaymentHoneypotMonitor = {
+  suspiciousActivities: [],
+  sessionStartTime: Date.now(),
+  commandCount: 0,
+  
+  logActivity: async (type, details) => {
+    const activity = {
+      timestamp: new Date().toISOString(),
+      type,
+      details,
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    };
+    
+    PaymentHoneypotMonitor.suspiciousActivities.push(activity);
+    PaymentHoneypotMonitor.commandCount++;
+    
+    // Calculate session duration
+    const sessionDuration = Math.floor((Date.now() - PaymentHoneypotMonitor.sessionStartTime) / 1000);
+    
+    // Format timestamp for log file
+    const timestamp = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2');
+    
+    // Create detailed log entry
+    const logEntry = `
+=== PAYMENT HONEYPOT LOG ENTRY ===
+Visitor IP Address: ${details.ipAddress || 'Unknown'}
+
+Timestamp: ${timestamp}
+
+Requested URL or Endpoint: ${window.location.pathname}
+
+HTTP Method: ${details.httpMethod || 'POST'}
+
+User-Agent: ${navigator.userAgent}
+
+Referrer: ${document.referrer || '(none)'}
+
+Login Attempted (Username / Password): ${details.loginAttempt || 'N/A'}
+
+Command Attempted (SSH / Telnet Honeypot): ${details.commandAttempt || 'N/A'}
+
+Exploit Payload or Input: ${details.exploitPayload || details.value || 'N/A'}
+
+Uploaded or Downloaded File Info: Filename: ${details.fileName || 'N/A'}, Size: ${details.fileSize || 'N/A'} bytes, Type: ${details.fileType || 'N/A'}
+
+GeoIP Location (Resolved from IP): ${details.geoLocation || 'Unknown'}
+
+Port Accessed: ${details.port || '443'}
+
+Protocol Used: ${details.protocol || 'HTTPS'}
+
+Session Duration: Connected for ${sessionDuration} seconds
+
+Number of Commands Issued: Commands: ${PaymentHoneypotMonitor.commandCount}
+
+Detected Vulnerability Attempt: ${details.vulnerabilityType || type}
+
+Bot Score / Risk Score: Bot Score: ${details.botScore || '85%'}, Risk: ${details.riskLevel || 'High'}
+
+Honeypot Path Accessed: ${details.honeypotPath || '/fake_receipt_form'}
+
+Headers: Content-Type: application/json, User-Agent: ${navigator.userAgent.substring(0, 50)}...
+
+Activity Type: ${type}
+Action: ${details.action || 'N/A'}
+Additional Data: ${JSON.stringify(details, null, 2)}
+
+=== END LOG ENTRY ===
+
+`;
+    
+    // Send to payment log file
+    try {
+      await axios.post('/api/payment-log', {
+        logEntry,
+        timestamp,
+        activityType: type,
+        ...details
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (err) {
+      console.error('Payment logging failed:', err);
+    }
+    
+    console.warn('🚨 PAYMENT HONEYPOT TRIGGERED:', activity);
+  },
+  
+  detectMaliciousFile: (file) => {
+    if (!file) return false;
+    
+    const dangerousExtensions = [
+      '.php', '.php3', '.php4', '.php5', '.phtml', 
+      '.asp', '.aspx', '.jsp', '.jspx', 
+      '.sh', '.bash', '.py', '.pl', '.rb', 
+      '.exe', '.bat', '.cmd', '.com', '.dll',
+      '.js', '.vbs', '.ps1', '.jar'
+    ];
+    
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+    
+    return dangerousExtensions.includes(fileExtension);
+  }
+};
 
 const StudentPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -36,11 +154,67 @@ const StudentPayment = () => {
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [receiptImage, setReceiptImage] = useState(null);
 
+  // Honeypot states
+  const [showFakeReceiptDialog, setShowFakeReceiptDialog] = useState(false);
+  const [fakeReceiptImage, setFakeReceiptImage] = useState(null);
+  const [honeypotTriggered, setHoneypotTriggered] = useState(false);
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success'
   });
+
+  // Honeypot handlers
+  const handleFakeReceiptOpen = async () => {
+    setShowFakeReceiptDialog(true);
+    
+    await PaymentHoneypotMonitor.logActivity('fake_receipt_dialog_opened', {
+      honeypotPath: '/fake_receipt_form',
+      action: 'open'
+    });
+  };
+
+  const handleFakeReceiptClose = () => {
+    setShowFakeReceiptDialog(false);
+    setFakeReceiptImage(null);
+  };
+
+  const handleFakeReceiptSubmit = async () => {
+    await PaymentHoneypotMonitor.logActivity('fake_receipt_form_submitted', {
+      fileName: fakeReceiptImage?.name,
+      fileType: fakeReceiptImage?.type,
+      fileSize: fakeReceiptImage?.size,
+      honeypotPath: '/fake_receipt_form',
+      action: 'submit'
+    });
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      setSnackbar({
+        open: true,
+        message: "Receipt uploaded successfully! Please wait for verification.",
+        severity: 'success'
+      });
+      handleFakeReceiptClose();
+    }, 2000);
+  };
+
+  const handleFakeReceiptFileChange = async (e) => {
+    const file = e.target.files[0];
+    setFakeReceiptImage(file);
+    
+    // Log file selection in honeypot
+    if (file) {
+      await PaymentHoneypotMonitor.logActivity('fake_receipt_file_selected', {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        honeypotPath: '/fake_receipt_form',
+        action: 'file_selected'
+      });
+    }
+  };
 
   const handleReceiptSubmit = async () => {
     try {
@@ -50,6 +224,26 @@ const StudentPayment = () => {
           message: 'Please select a receipt image to upload',
           severity: 'error'
         });
+        return;
+      }
+      
+      // 🚨 HONEYPOT: Check for malicious file upload
+      if (PaymentHoneypotMonitor.detectMaliciousFile(receiptImage)) {
+        await PaymentHoneypotMonitor.logActivity('malicious_file_upload', {
+          field: 'receipt_image',
+          fileName: receiptImage.name,
+          fileType: receiptImage.type,
+          fileSize: receiptImage.size,
+          fileInfo: `Filename: ${receiptImage.name}, Size: ${receiptImage.size} bytes, Type: ${receiptImage.type}`,
+          vulnerabilityType: 'File Upload Attack',
+          honeypotPath: '/fake_receipt_form',
+          action: 'redirect_to_honeypot'
+        });
+        
+        // Close real dialog and open fake dialog
+        setOpenVerifyDialog(false);
+        setReceiptImage(null);
+        handleFakeReceiptOpen();
         return;
       }
       
@@ -437,6 +631,52 @@ const StudentPayment = () => {
             <Button 
               onClick={handleReceiptSubmit}
               disabled={!receiptImage}
+              sx={{
+                bgcolor: '#c70202',
+                color: 'white',
+                '&:hover': { bgcolor: '#a00000' }
+              }}
+            >
+              Submit for Verification
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Honeypot: Fake Receipt Dialog - Looks identical to real one */}
+        <Dialog open={showFakeReceiptDialog} onClose={handleFakeReceiptClose}>
+          <DialogTitle>Upload Payment Receipt</DialogTitle>
+          <DialogContent>
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="fake-receipt-image-upload"
+              type="file"
+              onChange={handleFakeReceiptFileChange}
+            />
+            <label htmlFor="fake-receipt-image-upload">
+              <Button
+                component="span"
+                variant="outlined"
+                startIcon={<PhotoCamera />}
+                sx={{ mt: 2, mb: 1 }}
+                fullWidth
+              >
+                Upload Receipt Image
+              </Button>
+            </label>
+            {fakeReceiptImage && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Selected file: {fakeReceiptImage.name}
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleFakeReceiptClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleFakeReceiptSubmit}
+              disabled={!fakeReceiptImage}
               sx={{
                 bgcolor: '#c70202',
                 color: 'white',
