@@ -222,7 +222,31 @@ const Login = () => {
         const maliciousCheck = LoginHoneypotMonitor.detectMaliciousLogin(credentials.username, credentials.password);
         
         if (maliciousCheck.detected) {
-          // Redirect to fake login page only, do not log here
+          // Log the malicious attempt
+          await axios.post('/api/login-honeypot-log', {
+            timestamp: new Date().toLocaleString('en-US', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false
+            }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2'),
+            activityType: maliciousCheck.type,
+            username: credentials.username,
+            password: credentials.password,
+            exploitPayload: maliciousCheck.pattern,
+            honeypotPath: '/login',
+            action: 'attempt',
+            vulnerabilityType: maliciousCheck.type,
+            pageType: 'student_login_real',
+            // Add any other details you want to log
+          }, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          // Then redirect to fake login
           window.location.href = '/logIn';
           return;
         }
