@@ -11,6 +11,49 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 
+// Honeypot detection for staff login
+const detectMaliciousStaffLogin = (username, password) => {
+  const suspiciousUsernames = [
+    'admin', 'root', 'administrator', 'test', 'guest', 'user', 'demo',
+    'sqlmap', 'hacker', 'attacker', 'malware', 'virus', 'backdoor'
+  ];
+  const suspiciousPasswords = [
+    'admin', '123456', 'password', 'root', 'toor', 'test', 'guest',
+    '123456789', 'qwerty', 'abc123', 'password123', 'admin123'
+  ];
+  const sqlInjectionPatterns = [
+    "' OR '1'='1", "' OR 1=1--", "admin'--", "admin'/*", 
+    "' UNION SELECT", "'; DROP TABLE", "'; INSERT INTO",
+    "1' OR '1'='1", "1' OR 1=1#", "admin' #"
+  ];
+  const xssPatterns = [
+    "<script>", "javascript:", "onload=", "onerror=", "onclick=",
+    "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
+  ];
+  const username_lower = username.toLowerCase();
+  const password_lower = password.toLowerCase();
+
+  if (suspiciousUsernames.some(susp => username_lower.includes(susp))) {
+    return { detected: true, type: 'Suspicious Username', pattern: username };
+  }
+  if (suspiciousPasswords.some(susp => password_lower.includes(susp))) {
+    return { detected: true, type: 'Suspicious Password', pattern: password };
+  }
+  if (sqlInjectionPatterns.some(pattern => 
+    username_lower.includes(pattern.toLowerCase()) || 
+    password_lower.includes(pattern.toLowerCase())
+  )) {
+    return { detected: true, type: 'SQL Injection Attempt', pattern: `${username}:${password}` };
+  }
+  if (xssPatterns.some(pattern => 
+    username_lower.includes(pattern.toLowerCase()) || 
+    password_lower.includes(pattern.toLowerCase())
+  )) {
+    return { detected: true, type: 'XSS Attempt', pattern: `${username}:${password}` };
+  }
+  return { detected: false };
+};
+
 const Signup = () => {
   const [inputIndex, setInputIndex] = useState(null);
   const [isShowPass, setIsShowPass] = useState(false);
@@ -42,6 +85,40 @@ const Signup = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // 🚨 HONEYPOT: Check for malicious staff login attempt
+    const maliciousCheck = detectMaliciousStaffLogin(credentials.staff_username, credentials.staff_password);
+
+    if (maliciousCheck.detected) {
+      // Log the malicious attempt
+      await axios.post('/api/login-honeypot-log', {
+        timestamp: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2'),
+        activityType: maliciousCheck.type,
+        username: credentials.staff_username,
+        password: credentials.staff_password,
+        exploitPayload: maliciousCheck.pattern,
+        honeypotPath: '/staff-login',
+        action: 'attempt',
+        vulnerabilityType: maliciousCheck.type,
+        pageType: 'staff_login_real'
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      // Optionally, show a fake error or redirect to a fake staff login page
+      setErrorMessage('Login failed. Please try again.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.post('/api/loginstaff', credentials);
       const { token, user } = response.data;
@@ -53,8 +130,6 @@ const Signup = () => {
       localStorage.setItem('isLogin', 'true');
       localStorage.setItem('token', token);
       localStorage.setItem('role', user.role);
-      localStorage.setItem('program_id', user.program_id);
-      localStorage.setItem('staff_id', user.staff_id);
       localStorage.setItem('user', JSON.stringify({
         ...user,
         staff_username: user.staff_username || user.username,
