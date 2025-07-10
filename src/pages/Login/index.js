@@ -4,10 +4,9 @@ import { MyContext } from '../../App';
 import React, { useContext, useEffect, useState } from 'react';
 import { FaRegUserCircle } from "react-icons/fa";
 import { RiLockPasswordLine } from "react-icons/ri";
-import { VscEye } from "react-icons/vsc";
-import { VscEyeClosed } from "react-icons/vsc";
+import { VscEye, VscEyeClosed } from "react-icons/vsc";
 import Button from '@mui/material/Button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -16,140 +15,190 @@ const Login = () => {
   const [isShowPass, setIsShowPass] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const context = useContext(MyContext);
   const navigate = useNavigate();
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   useEffect(() => {
-      context.setIsHideComponents(true);
+    context.setIsHideComponents(true);
   }, [context]);
-  
-  const focusInput = (index) => {
-      setInputIndex(index);
-  }
 
-    const handleInputChange = (e) => {
+  useEffect(() => {
+    if (isLogin) {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const redirectPath = userData.enrollment_status === 'Officially Enrolled'
+        ? '/student-dashboard'
+        : '/student-profile';
+      window.location.href = redirectPath;
+    }
+  }, [isLogin]);
+
+  const focusInput = (index) => {
+    setInputIndex(index);
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
-    };
+  };
 
-    // Add loading state
-    const [isLoading, setIsLoading] = useState(false);
+  // Suspicious input detection function
+  const isSuspiciousInput = (text) => {
+    const suspiciousPatterns = [
+      /('|--|;|=|%27|%3D)/i,
+      /(\bOR\b|\bAND\b).*=.*/i,
+      /<script.*?>.*?<\/script>/i,
+      /UNION\s+SELECT/i,
+      /sleep\(/i
+    ];
+    return suspiciousPatterns.some((pattern) => pattern.test(text));
+  };
 
-    // Add this useEffect after your existing useEffect
-    useEffect(() => {
-      if (isLogin) {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
-          ? '/student-dashboard' 
-          : '/student-profile';
-        window.location.href = redirectPath;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const { username, password } = credentials;
+
+    //  Suspicious input check
+    if (isSuspiciousInput(username) || isSuspiciousInput(password)) {
+      console.warn(` Suspicious Login Attempt: ${username}:${password}`);
+      navigate('/log1n');
+      return;
+    }
+
+    try {
+      console.log(`Login Attempted (Username / Password): ${username}:${password}`);
+      const response = await axios.post('/api/loginstudent', credentials);
+      const { token, user } = response.data;
+
+      localStorage.clear();
+      localStorage.setItem('isLogin', 'true');
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', user.role);
+      localStorage.setItem('student_id', user.student_id);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      setToken(token);
+      setRole(user.role);
+      setUser(user);
+      setIsLogin(true);
+
+    } catch (error) {
+      let errorMsg = 'Login failed. Please try again.';
+      if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
       }
-    }, [isLogin]);
-    
-    // Then modify your handleLogin function to remove the redirect logic
-    const handleLogin = async (e) => {
-      e.preventDefault();
-      setIsLoading(true);
-      try {
-        const response = await axios.post('/api/loginstudent', credentials);
-        const { token, user } = response.data;
-    
-        // Clear any existing data first
-        localStorage.clear();
-        
-        // Store login state
-        localStorage.setItem('isLogin', 'true');
-        
-        // Store other data
-        localStorage.setItem('token', token);
-        localStorage.setItem('role', user.role);
-        localStorage.setItem('student_id', user.student_id);
-        localStorage.setItem('user', JSON.stringify(user));
-    
-        // Update context
-        setToken(token);
-        setRole(user.role);
-        setUser(user);
-        setIsLogin(true);
-    
-      } catch (error) {
-        let errorMsg = 'Login failed. Please try again.';
-        if (error.response?.data?.message) {
-          errorMsg = error.response.data.message;
-        }
-        setErrorMessage(errorMsg);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
+      setErrorMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //  Fake login page shown to suspicious users
+  const FakeLoginPage = () => (
+    <div className='text-center p-5'>
+      <h1> Suspicious Activity Detected</h1>
+      <p>You’ve been redirected due to a suspicious login attempt.</p>
+    </div>
+  );
+
+  //  Register Page (Optional placeholder page)
+  const RegisterPage = () => (
+    <div className='text-center p-5'>
+      <h2>Create Your Account</h2>
+      <p>This is a placeholder for the registration page.</p>
+      <Link to="/">Go back to login</Link>
+    </div>
+  );
 
   return (
     <>
-        <img src={loginbackground} alt="samp" className='loginBg' />
-        <section className='loginSection'>
-            <div className='loginBox'>
-                <div className='loginWrap mt-5 card border'>
-                    {/* Moved logo and header inside the loginWrap */}
-                    <div className='logo text-center'>
-                      <img src={logo} alt="samp" width="60px" className='pb-1' />
-                      <h5 className='loginHeader'>Login to OLSHCOnnect</h5>
-                    </div>
+      <Routes>
+        <Route path="/log1n" element={<FakeLoginPage />} />
+        <Route path="/homepage" element={<RegisterPage />} />
+      </Routes>
 
-                    <form onSubmit={handleLogin}>
-                        {errorMessage && (
-                            <div className='alert alert-danger'>
-                                {errorMessage}
-                            </div>
-                        )}                        
-                        <div className={`form-group position-relative mt-5 ${inputIndex === 0 && 'focus'}`}>
-                            <span className='icon'><FaRegUserCircle /></span>
-                            <input type='text' className='form-control' placeholder='Username' onFocus={() => focusInput(0)} onBlur={() => setInputIndex(null)} name='username' value={credentials.username} onChange={handleInputChange} autoFocus />
-                        </div>
-
-                        <div className={`form-group position-relative ${inputIndex === 1 && 'focus'}`}>
-                            <span className='icon'><RiLockPasswordLine /></span>
-                            <input type={`${isShowPass === true ? 'text' : 'password'}`} className='form-control' placeholder='Password' onFocus={() => focusInput(1)} onBlur={() => setInputIndex(null)} name='password' value={credentials.password} onChange={handleInputChange} />
-
-                            <span className='showPass' onClick={() => setIsShowPass(!isShowPass)}>
-                                {isShowPass === true ? <VscEye /> : <VscEyeClosed />}
-                            </span>
-                        </div>
-
-                        <div className='form-group'>
-                              <Button 
-                                className="btn-blue btn-lg w-100 btn-big" 
-                                type="submit" 
-                                disabled={isLoading}
-                                sx={{ 
-                                  display: 'flex', 
-                                  gap: '10px',
-                                  alignItems: 'center',
-                                  justifyContent: 'center' 
-                                }}
-                            >
-                              {isLoading && <CircularProgress size={20} color="inherit" />}
-                              {isLoading ? 'Signing in...' : 'Sign in'}
-                            </Button>
-                        </div>
-
-                        <div className='form-group text-center mb-0'>                        
-                            <Link to={'/forgot-password'} className='link'>FORGOT PASSWORD</Link>
-                        </div>
-                    </form>
-                </div>
-
-                <div className='loginWrap mt-3 card border footer p-3'>
-                    <span className='text-center'>
-                        Don't have an account?
-                        <Link to={'/homepage'} className='link color'>Register</Link>
-                    </span>
-                </div>
+      <img src={loginbackground} alt="login background" className='loginBg' />
+      <section className='loginSection'>
+        <div className='loginBox'>
+          <div className='loginWrap mt-5 card border'>
+            <div className='logo text-center'>
+              <img src={logo} alt="logo" width="60px" className='pb-1' />
+              <h5 className='loginHeader'>Login to OLSHCOnnect</h5>
             </div>
-        </section>
+
+            <form onSubmit={handleLogin}>
+              {errorMessage && (
+                <div className='alert alert-danger'>{errorMessage}</div>
+              )}
+
+              <div className={`form-group position-relative mt-5 ${inputIndex === 0 ? 'focus' : ''}`}>
+                <span className='icon'><FaRegUserCircle /></span>
+                <input
+                  type='text'
+                  className='form-control'
+                  placeholder='Username'
+                  name='username'
+                  value={credentials.username}
+                  onChange={handleInputChange}
+                  onFocus={() => focusInput(0)}
+                  onBlur={() => setInputIndex(null)}
+                  autoFocus
+                />
+              </div>
+
+              <div className={`form-group position-relative ${inputIndex === 1 ? 'focus' : ''}`}>
+                <span className='icon'><RiLockPasswordLine /></span>
+                <input
+                  type={isShowPass ? 'text' : 'password'}
+                  className='form-control'
+                  placeholder='Password'
+                  name='password'
+                  value={credentials.password}
+                  onChange={handleInputChange}
+                  onFocus={() => focusInput(1)}
+                  onBlur={() => setInputIndex(null)}
+                />
+                <span className='showPass' onClick={() => setIsShowPass(!isShowPass)}>
+                  {isShowPass ? <VscEye /> : <VscEyeClosed />}
+                </span>
+              </div>
+
+              <div className='form-group'>
+                <Button
+                  className="btn-blue btn-lg w-100 btn-big"
+                  type="submit"
+                  disabled={isLoading}
+                  sx={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {isLoading && <CircularProgress size={20} color="inherit" />}
+                  {isLoading ? 'Signing in...' : 'Sign in'}
+                </Button>
+              </div>
+
+              <div className='form-group text-center mb-0'>
+                <Link to={'/forgot-password'} className='link'>FORGOT PASSWORD</Link>
+              </div>
+            </form>
+          </div>
+
+          <div className='loginWrap mt-3 card border footer p-3'>
+            <span className='text-center'>
+              Don't have an account? <Link to={'/homepage'} className='link color'>Register</Link>
+            </span>
+          </div>
+        </div>
+      </section>
     </>
   );
-}
+};
 
 export default Login;
