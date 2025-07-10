@@ -4,23 +4,16 @@ export default function handler(req, res) {
   }
 
   try {
-    const { logEntry, timestamp, activityType, ...details } = req.body;
-    
-    // Get client IP address
-    const clientIP = req.headers['x-forwarded-for'] || 
-                    req.headers['x-real-ip'] || 
-                    req.connection.remoteAddress ||   
-                    req.socket.remoteAddress ||
-                    'Unknown';
-    
-    // Add IP address to log entry if not present
-    let finalLogEntry = logEntry;
-    if (!logEntry.includes('Visitor IP Address:')) {
-      finalLogEntry = logEntry.replace('Visitor IP Address: Unknown', `Visitor IP Address: ${clientIP}`);
-    }
-    
-    // For Vercel deployment - log in exact format requested (copied from payment-log.js)
-    console.log(`
+    const { timestamp, activityType, ...details } = req.body;
+
+    const clientIP = req.headers['x-forwarded-for'] ||
+      req.headers['x-real-ip'] ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress ||
+      'Unknown';
+
+    // Build the log entry here
+    const logEntry = `
 === LOGIN HONEYPOT LOG ENTRY ===
 Visitor IP Address: ${clientIP}
 
@@ -67,22 +60,24 @@ Action: ${details.action || 'N/A'}
 Additional Data: ${JSON.stringify(details, null, 2)}
 
 === END LOG ENTRY ===
-`);
-    
-    res.status(200).json({ 
-      success: true, 
+`;
+
+    console.log(logEntry);
+
+    res.status(200).json({
+      success: true,
       message: 'Login honeypot log entry logged successfully (Vercel environment)',
       timestamp,
       activityType,
       clientIP,
       environment: 'vercel'
     });
-    
+
   } catch (error) {
     console.error('❌ Login honeypot logging error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to log login honeypot activity',
-      details: error.message 
+      details: error.message
     });
   }
 } 
