@@ -14,6 +14,79 @@ import { MenuItem, Select, FormControl } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material';
 import { Snackbar, Alert } from '@mui/material';
 
+// Honeypot monitoring system
+const HoneypotMonitor = {
+  suspiciousActivities: [],
+  sessionStartTime: Date.now(),
+  commandCount: 0,
+  
+  logActivity: (type, details) => {
+    const activity = {
+      timestamp: new Date().toISOString(),
+      type,
+      details,
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    };
+    
+    HoneypotMonitor.suspiciousActivities.push(activity);
+    HoneypotMonitor.commandCount++;
+    
+    // Calculate session duration
+    const sessionDuration = Math.floor((Date.now() - HoneypotMonitor.sessionStartTime) / 1000);
+    
+    // Prepare comprehensive security log data
+    const securityData = {
+      url: window.location.href,
+      method: 'POST',
+      userAgent: navigator.userAgent,
+      referrer: document.referrer,
+      loginAttempt: details.loginAttempt || null,
+      commandAttempt: details.commandAttempt || null,
+      exploitPayload: details.exploitPayload || details.value || null,
+      fileInfo: details.fileInfo || null,
+      port: 443, // HTTPS
+      protocol: 'HTTPS',
+      sessionDuration: `${sessionDuration} seconds`,
+      numberOfCommands: HoneypotMonitor.commandCount,
+      vulnerabilityType: details.vulnerabilityType || type,
+      honeypotPath: details.honeypotPath || null,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': navigator.userAgent,
+        'Referer': document.referrer
+      }
+    };
+    
+    // Send to comprehensive security logging
+    axios.post('/api/security-log', securityData, {
+      headers: { 'Content-Type': 'application/json' }
+    }).catch(err => console.error('Security logging failed:', err));
+    
+    console.warn('🚨 HONEYPOT TRIGGERED:', activity);
+  },
+  
+  detectBotBehavior: (fieldName, value) => {
+    // Detect common bot patterns
+    const botPatterns = [
+      /^[a-z]{1,3}$/i, // Very short random strings
+      /^test\d+$/i, // Test patterns
+      /^admin$/i, // Admin attempts
+      /^root$/i, // Root attempts
+      /^guest$/i, // Guest attempts
+      /^user$/i, // Generic user attempts
+      /^password$/i, // Password attempts
+      /^123456$/i, // Common passwords
+      /^qwerty$/i, // Common passwords
+      /^<script/i, // XSS attempts
+      /javascript:/i, // JavaScript injection
+      /on\w+=/i, // Event handler injection
+    ];
+    
+    return botPatterns.some(pattern => pattern.test(value));
+  }
+};
+
 const formatFullName = (studentData) => {
   if (!studentData) return "N/A";
   
@@ -40,6 +113,19 @@ const StudentProfile = () => {
     message: '',
     severity: 'success'
   });
+  
+  // Honeypot states
+  const [honeypotFields, setHoneypotFields] = useState({
+    fakeEmail: '',
+    fakePhone: '',
+    fakeAddress: '',
+    fakeName: ''
+  });
+  
+  const [showFakeModal, setShowFakeModal] = useState(false);
+  const [fakeModalType, setFakeModalType] = useState('');
+  const [honeypotTriggered, setHoneypotTriggered] = useState(false);
+  
   const generateAcademicYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -84,12 +170,6 @@ const StudentProfile = () => {
     'Payment',
     'Officially Enrolled'
   ];
-
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    const enrollmentStatus = userData?.enrollment_status || studentData?.enrollment?.status;
-    setIsEnrolled(enrollmentStatus === 'Officially Enrolled');
-  }, [studentData]);
 
   useEffect(() => {
     if (studentData?.enrollment) {
@@ -188,8 +268,156 @@ const StudentProfile = () => {
     setIsEditing(false);
   };
 
+  // Honeypot field handler
+  const handleHoneypotChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Log honeypot field interaction
+    HoneypotMonitor.logActivity('honeypot_field_interaction', {
+      field: name,
+      value: value,
+      action: 'input'
+    });
+    
+    // Check for bot behavior
+    if (HoneypotMonitor.detectBotBehavior(name, value)) {
+      HoneypotMonitor.logActivity('bot_behavior_detected', {
+        field: name,
+        value: value,
+        pattern: 'suspicious_input'
+      });
+      setHoneypotTriggered(true);
+    }
+    
+    setHoneypotFields(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Fake modal handlers
+  const handleFakeModalOpen = (type) => {
+    setFakeModalType(type);
+    setShowFakeModal(true);
+    
+    HoneypotMonitor.logActivity('fake_modal_opened', {
+      modalType: type,
+      action: 'open'
+    });
+  };
+
+  const handleFakeModalClose = () => {
+    setShowFakeModal(false);
+    setFakeModalType('');
+  };
+
+  const handleFakeSubmit = (e) => {
+    e.preventDefault();
+    
+    HoneypotMonitor.logActivity('fake_form_submitted', {
+      modalType: fakeModalType,
+      formData: honeypotFields,
+      action: 'submit'
+    });
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      setSnackbar({
+        open: true,
+        message: "Form submitted successfully!",
+        severity: 'success'
+      });
+      handleFakeModalClose();
+    }, 2000);
+  };
+
+  // Enhanced input change handler with honeypot detection
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Check if this is a honeypot field
+    if (honeypotFields.hasOwnProperty(name)) {
+      handleHoneypotChange(e);
+      return;
+    }
+
+    // 🚨 MALICIOUS INPUT DETECTION - Check for payloads in real forms
+    const maliciousPatterns = [
+      // XSS payloads
+      /<script/i,
+      /javascript:/i,
+      /on\w+=/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      
+      // SQL Injection patterns
+      /union\s+select/i,
+      /drop\s+table/i,
+      /delete\s+from/i,
+      /insert\s+into/i,
+      /update\s+set/i,
+      /alter\s+table/i,
+      /exec\s*\(/i,
+      /xp_cmdshell/i,
+      
+      // Command injection
+      /;.*\$/i,
+      /\|\s*\w+/i,
+      /&&\s*\w+/i,
+      /`.*`/i,
+      /\$\(.*\)/i,
+      
+      // File path traversal
+      /\.\.\//i,
+      /\.\.\\/i,
+      /\/etc\/passwd/i,
+      /c:\\windows/i,
+      
+      // Common attack keywords
+      /admin/i,
+      /root/i,
+      /password/i,
+      /test.*123/i,
+      /<svg/i,
+      /<img.*onerror/i,
+      
+      // PHP shell patterns
+      /<\?php/i,
+      /system\s*\(/i,
+      /shell_exec/i,
+      /eval\s*\(/i,
+      /assert\s*\(/i,
+      /passthru/i,
+      /exec\s*\(/i
+    ];
+
+    // Check if input contains malicious patterns
+    const isMalicious = maliciousPatterns.some(pattern => pattern.test(value));
+    
+    if (isMalicious) {
+      // 🚨 TRIGGER HONEYPOT - Log the attack and redirect to fake form
+      HoneypotMonitor.logActivity('malicious_input_detected', {
+        field: name,
+        value: value,
+        exploitPayload: value,
+        vulnerabilityType: 'XSS/SQL Injection',
+        honeypotPath: '/fake_edit_form',
+        action: 'redirect_to_honeypot'
+      });
+      
+      // Redirect to fake modal based on context
+      if (['firstName', 'middleName', 'lastName', 'suffix', 'placeOfBirth', 'religion', 'guardianName', 'email', 'number', 'street_text'].includes(name)) {
+        handleFakeModalOpen('edit');
+      } else if (['programs', 'yearLevel', 'semester', 'academic_year'].includes(name)) {
+        handleFakeModalOpen('enrollment');
+      }
+      
+      // Clear the malicious input
+      setFormData(prev => ({ ...prev, [name]: '' }));
+      setFormDataa(prev => ({ ...prev, [name]: '' }));
+      
+      return; // Stop processing this input
+    }
 
     if (name === 'birthdate') {
         const today = new Date();
@@ -430,9 +658,62 @@ const StudentProfile = () => {
           </Stepper>
         </Paper>
       </ThemeProvider>
+      
+      {/* Honeypot: Hidden fake fields that look legitimate */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <input
+          type="text"
+          name="fakeEmail"
+          value={honeypotFields.fakeEmail}
+          onChange={handleHoneypotChange}
+          placeholder="Email"
+          style={{ opacity: 0, position: 'absolute' }}
+        />
+        <input
+          type="text"
+          name="fakePhone"
+          value={honeypotFields.fakePhone}
+          onChange={handleHoneypotChange}
+          placeholder="Phone"
+          style={{ opacity: 0, position: 'absolute' }}
+        />
+        <input
+          type="text"
+          name="fakeAddress"
+          value={honeypotFields.fakeAddress}
+          onChange={handleHoneypotChange}
+          placeholder="Address"
+          style={{ opacity: 0, position: 'absolute' }}
+        />
+        <input
+          type="text"
+          name="fakeName"
+          value={honeypotFields.fakeName}
+          onChange={handleHoneypotChange}
+          placeholder="Name"
+          style={{ opacity: 0, position: 'absolute' }}
+        />
+      </div>
+
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
         <h3 className="hd mt-2 pb-0" style={{ margin: 0 }}>Student Profile</h3>
-        {!isEnrolled && studentData?.enrollment?.status !== 'Officially Enrolled' && (
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* Honeypot: Fake enroll button that looks real */}
+          <Button 
+            variant="contained" 
+            className='enrollbut' 
+            color="primary" 
+            onClick={() => handleFakeModalOpen('enrollment')}
+            style={{ 
+              backgroundColor: '#28a745', 
+              color: 'white',
+              display: honeypotTriggered ? 'none' : 'block'
+            }}
+          >
+            <FaSchool/>Quick Enroll
+          </Button>
+          
+          {/* Real enroll button */}
           <Button 
             variant="contained" 
             className='enrollbut' 
@@ -442,20 +723,39 @@ const StudentProfile = () => {
           >
             <FaSchool/>Enroll Now!
           </Button>
-        )}
+        </div>
       </div>
+      
       <div className="d-flex justify-content-end mb-3">
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleOpen} 
-          className="edit-profile-button"
-          data-testid="edit-profile-button"
-          style={{ backgroundColor: '#c70202', color: 'white' }}
-        >
-          <FaUserEdit style={{ fontSize: '18px', marginRight: '10px' }} />
-          Edit Profile
-        </Button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* Honeypot: Fake edit button */}
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => handleFakeModalOpen('edit')}
+            style={{ 
+              backgroundColor: '#007bff', 
+              color: 'white',
+              display: honeypotTriggered ? 'none' : 'block'
+            }}
+          >
+            <FaUserEdit style={{ fontSize: '18px', marginRight: '10px' }} />
+            Quick Edit
+          </Button>
+          
+          {/* Real edit button */}
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleOpen} 
+            className="edit-profile-button"
+            data-testid="edit-profile-button"
+            style={{ backgroundColor: '#c70202', color: 'white' }}
+          >
+            <FaUserEdit style={{ fontSize: '18px', marginRight: '10px' }} />
+            Edit Profile
+          </Button>
+        </div>
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
@@ -805,6 +1105,120 @@ const StudentProfile = () => {
           </form>
         </Box>
       </Modal>
+      {/* Honeypot: Fake Modal */}
+      <Modal open={showFakeModal} onClose={handleFakeModalClose}>
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "600px",
+          backgroundColor: "white",
+          borderRadius: "10px",
+          padding: "30px",
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}>
+          <Button
+            onClick={handleFakeModalClose}
+            sx={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              minWidth: "30px",
+              minHeight: "30px",
+              padding: "5px",
+              fontSize: "1.2rem",
+              color: "#c70202",
+              '&:hover': {
+                backgroundColor: 'rgba(199, 2, 2, 0.1)',
+              },
+            }}
+          >
+            &times;
+          </Button>
+
+          <Typography variant="h5" sx={{ 
+            textAlign: "center", 
+            marginBottom: "20px",
+            color: '#c70202',
+            fontWeight: 'bold'
+          }}>
+            {fakeModalType === 'enrollment' ? 'Quick Enrollment Form' : 'Quick Profile Edit'}
+          </Typography>
+
+          <form onSubmit={handleFakeSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Full Name"
+                  fullWidth
+                  margin="normal"
+                  name="fakeName"
+                  value={honeypotFields.fakeName}
+                  onChange={handleHoneypotChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Email Address"
+                  fullWidth
+                  margin="normal"
+                  name="fakeEmail"
+                  value={honeypotFields.fakeEmail}
+                  onChange={handleHoneypotChange}
+                  type="email"
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Phone Number"
+                  fullWidth
+                  margin="normal"
+                  name="fakePhone"
+                  value={honeypotFields.fakePhone}
+                  onChange={handleHoneypotChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Address"
+                  fullWidth
+                  margin="normal"
+                  name="fakeAddress"
+                  value={honeypotFields.fakeAddress}
+                  onChange={handleHoneypotChange}
+                  multiline
+                  rows={3}
+                  required
+                />
+              </Grid>
+            </Grid>
+
+            <Button 
+              variant="contained" 
+              type="submit"
+              fullWidth
+              sx={{ 
+                mt: 3,
+                bgcolor: '#c70202',
+                '&:hover': {
+                  bgcolor: '#a00000',
+                },
+                height: '45px',
+                fontWeight: 'bold'
+              }}
+            >
+              Submit
+            </Button>
+          </form>
+        </Box>
+      </Modal>
       <Modal open={openEnrollment} onClose={handleCloseEnrollment} data-testid="enrollment-modal">
         <Box sx={{
           position: 'absolute',
@@ -861,7 +1275,8 @@ const StudentProfile = () => {
                     inputProps={{ 'aria-label': 'programs' }}
                     data-testid="program-select"
                   >
-                    <MenuItem value={2}>Bachelor of Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
+                    <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
                     <MenuItem value={3}>Bachelor of Science in Hospitality Management</MenuItem>
                     <MenuItem value={1}>Bachelor of Science in Information Technology</MenuItem>
                     <MenuItem value={4}>Bachelor of Science in Office Administration</MenuItem>
@@ -941,7 +1356,33 @@ const StudentProfile = () => {
                       className="form-control"
                       id="idpic"
                       name="idpic"
-                      onChange={(e) => setFormDataa({ ...formDataa, idpic: e.target.files[0] })}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // 🚨 FILE UPLOAD HONEYPOT DETECTION
+                          const dangerousExtensions = ['.php', '.php3', '.php4', '.php5', '.phtml', '.asp', '.aspx', '.jsp', '.jspx', '.sh', '.bash', '.py', '.pl', '.rb', '.exe', '.bat', '.cmd', '.com'];
+                          const fileName = file.name.toLowerCase();
+                          const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+                          
+                          if (dangerousExtensions.includes(fileExtension)) {
+                            HoneypotMonitor.logActivity('malicious_file_upload', {
+                              field: 'idpic',
+                              fileName: file.name,
+                              fileType: file.type,
+                              fileSize: file.size,
+                              fileInfo: `Filename: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`,
+                              vulnerabilityType: 'File Upload Attack',
+                              honeypotPath: '/fake_enrollment_form',
+                              action: 'redirect_to_honeypot'
+                            });
+                            
+                            handleFakeModalOpen('enrollment');
+                            e.target.value = ''; // Clear the input
+                            return;
+                          }
+                        }
+                        setFormDataa({ ...formDataa, idpic: file });
+                      }}
                       required
                       aria-label="ID Picture (JPEG/JPG)"
                       data-testid="id-pic-input"
@@ -954,7 +1395,33 @@ const StudentProfile = () => {
                       accept=".pdf, .jpeg, .jpg, .png"
                       className="form-control"
                       name="birthCertificateDoc"
-                      onChange={(e) => setFormDataa({ ...formDataa, birthCertificateDoc: e.target.files[0] })}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // 🚨 FILE UPLOAD HONEYPOT DETECTION
+                          const dangerousExtensions = ['.php', '.php3', '.php4', '.php5', '.phtml', '.asp', '.aspx', '.jsp', '.jspx', '.sh', '.bash', '.py', '.pl', '.rb', '.exe', '.bat', '.cmd', '.com'];
+                          const fileName = file.name.toLowerCase();
+                          const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+                          
+                          if (dangerousExtensions.includes(fileExtension)) {
+                            HoneypotMonitor.logActivity('malicious_file_upload', {
+                              field: 'birthCertificateDoc',
+                              fileName: file.name,
+                              fileType: file.type,
+                              fileSize: file.size,
+                              fileInfo: `Filename: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`,
+                              vulnerabilityType: 'File Upload Attack',
+                              honeypotPath: '/fake_enrollment_form',
+                              action: 'redirect_to_honeypot'
+                            });
+                            
+                            handleFakeModalOpen('enrollment');
+                            e.target.value = ''; // Clear the input
+                            return;
+                          }
+                        }
+                        setFormDataa({ ...formDataa, birthCertificateDoc: file });
+                      }}
                       required
                       aria-label="Birth Certificate (JPEG/JPG)"
                       data-testid="birth-cert-input"
@@ -967,7 +1434,33 @@ const StudentProfile = () => {
                       accept=".pdf, .jpeg, .jpg, .png"
                       className="form-control"
                       name="form137Doc"
-                      onChange={(e) => setFormDataa({ ...formDataa, form137Doc: e.target.files[0] })}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // 🚨 FILE UPLOAD HONEYPOT DETECTION
+                          const dangerousExtensions = ['.php', '.php3', '.php4', '.php5', '.phtml', '.asp', '.aspx', '.jsp', '.jspx', '.sh', '.bash', '.py', '.pl', '.rb', '.exe', '.bat', '.cmd', '.com'];
+                          const fileName = file.name.toLowerCase();
+                          const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+                          
+                          if (dangerousExtensions.includes(fileExtension)) {
+                            HoneypotMonitor.logActivity('malicious_file_upload', {
+                              field: 'form137Doc',
+                              fileName: file.name,
+                              fileType: file.type,
+                              fileSize: file.size,
+                              fileInfo: `Filename: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`,
+                              vulnerabilityType: 'File Upload Attack',
+                              honeypotPath: '/fake_enrollment_form',
+                              action: 'redirect_to_honeypot'
+                            });
+                            
+                            handleFakeModalOpen('enrollment');
+                            e.target.value = ''; // Clear the input
+                            return;
+                          }
+                        }
+                        setFormDataa({ ...formDataa, form137Doc: file });
+                      }}
                       required
                       aria-label="Form 137 (JPEG/JPG)"
                       data-testid="form137-input"
@@ -996,6 +1489,122 @@ const StudentProfile = () => {
             </form>      
         </Box>
       </Modal>
+
+      {/* Honeypot: Fake Modal */}
+      <Modal open={showFakeModal} onClose={handleFakeModalClose}>
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "600px",
+          backgroundColor: "white",
+          borderRadius: "10px",
+          padding: "30px",
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}>
+          <Button
+            onClick={handleFakeModalClose}
+            sx={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              minWidth: "30px",
+              minHeight: "30px",
+              padding: "5px",
+              fontSize: "1.2rem",
+              color: "#c70202",
+              '&:hover': {
+                backgroundColor: 'rgba(199, 2, 2, 0.1)',
+              },
+            }}
+          >
+            &times;
+          </Button>
+
+          <Typography variant="h5" sx={{ 
+            textAlign: "center", 
+            marginBottom: "20px",
+            color: '#c70202',
+            fontWeight: 'bold'
+          }}>
+            {fakeModalType === 'enrollment' ? 'Quick Enrollment Form' : 'Quick Profile Edit'}
+          </Typography>
+
+          <form onSubmit={handleFakeSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Full Name"
+                  fullWidth
+                  margin="normal"
+                  name="fakeName"
+                  value={honeypotFields.fakeName}
+                  onChange={handleHoneypotChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Email Address"
+                  fullWidth
+                  margin="normal"
+                  name="fakeEmail"
+                  value={honeypotFields.fakeEmail}
+                  onChange={handleHoneypotChange}
+                  type="email"
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Phone Number"
+                  fullWidth
+                  margin="normal"
+                  name="fakePhone"
+                  value={honeypotFields.fakePhone}
+                  onChange={handleHoneypotChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Address"
+                  fullWidth
+                  margin="normal"
+                  name="fakeAddress"
+                  value={honeypotFields.fakeAddress}
+                  onChange={handleHoneypotChange}
+                  multiline
+                  rows={3}
+                  required
+                />
+              </Grid>
+            </Grid>
+
+            <Button 
+              variant="contained" 
+              type="submit"
+              fullWidth
+              sx={{ 
+                mt: 3,
+                bgcolor: '#c70202',
+                '&:hover': {
+                  bgcolor: '#a00000',
+                },
+                height: '45px',
+                fontWeight: 'bold'
+              }}
+            >
+              Submit
+            </Button>
+          </form>
+        </Box>
+      </Modal>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
