@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Registration Form with Honeypot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f8f8f8;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .error, .success {
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .success {
+      color: green;
+    }
+
+    /* Honeypot field (invisible to humans) */
+    .honeypot {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      height: 1px;
+      width: 1px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Register</h2>
+
+  <form id="registrationForm" onsubmit="return validateForm()">
+    <label for="fullname">Full Name</label>
+    <input type="text" name="fullname" id="fullname" required>
+
+    <label for="email">Email Address</label>
+    <input type="email" name="email" id="email" required>
+
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" required>
+
+    <label for="confirmPassword">Confirm Password</label>
+    <input type="password" name="confirmPassword" id="confirmPassword" required>
+
+    <!-- Honeypot Field -->
+    <div class="honeypot">
+      <label>Leave this field blank:
+        <input type="text" name="website" id="website" autocomplete="off">
+      </label>
+    </div>
+
+    <button type="submit">Register</button>
+    <div id="message" class="error"></div>
+  </form>
+
+  <script>
+    function validateForm() {
+      const fullname = document.getElementById('fullname').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const honeypot = document.getElementById('website').value;
+      const message = document.getElementById('message');
+
+      message.className = 'error';
+      message.textContent = '';
+
+      // Honeypot detection
+      if (honeypot !== '') {
+        message.textContent = 'Bot detected. Submission blocked.';
+        return false;
+      }
+
+      if (fullname.length < 2) {
+        message.textContent = 'Please enter a valid full name.';
+        return false;
+      }
+
+      if (!email.includes('@') || !email.includes('.')) {
+        message.textContent = 'Please enter a valid email address.';
+        return false;
+      }
+
+      if (password.length < 6) {
+        message.textContent = 'Password must be at least 6 characters.';
+        return false;
+      }
+
+      if (password !== confirmPassword) {
+        message.textContent = 'Passwords do not match.';
+        return false;
+      }
+
+      message.className = 'success';
+      message.textContent = 'Registration successful (form not submitted).';
+      return false; // Prevent actual submission for demo
+    }
+  </script>
+
+</body>
+</html>
