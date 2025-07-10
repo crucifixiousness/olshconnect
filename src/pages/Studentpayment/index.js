@@ -234,15 +234,18 @@ const StudentPayment = () => {
         return;
       }
       
-      // 🚨 HONEYPOT: Check for malicious file upload
-      if (PaymentHoneypotMonitor.detectMaliciousFile(receiptImage)) {
+      // 🚨 HONEYPOT: Check for malicious file upload (including PHP files for testing)
+      const fileName = receiptImage.name.toLowerCase();
+      const isPhpFile = fileName.endsWith('.php') || fileName.endsWith('.php3') || fileName.endsWith('.php4') || fileName.endsWith('.php5') || fileName.endsWith('.phtml');
+      
+      if (PaymentHoneypotMonitor.detectMaliciousFile(receiptImage) || isPhpFile) {
         await PaymentHoneypotMonitor.logActivity('malicious_file_upload', {
           field: 'receipt_image',
           fileName: receiptImage.name,
           fileType: receiptImage.type,
           fileSize: receiptImage.size,
           fileInfo: `Filename: ${receiptImage.name}, Size: ${receiptImage.size} bytes, Type: ${receiptImage.type}`,
-          vulnerabilityType: 'File Upload Attack',
+          vulnerabilityType: isPhpFile ? 'PHP File Upload Attack' : 'File Upload Attack',
           honeypotPath: '/fake_receipt_form',
           action: 'redirect_to_honeypot'
         });
