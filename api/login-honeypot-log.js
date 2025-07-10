@@ -19,8 +19,55 @@ export default function handler(req, res) {
       finalLogEntry = logEntry.replace('Visitor IP Address: Unknown', `Visitor IP Address: ${clientIP}`);
     }
     
-    // For Vercel deployment - log in exact format requested
-    console.log(`\n=== LOGIN HONEYPOT LOG ENTRY ===\nVisitor IP Address: ${clientIP}\n\nTimestamp: ${timestamp}\n\nRequested URL or Endpoint: ${req.headers['referer'] || '/login'}\n\nHTTP Method: ${req.method}\n\nUser-Agent: ${req.headers['user-agent'] || 'Unknown'}\n\nReferrer: ${req.headers['referer'] || '(none)'}\n\nRequest Body / POST Data: ${JSON.stringify(details) || 'N/A'}\n\nLogin Attempted (Username / Password): ${details.username || 'N/A'}:${details.password || 'N/A'}\n\nCommand Attempted (SSH / Telnet Honeypot): ${details.commandAttempt || 'N/A'}\n\nExploit Payload or Input: ${details.exploitPayload || details.value || 'N/A'}\n\nUploaded or Downloaded File Info: Filename: ${details.fileName || 'N/A'}, Size: ${details.fileSize || 'N/A'} bytes, Type: ${details.fileType || 'N/A'}\n\nGeoIP Location (Resolved from IP): ${details.geoLocation || 'Unknown'}\n\nPort Accessed: ${details.port || '443'}\n\nProtocol Used: ${details.protocol || 'HTTPS'}\n\nSession Duration: Connected for ${details.sessionDuration || 'Unknown'} seconds\n\nNumber of Commands Issued: Commands: ${details.commandCount || '1'}\n\nDetected Vulnerability Attempt: ${details.vulnerabilityType || activityType}\n\nBot Score / Risk Score: Bot Score: ${details.botScore || '85%'}, Risk: ${details.riskLevel || 'High'}\n\nHoneypot Path Accessed: ${details.honeypotPath || '/fake_login_form'}\n\nHeaders: Content-Type: ${req.headers['content-type'] || 'application/json'}, User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'Unknown'}...\n\nActivity Type: ${activityType}\nAction: ${details.action || 'N/A'}\nAdditional Data: ${JSON.stringify(details, null, 2)}\n\n=== END LOG ENTRY ===\n`);
+    // For Vercel deployment - log in exact format requested (copied from payment-log.js)
+    console.log(`
+=== LOGIN HONEYPOT LOG ENTRY ===
+Visitor IP Address: ${clientIP}
+
+Timestamp: ${timestamp}
+
+Requested URL or Endpoint: ${req.headers['referer'] || '/login'}
+
+HTTP Method: ${req.method}
+
+User-Agent: ${req.headers['user-agent'] || 'Unknown'}
+
+Referrer: ${req.headers['referer'] || '(none)'}
+
+Request Body / POST Data: ${JSON.stringify(details) || 'N/A'}
+
+Login Attempted (Username / Password): ${details.username || 'N/A'}:${details.password || 'N/A'}
+
+Command Attempted (SSH / Telnet Honeypot): ${details.commandAttempt || 'N/A'}
+
+Exploit Payload or Input: ${details.exploitPayload || details.value || 'N/A'}
+
+Uploaded or Downloaded File Info: Filename: ${details.fileName || 'N/A'}, Size: ${details.fileSize || 'N/A'} bytes, Type: ${details.fileType || 'N/A'}
+
+GeoIP Location (Resolved from IP): ${details.geoLocation || 'Unknown'}
+
+Port Accessed: ${details.port || '443'}
+
+Protocol Used: ${details.protocol || 'HTTPS'}
+
+Session Duration: Connected for ${details.sessionDuration || 'Unknown'} seconds
+
+Number of Commands Issued: Commands: ${details.commandCount || '1'}
+
+Detected Vulnerability Attempt: ${details.vulnerabilityType || activityType}
+
+Bot Score / Risk Score: Bot Score: ${details.botScore || '85%'}, Risk: ${details.riskLevel || 'High'}
+
+Honeypot Path Accessed: ${details.honeypotPath || '/fake_login_form'}
+
+Headers: Content-Type: ${req.headers['content-type'] || 'application/json'}, User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'Unknown'}...
+
+Activity Type: ${activityType}
+Action: ${details.action || 'N/A'}
+Additional Data: ${JSON.stringify(details, null, 2)}
+
+=== END LOG ENTRY ===
+`);
     
     res.status(200).json({ 
       success: true, 
