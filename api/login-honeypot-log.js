@@ -6,6 +6,7 @@ export default function handler(req, res) {
   try {
     const { timestamp, activityType, ...details } = req.body;
 
+    // Get client IP address
     const clientIP = req.headers['x-forwarded-for'] ||
       req.headers['x-real-ip'] ||
       req.connection.remoteAddress ||
