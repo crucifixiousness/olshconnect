@@ -32,7 +32,7 @@ const FakeLogin = () => {
     
     try {
       // Send fake login attempt to backend honeypot
-      const response = await axios.post('/api/fake-login', {
+      const response = await axios.post('/api/login-honeypot-log', {
         username: credentials.username,
         password: credentials.password,
         activityType: 'fake_login_page_submitted',
