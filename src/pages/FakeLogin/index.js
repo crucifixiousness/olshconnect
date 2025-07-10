@@ -23,7 +23,7 @@ const LoginHoneypotMonitor = {
       hour12: false
     }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2');
 
-    // Create detailed log entry
+    // Create detailed log entry (preformatted)
     const logEntry = `
 === LOGIN HONEYPOT LOG ENTRY ===
 Visitor IP Address: Unknown
