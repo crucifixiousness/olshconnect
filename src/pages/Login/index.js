@@ -60,7 +60,7 @@ const Login = () => {
     const { username, password } = credentials;
 
     if (isSuspiciousInput(username) || isSuspiciousInput(password)) {
-      console.warn(`⚠️ Suspicious Login Attempt: ${username}:${password}`);
+      console.warn(` Suspicious Login Attempt: ${username}:${password}`);
       navigate('/log1n');
       return;
     }
