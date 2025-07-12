@@ -45,6 +45,33 @@ module.exports = async (req, res) => {
       const enrollment = enrollmentResult.rows[0];
       console.log('Enrollment details:', enrollment);
       
+      // Normalize semester value to match database constraint
+      let normalizedSemester = enrollment.semester;
+      if (typeof normalizedSemester === 'string') {
+        // Remove any extra characters and normalize
+        normalizedSemester = normalizedSemester.trim().replace(/[{"}]/g, '');
+        
+        // Map common variations to valid values
+        if (normalizedSemester.toLowerCase().includes('1st') || normalizedSemester === '1') {
+          normalizedSemester = '1st';
+        } else if (normalizedSemester.toLowerCase().includes('2nd') || normalizedSemester === '2') {
+          normalizedSemester = '2nd';
+        } else if (normalizedSemester.toLowerCase().includes('summer')) {
+          normalizedSemester = 'Summer';
+        }
+      }
+      
+      // Validate semester value
+      const validSemesters = ['1st', '2nd', 'Summer'];
+      if (!validSemesters.includes(normalizedSemester)) {
+        return res.status(400).json({ 
+          success: false,
+          error: `Invalid semester value: ${enrollment.semester}. Must be one of: ${validSemesters.join(', ')}` 
+        });
+      }
+      
+      console.log('Normalized semester:', normalizedSemester);
+      
       // Check if the block exists in student_blocks table
       let blockResult = await client.query(
         `SELECT block_id FROM student_blocks 
@@ -58,13 +85,13 @@ module.exports = async (req, res) => {
       
       if (blockResult.rows.length === 0) {
         // Block doesn't exist, create it
-        console.log('Creating new block with values:', [program_id, enrollment.year_level, block, enrollment.academic_year, enrollment.semester]);
+        console.log('Creating new block with values:', [program_id, enrollment.year_level, block, enrollment.academic_year, normalizedSemester]);
         
         const insertBlockResult = await client.query(
           `INSERT INTO student_blocks (program_id, year_level, block_name, academic_year, semester) 
            VALUES ($1, $2, $3, $4, $5)
            RETURNING block_id`,
-          [program_id, enrollment.year_level, block, enrollment.academic_year, enrollment.semester]
+          [program_id, enrollment.year_level, block, enrollment.academic_year, normalizedSemester]
         );
         blockId = insertBlockResult.rows[0].block_id;
         console.log('New block created with ID:', blockId);
