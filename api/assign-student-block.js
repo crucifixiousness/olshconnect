@@ -24,10 +24,11 @@ module.exports = async (req, res) => {
       
       // First, get student's enrollment details
       const enrollmentResult = await client.query(
-        `SELECT year_level, academic_year, semester 
-         FROM enrollments 
-         WHERE student_id = $1 
-         ORDER BY enrollment_date DESC 
+        `SELECT e.year_id, e.academic_year, e.semester, py.year_level
+         FROM enrollments e
+         JOIN program_year py ON e.year_id = py.year_id
+         WHERE e.student_id = $1 
+         ORDER BY e.enrollment_date DESC 
          LIMIT 1`,
         [student_id]
       );
@@ -94,39 +95,12 @@ module.exports = async (req, res) => {
         message: `Student assigned to Block ${block} successfully` 
       });
     } catch (error) {
-      console.error("Error in main approach:", error);
-      
-      // Fallback: Try to update the student's block directly
-      try {
-        console.log("Trying fallback approach...");
-        const fallbackResult = await client.query(
-          `UPDATE students 
-           SET block = $1 
-           WHERE id = $2`,
-          [req.body.block, req.body.student_id]
-        );
-        
-        console.log('Fallback result:', fallbackResult);
-        
-        if (fallbackResult.rowCount > 0) {
-          res.json({ 
-            success: true, 
-            message: `Student assigned to Block ${req.body.block} successfully (fallback method)` 
-          });
-        } else {
-          res.status(404).json({ 
-            success: false,
-            error: "Student not found" 
-          });
-        }
-      } catch (fallbackError) {
-        console.error("Fallback approach also failed:", fallbackError);
-        res.status(500).json({ 
-          success: false,
-          error: "Database error", 
-          details: error.message 
-        });
-      }
+      console.error("Error assigning student to block:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Database error", 
+        details: error.message 
+      });
     } finally {
       if (client) {
         client.release();
