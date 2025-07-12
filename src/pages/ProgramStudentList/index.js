@@ -96,7 +96,7 @@ const ProgramStudentList = () => {
   // Filter students based on search term
   const filteredStudents = students.filter(student => 
     student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.block?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (student.block !== 'Not Assigned' && student.block?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     student.year_level?.toString().includes(searchTerm)
   );
 
@@ -164,7 +164,7 @@ const ProgramStudentList = () => {
         });
         handleCloseAssignModal();
         
-        // Refresh the student list
+        // Refresh the student list and existing blocks
         const updatedStudents = students.map(student => 
           student.id === selectedStudent.id 
             ? { ...student, block: blockToAssign }
@@ -175,6 +175,14 @@ const ProgramStudentList = () => {
         // Refresh the existing blocks list if a new block was added
         if (newBlockName && !existingBlocks.includes(newBlockName)) {
           setExistingBlocks([...existingBlocks, newBlockName].sort());
+        }
+        
+        // Refresh the existing blocks from the database
+        try {
+          const blocksResponse = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
+          setExistingBlocks(blocksResponse.data);
+        } catch (error) {
+          console.error('Error refreshing blocks:', error);
         }
       }
     } catch (error) {
@@ -293,8 +301,8 @@ const ProgramStudentList = () => {
                         }
                       </td>
                       <td className="text-center">
-                        {student.block === 'N/A' ? 
-                          <span className="text-muted">N/A</span> : 
+                        {student.block === 'Not Assigned' ? 
+                          <span className="text-muted">Not Assigned</span> : 
                           `Block ${student.block}`
                         }
                       </td>
@@ -317,7 +325,7 @@ const ProgramStudentList = () => {
                           >
                             View
                           </Button>
-                          {student.block === 'N/A' && (
+                          {student.block === 'Not Assigned' && (
                             <Button 
                               variant="contained"
                               size="small"
