@@ -183,10 +183,14 @@ module.exports = async (req, res) => {
         `INSERT INTO enrollments 
          (student_id, program_id, year_id, semester, enrollment_status, 
           enrollment_date, idpic, birth_certificate_doc, form137_doc, 
-          payment_status, academic_year, transfer_certificate_doc, tor_doc) 
-         VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10)
+          payment_status, academic_year, student_type, previous_school, previous_program, transfer_certificate_doc, tor_doc) 
+         VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10, $11, $12, $13)
          RETURNING enrollment_id`,
-        [id, fields.programs, year_id, fields.semester, idpic, birthCertificateDoc, form137Doc, fields.academic_year, transferCertificateDoc, torDoc]
+        [
+          id, fields.programs, year_id, fields.semester, idpic, birthCertificateDoc, 
+          form137Doc, fields.academic_year, fields.studentType, fields.previousSchool || null, 
+          fields.previousProgram || null, transferCertificateDoc, torDoc
+        ]
       );
 
       await client.query('COMMIT');
