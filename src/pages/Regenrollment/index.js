@@ -30,6 +30,7 @@ const RegistrarEnrollment = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [yearLevel, setYearLevel] = useState('');
+  const [studentType, setStudentType] = useState('');
 
 
   const handlePageChange = (event, newPage) => {
@@ -59,8 +60,10 @@ const RegistrarEnrollment = () => {
       ).toLowerCase();
       
       const matchesSearch = !searchTerm || searchString.includes(searchTerm.toLowerCase());
+      
+      const matchesStudentType = !studentType || enrollment.student_type === studentType;
 
-      return matchesProgram && matchesSearch && matchesYear;
+      return matchesProgram && matchesSearch && matchesYear && matchesStudentType;
     })
     // Then apply sorting to filtered results
     .sort((a, b) => {
@@ -220,6 +223,22 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </div>
+            <div className="col-md-3">
+              <h4>STUDENT TYPE</h4>
+              <FormControl size='small' className='w-100'>
+                <Select
+                  value={studentType}
+                  onChange={(e) => setStudentType(e.target.value)}
+                  displayEmpty
+                >
+                  <MenuItem value="">
+                    <em>All Types</em>
+                  </MenuItem>
+                  <MenuItem value="new">New Student</MenuItem>
+                  <MenuItem value="transferee">Transferee</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
           </div>
 
           <div className='table-responsive mt-3'>
@@ -230,6 +249,7 @@ const RegistrarEnrollment = () => {
                   <th>YEAR LEVEL</th>
                   <th>PROGRAM</th>
                   <th>STATUS</th>
+                  <th>STUDENT TYPE</th>
                   <th>ACTION</th>
                 </tr>
               </thead>
@@ -248,6 +268,7 @@ const RegistrarEnrollment = () => {
                       {enrollment.program_name || programMapping[enrollment.programs]}
                     </td>
                     <td data-testid={`status-${index}`}>{enrollment.status}</td>
+                    <td data-testid={`student-type-${index}`}>{enrollment.student_type === 'transferee' ? 'Transferee' : 'New Student'}</td>
                     <td className='action'>
                       <div className='actions d-flex align-items-center'>
                         <Button 
@@ -370,7 +391,32 @@ const RegistrarEnrollment = () => {
                   {selectedEnrollment.academic_year.replace(/[{"}]/g, '')}
                 </Typography>
               </div>
-              
+
+              <div className="enrollment-info-item">
+                <Typography variant="subtitle2" sx={{ color: '#666' }}>Student Type</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {selectedEnrollment.student_type === 'transferee' ? 'Transferee' : 'New Student'}
+                </Typography>
+              </div>
+
+              {selectedEnrollment.student_type === 'transferee' && (
+                <>
+                  <div className="enrollment-info-item">
+                    <Typography variant="subtitle2" sx={{ color: '#666' }}>Previous School</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedEnrollment.previous_school || 'Not specified'}
+                    </Typography>
+                  </div>
+
+                  <div className="enrollment-info-item">
+                    <Typography variant="subtitle2" sx={{ color: '#666' }}>Previous Program</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedEnrollment.previous_program || 'Not specified'}
+                    </Typography>
+                  </div>
+                </>
+              )}
+
               <div className="enrollment-docs-section">
                 <Typography variant="h6" sx={{ 
                   mb: 2,
@@ -430,6 +476,45 @@ const RegistrarEnrollment = () => {
                     <div className="no-doc-message">No Form 137 uploaded</div>
                   )}
                 </div>
+
+                {/* Additional documents for transferee students */}
+                {selectedEnrollment.student_type === 'transferee' && (
+                  <>
+                    <div className="document-preview">
+                      <div className="document-title">
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                          Transfer Certificate
+                        </Typography>
+                      </div>
+                      {selectedEnrollment.transfer_certificate_doc ? (
+                        <img 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.transfer_certificate_doc}`} 
+                          alt="Transfer Certificate" 
+                          style={{ width: '100%', borderRadius: '8px' }}
+                        />
+                      ) : (
+                        <div className="no-doc-message">No transfer certificate uploaded</div>
+                      )}
+                    </div>
+
+                    <div className="document-preview">
+                      <div className="document-title">
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                          Transcript of Records (TOR)
+                        </Typography>
+                      </div>
+                      {selectedEnrollment.tor_doc ? (
+                        <img 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.tor_doc}`} 
+                          alt="Transcript of Records" 
+                          style={{ width: '100%', borderRadius: '8px' }}
+                        />
+                      ) : (
+                        <div className="no-doc-message">No TOR uploaded</div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               <Button 
