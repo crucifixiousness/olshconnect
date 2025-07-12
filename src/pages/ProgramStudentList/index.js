@@ -14,6 +14,7 @@ const ProgramStudentList = () => {
   const [rowsPerPage] = useState(10);
   const [programId, setProgramId] = useState(null);
   const [programName, setProgramName] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Add program mapping
   const programMapping = {
@@ -58,14 +59,19 @@ const ProgramStudentList = () => {
     fetchStudents();
   }, [programId, yearLevel, block, showBy]);
 
+  // Filter students based on search term
+  const filteredStudents = students.filter(student => 
+    student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.block?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.year_level?.toString().includes(searchTerm)
+  );
+
+  // Helper function to get year suffix
   const getYearSuffix = (year) => {
-    switch (year) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      case 4: return 'th';
-      default: return '';
-    }
+    if (year === 1) return 'st';
+    if (year === 2) return 'nd';
+    if (year === 3) return 'rd';
+    return 'th';
   };
 
   return (
@@ -76,7 +82,10 @@ const ProgramStudentList = () => {
   
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
-          <Searchbar/>
+          <Searchbar
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
           <h3 className="hd">Student List - {programName}</h3>
   
           <div className="row cardFilters mt-3">
@@ -149,12 +158,14 @@ const ProgramStudentList = () => {
                   <tr>
                     <td colSpan="5" className="text-center">Loading...</td>
                   </tr>
-                ) : students.length === 0 ? (
+                ) : filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center">No enrolled students found</td>
+                    <td colSpan="5" className="text-center">
+                      {searchTerm ? 'No students found matching your search' : 'No enrolled students found'}
+                    </td>
                   </tr>
                 ) : (
-                  students.map((student) => (
+                  filteredStudents.map((student) => (
                     <tr key={student.id}>
                       <td>{student.student_name}</td>
                       <td className="text-center">
