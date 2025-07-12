@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
       SELECT 
         s.id,
         CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
-        COALESCE(py.year_level, 'Not Set') as year_level,
+        COALESCE(py.year_level, 0) as year_level,
         COALESCE(sb.block_name, 'Not Assigned') as block,
         COALESCE(s.sex, 'Not Specified') as sex
       FROM students s
