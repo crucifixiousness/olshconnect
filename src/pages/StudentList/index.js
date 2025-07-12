@@ -50,7 +50,7 @@ const StudentList = () => {
           <div className="card shadow border-0 p-3 mt-1">
             <Searchbar
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={setSearchTerm}
             />
               <h3 className="hd">Enrolled Student List</h3>
 
