@@ -22,12 +22,36 @@ module.exports = async (req, res) => {
 
       client = await pool.connect();
       
-      // Update the student's block in the database
+      // First, check if the block exists in student_blocks table
+      let blockResult = await client.query(
+        `SELECT block_id FROM student_blocks 
+         WHERE program_id = $1 AND block_name = $2`,
+        [program_id, block]
+      );
+      
+      let blockId;
+      
+      if (blockResult.rows.length === 0) {
+        // Block doesn't exist, create it
+        const insertBlockResult = await client.query(
+          `INSERT INTO student_blocks (program_id, year_level, block_name, academic_year, semester) 
+           VALUES ($1, (SELECT year_level FROM enrollments WHERE student_id = $2 LIMIT 1), $3, 
+                   (SELECT academic_year FROM enrollments WHERE student_id = $2 LIMIT 1), 
+                   (SELECT semester FROM enrollments WHERE student_id = $2 LIMIT 1))
+           RETURNING block_id`,
+          [program_id, student_id, block]
+        );
+        blockId = insertBlockResult.rows[0].block_id;
+      } else {
+        blockId = blockResult.rows[0].block_id;
+      }
+      
+      // Update the student's enrollment with the block_id
       const result = await client.query(
-        `UPDATE students 
-         SET block = $1 
-         WHERE id = $2 AND program_id = $3`,
-        [block, student_id, program_id]
+        `UPDATE enrollments 
+         SET block_id = $1 
+         WHERE student_id = $2`,
+        [blockId, student_id]
       );
 
       if (result.rowCount === 0) {
