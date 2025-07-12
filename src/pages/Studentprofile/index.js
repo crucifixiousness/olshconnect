@@ -71,7 +71,12 @@ const StudentProfile = () => {
     programs: '',
     yearLevel: '',
     semester: '',           // Add this
-    academic_year: ''       // Add this
+    academic_year: '',      // Add this
+    studentType: 'new',     // Add student type field
+    previousSchool: '',     // Add previous school field
+    previousProgram: '',    // Add previous program field
+    transferCertificateDoc: '', // Add transfer certificate field
+    torDoc: ''             // Add TOR field
   });
 
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -328,16 +333,26 @@ const StudentProfile = () => {
         return;
       }
   
-      // ✅ Validate files
+            // ✅ Validate files based on student type
       const maxSize = 50 * 1024 * 1024; // 50MB
       const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-  
-      const files = {
+
+      // Common files for both student types
+      let files = {
         idpic: formDataa.idpic,
         birthCertificateDoc: formDataa.birthCertificateDoc,
         form137Doc: formDataa.form137Doc
       };
-  
+
+      // Additional files for transferee students
+      if (formDataa.studentType === 'transferee') {
+        files = {
+          ...files,
+          transferCertificateDoc: formDataa.transferCertificateDoc,
+          torDoc: formDataa.torDoc
+        };
+      }
+
       for (const [key, file] of Object.entries(files)) {
         if (file && (!allowedTypes.includes(file.type) || file.size > maxSize)) {
           throw new Error(`${key}: Must be JPG, PNG or PDF under 50MB`);
@@ -352,15 +367,29 @@ const StudentProfile = () => {
         academic_year: formDataa.academic_year
       });
   
-      const formDataToSend = new FormData();
+            const formDataToSend = new FormData();
       formDataToSend.append('programs', Number(formDataa.programs));
       formDataToSend.append('yearLevel', Number(formDataa.yearLevel));
       formDataToSend.append('semester', formDataa.semester);
       formDataToSend.append('academic_year', formDataa.academic_year);
-  
+      formDataToSend.append('studentType', formDataa.studentType);
+
+      // Add previous school information for transferees
+      if (formDataa.studentType === 'transferee') {
+        formDataToSend.append('previousSchool', formDataa.previousSchool);
+        formDataToSend.append('previousProgram', formDataa.previousProgram);
+      }
+
+      // Add all documents
       if (formDataa.idpic) formDataToSend.append('idpic', formDataa.idpic);
       if (formDataa.birthCertificateDoc) formDataToSend.append('birthCertificateDoc', formDataa.birthCertificateDoc);
       if (formDataa.form137Doc) formDataToSend.append('form137Doc', formDataa.form137Doc);
+      
+      // Add transferee-specific documents
+      if (formDataa.studentType === 'transferee') {
+        if (formDataa.transferCertificateDoc) formDataToSend.append('transferCertificateDoc', formDataa.transferCertificateDoc);
+        if (formDataa.torDoc) formDataToSend.append('torDoc', formDataa.torDoc);
+      }
   
       const response = await axios.put("/api/enroll", formDataToSend, {
         headers: {
@@ -382,9 +411,14 @@ const StudentProfile = () => {
           yearLevel: "",
           semester: "",
           academic_year: "",
+          studentType: "new",
+          previousSchool: "",
+          previousProgram: "",
           idpic: null,
           birthCertificateDoc: null,
           form137Doc: null,
+          transferCertificateDoc: null,
+          torDoc: null,
         });
   
         await fetchStudentData();
@@ -923,6 +957,52 @@ const StudentProfile = () => {
 
               <div className="registration-section">
                 <Typography variant="h6" className="section-title">
+                  Student Type
+                </Typography>
+                <FormControl fullWidth margin="normal" required>
+                  <Select
+                    name="studentType"
+                    value={formDataa.studentType}
+                    onChange={handleInputChange}
+                    inputProps={{ 'aria-label': 'studentType' }}
+                    data-testid="student-type-select"
+                  >
+                    <MenuItem value="new">New Student</MenuItem>
+                    <MenuItem value="transferee">Transferee</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+
+              {formDataa.studentType === 'transferee' && (
+                <div className="registration-section">
+                  <Typography variant="h6" className="section-title">
+                    Previous School Information
+                  </Typography>
+                  <TextField
+                    label="Previous School/University"
+                    fullWidth
+                    margin="normal"
+                    name="previousSchool"
+                    value={formDataa.previousSchool}
+                    onChange={handleInputChange}
+                    required
+                    data-testid="previous-school-input"
+                  />
+                  <TextField
+                    label="Previous Program/Course"
+                    fullWidth
+                    margin="normal"
+                    name="previousProgram"
+                    value={formDataa.previousProgram}
+                    onChange={handleInputChange}
+                    required
+                    data-testid="previous-program-input"
+                  />
+                </div>
+              )}
+
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
                   Required Documents
                 </Typography>
                 <Grid container spacing={2}>
@@ -966,6 +1046,38 @@ const StudentProfile = () => {
                       data-testid="form137-input"
                     />
                   </Grid>
+                  
+                  {/* Additional documents for transferee students */}
+                  {formDataa.studentType === 'transferee' && (
+                    <>
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" sx={{ mb: 1, mt: 2, color: '#666' }}>Transfer Certificate</Typography>
+                        <input
+                          type="file"
+                          accept=".pdf, .jpeg, .jpg, .png"
+                          className="form-control"
+                          name="transferCertificateDoc"
+                          onChange={(e) => setFormDataa({ ...formDataa, transferCertificateDoc: e.target.files[0] })}
+                          required
+                          aria-label="Transfer Certificate (JPEG/JPG)"
+                          data-testid="transfer-cert-input"
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" sx={{ mb: 1, mt: 2, color: '#666' }}>Transcript of Records (TOR)</Typography>
+                        <input
+                          type="file"
+                          accept=".pdf, .jpeg, .jpg, .png"
+                          className="form-control"
+                          name="torDoc"
+                          onChange={(e) => setFormDataa({ ...formDataa, torDoc: e.target.files[0] })}
+                          required
+                          aria-label="Transcript of Records (TOR)"
+                          data-testid="tor-input"
+                        />
+                      </Grid>
+                    </>
+                  )}
                 </Grid>
               </div>
 
