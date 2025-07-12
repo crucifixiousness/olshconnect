@@ -16,6 +16,7 @@ const StudentList = () => {
   const [showCourseBy, setCourseBy] = useState('');
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -32,6 +33,13 @@ const StudentList = () => {
     fetchStudents();
   }, []);
 
+  // Filter students based on search term
+  const filteredStudents = students.filter(student => 
+    student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.program?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.year_level?.toString().includes(searchTerm)
+  );
+
   return (
     <div className="right-content w-100" data-testid="student-list">
       <div className="card shadow border-0 p-3 mt-1">
@@ -40,7 +48,10 @@ const StudentList = () => {
 
       <div className="card shadow border-0 p-3 mt-1">
           <div className="card shadow border-0 p-3 mt-1">
-            <Searchbar/>
+            <Searchbar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
               <h3 className="hd">Enrolled Student List</h3>
 
               <div className="row cardFilters mt-3">
@@ -106,12 +117,14 @@ const StudentList = () => {
                               <tr>
                                 <td colSpan="5" className="text-center">Loading...</td>
                               </tr>
-                            ) : students.length === 0 ? (
+                            ) : filteredStudents.length === 0 ? (
                               <tr>
-                                <td colSpan="5" className="text-center">No enrolled students found</td>
+                                <td colSpan="5" className="text-center">
+                                  {searchTerm ? 'No students found matching your search' : 'No enrolled students found'}
+                                </td>
                               </tr>
                             ) : (
-                              students.map((student) => (
+                              filteredStudents.map((student) => (
                                 <tr key={student.id}>
                                   <td>{student.student_name}</td>
                                   <td>{student.year_level}</td>
