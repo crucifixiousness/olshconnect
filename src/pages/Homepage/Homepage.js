@@ -39,7 +39,11 @@ const detectMaliciousRegistration = (fields) => {
   // Check all fields for suspicious patterns
   for (const [key, value] of Object.entries(fields)) {
     if (!value) continue;
-    const val = value.toLowerCase();
+    
+    // Ensure value is a string before calling toLowerCase()
+    const stringValue = String(value);
+    const val = stringValue.toLowerCase();
+    
     if (suspiciousUsernames.some(susp => val.includes(susp))) {
       return { detected: true, type: 'Suspicious Username', pattern: value, field: key };
     }
@@ -167,7 +171,7 @@ const Homepage = () => {
                 validNumber = '09'; // Ensure the number starts with "09"
             }
     
-            // Set error for contact number if less than 11 digits
+            // Set error for contact number if less than 11 digits  
             if (name === 'number') {
                 if (validNumber.length > 0 && validNumber.length < 11) {
                     setContactNumberError("Contact number must be 11 digits");
