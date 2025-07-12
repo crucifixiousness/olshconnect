@@ -23,6 +23,9 @@ const ProgramStudentList = () => {
   const [newBlockName, setNewBlockName] = useState('');
   const [showAddBlock, setShowAddBlock] = useState(false);
   
+  // Existing blocks state
+  const [existingBlocks, setExistingBlocks] = useState([]);
+  
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -73,6 +76,23 @@ const ProgramStudentList = () => {
     fetchStudents();
   }, [programId, yearLevel, block, showBy]);
 
+  // Fetch existing blocks when programId changes
+  useEffect(() => {
+    const fetchExistingBlocks = async () => {
+      if (!programId) return;
+      
+      try {
+        const response = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
+        setExistingBlocks(response.data);
+      } catch (error) {
+        console.error('Error fetching existing blocks:', error);
+        setExistingBlocks([]);
+      }
+    };
+
+    fetchExistingBlocks();
+  }, [programId]);
+
   // Filter students based on search term
   const filteredStudents = students.filter(student => 
     student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,6 +137,16 @@ const ProgramStudentList = () => {
       return;
     }
 
+    // Check if the new block name already exists
+    if (newBlockName && existingBlocks.includes(newBlockName)) {
+      setSnackbar({
+        open: true,
+        message: `Block ${newBlockName} already exists. Please select it from the dropdown instead.`,
+        severity: 'error'
+      });
+      return;
+    }
+
     try {
       const blockToAssign = selectedBlock || newBlockName;
       
@@ -133,6 +163,7 @@ const ProgramStudentList = () => {
           severity: 'success'
         });
         handleCloseAssignModal();
+        
         // Refresh the student list
         const updatedStudents = students.map(student => 
           student.id === selectedStudent.id 
@@ -140,6 +171,11 @@ const ProgramStudentList = () => {
             : student
         );
         setStudents(updatedStudents);
+        
+        // Refresh the existing blocks list if a new block was added
+        if (newBlockName && !existingBlocks.includes(newBlockName)) {
+          setExistingBlocks([...existingBlocks, newBlockName].sort());
+        }
       }
     } catch (error) {
       console.error('Error assigning block:', error);
@@ -352,9 +388,19 @@ const ProgramStudentList = () => {
                     <MenuItem value="">
                       <em>Choose a block</em>
                     </MenuItem>
-                    <MenuItem value="A">Block A</MenuItem>
-                    <MenuItem value="B">Block B</MenuItem>
-                    <MenuItem value="C">Block C</MenuItem>
+                    {existingBlocks.length > 0 ? (
+                      existingBlocks.map((block) => (
+                        <MenuItem key={block} value={block}>
+                          Block {block}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <>
+                        <MenuItem value="A">Block A</MenuItem>
+                        <MenuItem value="B">Block B</MenuItem>
+                        <MenuItem value="C">Block C</MenuItem>
+                      </>
+                    )}
                   </Select>
                 </FormControl>
 
@@ -374,14 +420,23 @@ const ProgramStudentList = () => {
                 </div>
 
                 {showAddBlock && (
-                  <TextField
-                    fullWidth
-                    label="New Block Name"
-                    value={newBlockName}
-                    onChange={(e) => setNewBlockName(e.target.value)}
-                    placeholder="e.g., Block D, Block E"
-                    sx={{ mb: 2 }}
-                  />
+                  <>
+                    <TextField
+                      fullWidth
+                      label="New Block Name"
+                      value={newBlockName}
+                      onChange={(e) => setNewBlockName(e.target.value)}
+                      placeholder="e.g., D, E, F"
+                      sx={{ mb: 2 }}
+                      error={existingBlocks.includes(newBlockName)}
+                      helperText={existingBlocks.includes(newBlockName) ? `Block ${newBlockName} already exists` : ''}
+                    />
+                    {existingBlocks.length > 0 && (
+                      <Typography variant="caption" sx={{ color: 'text.secondary', mb: 2, display: 'block' }}>
+                        Existing blocks: {existingBlocks.map(block => `Block ${block}`).join(', ')}
+                      </Typography>
+                    )}
+                  </>
                 )}
               </div>
 
