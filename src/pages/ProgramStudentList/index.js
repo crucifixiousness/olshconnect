@@ -150,6 +150,12 @@ const ProgramStudentList = () => {
     try {
       const blockToAssign = selectedBlock || newBlockName;
       
+      console.log('Sending request with data:', {
+        student_id: selectedStudent.id,
+        block: blockToAssign,
+        program_id: programId
+      });
+      
       const response = await axios.put(`/api/assign-student-block`, {
         student_id: selectedStudent.id,
         block: blockToAssign,
