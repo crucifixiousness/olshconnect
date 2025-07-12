@@ -247,8 +247,16 @@ const StudentProfile = () => {
 
     } 
      // Handle dropdown selections (Material-UI Select) for `formDataa`
-     else if (['programs', 'yearLevel', 'semester', 'academic_year'].includes(name)) {
-      setFormDataa({ ...formDataa, [name]: value });
+     else if (['programs', 'yearLevel', 'semester', 'academic_year', 'studentType'].includes(name)) {
+      if (name === 'studentType') {
+        if (value === 'new') {
+          setFormDataa({ ...formDataa, studentType: value, yearLevel: 1 });
+        } else {
+          setFormDataa({ ...formDataa, studentType: value, yearLevel: '' });
+        }
+      } else {
+        setFormDataa({ ...formDataa, [name]: value });
+      }
      }
     // Handle file uploads separately
     else if (['idpic', 'birthCertificateDoc', 'form137Doc'].includes(name)) {
@@ -877,6 +885,24 @@ const StudentProfile = () => {
             <form onSubmit={handleEnroll} data-testid="enrollment-form">
               <div className="registration-section">
                 <Typography variant="h6" className="section-title">
+                  Student Type
+                </Typography>
+                <FormControl fullWidth margin="normal" required>
+                  <Select
+                    name="studentType"
+                    value={formDataa.studentType}
+                    onChange={handleInputChange}
+                    inputProps={{ 'aria-label': 'studentType' }}
+                    data-testid="student-type-select"
+                  >
+                    <MenuItem value="new">New Student</MenuItem>
+                    <MenuItem value="transferee">Transferee</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
                   Program Selection
                 </Typography>
                 <FormControl fullWidth margin="normal" required>
@@ -908,6 +934,7 @@ const StudentProfile = () => {
                     onChange={handleInputChange}
                     inputProps={{ 'aria-label': 'yearLevel' }}
                     data-testid="year-level-select"
+                    disabled={formDataa.studentType === 'new'}
                   >
                     <MenuItem value={1}>1st Year</MenuItem>
                     <MenuItem value={2}>2nd Year</MenuItem>
@@ -951,24 +978,6 @@ const StudentProfile = () => {
                         {year}
                       </MenuItem>
                     ))}
-                  </Select>
-                </FormControl>
-              </div>
-
-              <div className="registration-section">
-                <Typography variant="h6" className="section-title">
-                  Student Type
-                </Typography>
-                <FormControl fullWidth margin="normal" required>
-                  <Select
-                    name="studentType"
-                    value={formDataa.studentType}
-                    onChange={handleInputChange}
-                    inputProps={{ 'aria-label': 'studentType' }}
-                    data-testid="student-type-select"
-                  >
-                    <MenuItem value="new">New Student</MenuItem>
-                    <MenuItem value="transferee">Transferee</MenuItem>
                   </Select>
                 </FormControl>
               </div>
