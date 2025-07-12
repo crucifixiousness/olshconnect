@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, FormControl, Select, MenuItem, Pagination } from '@mui/material';
-import { FaEye } from "react-icons/fa";
+import { Button, FormControl, Select, MenuItem, Pagination, Modal, Box, Typography, TextField, Snackbar, Alert } from '@mui/material';
+import { FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import Searchbar from '../../components/Searchbar';
 import axios from 'axios';
 
@@ -15,6 +15,20 @@ const ProgramStudentList = () => {
   const [programId, setProgramId] = useState(null);
   const [programName, setProgramName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal states
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedBlock, setSelectedBlock] = useState('');
+  const [newBlockName, setNewBlockName] = useState('');
+  const [showAddBlock, setShowAddBlock] = useState(false);
+  
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Add program mapping
   const programMapping = {
@@ -72,6 +86,74 @@ const ProgramStudentList = () => {
     if (year === 2) return 'nd';
     if (year === 3) return 'rd';
     return 'th';
+  };
+
+  // Handle opening assign modal
+  const handleAssignBlock = (student) => {
+    setSelectedStudent(student);
+    setSelectedBlock('');
+    setNewBlockName('');
+    setShowAddBlock(false);
+    setShowAssignModal(true);
+  };
+
+  // Handle closing assign modal
+  const handleCloseAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedStudent(null);
+    setSelectedBlock('');
+    setNewBlockName('');
+    setShowAddBlock(false);
+  };
+
+  // Handle assigning block to student
+  const handleAssignBlockSubmit = async () => {
+    if (!selectedStudent || (!selectedBlock && !newBlockName)) {
+      setSnackbar({
+        open: true,
+        message: 'Please select a block or add a new one',
+        severity: 'error'
+      });
+      return;
+    }
+
+    try {
+      const blockToAssign = selectedBlock || newBlockName;
+      
+      const response = await axios.put(`/api/assign-student-block`, {
+        student_id: selectedStudent.id,
+        block: blockToAssign,
+        program_id: programId
+      });
+
+      if (response.data.success) {
+        setSnackbar({
+          open: true,
+          message: `Student assigned to Block ${blockToAssign} successfully!`,
+          severity: 'success'
+        });
+        handleCloseAssignModal();
+        // Refresh the student list
+        const updatedStudents = students.map(student => 
+          student.id === selectedStudent.id 
+            ? { ...student, block: blockToAssign }
+            : student
+        );
+        setStudents(updatedStudents);
+      }
+    } catch (error) {
+      console.error('Error assigning block:', error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error || 'Failed to assign block to student',
+        severity: 'error'
+      });
+    }
+  };
+
+  // Handle snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -187,17 +269,33 @@ const ProgramStudentList = () => {
                         }
                       </td>
                       <td className="text-center">
-                        <Button 
-                          variant="contained"
-                          size="small"
-                          startIcon={<FaEye/>}
-                          sx={{
-                            bgcolor: '#0d6efd',
-                            '&:hover': { bgcolor: '#0b5ed7' }
-                          }}
-                        >
-                          View
-                        </Button>
+                        <div className="d-flex gap-2 justify-content-center">
+                          <Button 
+                            variant="contained"
+                            size="small"
+                            startIcon={<FaEye/>}
+                            sx={{
+                              bgcolor: '#0d6efd',
+                              '&:hover': { bgcolor: '#0b5ed7' }
+                            }}
+                          >
+                            View
+                          </Button>
+                          {student.block === 'N/A' && (
+                            <Button 
+                              variant="contained"
+                              size="small"
+                              startIcon={<FaEdit/>}
+                              onClick={() => handleAssignBlock(student)}
+                              sx={{
+                                bgcolor: '#28a745',
+                                '&:hover': { bgcolor: '#218838' }
+                              }}
+                            >
+                              Assign Block
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -210,6 +308,132 @@ const ProgramStudentList = () => {
           </div>          
         </div>
       </div>
+
+      {/* Assign Block Modal */}
+      <Modal
+        open={showAssignModal}
+        onClose={handleCloseAssignModal}
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "500px",
+          backgroundColor: "white",
+          borderRadius: "10px",
+          padding: "30px",
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        }}>
+          <Typography variant="h5" sx={{ mb: 3, color: '#c70202', fontWeight: 'bold' }}>
+            Assign Block to Student
+          </Typography>
+
+          {selectedStudent && (
+            <div>
+              <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                <strong>Student:</strong> {selectedStudent.student_name}
+              </Typography>
+              <Typography variant="subtitle1" sx={{ mb: 3 }}>
+                <strong>Year Level:</strong> {selectedStudent.year_level}{getYearSuffix(selectedStudent.year_level)} Year
+              </Typography>
+
+              <div className="mb-3">
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Select Block:
+                </Typography>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <Select
+                    value={selectedBlock}
+                    onChange={(e) => setSelectedBlock(e.target.value)}
+                    displayEmpty
+                  >
+                    <MenuItem value="">
+                      <em>Choose a block</em>
+                    </MenuItem>
+                    <MenuItem value="A">Block A</MenuItem>
+                    <MenuItem value="B">Block B</MenuItem>
+                    <MenuItem value="C">Block C</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <div className="d-flex align-items-center mb-3">
+                  <Typography variant="subtitle2" sx={{ mr: 2 }}>
+                    Or add a new block:
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<FaPlus />}
+                    onClick={() => setShowAddBlock(!showAddBlock)}
+                    sx={{ borderColor: '#c70202', color: '#c70202' }}
+                  >
+                    {showAddBlock ? 'Cancel' : 'Add New Block'}
+                  </Button>
+                </div>
+
+                {showAddBlock && (
+                  <TextField
+                    fullWidth
+                    label="New Block Name"
+                    value={newBlockName}
+                    onChange={(e) => setNewBlockName(e.target.value)}
+                    placeholder="e.g., Block D, Block E"
+                    sx={{ mb: 2 }}
+                  />
+                )}
+              </div>
+
+              <div className="d-flex gap-2">
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={handleAssignBlockSubmit}
+                  sx={{
+                    bgcolor: '#c70202',
+                    '&:hover': { bgcolor: '#a00000' }
+                  }}
+                >
+                  Assign Block
+                </Button>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={handleCloseAssignModal}
+                  sx={{
+                    borderColor: '#c70202',
+                    color: '#c70202',
+                    '&:hover': {
+                      borderColor: '#a00000',
+                      color: '#a00000'
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </Box>
+      </Modal>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
