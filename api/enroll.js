@@ -62,6 +62,56 @@ module.exports = async (req, res) => {
         });
       }
 
+      // Validate student type
+      if (!fields.studentType || !['new', 'transferee'].includes(fields.studentType)) {
+        return res.status(400).json({
+          error: "Invalid student type. Must be 'new' or 'transferee'"
+        });
+      }
+
+      // Validate required documents based on student type
+      if (!files.idpic) {
+        return res.status(400).json({
+          error: "ID picture is required for all students"
+        });
+      }
+
+      if (!files.birthCertificateDoc) {
+        return res.status(400).json({
+          error: "Birth certificate is required for all students"
+        });
+      }
+
+      if (!files.form137Doc) {
+        return res.status(400).json({
+          error: "Form 137 is required for all students"
+        });
+      }
+
+      // Validate transferee-specific requirements
+      if (fields.studentType === 'transferee') {
+        if (!files.transferCertificateDoc) {
+          return res.status(400).json({
+            error: "Transfer certificate is required for transferee students"
+          });
+        }
+        if (!files.torDoc) {
+          return res.status(400).json({
+            error: "Transcript of Records (TOR) is required for transferee students"
+          });
+        }
+        if (!fields.previousSchool || !fields.previousSchool.trim()) {
+          return res.status(400).json({
+            error: "Previous school information is required for transferee students"
+          });
+        }
+        if (!fields.previousProgram || !fields.previousProgram.trim()) {
+          return res.status(400).json({
+            error: "Previous program information is required for transferee students"
+          });
+        }
+      }
+
       client = await pool.connect();
       await client.query('BEGIN');
 
@@ -79,7 +129,7 @@ module.exports = async (req, res) => {
 
       const yearResult = await client.query(
         "SELECT year_id FROM program_year WHERE program_id = $1 AND year_level = $2",
-        [programs, yearLevel]
+        [fields.programs, fields.yearLevel]
       );
 
       let year_id;
@@ -89,17 +139,33 @@ module.exports = async (req, res) => {
         
         await client.query(
           "INSERT INTO program_year (year_id, program_id, year_level) VALUES ($1, $2, $3)",
-          [year_id, programs, yearLevel]
+          [year_id, fields.programs, fields.yearLevel]
         );
       } else {
         year_id = yearResult.rows[0].year_id;
       }
 
       const idpic = files.idpic ? await fs.readFile(files.idpic[0].filepath) : null;
-      const birthCertificateDoc = files.birthCertificateDoc ? 
+      
+      // Handle documents based on student type
+      let birthCertificateDoc = null;
+      let transferCertificateDoc = null;
+      let torDoc = null;
+      let form137Doc = null;
+      
+      // Common documents for both student types
+      birthCertificateDoc = files.birthCertificateDoc ? 
         await fs.readFile(files.birthCertificateDoc[0].filepath) : null;
-      const form137Doc = files.form137Doc ? 
+      form137Doc = files.form137Doc ? 
         await fs.readFile(files.form137Doc[0].filepath) : null;
+      
+      // Additional documents for transferee students
+      if (fields.studentType === 'transferee') {
+        transferCertificateDoc = files.transferCertificateDoc ? 
+          await fs.readFile(files.transferCertificateDoc[0].filepath) : null;
+        torDoc = files.torDoc ? 
+          await fs.readFile(files.torDoc[0].filepath) : null;
+      }
 
       const existingEnrollment = await client.query(
         "SELECT enrollment_id FROM enrollments WHERE student_id = $1 AND academic_year = $2 AND semester = $3",
@@ -117,10 +183,10 @@ module.exports = async (req, res) => {
         `INSERT INTO enrollments 
          (student_id, program_id, year_id, semester, enrollment_status, 
           enrollment_date, idpic, birth_certificate_doc, form137_doc, 
-          payment_status, academic_year) 
-         VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8)
+          payment_status, academic_year, transfer_certificate_doc, tor_doc) 
+         VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10)
          RETURNING enrollment_id`,
-        [id, programs, year_id, fields.semester, idpic, birthCertificateDoc, form137Doc, fields.academic_year]
+        [id, fields.programs, year_id, fields.semester, idpic, birthCertificateDoc, form137Doc, fields.academic_year, transferCertificateDoc, torDoc]
       );
 
       await client.query('COMMIT');
@@ -130,12 +196,17 @@ module.exports = async (req, res) => {
         fileArray.map(file => fs.unlink(file.filepath))
       ).flat());
       
+      const message = fields.studentType === 'transferee' 
+        ? "Enrollment submitted successfully. Your transfer credits will be evaluated by the registrar's office."
+        : "Enrollment submitted successfully";
+        
       res.json({ 
-        message: "Enrollment submitted successfully",
+        message: message,
         status: "Pending",
         enrollment_id: enrollmentResult.rows[0].enrollment_id,
         semester: fields.semester,
-        academic_year: fields.academic_year
+        academic_year: fields.academic_year,
+        studentType: fields.studentType
       });
     } catch (error) {
       if (client) {
