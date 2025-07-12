@@ -208,18 +208,52 @@ const AssignCourses = () => {
   // Fetch logged-in user details (assuming it's stored in localStorage)
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
-    const storedStaffId = localStorage.getItem("staff_id"); // Add this line
+    const storedStaffId = localStorage.getItem("staff_id");
     
+    // Try to get program_id from localStorage first
     if (storedProgramId) {
       const programId = parseInt(storedProgramId, 10);
       if (!isNaN(programId)) {
         setProgramId(programId);
         setProgramName(programMapping[programId] || "Unknown");
       }
+    } else {
+      // Fallback: try to get program_id from user object in localStorage
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          if (userData.program_id) {
+            const programId = parseInt(userData.program_id, 10);
+            if (!isNaN(programId)) {
+              setProgramId(programId);
+              setProgramName(programMapping[programId] || "Unknown");
+              // Also store it in localStorage for future use
+              localStorage.setItem("program_id", programId.toString());
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
+      }
     }
 
-    if (storedStaffId) { // Add this block
+    if (storedStaffId) {
       setStaffId(storedStaffId);
+    } else {
+      // Fallback: try to get staff_id from user object
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          if (userData.staff_id) {
+            setStaffId(userData.staff_id.toString());
+            localStorage.setItem("staff_id", userData.staff_id.toString());
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
+      }
     }
   }, []);
   
