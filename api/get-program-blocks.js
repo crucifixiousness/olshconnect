@@ -21,15 +21,15 @@ module.exports = async (req, res) => {
 
       client = await pool.connect();
       
-      // Get all unique blocks for the specified program
+      // Get all unique blocks for the specified program from student_blocks table
       const result = await client.query(
-        `SELECT DISTINCT block 
-         FROM students 
+        `SELECT DISTINCT block_name 
+         FROM student_blocks 
          WHERE program_id = $1 
-         AND block IS NOT NULL 
-         AND block != 'N/A' 
-         AND block != ''
-         ORDER BY block`,
+         AND block_name IS NOT NULL 
+         AND block_name != 'N/A' 
+         AND block_name != ''
+         ORDER BY block_name`,
         [program_id]
       );
 
