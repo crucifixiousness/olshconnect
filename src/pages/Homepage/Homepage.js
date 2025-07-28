@@ -873,21 +873,21 @@ const Homepage = () => {
                     <div className="announcements-container d-flex flex-wrap">
                         <div className="announcement-card">
                         <h3>No Tuition Fee Increase</h3>
-                        <p>June 22, 2021</p>
+                        <p>June 22, 2025</p>
                         <p>PS-GS & JUNIOR HIGH SCHOOL (Enroll Now!) click Read more to register</p>
                         <button className="btn btn-primary">Read More</button>
                         </div>
 
                         <div className="announcement-card">
                         <h3>No Tuition Fee Increase</h3>
-                        <p>June 22, 2021</p>
+                        <p>June 22, 2025</p>
                         <p>SENIOR HIGH SCHOOL - ABM / HUMSS / STEM / TECHVOC (Enroll Now!) click Read more to register</p>
                         <button className="btn btn-primary">Read More</button>
                         </div>
 
                         <div className="announcement-card">
                         <h3>Upcoming Events</h3>
-                        <p>June 28, 2021</p>
+                        <p>July 1 - 18, 2025</p>
                         <p>OLSHCO ENROLLMENT IS ONGOING!</p>
                         <button className="btn btn-primary">Read More</button>
                         </div>
