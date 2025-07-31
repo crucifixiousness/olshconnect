@@ -123,6 +123,15 @@ module.exports = async (req, res) => {
       GROUP BY payment_method
       ORDER BY total_amount DESC
     `);
+    console.log('Debug - Payment Methods Distribution:', paymentMethodStatsResult.rows);
+
+    // Debug: Check all payment methods in database
+    const allPaymentMethodsDebug = await pool.query(`
+      SELECT payment_method, COUNT(*) as count
+      FROM payment_transactions
+      GROUP BY payment_method
+    `);
+    console.log('Debug - All Payment Methods in Database:', allPaymentMethodsDebug.rows);
 
     // Get program-wise payment statistics
     const programStatsResult = await pool.query(`
