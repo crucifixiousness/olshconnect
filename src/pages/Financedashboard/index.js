@@ -229,6 +229,7 @@ const FinanceDashboard = () => {
               {paymentStats.paymentMethods.length > 0 ? (
                 <Box mb={3}>
                   <Typography variant="subtitle2" className="mb-2">Payment Methods Distribution</Typography>
+                  {console.log('🎯 Payment Methods Data:', paymentStats.paymentMethods)}
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
@@ -240,14 +241,25 @@ const FinanceDashboard = () => {
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="total_amount"
+                        nameKey="payment_method"
                       >
                         {paymentStats.paymentMethods.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => `₱${parseFloat(value).toLocaleString()}`} />
+                      <Tooltip 
+                        formatter={(value, name) => [`₱${parseFloat(value).toLocaleString()}`, name]}
+                        labelFormatter={(value) => value}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
+                  
+                  {/* Debug: Show payment methods data as text */}
+                  <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+                    <Typography variant="caption" color="textSecondary">
+                      Payment Methods Data: {JSON.stringify(paymentStats.paymentMethods)}
+                    </Typography>
+                  </Box>
                 </Box>
               ) : (
                 <Box mb={3}>
