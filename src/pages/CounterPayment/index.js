@@ -181,14 +181,183 @@ const CounterPayment = () => {
 
   const handleViewHistory = async () => {
     try {
-      const response = await axios.get(`/api/get-verified-enrollments?studentId=${studentInfo.id}`, {
+      if (!studentInfo) {
+        setSnackbar({
+          open: true,
+          message: 'Please search for a student first',
+          severity: 'warning'
+        });
+        return;
+      }
+
+      const response = await axios.get(`/api/payment-history?studentId=${studentInfo.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPaymentHistory(response.data);
       setShowHistory(true);
     } catch (error) {
       console.error('Error fetching payment history:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error fetching payment history',
+        severity: 'error'
+      });
     }
+  };
+
+  const handlePrintReceipt = () => {
+    if (!studentInfo) {
+      setSnackbar({
+        open: true,
+        message: 'Please search for a student first',
+        severity: 'warning'
+      });
+      return;
+    }
+
+    const receiptContent = `
+      <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #c70202; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
+          <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
+          <h3 style="color: #c70202; margin: 15px 0;">Student Payment Receipt</h3>
+        </div>
+        <div style="border-top: 2px solid #c70202; border-bottom: 2px solid #c70202; padding: 15px 0; margin: 15px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 5px 0;"><strong>Student Name:</strong></td>
+              <td>${studentInfo.fullName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Student ID:</strong></td>
+              <td>${studentInfo.studentId}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Program:</strong></td>
+              <td>${studentInfo.program}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Enrollment Status:</strong></td>
+              <td>${studentInfo.enrollmentStatus}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Total Fee:</strong></td>
+              <td>₱${studentInfo.totalFee?.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
+              <td>₱${studentInfo.amountPaid?.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Remaining Balance:</strong></td>
+              <td>₱${studentInfo.balance?.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Date:</strong></td>
+              <td>${new Date().toLocaleDateString()}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is a payment summary. Please keep this for your records.</p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Student Payment Receipt</title>
+        </head>
+        <body style="margin: 0; padding: 20px;">
+          ${receiptContent}
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              }
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handlePrintIndividualReceipt = (payment) => {
+    const receiptContent = `
+      <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #c70202; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
+          <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
+          <h3 style="color: #c70202; margin: 15px 0;">Student Payment Receipt</h3>
+        </div>
+        <div style="border-top: 2px solid #c70202; border-bottom: 2px solid #c70202; padding: 15px 0; margin: 15px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 5px 0;"><strong>Student Name:</strong></td>
+              <td>${studentInfo.fullName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Student ID:</strong></td>
+              <td>${studentInfo.studentId}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Program:</strong></td>
+              <td>${studentInfo.program}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Enrollment Status:</strong></td>
+              <td>${studentInfo.enrollmentStatus}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Total Fee:</strong></td>
+              <td>₱${studentInfo.totalFee?.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
+              <td>₱${payment.amount_paid?.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Remaining Balance:</strong></td>
+              <td>₱${studentInfo.balance?.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Date:</strong></td>
+              <td>${new Date(payment.payment_date).toLocaleDateString()}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is a payment summary. Please keep this for your records.</p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Student Payment Receipt</title>
+        </head>
+        <body style="margin: 0; padding: 20px;">
+          ${receiptContent}
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              }
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   return (
@@ -339,6 +508,7 @@ const CounterPayment = () => {
                 <Button 
                   variant="outlined" 
                   startIcon={<FaPrint />}
+                  onClick={handlePrintReceipt}
                   sx={{
                     borderColor: '#c70202',
                     color: '#c70202',
@@ -386,21 +556,30 @@ const CounterPayment = () => {
                     <TableCell>Amount</TableCell>
                     <TableCell>Method</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Receipt</TableCell>
+                    <TableCell>Reference</TableCell>
+                    <TableCell>Action</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paymentHistory.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
-                      <TableCell>₱{payment.amount.toLocaleString()}</TableCell>
-                      <TableCell>{payment.method}</TableCell>
-                      <TableCell>{payment.status}</TableCell>
+                  {paymentHistory.map((payment, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
+                      <TableCell>₱{parseFloat(payment.amount_paid).toLocaleString()}</TableCell>
+                      <TableCell>{payment.payment_method}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={payment.payment_status} 
+                          color={payment.payment_status === 'Fully Paid' ? 'success' : 'warning'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{payment.reference_number}</TableCell>
                       <TableCell>
                         <Button 
                           variant="outlined" 
                           size="small"
                           startIcon={<FaPrint />}
+                          onClick={() => handlePrintIndividualReceipt(payment)}
                           sx={{
                             borderColor: '#c70202',
                             color: '#c70202',
@@ -418,6 +597,11 @@ const CounterPayment = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+            {paymentHistory.length === 0 && (
+              <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
+                No payment history found for this student
+              </Typography>
+            )}
           </Box>
         </Modal>
 
