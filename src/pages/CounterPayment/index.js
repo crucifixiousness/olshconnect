@@ -1,9 +1,30 @@
 import { useState } from 'react';
-import { TextField, Button, Grid, Paper, Typography, FormControl, InputLabel, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Snackbar, Alert} from '@mui/material';
+import { 
+  TextField, 
+  Button, 
+  Grid, 
+  Paper, 
+  Typography, 
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Modal,
+  Box,
+  Chip
+} from '@mui/material';
 import { FaSearch, FaPrint, FaHistory } from 'react-icons/fa';
 import axios from 'axios';
+import { Snackbar, Alert } from '@mui/material';
 
 const CounterPayment = () => {
+  // Add this state with other states
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -97,6 +118,16 @@ const CounterPayment = () => {
         return;
       }
 
+      // Check if student is fully paid
+      if (studentInfo.balance <= 0) {
+        setSnackbar({
+          open: true,
+          message: 'Student is already fully paid',
+          severity: 'warning'
+        });
+        return;
+      }
+
       const response = await axios.post('/api/counter-payment', {
         enrollment_id: studentInfo.enrollment_id,
         amount_paid: paymentAmount,
@@ -129,21 +160,24 @@ const CounterPayment = () => {
     }
   };
 
-  // Add this at the end of your return statement, before the final closing div
-  <Snackbar
-    open={snackbar.open}
-    autoHideDuration={6000}
-    onClose={() => setSnackbar({ ...snackbar, open: false })}
-    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-  >
-    <Alert
-      onClose={() => setSnackbar({ ...snackbar, open: false })}
-      severity={snackbar.severity}
-      sx={{ width: '100%' }}
-    >
-      {snackbar.message}
-    </Alert>
-  </Snackbar>
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Officially Enrolled':
+        return 'success';
+      case 'Verified':
+        return 'info';
+      case 'For Payment':
+        return 'warning';
+      case 'Fully Paid':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
+  const isPaymentDisabled = () => {
+    return !studentInfo || !paymentAmount || !paymentMethod || studentInfo.balance <= 0;
+  };
 
   const handleViewHistory = async () => {
     try {
@@ -160,10 +194,10 @@ const CounterPayment = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3">
-        <Typography variant="h5" className="mb-4">Counter Payment</Typography>
+        <Typography variant="h5" className="mb-4" style={{ color: '#c70202' }}>Counter Payment</Typography>
 
         {/* Search Student Section */}
-        <Paper elevation={3} className="p-3 mb-4">
+        <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0' }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={8}>
               <TextField
@@ -171,6 +205,16 @@ const CounterPayment = () => {
                 label="Search Student (ID or Name)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={4}>
@@ -179,6 +223,12 @@ const CounterPayment = () => {
                 startIcon={<FaSearch />}
                 onClick={handleSearch}
                 fullWidth
+                sx={{
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  },
+                }}
               >
                 Search
               </Button>
@@ -188,18 +238,32 @@ const CounterPayment = () => {
 
         {/* Student Information */}
         {studentInfo && (
-          <Paper elevation={3} className="p-3 mb-4">
-            <Typography variant="h6" className="mb-3">Student Information</Typography>
+          <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0' }}>
+            <Typography variant="h6" className="mb-3" style={{ color: '#c70202' }}>Student Information</Typography>
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <Typography>Name: {studentInfo.fullName}</Typography>
-                <Typography>Student ID: {studentInfo.studentId}</Typography>
-                <Typography>Program: {studentInfo.program}</Typography>
+                <Typography><strong>Name:</strong> {studentInfo.fullName}</Typography>
+                <Typography><strong>Student ID:</strong> {studentInfo.studentId}</Typography>
+                <Typography><strong>Program:</strong> {studentInfo.program}</Typography>
+                <Chip 
+                  label={studentInfo.enrollmentStatus} 
+                  color={getStatusColor(studentInfo.enrollmentStatus)}
+                  size="small"
+                  className="mt-1"
+                />
               </Grid>
               <Grid item xs={6}>
-                <Typography>Total Fee: ₱{studentInfo.totalFee?.toLocaleString()}</Typography>
-                <Typography>Amount Paid: ₱{studentInfo.amountPaid?.toLocaleString()}</Typography>
-                <Typography>Balance: ₱{studentInfo.balance?.toLocaleString()}</Typography>
+                <Typography><strong>Total Fee:</strong> ₱{studentInfo.totalFee?.toLocaleString()}</Typography>
+                <Typography><strong>Amount Paid:</strong> ₱{studentInfo.amountPaid?.toLocaleString()}</Typography>
+                <Typography><strong>Balance:</strong> ₱{studentInfo.balance?.toLocaleString()}</Typography>
+                {studentInfo.balance <= 0 && (
+                  <Chip 
+                    label="Fully Paid" 
+                    color="success"
+                    size="small"
+                    className="mt-1"
+                  />
+                )}
               </Grid>
             </Grid>
           </Paper>
@@ -207,8 +271,8 @@ const CounterPayment = () => {
 
         {/* Payment Form */}
         {studentInfo && (
-          <Paper elevation={3} className="p-3 mb-4">
-            <Typography variant="h6" className="mb-3">Payment Details</Typography>
+          <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0' }}>
+            <Typography variant="h6" className="mb-3" style={{ color: '#c70202' }}>Payment Details</Typography>
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <TextField
@@ -217,6 +281,17 @@ const CounterPayment = () => {
                   type="number"
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
+                  disabled={studentInfo.balance <= 0}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -225,6 +300,17 @@ const CounterPayment = () => {
                   <Select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
+                    disabled={studentInfo.balance <= 0}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#c70202',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#c70202',
+                        },
+                      },
+                    }}
                   >
                     <MenuItem value="Cash">Cash</MenuItem>
                     <MenuItem value="Check">Check</MenuItem>
@@ -235,15 +321,32 @@ const CounterPayment = () => {
               <Grid item xs={12} className="mt-3">
                 <Button 
                   variant="contained" 
-                  color="primary" 
                   onClick={handlePayment}
+                  disabled={isPaymentDisabled()}
                   className="me-2"
+                  sx={{
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                    '&:disabled': {
+                      bgcolor: '#cccccc',
+                    },
+                  }}
                 >
                   Process Payment
                 </Button>
                 <Button 
                   variant="outlined" 
                   startIcon={<FaPrint />}
+                  sx={{
+                    borderColor: '#c70202',
+                    color: '#c70202',
+                    '&:hover': {
+                      borderColor: '#a00000',
+                      bgcolor: 'rgba(199, 2, 2, 0.04)',
+                    },
+                  }}
                 >
                   Print Receipt
                 </Button>
@@ -252,6 +355,14 @@ const CounterPayment = () => {
                   startIcon={<FaHistory />}
                   onClick={handleViewHistory}
                   className="ms-2"
+                  sx={{
+                    borderColor: '#c70202',
+                    color: '#c70202',
+                    '&:hover': {
+                      borderColor: '#a00000',
+                      bgcolor: 'rgba(199, 2, 2, 0.04)',
+                    },
+                  }}
                 >
                   View History
                 </Button>
@@ -266,7 +377,7 @@ const CounterPayment = () => {
           onClose={() => setShowHistory(false)}
         >
           <Box sx={modalStyle}>
-            <Typography variant="h6" className="mb-3">Payment History</Typography>
+            <Typography variant="h6" className="mb-3" style={{ color: '#c70202' }}>Payment History</Typography>
             <TableContainer>
               <Table>
                 <TableHead>
@@ -290,6 +401,14 @@ const CounterPayment = () => {
                           variant="outlined" 
                           size="small"
                           startIcon={<FaPrint />}
+                          sx={{
+                            borderColor: '#c70202',
+                            color: '#c70202',
+                            '&:hover': {
+                              borderColor: '#a00000',
+                              bgcolor: 'rgba(199, 2, 2, 0.04)',
+                            },
+                          }}
                         >
                           Print
                         </Button>
@@ -301,22 +420,23 @@ const CounterPayment = () => {
             </TableContainer>
           </Box>
         </Modal>
-      </div>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-    >
-        <Alert
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        severity={snackbar.severity}
-        variant="filled"
-        sx={{ width: '100%' }}
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-        {snackbar.message}
-        </Alert>
-     </Snackbar>
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
     </div>
   );
 };
