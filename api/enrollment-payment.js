@@ -70,16 +70,16 @@ module.exports = async (req, res) => {
 
       const enrollmentId = enrollmentResult.rows[0].enrollment_id;
 
+      // Insert into enrollment_payment_receipts table
       const result = await client.query(
-        `UPDATE enrollments 
-         SET enrollment_payment_receipt = $1
-         WHERE enrollment_id = $2 AND student_id = $3
-         RETURNING enrollment_id`,
-        [receiptImage, enrollmentId, req.user.id]
+        `INSERT INTO enrollment_payment_receipts (enrollment_id, receipt_image)
+         VALUES ($1, $2)
+         RETURNING receipt_id`,
+        [enrollmentId, receiptImage]
       );
 
       if (result.rows.length === 0) {
-        throw new Error('Failed to update enrollment');
+        throw new Error('Failed to insert receipt');
       }
 
       // Cleanup temp file
@@ -87,7 +87,8 @@ module.exports = async (req, res) => {
 
       res.json({ 
         message: "Receipt uploaded successfully",
-        enrollment_id: result.rows[0].enrollment_id
+        receipt_id: result.rows[0].receipt_id,
+        enrollment_id: enrollmentId
       });
     } else {
       res.status(405).json({ message: 'Method not allowed' });
