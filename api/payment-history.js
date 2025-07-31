@@ -25,42 +25,42 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const decoded = authenticateToken(req);
+    // Verify token
+    authenticateToken(req);
 
+    const { studentId } = req.query;
+    
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID is required' });
+    }
+
+    // Get payment history for the specific student
     const result = await pool.query(`
       SELECT 
         pt.transaction_id,
-        pt.reference_number,
-        pt.payment_date,
         pt.amount_paid,
+        pt.payment_date,
         pt.payment_method,
-        pt.payment_status,
+        pt.reference_number,
         pt.remarks,
-        a.full_name as processed_by_name
+        pt.payment_status,
+        e.enrollment_status,
+        p.program_name
       FROM payment_transactions pt
-      LEFT JOIN admins a ON pt.processed_by = a.staff_id
+      JOIN enrollments e ON pt.enrollment_id = e.enrollment_id
+      JOIN program p ON e.program_id = p.program_id
       WHERE pt.student_id = $1
       ORDER BY pt.payment_date DESC
-    `, [decoded.id]);
+    `, [studentId]);
 
-    // Add debug logging
-    console.log('Student ID:', decoded.id);
-    console.log('Query result:', result.rows);
+    console.log('Debug - Payment History for Student:', studentId, 'Count:', result.rows.length);
 
-    return res.status(200).json(result.rows);
-
+    res.status(200).json(result.rows);
   } catch (error) {
-    // Detailed error logging
-    console.error('Detailed error:', {
-      message: error.message,
-      stack: error.stack,
-      query: error.query,
-      parameters: error.parameters
-    });
-    
-    return res.status(500).json({ 
+    console.error('Error fetching payment history:', error);
+    res.status(500).json({ 
       error: 'Failed to fetch payment history',
-      details: error.message 
+      details: error.message
     });
   }
 };
