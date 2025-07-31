@@ -32,16 +32,15 @@ module.exports = async (req, res) => {
     const debugResult1 = await pool.query(`
       SELECT COUNT(*) as total_count
       FROM enrollments e
-      WHERE e.enrollment_status = 'For Payment'
+      WHERE e.enrollment_status = 'Verified'
     `);
-    console.log('Debug - Total For Payment enrollments:', debugResult1.rows[0].total_count);
+    console.log('Debug - Total Verified enrollments:', debugResult1.rows[0].total_count);
 
     const debugResult2 = await pool.query(`
       SELECT COUNT(*) as total_count
-      FROM enrollments e
-      WHERE e.enrollment_payment_receipt IS NOT NULL
+      FROM enrollment_payment_receipts epr
     `);
-    console.log('Debug - Total enrollments with receipts:', debugResult2.rows[0].total_count);
+    console.log('Debug - Total receipts in enrollment_payment_receipts:', debugResult2.rows[0].total_count);
 
     const debugResult3 = await pool.query(`
       SELECT COUNT(*) as total_count
@@ -66,7 +65,24 @@ module.exports = async (req, res) => {
     `);
     console.log('Debug - All payment transaction remarks:', debugResult5.rows);
 
-    // Main query - less restrictive to see what we can get
+    // Check if there are any enrollments with receipts
+    const debugResult6 = await pool.query(`
+      SELECT COUNT(*) as total_count
+      FROM enrollments e
+      JOIN enrollment_payment_receipts epr ON e.enrollment_id = epr.enrollment_id
+    `);
+    console.log('Debug - Total enrollments with receipts:', debugResult6.rows[0].total_count);
+
+    // Check enrollments with receipts and Verified status
+    const debugResult7 = await pool.query(`
+      SELECT COUNT(*) as total_count
+      FROM enrollments e
+      JOIN enrollment_payment_receipts epr ON e.enrollment_id = epr.enrollment_id
+      WHERE e.enrollment_status = 'Verified'
+    `);
+    console.log('Debug - Total Verified enrollments with receipts:', debugResult7.rows[0].total_count);
+
+    // Main query - start with basic data and add conditions
     const result = await pool.query(`
       SELECT DISTINCT
         e.enrollment_id AS "_id",
@@ -79,9 +95,8 @@ module.exports = async (req, res) => {
       JOIN students s ON e.student_id = s.id
       JOIN program p ON e.program_id = p.program_id
       JOIN program_year py ON e.year_id = py.year_id
-      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
       JOIN enrollment_payment_receipts epr ON e.enrollment_id = epr.enrollment_id
-      WHERE e.enrollment_status = 'For Payment'
+      WHERE e.enrollment_status = 'Verified'
       ORDER BY "studentName" ASC
     `);
 
