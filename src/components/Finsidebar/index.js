@@ -3,7 +3,7 @@ import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { FaCashRegister } from "react-icons/fa";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { IoDocuments } from "react-icons/io5";
@@ -15,6 +15,7 @@ const FinanceSidebar = () =>{
   // eslint-disable-next-line
   const [activeTab, setActiveTab] = useState(0);
   const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
+  const navigate = useNavigate();
 
   const isOpenStudentMenu = (index) => {
     setActiveTab(index);
@@ -23,6 +24,13 @@ const FinanceSidebar = () =>{
 
   const handleTabClick = (index) => {
     setActiveTab(index);
+  };
+
+  const handleLogout = () => {
+    // Clear all local storage data
+    localStorage.clear();
+    // Redirect to homepage
+    navigate('/homepage');
   };
 
 
@@ -107,11 +115,11 @@ const FinanceSidebar = () =>{
 
           <br/>
           <div className='logoutWrap'>
-              <Link to={"/homepage"}>
-              <div className='logoutBox'>
-                  <Button variant="contained"><HiOutlineLogout/>Logout</Button>
-              </div>
-              </Link>
+            <div className='logoutBox'>
+              <Button variant="contained" onClick={handleLogout}>
+                <HiOutlineLogout/>Logout
+              </Button>
+            </div>
           </div>
           
 
