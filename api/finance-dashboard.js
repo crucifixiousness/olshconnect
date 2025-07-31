@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
 
     // Get total revenue (sum of all payments)
     const totalRevenueResult = await pool.query(`
-      SELECT COALESCE(SUM(amount_paid), 0) as total_revenue
+      SELECT CAST(COALESCE(SUM(amount_paid), 0) AS DECIMAL(10,2)) as total_revenue
       FROM payment_transactions
       WHERE payment_status IN ('Fully Paid', 'Partial')
     `);
@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
     const recentTransactionsResult = await pool.query(`
       SELECT 
         pt.transaction_id,
-        pt.amount_paid,
+        CAST(pt.amount_paid AS DECIMAL(10,2)) as amount_paid,
         pt.payment_date,
         pt.payment_method,
         pt.reference_number,
@@ -104,7 +104,7 @@ module.exports = async (req, res) => {
       SELECT 
         DATE_TRUNC('month', payment_date) as month,
         COUNT(*) as transaction_count,
-        SUM(amount_paid) as monthly_revenue
+        CAST(SUM(amount_paid) AS DECIMAL(10,2)) as monthly_revenue
       FROM payment_transactions
       WHERE payment_status IN ('Fully Paid', 'Partial')
       AND payment_date >= CURRENT_DATE - INTERVAL '6 months'
@@ -117,7 +117,7 @@ module.exports = async (req, res) => {
       SELECT 
         payment_method,
         COUNT(*) as count,
-        SUM(amount_paid) as total_amount
+        CAST(SUM(amount_paid) AS DECIMAL(10,2)) as total_amount
       FROM payment_transactions
       WHERE payment_status IN ('Fully Paid', 'Partial')
       GROUP BY payment_method
@@ -138,7 +138,7 @@ module.exports = async (req, res) => {
       SELECT 
         p.program_name,
         COUNT(DISTINCT e.student_id) as student_count,
-        SUM(pt.amount_paid) as total_revenue
+        CAST(COALESCE(SUM(pt.amount_paid), 0) AS DECIMAL(10,2)) as total_revenue
       FROM enrollments e
       JOIN program p ON e.program_id = p.program_id
       LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id AND pt.payment_status IN ('Fully Paid', 'Partial')
