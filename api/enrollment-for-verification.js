@@ -28,25 +28,45 @@ module.exports = async (req, res) => {
     // Verify token
     authenticateToken(req);
 
-    // Debug query to check data
-    const debugResult = await pool.query(`
+    // Debug queries to check what data exists
+    const debugResult1 = await pool.query(`
       SELECT COUNT(*) as total_count
       FROM enrollments e
-      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
       WHERE e.enrollment_status = 'For Payment'
     `);
-    console.log('Debug - Total For Payment enrollments:', debugResult.rows[0].total_count);
+    console.log('Debug - Total For Payment enrollments:', debugResult1.rows[0].total_count);
 
     const debugResult2 = await pool.query(`
       SELECT COUNT(*) as total_count
       FROM enrollments e
-      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
-      WHERE e.enrollment_status = 'For Payment'
-      AND pt.remarks = 'For Enrollment'
+      WHERE e.enrollment_payment_receipt IS NOT NULL
     `);
-    console.log('Debug - Total matching enrollments:', debugResult2.rows[0].total_count);
+    console.log('Debug - Total enrollments with receipts:', debugResult2.rows[0].total_count);
 
-    // Main query with exact field names matching frontend
+    const debugResult3 = await pool.query(`
+      SELECT COUNT(*) as total_count
+      FROM payment_transactions pt
+      WHERE pt.remarks = 'For Enrollment'
+    `);
+    console.log('Debug - Total payment transactions with For Enrollment remarks:', debugResult3.rows[0].total_count);
+
+    // Show all enrollment statuses
+    const debugResult4 = await pool.query(`
+      SELECT enrollment_status, COUNT(*) as count
+      FROM enrollments
+      GROUP BY enrollment_status
+    `);
+    console.log('Debug - All enrollment statuses:', debugResult4.rows);
+
+    // Show all payment transaction remarks
+    const debugResult5 = await pool.query(`
+      SELECT remarks, COUNT(*) as count
+      FROM payment_transactions
+      GROUP BY remarks
+    `);
+    console.log('Debug - All payment transaction remarks:', debugResult5.rows);
+
+    // Main query - less restrictive to see what we can get
     const result = await pool.query(`
       SELECT DISTINCT
         e.enrollment_id AS "_id",
@@ -54,15 +74,14 @@ module.exports = async (req, res) => {
         p.program_name as "program",
         py.year_level as "yearLevel",
         e.enrollment_status as "enrollmentStatus",
-        encode(e.enrollment_payment_receipt, 'base64') as "proofOfPayment"
+        encode(epr.receipt_image, 'base64') as "proofOfPayment"
       FROM enrollments e
       JOIN students s ON e.student_id = s.id
       JOIN program p ON e.program_id = p.program_id
       JOIN program_year py ON e.year_id = py.year_id
-      JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
-      WHERE e.enrollment_payment_receipt IS NOT NULL
-      AND e.enrollment_status = 'For Payment'
-      AND pt.remarks = 'For Enrollment'
+      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id
+      JOIN enrollment_payment_receipts epr ON e.enrollment_id = epr.enrollment_id
+      WHERE e.enrollment_status = 'For Payment'
       ORDER BY "studentName" ASC
     `);
 
