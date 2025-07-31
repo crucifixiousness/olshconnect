@@ -15,6 +15,7 @@ const StudentSidebar = () => {
   // Remove the initial 0 value since we'll set it in useEffect
   const [activeTab, setActiveTab] = useState(null);
   const [isOfficiallyEnrolled, setIsOfficiallyEnrolled] = useState(false);
+  const [canAccessPayment, setCanAccessPayment] = useState(false);
   // eslint-disable-next-line
   const context = useContext(MyContext);
   const navigate = useNavigate();
@@ -22,9 +23,14 @@ const StudentSidebar = () => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
     const isEnrolled = userData?.enrollment_status === 'Officially Enrolled';
-    setIsOfficiallyEnrolled(isEnrolled);
+    const isVerified = userData?.enrollment_status === 'Verified';
+    const canAccessFeatures = isEnrolled || isVerified;
+    const canPay = isEnrolled || isVerified; // Payment available for both verified and enrolled
+    
+    setIsOfficiallyEnrolled(canAccessFeatures);
+    setCanAccessPayment(canPay);
     // Set initial active tab based on enrollment status
-    setActiveTab(isEnrolled ? 0 : 3); // 0 for Dashboard, 3 for My Profile
+    setActiveTab(canAccessFeatures ? 0 : 3); // 0 for Dashboard, 3 for My Profile
   }, []);
 
   const handleTabClick = (index) => {
@@ -158,21 +164,21 @@ const StudentSidebar = () => {
             <Button 
               className={`w-100 ${activeTab === 5 ? 'active' : ''}`} 
               onClick={() => handleTabClick(5)}
-              disabled={!isOfficiallyEnrolled}
+              disabled={!canAccessPayment}
               sx={{ 
-                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
-                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
-                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
-                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                opacity: !canAccessPayment ? 0.6 : 1,
+                color: !canAccessPayment ? '#666 !important' : 'inherit',
+                backgroundColor: !canAccessPayment ? '#f5f5f5' : 'inherit',
+                cursor: !canAccessPayment ? 'not-allowed' : 'pointer',
                 '&:hover': {
-                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                  backgroundColor: !canAccessPayment ? '#f5f5f5' : 'inherit',
                 }
               }}
             >
               <span className='icon'><FaMoneyBillWave /></span>
               Payment
             </Button>
-          )}
+          , canAccessPayment)} {/* Use canAccessPayment instead of isOfficiallyEnrolled */}
         </li>
       </ul>
 
