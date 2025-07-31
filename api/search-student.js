@@ -43,11 +43,12 @@ module.exports = async (req, res) => {
         e.amount_paid,
         e.remaining_balance,
         e.payment_status,
+        e.enrollment_status,
         p.program_name
       FROM students s
       LEFT JOIN enrollments e ON s.id = e.student_id
       LEFT JOIN program p ON e.program_id = p.program_id
-      WHERE e.enrollment_status IN ('Verified', 'For Payment', 'Enrolled')
+      WHERE e.enrollment_status IN ('Verified', 'Officially Enrolled', 'For Payment')
       AND (
         LOWER(s.first_name) LIKE LOWER($1) OR
         LOWER(s.last_name) LIKE LOWER($1) OR
@@ -58,7 +59,7 @@ module.exports = async (req, res) => {
     `, [`%${searchQuery}%`]);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Student not found or no verified enrollment' });
+      return res.status(404).json({ error: 'Student not found or no active enrollment' });
     }
 
     const student = result.rows[0];
@@ -71,7 +72,8 @@ module.exports = async (req, res) => {
       amountPaid: parseFloat(student.amount_paid) || 0,
       balance: parseFloat(student.remaining_balance) || 0,
       enrollmentId: student.enrollment_id,
-      paymentStatus: student.payment_status
+      paymentStatus: student.payment_status,
+      enrollmentStatus: student.enrollment_status
     });
 
   } catch (error) {
