@@ -52,7 +52,15 @@ const StudentSidebar = () => {
     navigate('/homepage');
   };
 
-  const renderLink = (to, button, requiresEnrollment = true) => {
+  const renderLink = (to, button, requiresEnrollment = true, requiresPayment = false) => {
+    if (requiresPayment) {
+      // For payment, check if user can access payment
+      if (!canAccessPayment) {
+        return button;
+      }
+      return <Link to={to}>{button}</Link>;
+    }
+    
     if (requiresEnrollment && !isOfficiallyEnrolled) {
       return button;
     }
@@ -178,7 +186,7 @@ const StudentSidebar = () => {
               <span className='icon'><FaMoneyBillWave /></span>
               Payment
             </Button>
-          , canAccessPayment)} {/* Use canAccessPayment instead of isOfficiallyEnrolled */}
+          , false, true)} {/* false for requiresEnrollment, true for requiresPayment */}
         </li>
       </ul>
 
