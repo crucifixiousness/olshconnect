@@ -71,29 +71,25 @@ const FinanceDashboard = () => {
       title: 'Total Revenue',
       value: `₱${dashboardData.totalRevenue.toLocaleString()}`,
       icon: <FaMoneyBillWave size={30} />,
-      color: '#1976d2',
-      description: 'Total payments received from all students'
+      color: '#1976d2'
     },
     {
       title: 'Students Who Paid',
       value: dashboardData.totalStudentsPaid,
       icon: <FaUserGraduate size={30} />,
-      color: '#2e7d32',
-      description: 'Number of students who have made payments'
+      color: '#2e7d32'
     },
     {
       title: 'Pending Payments',
       value: dashboardData.pendingPayments,
       icon: <FaFileInvoiceDollar size={30} />,
-      color: '#ed6c02',
-      description: 'Students who haven\'t paid or partially paid'
+      color: '#ed6c02'
     },
     {
       title: 'Recent Transactions',
       value: dashboardData.recentTransactions.length,
       icon: <FaCreditCard size={30} />,
-      color: '#9c27b0',
-      description: 'Latest payment transactions'
+      color: '#9c27b0'
     }
   ];
 
@@ -146,9 +142,6 @@ const FinanceDashboard = () => {
                 <Typography variant="h3" style={{ color: card.color }}>
                   {card.value}
                 </Typography>
-                <Typography variant="body2" color="textSecondary" className="mt-2">
-                  {card.description}
-                </Typography>
               </Card>
             </div>
           ))}
@@ -200,7 +193,7 @@ const FinanceDashboard = () => {
               <Typography variant="h6" className="mb-3">Payment Statistics</Typography>
               
               {/* Monthly Revenue Chart */}
-              {paymentStats.monthlyData.length > 0 && (
+              {paymentStats.monthlyData.length > 0 ? (
                 <Box mb={3}>
                   <Typography variant="subtitle2" className="mb-2">Monthly Revenue (Last 6 Months)</Typography>
                   <ResponsiveContainer width="100%" height={200}>
@@ -223,10 +216,17 @@ const FinanceDashboard = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
+              ) : (
+                <Box mb={3}>
+                  <Typography variant="subtitle2" className="mb-2">Monthly Revenue (Last 6 Months)</Typography>
+                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
+                    No monthly revenue data available
+                  </Typography>
+                </Box>
               )}
 
               {/* Payment Methods Distribution */}
-              {paymentStats.paymentMethods.length > 0 && (
+              {paymentStats.paymentMethods.length > 0 ? (
                 <Box mb={3}>
                   <Typography variant="subtitle2" className="mb-2">Payment Methods Distribution</Typography>
                   <ResponsiveContainer width="100%" height={200}>
@@ -249,10 +249,17 @@ const FinanceDashboard = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </Box>
+              ) : (
+                <Box mb={3}>
+                  <Typography variant="subtitle2" className="mb-2">Payment Methods Distribution</Typography>
+                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
+                    No payment method data available
+                  </Typography>
+                </Box>
               )}
 
               {/* Program-wise Statistics */}
-              {paymentStats.programStats.length > 0 && (
+              {paymentStats.programStats.length > 0 ? (
                 <Box>
                   <Typography variant="subtitle2" className="mb-2">Revenue by Program</Typography>
                   <TableContainer component={Paper} elevation={0}>
@@ -277,6 +284,13 @@ const FinanceDashboard = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="subtitle2" className="mb-2">Revenue by Program</Typography>
+                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
+                    No program revenue data available
+                  </Typography>
                 </Box>
               )}
             </Card>
