@@ -32,15 +32,17 @@ module.exports = async (req, res) => {
     const totalRevenueResult = await pool.query(`
       SELECT COALESCE(SUM(amount_paid), 0) as total_revenue
       FROM payment_transactions
-      WHERE payment_status = 'Completed'
+      WHERE payment_status IN ('Fully Paid', 'Partial')
     `);
+    console.log('Debug - Total Revenue Query Result:', totalRevenueResult.rows[0]);
 
     // Get total students who have paid (distinct students with payments)
     const totalStudentsPaidResult = await pool.query(`
       SELECT COUNT(DISTINCT student_id) as total_students_paid
       FROM payment_transactions
-      WHERE payment_status = 'Completed'
+      WHERE payment_status IN ('Fully Paid', 'Partial')
     `);
+    console.log('Debug - Total Students Paid Query Result:', totalStudentsPaidResult.rows[0]);
 
     // Get pending payments (students with verified, for payment, or officially enrolled status who haven't paid or aren't fully paid)
     const pendingPaymentsResult = await pool.query(`
@@ -53,6 +55,7 @@ module.exports = async (req, res) => {
         OR e.payment_status IS NULL
       )
     `);
+    console.log('Debug - Pending Payments Query Result:', pendingPaymentsResult.rows[0]);
 
     // Get recent transactions (last 10 payments with detailed info)
     const recentTransactionsResult = await pool.query(`
@@ -73,10 +76,28 @@ module.exports = async (req, res) => {
       JOIN enrollments e ON pt.enrollment_id = e.enrollment_id
       JOIN program p ON e.program_id = p.program_id
       JOIN program_year py ON e.year_id = py.year_id
-      WHERE pt.payment_status = 'Completed'
+      WHERE pt.payment_status IN ('Fully Paid', 'Partial')
       ORDER BY pt.payment_date DESC
       LIMIT 10
     `);
+    console.log('Debug - Recent Transactions Count:', recentTransactionsResult.rows.length);
+    console.log('Debug - Recent Transactions Sample:', recentTransactionsResult.rows[0]);
+
+    // Debug: Check what payment statuses exist
+    const paymentStatusDebug = await pool.query(`
+      SELECT payment_status, COUNT(*) as count
+      FROM payment_transactions
+      GROUP BY payment_status
+    `);
+    console.log('Debug - Payment Statuses in Database:', paymentStatusDebug.rows);
+
+    // Debug: Check what enrollment statuses exist
+    const enrollmentStatusDebug = await pool.query(`
+      SELECT enrollment_status, COUNT(*) as count
+      FROM enrollments
+      GROUP BY enrollment_status
+    `);
+    console.log('Debug - Enrollment Statuses in Database:', enrollmentStatusDebug.rows);
 
     // Get payment statistics for charts
     const paymentStatsResult = await pool.query(`
@@ -85,7 +106,7 @@ module.exports = async (req, res) => {
         COUNT(*) as transaction_count,
         SUM(amount_paid) as monthly_revenue
       FROM payment_transactions
-      WHERE payment_status = 'Completed'
+      WHERE payment_status IN ('Fully Paid', 'Partial')
       AND payment_date >= CURRENT_DATE - INTERVAL '6 months'
       GROUP BY DATE_TRUNC('month', payment_date)
       ORDER BY month DESC
@@ -98,7 +119,7 @@ module.exports = async (req, res) => {
         COUNT(*) as count,
         SUM(amount_paid) as total_amount
       FROM payment_transactions
-      WHERE payment_status = 'Completed'
+      WHERE payment_status IN ('Fully Paid', 'Partial')
       GROUP BY payment_method
       ORDER BY total_amount DESC
     `);
@@ -111,7 +132,7 @@ module.exports = async (req, res) => {
         SUM(pt.amount_paid) as total_revenue
       FROM enrollments e
       JOIN program p ON e.program_id = p.program_id
-      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id AND pt.payment_status = 'Completed'
+      LEFT JOIN payment_transactions pt ON e.enrollment_id = pt.enrollment_id AND pt.payment_status IN ('Fully Paid', 'Partial')
       WHERE e.enrollment_status IN ('Verified', 'For Payment', 'Officially Enrolled')
       GROUP BY p.program_name
       ORDER BY total_revenue DESC
