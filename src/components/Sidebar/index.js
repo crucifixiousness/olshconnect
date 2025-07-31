@@ -4,7 +4,7 @@ import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
@@ -16,6 +16,7 @@ const Sidebar = () =>{
   const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
   // eslint-disable-next-line
   const context = useContext(MyContext);
+  const navigate = useNavigate();
 
   const isOpenStudentMenu = (index) => {
     setActiveTab(index);
@@ -26,6 +27,13 @@ const Sidebar = () =>{
     setActiveTab(index);
   };
   // eslint-disable-next-line
+
+  const handleLogout = () => {
+    // Clear all local storage data
+    localStorage.clear();
+    // Redirect to homepage
+    navigate('/homepage');
+  };
 
     return(
       <>
@@ -97,11 +105,11 @@ const Sidebar = () =>{
 
           <br/>
           <div className='logoutWrap'>
-              <Link to={"/homepage"}>
-              <div className='logoutBox'>
-                  <Button variant="contained"><HiOutlineLogout/>Logout</Button>
-              </div>
-              </Link>
+            <div className='logoutBox'>
+              <Button variant="contained" onClick={handleLogout}>
+                <HiOutlineLogout/>Logout
+              </Button>
+            </div>
           </div>
           
 
