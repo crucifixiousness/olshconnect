@@ -51,9 +51,21 @@ const FinanceDashboard = () => {
         });
 
         setPaymentStats({
-          monthlyData: response.data.paymentStats?.monthlyData || [],
-          paymentMethods: response.data.paymentStats?.paymentMethods || [],
-          programStats: response.data.paymentStats?.programStats || []
+          monthlyData: (response.data.paymentStats?.monthlyData || []).map(item => ({
+            ...item,
+            monthly_revenue: parseFloat(item.monthly_revenue) || 0,
+            transaction_count: parseInt(item.transaction_count) || 0
+          })),
+          paymentMethods: (response.data.paymentStats?.paymentMethods || []).map(item => ({
+            ...item,
+            total_amount: parseFloat(item.total_amount) || 0,
+            count: parseInt(item.count) || 0
+          })),
+          programStats: (response.data.paymentStats?.programStats || []).map(item => ({
+            ...item,
+            total_revenue: parseFloat(item.total_revenue) || 0,
+            student_count: parseInt(item.student_count) || 0
+          }))
         });
         
         setLoading(false);
