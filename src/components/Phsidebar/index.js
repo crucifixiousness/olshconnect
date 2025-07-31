@@ -28,14 +28,8 @@ const ProgramHeadSidebar = () => {
   };
 
   const handleLogout = () => {
-      // Clear all cached data
-      localStorage.removeItem('assignedCoursesData');
-      localStorage.removeItem('assignedCoursesTimestamp');
-      // Clear auth data
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      localStorage.removeItem('program_id');
-      localStorage.removeItem('staff_id');
+      // Clear all local storage data
+      localStorage.clear();
       // Redirect to homepage
       navigate('/homepage');
   };
@@ -54,7 +48,7 @@ const ProgramHeadSidebar = () => {
             </Link>
           </li>
           <li>
-            <Link to="/program-studentlist">
+            <Link to="/studentlist">
               <Button className={`w-100 ${activeTab === 1 && isStudentMenuOpen ? 'active' : ''}`} onClick={() => toggleStudentMenu(1)}>
                 <span className='icon'><PiStudentBold /></span>
                 Student List
