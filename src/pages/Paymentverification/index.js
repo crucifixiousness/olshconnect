@@ -30,16 +30,21 @@ const PaymentVerification = () => {
   // Update fetchPayments to fetch enrollment payments
   const fetchPayments = useCallback(async () => {
     try {
+      console.log('🔍 Fetching enrollment payments...');
       const response = await axios.get('/api/enrollment-for-verification', {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      console.log('Fetched payments:', response.data); // Debug log
-      setPayments(response.data);
+      console.log('✅ Fetched payments response:', response);
+      console.log('📊 Fetched payments data:', response.data);
+      console.log('📊 Number of payments:', response.data?.length || 0);
+      setPayments(response.data || []);
     } catch (error) {
-      console.error('Full error:', error.response || error);
+      console.error('❌ Error fetching payments:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error message:', error.message);
       setSnackbar({
         open: true,
         message: error.response?.data?.error || 'Failed to fetch enrollment payments',
@@ -157,6 +162,7 @@ const PaymentVerification = () => {
           </div>
 
           <div className='table-responsive mt-3'>
+            {console.log('🎯 Rendering payments table with data:', payments)}
             <table className='table table-bordered v-align'>
               <thead className='thead-dark'>
                 <tr>
@@ -184,7 +190,7 @@ const PaymentVerification = () => {
                         >
                           <FaEye/>
                         </Button>
-                        {payment.enrollmentStatus === 'For Payment' && (
+                        {payment.enrollmentStatus === 'Verified' && (
                           <>
                             <Button 
                               className="success" 
@@ -285,7 +291,6 @@ const PaymentVerification = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}          
       >
         <Alert 
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
