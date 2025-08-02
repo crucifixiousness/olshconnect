@@ -26,18 +26,22 @@ module.exports = async (req, res) => {
 
   try {
     const decoded = authenticateToken(req);
-    const { doc_type } = req.body;
+    const { doc_type, description } = req.body;
     const id = decoded.id;
 
     if (!id || !doc_type) {
       return res.status(400).json({ message: "Document type is required." });
     }
 
+    if (!description || !description.trim()) {
+      return res.status(400).json({ message: "Description/reason for request is required." });
+    }
+
     const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     const result = await pool.query(
-      "INSERT INTO documentrequest (id, doc_type, req_date, req_status) VALUES ($1, $2, $3, $4) RETURNING *",
-      [id, doc_type, currentDate, "Pending"]
+      "INSERT INTO documentrequest (id, doc_type, description, req_date, req_status) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [id, doc_type, description.trim(), currentDate, "Pending"]
     );
 
     if (!result.rows || result.rows.length === 0) {
@@ -57,6 +61,7 @@ module.exports = async (req, res) => {
       return res.status(201).json({ 
         message: "Request added successfully",
         doc_type,
+        description,
         req_date: currentDate,
         req_status: "Pending"
       });
