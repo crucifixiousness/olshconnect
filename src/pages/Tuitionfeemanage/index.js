@@ -231,14 +231,19 @@ const TuitionManagement = () => {
                             <Button 
                               data-testid={`edit-button-${fee.fee_id}`}
                               variant="contained"
-                              color="success" 
                               size="small"
+                              onClick={() => handleEdit(fee.fee_id)}
                               sx={{
                                 minWidth: '36px',
                                 width: '36px',
                                 height: '36px',
                                 padding: 0,
                                 borderRadius: '8px',
+                                bgcolor: '#e8f5e8',
+                                color: '#2e7d32',
+                                '&:hover': {
+                                  bgcolor: '#c8e6c9',
+                                },
                                 '& .MuiButton-startIcon': {
                                   margin: 0
                                 }
@@ -249,14 +254,19 @@ const TuitionManagement = () => {
                             <Button 
                               data-testid={`delete-button-${fee.fee_id}`}
                               variant="contained"
-                              color="error" 
                               size="small"
+                              onClick={() => handleDelete(fee.fee_id)}
                               sx={{
                                 minWidth: '36px',
                                 width: '36px',
                                 height: '36px',
                                 padding: 0,
                                 borderRadius: '8px',
+                                bgcolor: '#ffebee',
+                                color: '#c62828',
+                                '&:hover': {
+                                  bgcolor: '#ffcdd2',
+                                },
                                 '& .MuiButton-startIcon': {
                                   margin: 0
                                 }
