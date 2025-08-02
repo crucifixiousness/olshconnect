@@ -10,12 +10,21 @@ import {
   Box,
   Typography,
   Snackbar,
-  Alert
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Pagination,
+  CircularProgress
 } from '@mui/material';
 import axios from 'axios';
 // Import the search icon
-import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
-import { CircularProgress } from '@mui/material';  // Add this to imports
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import Searchbar from '../../components/Searchbar';
 
 const TuitionManagement = () => {
   const [tuitionFees, setTuitionFees] = useState([]);
@@ -32,6 +41,24 @@ const TuitionManagement = () => {
     otherFees: ''
   });
   const [programs, setPrograms] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+
+  // Add CSS to override Searchbar margin
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .searchbar-container .searchBar {
+        margin-bottom: 0 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const fetchPrograms = async () => {
     try {
@@ -114,15 +141,21 @@ const TuitionManagement = () => {
       setSnackbar({ ...snackbar, open: false });
   };
 
-  // Add this state for search
-  const [searchTerm, setSearchTerm] = useState('');
-
   // Add this function to handle search
   const filteredTuitionFees = tuitionFees.filter(fee =>
     fee.program_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     fee.semester.toLowerCase().includes(searchTerm.toLowerCase()) ||
     fee.year_level.toString().includes(searchTerm)
   );
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedTuitionFees = filteredTuitionFees.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(filteredTuitionFees.length / rowsPerPage);
 
   // In the return statement, add this before the table
   return (
@@ -134,112 +167,124 @@ const TuitionManagement = () => {
       </div>
 
       <div className="card shadow border-0 p-3 mt-3">
-        <div className="d-flex justify-content-between mb-3">
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <TextField
-              size="small"
-              placeholder="Search by program, semester, or year level"
-              variant="outlined"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ 
-                width: '400px',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: '#c70202',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#a00000',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#c70202',
-                  },
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <Button
-                    sx={{
-                      minWidth: '40px',
-                      bgcolor: '#c70202',
-                      '&:hover': { bgcolor: '#a00000' },
-                      height: '100%',
-                      borderRadius: '0 4px 4px 0',
-                      marginRight: '-13px'
-                    }}
-                  >
-                    <FaSearch style={{ color: 'white' }} />
-                  </Button>
-                ),
-              }}
-            />
-          </Box>
-          <Button 
-            variant="contained" 
-            onClick={() => setOpenModal(true)}
-            sx={{ bgcolor: '#c70202', '&:hover': { bgcolor: '#a00000' } }}
-          >
-            <FaPlus className="me-2"/> Set New Tuition Fee
-          </Button>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
+            <div style={{ width: '850px' }}>
+              <div className="searchbar-container" style={{ marginBottom: '0' }}>
+                <Searchbar value={searchTerm} onChange={setSearchTerm} />
+              </div>
+            </div>
+            <div style={{ marginLeft: 'auto' }}>
+              <Button 
+                variant="contained" 
+                onClick={() => setOpenModal(true)}
+                sx={{ 
+                  bgcolor: '#c70202', 
+                  '&:hover': { bgcolor: '#a00000' },
+                  height: '40px',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <FaPlus className="me-2"/> Set New Tuition Fee
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="table-responsive mt-3">
           {loading ? (
             <Box display="flex" justifyContent="center" py={3}>
-              <CircularProgress />
+              <CircularProgress style={{ color: '#c70202' }} />
             </Box>
           ) : (
-            <table className="table table-bordered v-align">
-              <thead className="thead-dark">
-                <tr>
-                  <th>Program</th>
-                  <th>Year Level</th>
-                  <th>Semester</th>
-                  <th>Tuition Fee</th>
-                  <th>Misc. Fees</th>
-                  <th>Lab Fees</th>
-                  <th>Other Fees</th>
-                  <th>Total</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTuitionFees.map((fee) => (
-                  <tr key={fee.fee_id}>
-                    <td>{fee.program_name}</td>
-                    <td>{fee.year_level}</td>
-                    <td>{fee.semester}</td>
-                    <td>₱{fee.tuition_amount}</td>
-                    <td>₱{fee.misc_fees}</td>
-                    <td>₱{fee.lab_fees}</td>
-                    <td>₱{fee.other_fees}</td>
-                    <td>₱{parseFloat(fee.tuition_amount) + parseFloat(fee.misc_fees) + parseFloat(fee.lab_fees) + parseFloat(fee.other_fees)}</td>
-                    <td>
-                      <div className="actions d-flex align-items-center gap-2">
-                        <Button 
-                          data-testid={`edit-button-${fee.fee_id}`}
-                          className="success" 
-                          color="success" 
-                          size="small"
-                        >
-                          <FaEdit />
-                        </Button>
-                        <Button 
-                          data-testid={`delete-button-${fee.fee_id}`}
-                          className="error" 
-                          color="error" 
-                          size="small"
-                        >
-                          <FaTrash />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Tuition Fee</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Misc. Fees</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Lab Fees</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Other Fees</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Total</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedTuitionFees.length > 0 ? (
+                    paginatedTuitionFees.map((fee) => (
+                      <TableRow key={fee.fee_id}>
+                        <TableCell>{fee.program_name}</TableCell>
+                        <TableCell>{fee.year_level}</TableCell>
+                        <TableCell>{fee.semester}</TableCell>
+                        <TableCell>₱{fee.tuition_amount}</TableCell>
+                        <TableCell>₱{fee.misc_fees}</TableCell>
+                        <TableCell>₱{fee.lab_fees}</TableCell>
+                        <TableCell>₱{fee.other_fees}</TableCell>
+                        <TableCell style={{ fontWeight: 'bold' }}>
+                          ₱{parseFloat(fee.tuition_amount) + parseFloat(fee.misc_fees) + parseFloat(fee.lab_fees) + parseFloat(fee.other_fees)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="actions d-flex align-items-center gap-2">
+                            <Button 
+                              data-testid={`edit-button-${fee.fee_id}`}
+                              className="success" 
+                              color="success" 
+                              size="small"
+                            >
+                              <FaEdit />
+                            </Button>
+                            <Button 
+                              data-testid={`delete-button-${fee.fee_id}`}
+                              className="error" 
+                              color="error" 
+                              size="small"
+                            >
+                              <FaTrash />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan="9" style={{ textAlign: "center" }}>
+                        No tuition fees found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </div>
+
+        {/* Pagination */}
+        {filteredTuitionFees.length > 0 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination 
+              count={pageCount}
+              page={page}
+              onChange={handlePageChange}
+              color="primary" 
+              className="pagination"
+              showFirstButton 
+              showLastButton 
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  '&.Mui-selected': {
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
