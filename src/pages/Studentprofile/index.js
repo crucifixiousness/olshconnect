@@ -69,7 +69,7 @@ const StudentProfile = () => {
     birthCertificateDoc: '',
     form137Doc: '',
     programs: '',
-    yearLevel: '',
+    yearLevel: 1,           // Set default to 1 for new students
     semester: '',           // Add this
     academic_year: '',      // Add this
     studentType: 'new',     // Add student type field
@@ -426,20 +426,20 @@ const StudentProfile = () => {
         setIsEnrolled(true);
         setOpenEnrollment(false);
   
-        setFormDataa({
-          programs: "",
-          yearLevel: "",
-          semester: "",
-          academic_year: "",
-          studentType: "new",
-          previousSchool: "",
-          previousProgram: "",
-          idpic: null,
-          birthCertificateDoc: null,
-          form137Doc: null,
-          transferCertificateDoc: null,
-          torDoc: null,
-        });
+                 setFormDataa({
+           programs: "",
+           yearLevel: 1,           // Reset to 1 for new students
+           semester: "",
+           academic_year: "",
+           studentType: "new",
+           previousSchool: "",
+           previousProgram: "",
+           idpic: null,
+           birthCertificateDoc: null,
+           form137Doc: null,
+           transferCertificateDoc: null,
+           torDoc: null,
+         });
   
         await fetchStudentData();
       }
