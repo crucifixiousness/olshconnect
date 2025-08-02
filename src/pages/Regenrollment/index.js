@@ -32,7 +32,6 @@ const RegistrarEnrollment = () => {
 
   const [yearLevel, setYearLevel] = useState('');
   const [studentType, setStudentType] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -227,18 +226,6 @@ const RegistrarEnrollment = () => {
   };
 
   const handleViewDetails = (enrollment) => {
-    console.log('Enrollment data for viewing:', enrollment);
-    console.log('Document fields:', {
-      idpic: enrollment.idpic ? 'Present' : 'Missing',
-      birth_certificate_doc: enrollment.birth_certificate_doc ? 'Present' : 'Missing',
-      birthCertificateDoc: enrollment.birthCertificateDoc ? 'Present' : 'Missing',
-      form137_doc: enrollment.form137_doc ? 'Present' : 'Missing',
-      form137Doc: enrollment.form137Doc ? 'Present' : 'Missing',
-      transfer_certificate_doc: enrollment.transfer_certificate_doc ? 'Present' : 'Missing',
-      transferCertificateDoc: enrollment.transferCertificateDoc ? 'Present' : 'Missing',
-      tor_doc: enrollment.tor_doc ? 'Present' : 'Missing',
-      torDoc: enrollment.torDoc ? 'Present' : 'Missing'
-    });
     setSelectedEnrollment(enrollment);
     setOpen(true);
   };
@@ -263,7 +250,7 @@ const RegistrarEnrollment = () => {
         {/* Filters */}
         <Paper elevation={3} className="p-3 mb-4">
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={2}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SHOW BY</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -294,7 +281,7 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={2}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>YEAR LEVEL</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -322,7 +309,7 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={2}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>PROGRAM</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -352,7 +339,7 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={2}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STUDENT TYPE</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -377,53 +364,6 @@ const RegistrarEnrollment = () => {
                   <MenuItem value="transferee">Transferee</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
-            <Grid item xs={2}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STATUS</Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  displayEmpty
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>All Status</em>
-                  </MenuItem>
-                  <MenuItem value="registered">Registered</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="verified">Verified</MenuItem>
-                  <MenuItem value="for payment">For Payment</MenuItem>
-                  <MenuItem value="officially enrolled">Officially Enrolled</MenuItem>
-                  <MenuItem value="rejected">Rejected</MenuItem>
-                  <MenuItem value="incomplete">Incomplete</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={2}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>&nbsp;</Typography>
-              <Button 
-                variant="contained"
-                onClick={fetchEnrollments}
-                fullWidth
-                sx={{
-                  bgcolor: '#c70202',
-                  '&:hover': {
-                    bgcolor: '#a00000',
-                  },
-                }}
-              >
-                Apply Filters
-              </Button>
             </Grid>
           </Grid>
         </Paper>
@@ -462,7 +402,7 @@ const RegistrarEnrollment = () => {
                       {enrollment.program_name || programMapping[enrollment.programs]}
                     </TableCell>
                     <TableCell data-testid={`status-${index}`}>
-                      <span style={getEnrollmentStatusColor(enrollment.status)}>
+                      <span className={`badge ${enrollment.status === 'Verified' ? 'bg-success' : 'bg-warning'}`}>
                         {enrollment.status}
                       </span>
                     </TableCell>
@@ -670,27 +610,14 @@ const RegistrarEnrollment = () => {
                       Birth Certificate
                     </Typography>
                   </div>
-                  {selectedEnrollment.birth_certificate_doc || selectedEnrollment.birthCertificateDoc ? (
+                  {selectedEnrollment.birth_certificate_doc ? (
                     <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.birth_certificate_doc || selectedEnrollment.birthCertificateDoc}`} 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.birth_certificate_doc}`} 
                       alt="Birth Certificate" 
                       style={{ width: '100%', borderRadius: '8px' }}
-                      onError={(e) => {
-                        console.log('Birth certificate image failed to load');
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
                     />
                   ) : (
-                    <div className="no-doc-message" style={{ 
-                      padding: '20px', 
-                      textAlign: 'center', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      color: '#6c757d'
-                    }}>
-                      No birth certificate uploaded
-                    </div>
+                    <div className="no-doc-message">No birth certificate uploaded</div>
                   )}
                 </div>
 
@@ -700,27 +627,14 @@ const RegistrarEnrollment = () => {
                       Form 137
                     </Typography>
                   </div>
-                  {selectedEnrollment.form137_doc || selectedEnrollment.form137Doc ? (
+                  {selectedEnrollment.form137_doc ? (
                     <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.form137_doc || selectedEnrollment.form137Doc}`} 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.form137_doc}`} 
                       alt="Form 137" 
                       style={{ width: '100%', borderRadius: '8px' }}
-                      onError={(e) => {
-                        console.log('Form 137 image failed to load');
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
                     />
                   ) : (
-                    <div className="no-doc-message" style={{ 
-                      padding: '20px', 
-                      textAlign: 'center', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      color: '#6c757d'
-                    }}>
-                      No Form 137 uploaded
-                    </div>
+                    <div className="no-doc-message">No Form 137 uploaded</div>
                   )}
                 </div>
 
@@ -733,27 +647,14 @@ const RegistrarEnrollment = () => {
                           Transfer Certificate
                         </Typography>
                       </div>
-                      {selectedEnrollment.transfer_certificate_doc || selectedEnrollment.transferCertificateDoc ? (
+                      {selectedEnrollment.transfer_certificate_doc ? (
                         <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.transfer_certificate_doc || selectedEnrollment.transferCertificateDoc}`} 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.transfer_certificate_doc}`} 
                           alt="Transfer Certificate" 
                           style={{ width: '100%', borderRadius: '8px' }}
-                          onError={(e) => {
-                            console.log('Transfer certificate image failed to load');
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
-                          }}
                         />
                       ) : (
-                        <div className="no-doc-message" style={{ 
-                          padding: '20px', 
-                          textAlign: 'center', 
-                          backgroundColor: '#f8f9fa', 
-                          borderRadius: '8px',
-                          color: '#6c757d'
-                        }}>
-                          No transfer certificate uploaded
-                        </div>
+                        <div className="no-doc-message">No transfer certificate uploaded</div>
                       )}
                     </div>
 
@@ -763,27 +664,14 @@ const RegistrarEnrollment = () => {
                           Transcript of Records (TOR)
                         </Typography>
                       </div>
-                      {selectedEnrollment.tor_doc || selectedEnrollment.torDoc ? (
+                      {selectedEnrollment.tor_doc ? (
                         <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.tor_doc || selectedEnrollment.torDoc}`} 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.tor_doc}`} 
                           alt="Transcript of Records" 
                           style={{ width: '100%', borderRadius: '8px' }}
-                          onError={(e) => {
-                            console.log('TOR image failed to load');
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
-                          }}
                         />
                       ) : (
-                        <div className="no-doc-message" style={{ 
-                          padding: '20px', 
-                          textAlign: 'center', 
-                          backgroundColor: '#f8f9fa', 
-                          borderRadius: '8px',
-                          color: '#6c757d'
-                        }}>
-                          No TOR uploaded
-                        </div>
+                        <div className="no-doc-message">No TOR uploaded</div>
                       )}
                     </div>
                   </>
