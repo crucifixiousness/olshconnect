@@ -53,44 +53,36 @@ const RegistrarEnrollment = () => {
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       case 'pending':
       case 'under review':
         return {
           backgroundColor: '#ffc107', // Yellow - Under review
-          color: '#212529',
+          color: 'white',
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       case 'verified':
       case 'approved':
         return {
-          backgroundColor: '#28a745', // Green - Verified
+          backgroundColor: '#17a2b8', // Blue - Verified
           color: 'white',
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       case 'for payment':
         return {
-          backgroundColor: '#17a2b8', // Blue - Payment required
+          backgroundColor: '#fd7e14', // Orange - Payment required
           color: 'white',
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       case 'officially enrolled':
         return {
@@ -99,9 +91,7 @@ const RegistrarEnrollment = () => {
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       case 'rejected':
       case 'declined':
@@ -111,21 +101,17 @@ const RegistrarEnrollment = () => {
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       case 'incomplete':
       case 'missing documents':
         return {
-          backgroundColor: '#fd7e14', // Orange - Incomplete
+          backgroundColor: '#6f42c1', // Purple - Incomplete
           color: 'white',
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
       default:
         return {
@@ -134,9 +120,7 @@ const RegistrarEnrollment = () => {
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '0.75rem',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          fontWeight: '600'
         };
     }
   };
@@ -243,6 +227,18 @@ const RegistrarEnrollment = () => {
   };
 
   const handleViewDetails = (enrollment) => {
+    console.log('Enrollment data for viewing:', enrollment);
+    console.log('Document fields:', {
+      idpic: enrollment.idpic ? 'Present' : 'Missing',
+      birth_certificate_doc: enrollment.birth_certificate_doc ? 'Present' : 'Missing',
+      birthCertificateDoc: enrollment.birthCertificateDoc ? 'Present' : 'Missing',
+      form137_doc: enrollment.form137_doc ? 'Present' : 'Missing',
+      form137Doc: enrollment.form137Doc ? 'Present' : 'Missing',
+      transfer_certificate_doc: enrollment.transfer_certificate_doc ? 'Present' : 'Missing',
+      transferCertificateDoc: enrollment.transferCertificateDoc ? 'Present' : 'Missing',
+      tor_doc: enrollment.tor_doc ? 'Present' : 'Missing',
+      torDoc: enrollment.torDoc ? 'Present' : 'Missing'
+    });
     setSelectedEnrollment(enrollment);
     setOpen(true);
   };
@@ -674,14 +670,27 @@ const RegistrarEnrollment = () => {
                       Birth Certificate
                     </Typography>
                   </div>
-                  {selectedEnrollment.birth_certificate_doc ? (
+                  {selectedEnrollment.birth_certificate_doc || selectedEnrollment.birthCertificateDoc ? (
                     <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.birth_certificate_doc}`} 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.birth_certificate_doc || selectedEnrollment.birthCertificateDoc}`} 
                       alt="Birth Certificate" 
                       style={{ width: '100%', borderRadius: '8px' }}
+                      onError={(e) => {
+                        console.log('Birth certificate image failed to load');
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
                     />
                   ) : (
-                    <div className="no-doc-message">No birth certificate uploaded</div>
+                    <div className="no-doc-message" style={{ 
+                      padding: '20px', 
+                      textAlign: 'center', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      color: '#6c757d'
+                    }}>
+                      No birth certificate uploaded
+                    </div>
                   )}
                 </div>
 
@@ -691,14 +700,27 @@ const RegistrarEnrollment = () => {
                       Form 137
                     </Typography>
                   </div>
-                  {selectedEnrollment.form137_doc ? (
+                  {selectedEnrollment.form137_doc || selectedEnrollment.form137Doc ? (
                     <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.form137_doc}`} 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.form137_doc || selectedEnrollment.form137Doc}`} 
                       alt="Form 137" 
                       style={{ width: '100%', borderRadius: '8px' }}
+                      onError={(e) => {
+                        console.log('Form 137 image failed to load');
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
                     />
                   ) : (
-                    <div className="no-doc-message">No Form 137 uploaded</div>
+                    <div className="no-doc-message" style={{ 
+                      padding: '20px', 
+                      textAlign: 'center', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      color: '#6c757d'
+                    }}>
+                      No Form 137 uploaded
+                    </div>
                   )}
                 </div>
 
@@ -711,14 +733,27 @@ const RegistrarEnrollment = () => {
                           Transfer Certificate
                         </Typography>
                       </div>
-                      {selectedEnrollment.transfer_certificate_doc ? (
+                      {selectedEnrollment.transfer_certificate_doc || selectedEnrollment.transferCertificateDoc ? (
                         <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.transfer_certificate_doc}`} 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.transfer_certificate_doc || selectedEnrollment.transferCertificateDoc}`} 
                           alt="Transfer Certificate" 
                           style={{ width: '100%', borderRadius: '8px' }}
+                          onError={(e) => {
+                            console.log('Transfer certificate image failed to load');
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
                         />
                       ) : (
-                        <div className="no-doc-message">No transfer certificate uploaded</div>
+                        <div className="no-doc-message" style={{ 
+                          padding: '20px', 
+                          textAlign: 'center', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          color: '#6c757d'
+                        }}>
+                          No transfer certificate uploaded
+                        </div>
                       )}
                     </div>
 
@@ -728,14 +763,27 @@ const RegistrarEnrollment = () => {
                           Transcript of Records (TOR)
                         </Typography>
                       </div>
-                      {selectedEnrollment.tor_doc ? (
+                      {selectedEnrollment.tor_doc || selectedEnrollment.torDoc ? (
                         <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.tor_doc}`} 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.tor_doc || selectedEnrollment.torDoc}`} 
                           alt="Transcript of Records" 
                           style={{ width: '100%', borderRadius: '8px' }}
+                          onError={(e) => {
+                            console.log('TOR image failed to load');
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
                         />
                       ) : (
-                        <div className="no-doc-message">No TOR uploaded</div>
+                        <div className="no-doc-message" style={{ 
+                          padding: '20px', 
+                          textAlign: 'center', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          color: '#6c757d'
+                        }}>
+                          No TOR uploaded
+                        </div>
                       )}
                     </div>
                   </>
