@@ -382,8 +382,8 @@ const StudentProfile = () => {
       });
   
             const formDataToSend = new FormData();
-      formDataToSend.append('programs', Number(formDataa.programs));
-      formDataToSend.append('yearLevel', Number(formDataa.yearLevel));
+      formDataToSend.append('programs', String(formDataa.programs));
+      formDataToSend.append('yearLevel', String(formDataa.yearLevel));
       formDataToSend.append('semester', formDataa.semester);
       formDataToSend.append('academic_year', formDataa.academic_year);
       formDataToSend.append('studentType', formDataa.studentType);
