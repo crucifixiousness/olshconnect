@@ -145,9 +145,10 @@ const PaymentHistory = () => {
 
   return (
     <div className="right-content w-100">
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="hd mt-2 pb-0">Payment History</h3>
+      </div>
       <div className="card shadow border-0 p-3">
-        <Typography variant="h5" className="mb-4" style={{ color: '#c70202' }}>Payment History</Typography>
-
         {/* Filters */}
         <Paper elevation={3} className="p-3 mb-4">
           <Grid container spacing={2} alignItems="center">
@@ -256,7 +257,7 @@ const PaymentHistory = () => {
 
         {/* Pagination */}
         {payments.length > 0 && (
-          <div className="d-flex tableFooter">
+          <div className="d-flex justify-content-center mt-4">
             <Pagination 
               count={pageCount}
               page={page}
