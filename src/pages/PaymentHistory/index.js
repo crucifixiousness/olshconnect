@@ -13,7 +13,9 @@ import {
   Select,
   MenuItem,
   TextField,
-  Grid
+  Grid,
+  Pagination,
+  CircularProgress
 } from '@mui/material';
 import { FaPrint } from 'react-icons/fa';
 import axios from 'axios';
@@ -22,6 +24,9 @@ const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
   const [filterProgram, setFilterProgram] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -30,6 +35,7 @@ const PaymentHistory = () => {
 
   const fetchPayments = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('/api/all-payment-history', {
         params: {
           program: filterProgram,
@@ -40,13 +46,34 @@ const PaymentHistory = () => {
       setPayments(response.data);
     } catch (error) {
       console.error('Error fetching payments:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedPayments = payments.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(payments.length / rowsPerPage);
+
+  if (loading) {
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3">
-        <Typography variant="h5" className="mb-4">Payment History</Typography>
+        <Typography variant="h5" className="mb-4" style={{ color: '#c70202' }}>Payment History</Typography>
 
         {/* Filters */}
         <Paper elevation={3} className="p-3 mb-4">
@@ -57,6 +84,16 @@ const PaymentHistory = () => {
                   value={filterProgram}
                   onChange={(e) => setFilterProgram(e.target.value)}
                   displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="">All Programs</MenuItem>
                   <MenuItem value="BSIT">BSIT</MenuItem>
@@ -74,6 +111,16 @@ const PaymentHistory = () => {
                 size="small"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={4}>
@@ -81,6 +128,12 @@ const PaymentHistory = () => {
                 variant="contained"
                 onClick={fetchPayments}
                 fullWidth
+                sx={{
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  },
+                }}
               >
                 Apply Filters
               </Button>
@@ -93,42 +146,65 @@ const PaymentHistory = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Student Name</TableCell>
-                <TableCell>Program</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Method</TableCell>
-                <TableCell>Reference No.</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Processed By</TableCell>
-                <TableCell>Action</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Date</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Amount</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Method</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Reference No.</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Processed By</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {payments.map((payment) => (
-                <TableRow key={payment.transaction_id}>
-                  <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
-                  <TableCell>{payment.student_name}</TableCell>
-                  <TableCell>{payment.program_name}</TableCell>
-                  <TableCell>₱{payment.amount_paid.toLocaleString()}</TableCell>
-                  <TableCell>{payment.payment_method}</TableCell>
-                  <TableCell>{payment.reference_number || '-'}</TableCell>
-                  <TableCell>{payment.payment_status}</TableCell>
-                  <TableCell>{payment.processed_by_name}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<FaPrint />}
-                    >
-                      Print
-                    </Button>
+              {paginatedPayments.length > 0 ? (
+                paginatedPayments.map((payment) => (
+                  <TableRow key={payment.transaction_id}>
+                    <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{payment.student_name}</TableCell>
+                    <TableCell>{payment.program_name}</TableCell>
+                    <TableCell>₱{payment.amount_paid.toLocaleString()}</TableCell>
+                    <TableCell>{payment.payment_method}</TableCell>
+                    <TableCell>{payment.reference_number || '-'}</TableCell>
+                    <TableCell>{payment.payment_status}</TableCell>
+                    <TableCell>{payment.processed_by_name}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan="8" style={{ textAlign: "center" }}>
+                    No payment records available.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination */}
+        {payments.length > 0 && (
+          <div className="d-flex tableFooter">
+            <Pagination 
+              count={pageCount}
+              page={page}
+              onChange={handlePageChange}
+              color="primary" 
+              className="pagination"
+              showFirstButton 
+              showLastButton 
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  '&.Mui-selected': {
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
