@@ -243,11 +243,9 @@ const StudentBalance = () => {
                       {student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={getStatusText(student.balance)}
-                        color={getStatusColor(student.balance)}
-                        size="small"
-                      />
+                      <span className={`badge ${student.balance > 0 ? 'bg-danger' : 'bg-success'}`}>
+                        {student.balance > 0 ? 'With Balance' : 'Cleared'}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))
