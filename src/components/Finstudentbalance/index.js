@@ -1,12 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from 'react';
 import { 
-  Button, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  Pagination,
-  CircularProgress,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Modal,
+  Box,
+  Typography,
+  Snackbar,
+  Alert,
   Table,
   TableBody,
   TableCell,
@@ -14,22 +18,32 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
-  Chip
-} from "@mui/material";
+  Pagination,
+  CircularProgress
+} from '@mui/material';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
-import Searchbar from '../Searchbar';
+// Import the search icon
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import Searchbar from '../../components/Searchbar';
 
-const StudentBalance = () => {
-  const [students, setStudents] = useState([]);
+const TuitionManagement = () => {
+  const [tuitionFees, setTuitionFees] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Modify the formData state to include program_id
+  const [formData, setFormData] = useState({
+    program_id: '', // Changed from 'program' to 'program_id'
+    yearLevel: '',
+    semester: '',
+    tuitionAmount: '',
+    miscFees: '',
+    labFees: '',
+    otherFees: ''
+  });
+  const [programs, setPrograms] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
-  const [searchParams] = useSearchParams();
-  const yearLevel = searchParams.get('year');
 
   // Add CSS to override Searchbar margin
   useEffect(() => {
@@ -46,33 +60,93 @@ const StudentBalance = () => {
     };
   }, []);
 
-  const fetchStudents = useCallback(async () => {
+  const fetchPrograms = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get('/api/student-balances');
-      setStudents(response.data);
+      const response = await axios.get('/api/programs');
+      setPrograms(response.data);
     } catch (error) {
-      console.error("Error fetching students:", error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching programs:', error);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
+    fetchTuitionFees();
+    fetchPrograms();
+  }, []);
 
-  const filteredStudents = students.filter(student => {
-    const semesterMatch = selectedSemester ? student.semester === selectedSemester : true;
-    const searchMatch = searchTerm.toLowerCase() === '' ? true : 
-      student.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.program_name.toLowerCase().includes(searchTerm.toLowerCase());
-    return semesterMatch && searchMatch;
-  });
-
-  const handleSemesterChange = (event) => {
-    setSelectedSemester(event.target.value);
+  const fetchTuitionFees = async () => {
+    try {
+      const response = await axios.get('/api/tuition-fees');
+      setTuitionFees(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching tuition fees:', error);
+      // No error message displayed to user
+    }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      
+      // Add token to request headers
+      await axios.post('/api/add-tuition-fee', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      setSnackbar({
+        open: true,
+        message: 'Tuition fee set successfully!',
+        severity: 'success'
+      });
+      fetchTuitionFees(); // Refresh the list
+      setOpenModal(false);
+      setFormData({
+        program: '',
+        yearLevel: '',
+        semester: '',
+        tuitionAmount: '',
+        miscFees: '',
+        labFees: '',
+        otherFees: ''
+      });
+    } catch (error) {
+      console.error('Error saving tuition fee:', error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error || 'Failed to set tuition fee',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const [snackbar, setSnackbar] = useState({
+      open: false,
+      message: '',
+      severity: 'success'
+  });
+  
+  const handleSnackbarClose = () => {
+      setSnackbar({ ...snackbar, open: false });
+  };
+
+  // Add this function to handle search
+  const filteredTuitionFees = tuitionFees.filter(fee =>
+    fee.program_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fee.semester.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fee.year_level.toString().includes(searchTerm)
+  );
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -80,96 +154,19 @@ const StudentBalance = () => {
 
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
-  const pageCount = Math.ceil(filteredStudents.length / rowsPerPage);
+  const paginatedTuitionFees = filteredTuitionFees.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(filteredTuitionFees.length / rowsPerPage);
 
-  const getStatusColor = (balance) => {
-    return parseFloat(balance) > 0 ? 'error' : 'success';
-  };
-
-  const getStatusText = (balance) => {
-    return parseFloat(balance) > 0 ? 'With Balance' : 'Cleared';
-  };
-
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="card shadow border-0 p-3 mt-1">
-          <h3 className="hd mt-2 pb-0">Student Balance Management</h3>
-        </div>
-
-        <div className="card shadow border-0 p-3 mt-1">
-          <h3 className="hd">
-            Students Balance {yearLevel ? `- Year ${yearLevel}` : ''}
-          </h3>
-
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
-              <div style={{ width: '850px' }}>
-                <div className="searchbar-container" style={{ marginBottom: '0' }}>
-                  <Searchbar value={searchTerm} onChange={setSearchTerm} />
-                </div>
-              </div>
-              <div style={{ marginLeft: 'auto' }}>
-                <FormControl sx={{ minWidth: 180, height: '40px' }}>
-                  <InputLabel id="semester-filter-label" sx={{ fontSize: '0.875rem' }}>Filter by Semester</InputLabel>
-                  <Select
-                    labelId="semester-filter-label"
-                    value={selectedSemester}
-                    onChange={handleSemesterChange}
-                    label="Filter by Semester"
-                    size="small"
-                    sx={{
-                      height: '40px',
-                      fontSize: '0.875rem',
-                      '& .MuiOutlinedInput-root': {
-                        height: '40px',
-                        '&:hover fieldset': {
-                          borderColor: '#c70202',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#c70202',
-                        },
-                      },
-                      '& .MuiSelect-select': {
-                        fontSize: '0.875rem',
-                        paddingTop: '8px',
-                        paddingBottom: '8px',
-                      },
-                    }}
-                  >
-                    <MenuItem value="" sx={{ fontSize: '0.875rem' }}>All Semesters</MenuItem>
-                    <MenuItem value="1st" sx={{ fontSize: '0.875rem' }}>1st Semester</MenuItem>
-                    <MenuItem value="2nd" sx={{ fontSize: '0.875rem' }}>2nd Semester</MenuItem>
-                    <MenuItem value="Summer" sx={{ fontSize: '0.875rem' }}>Summer</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading State for Table */}
-          <Paper elevation={3} className="p-4">
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '300px' }}>
-              <CircularProgress style={{ color: '#c70202' }} />
-            </div>
-          </Paper>
-        </div>
-      </div>
-    );
-  }
-
+  // In the return statement, add this before the table
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Student Balance Management</h3>
+        <h3 className="hd mt-2 pb-0">
+          Tuition Fee Management
+        </h3>
       </div>
 
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd">
-          Students Balance {yearLevel ? `- Year ${yearLevel}` : ''}
-        </h3>
-
+      <div className="card shadow border-0 p-3 mt-3">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
             <div style={{ width: '850px' }}>
@@ -178,91 +175,95 @@ const StudentBalance = () => {
               </div>
             </div>
             <div style={{ marginLeft: 'auto' }}>
-              <FormControl sx={{ minWidth: 180, height: '40px' }}>
-                <InputLabel id="semester-filter-label" sx={{ fontSize: '0.875rem' }}>Filter by Semester</InputLabel>
-                <Select
-                  labelId="semester-filter-label"
-                  value={selectedSemester}
-                  onChange={handleSemesterChange}
-                  label="Filter by Semester"
-                  size="small"
-                  sx={{
-                    height: '40px',
-                    fontSize: '0.875rem',
-                    '& .MuiOutlinedInput-root': {
-                      height: '40px',
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                    '& .MuiSelect-select': {
-                      fontSize: '0.875rem',
-                      paddingTop: '8px',
-                      paddingBottom: '8px',
-                    },
-                  }}
-                >
-                  <MenuItem value="" sx={{ fontSize: '0.875rem' }}>All Semesters</MenuItem>
-                  <MenuItem value="1st" sx={{ fontSize: '0.875rem' }}>1st Semester</MenuItem>
-                  <MenuItem value="2nd" sx={{ fontSize: '0.875rem' }}>2nd Semester</MenuItem>
-                  <MenuItem value="Summer" sx={{ fontSize: '0.875rem' }}>Summer</MenuItem>
-                </Select>
-              </FormControl>
+              <Button 
+                variant="contained" 
+                onClick={() => setOpenModal(true)}
+                sx={{ 
+                  bgcolor: '#c70202', 
+                  '&:hover': { bgcolor: '#a00000' },
+                  height: '40px',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <FaPlus className="me-2"/> Set New Tuition Fee
+              </Button>
             </div>
           </div>
         </div>
 
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student ID</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Name</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Total Balance</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Last Payment Date</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedStudents.length > 0 ? (
-                paginatedStudents.map((student) => (
-                  <TableRow key={student.student_id}>
-                    <TableCell>{student.student_id}</TableCell>
-                    <TableCell>{student.student_name}</TableCell>
-                    <TableCell>{student.year_level}</TableCell>
-                    <TableCell>{student.program_name}</TableCell>
-                    <TableCell style={{ fontWeight: 'bold' }}>
-                      ₱{parseFloat(student.balance).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      {student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`badge ${student.balance > 0 ? 'bg-danger' : 'bg-success'}`}>
-                        {student.balance > 0 ? 'With Balance' : 'Cleared'}
-                      </span>
-                    </TableCell>
+        <div className="table-responsive mt-3">
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress style={{ color: '#c70202' }} />
+            </Box>
+          ) : (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Tuition Fee</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Misc. Fees</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Lab Fees</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Other Fees</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Total</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan="7" style={{ textAlign: "center" }}>
-                    No students with balance found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {paginatedTuitionFees.length > 0 ? (
+                    paginatedTuitionFees.map((fee) => (
+                      <TableRow key={fee.fee_id}>
+                        <TableCell>{fee.program_name}</TableCell>
+                        <TableCell>{fee.year_level}</TableCell>
+                        <TableCell>{fee.semester}</TableCell>
+                        <TableCell>₱{fee.tuition_amount}</TableCell>
+                        <TableCell>₱{fee.misc_fees}</TableCell>
+                        <TableCell>₱{fee.lab_fees}</TableCell>
+                        <TableCell>₱{fee.other_fees}</TableCell>
+                        <TableCell style={{ fontWeight: 'bold' }}>
+                          ₱{parseFloat(fee.tuition_amount) + parseFloat(fee.misc_fees) + parseFloat(fee.lab_fees) + parseFloat(fee.other_fees)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="actions d-flex align-items-center gap-2">
+                            <Button 
+                              data-testid={`edit-button-${fee.fee_id}`}
+                              className="success" 
+                              color="success" 
+                              size="small"
+                            >
+                              <FaEdit />
+                            </Button>
+                            <Button 
+                              data-testid={`delete-button-${fee.fee_id}`}
+                              className="error" 
+                              color="error" 
+                              size="small"
+                            >
+                              <FaTrash />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan="9" style={{ textAlign: "center" }}>
+                        No tuition fees found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </div>
 
         {/* Pagination */}
-        {filteredStudents.length > 0 && (
-          <div className="d-flex tableFooter">
+        {filteredTuitionFees.length > 0 && (
+          <div className="d-flex justify-content-center mt-4">
             <Pagination 
               count={pageCount}
               page={page}
@@ -285,8 +286,175 @@ const StudentBalance = () => {
           </div>
         )}
       </div>
+
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: "90%",
+          maxWidth: "600px",
+          bgcolor: 'background.paper',
+          borderRadius: "10px",
+          boxShadow: 24,
+          p: 4,
+          maxHeight: "90vh",
+          overflowY: "auto"
+        }}>
+          <Typography variant="h5" sx={{ 
+            textAlign: "center", 
+            marginBottom: "20px",
+            color: '#c70202',
+            fontWeight: 'bold'
+          }}>
+            Set Tuition Fee
+          </Typography>
+
+          <form onSubmit={handleSubmit}>
+            <div className="registration-section">
+              <Typography variant="h6" className="section-title">
+                Program Details
+              </Typography>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Program</InputLabel>
+                <Select
+                  data-testid="program-select"
+                  name="program_id"
+                  value={formData.program_id}
+                  onChange={handleInputChange}
+                  required
+                >
+                  {programs.map((program) => (
+                    <MenuItem key={program.program_id} value={program.program_id}>
+                      {program.program_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Year Level</InputLabel>
+                <Select
+                  data-testid="year-select"
+                  name="yearLevel"
+                  value={formData.yearLevel}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <MenuItem value="1">1st Year</MenuItem>
+                  <MenuItem value="2">2nd Year</MenuItem>
+                  <MenuItem value="3">3rd Year</MenuItem>
+                  <MenuItem value="4">4th Year</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Semester</InputLabel>
+                <Select
+                  data-testid="semester-select"
+                  name="semester"
+                  value={formData.semester}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <MenuItem value="1st">1st Semester</MenuItem>
+                  <MenuItem value="2nd">2nd Semester</MenuItem>
+                  <MenuItem value="Summer">Summer</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+
+            <div className="registration-section">
+              <Typography variant="h6" className="section-title">
+                Fee Breakdown
+              </Typography>
+              <TextField
+                data-testid="tuition-amount"
+                fullWidth
+                margin="normal"
+                label="Tuition Amount"
+                name="tuitionAmount"
+                type="number"
+                value={formData.tuitionAmount}
+                onChange={handleInputChange}
+                required
+              />
+
+              <TextField
+                data-testid="misc-fees"
+                fullWidth
+                margin="normal"
+                label="Miscellaneous Fees"
+                name="miscFees"
+                type="number"
+                value={formData.miscFees}
+                onChange={handleInputChange}
+                required
+              />
+
+              <TextField
+                data-testid="lab-fees"
+                fullWidth
+                margin="normal"
+                label="Laboratory Fees"
+                name="labFees"
+                type="number"
+                value={formData.labFees}
+                onChange={handleInputChange}
+                required
+              />
+
+              <TextField
+                data-testid="other-fees"
+                fullWidth
+                margin="normal"
+                label="Other Fees"
+                name="otherFees"
+                type="number"
+                value={formData.otherFees}
+                onChange={handleInputChange}
+                required
+              />
+
+              <Button 
+                data-testid="submit-button"
+                type="submit" 
+                variant="contained"
+                fullWidth
+                sx={{
+                  mt: 3,
+                  bgcolor: '#c70202',
+                  '&:hover': { bgcolor: '#a00000' },
+                  height: '45px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Save Tuition Fee
+              </Button>
+            </div>
+          </form>
+        </Box>
+      </Modal>
+
+      {/* Move Snackbar inside the return statement */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
 
-export default StudentBalance;
+export default TuitionManagement;
