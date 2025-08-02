@@ -62,10 +62,10 @@ module.exports = async (req, res) => {
         });
       }
 
-      // Validate student type
-      if (!fields.studentType || !['new', 'transferee'].includes(fields.studentType)) {
+      // Validate student type (removed restriction - allowing any value)
+      if (!fields.studentType) {
         return res.status(400).json({
-          error: "Invalid student type. Must be 'new' or 'transferee'"
+          error: "Student type is required"
         });
       }
 
