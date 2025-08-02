@@ -250,7 +250,7 @@ const TuitionManagement = () => {
                               size="small"
                               sx={{
                                 minWidth: 'auto',
-                                padding: '6px 8px',
+                                padding: '6px 6px',
                                 '& .MuiButton-startIcon': {
                                   margin: 0
                                 }
