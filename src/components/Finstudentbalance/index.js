@@ -262,7 +262,7 @@ const StudentBalance = () => {
 
         {/* Pagination */}
         {filteredStudents.length > 0 && (
-          <div className="d-flex tableFooter">
+          <div className="d-flex justify-content-center mt-4">
             <Pagination 
               count={pageCount}
               page={page}
