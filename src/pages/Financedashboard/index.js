@@ -124,8 +124,56 @@ const FinanceDashboard = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-        <CircularProgress />
+      <div className="right-content w-100">
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="mb-4">Finance Dashboard</h3>
+          
+          {/* Stat Cards - Show skeleton loading */}
+          <div className="row">
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="col-md-3 mb-4">
+                <Card 
+                  className="h-100 p-3" 
+                  sx={{ 
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-5px)' },
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <div className="d-flex align-items-center mb-3">
+                    <CircularProgress size={30} style={{ color: '#c70202' }} />
+                    <Typography variant="h6" className="ms-2">Loading...</Typography>
+                  </div>
+                  <Typography variant="h3" style={{ color: '#c70202' }}>
+                    --
+                  </Typography>
+                </Card>
+              </div>
+            ))}
+          </div>
+
+          <div className="row mt-4">
+            {/* Recent Transactions - Loading State */}
+            <div className="col-md-6 mb-4">
+              <Card className="h-100 p-3">
+                <Typography variant="h6" className="mb-3">Recent Transactions</Typography>
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+                  <CircularProgress style={{ color: '#c70202' }} />
+                </div>
+              </Card>
+            </div>
+
+            {/* Payment Statistics - Loading State */}
+            <div className="col-md-6 mb-4">
+              <Card className="h-100 p-3">
+                <Typography variant="h6" className="mb-3">Payment Statistics</Typography>
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+                  <CircularProgress style={{ color: '#c70202' }} />
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
