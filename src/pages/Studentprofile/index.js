@@ -377,7 +377,8 @@ const StudentProfile = () => {
         programs: formDataa.programs,
         yearLevel: formDataa.yearLevel,
         semester: formDataa.semester,
-        academic_year: formDataa.academic_year
+        academic_year: formDataa.academic_year,
+        studentType: formDataa.studentType
       });
   
             const formDataToSend = new FormData();
@@ -386,6 +387,12 @@ const StudentProfile = () => {
       formDataToSend.append('semester', formDataa.semester);
       formDataToSend.append('academic_year', formDataa.academic_year);
       formDataToSend.append('studentType', formDataa.studentType);
+
+      // Debug: Log what's being sent
+      console.log("FormData being sent:");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}: ${value}`);
+      }
 
       // Add previous school information for transferees
       if (formDataa.studentType === 'transferee') {
