@@ -63,8 +63,81 @@ const PaymentHistory = () => {
   if (loading) {
     return (
       <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
+        <div className="card shadow border-0 p-3">
+          <Typography variant="h5" className="mb-4" style={{ color: '#c70202' }}>Payment History</Typography>
+
+          {/* Filters */}
+          <Paper elevation={3} className="p-3 mb-4">
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={4}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={filterProgram}
+                    onChange={(e) => setFilterProgram(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#c70202',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#c70202',
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value="">All Programs</MenuItem>
+                    <MenuItem value="BSIT">BSIT</MenuItem>
+                    <MenuItem value="BSED">BSED</MenuItem>
+                    <MenuItem value="BSCRIM">BSCRIM</MenuItem>
+                    <MenuItem value="BSHM">BSHM</MenuItem>
+                    <MenuItem value="BSOAD">BSOAD</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  type="date"
+                  fullWidth
+                  size="small"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <Button 
+                  variant="contained"
+                  onClick={fetchPayments}
+                  fullWidth
+                  sx={{
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  }}
+                >
+                  Apply Filters
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Loading State for Table */}
+          <Paper elevation={3} className="p-4">
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '300px' }}>
+              <CircularProgress style={{ color: '#c70202' }} />
+            </div>
+          </Paper>
         </div>
       </div>
     );
