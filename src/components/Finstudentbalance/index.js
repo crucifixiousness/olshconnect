@@ -1,9 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button, FormControl, InputLabel, Select, MenuItem, Pagination } from "@mui/material";
+import { 
+  Button, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Pagination,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Chip
+} from "@mui/material";
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
-import { TextField, InputAdornment } from '@mui/material';
-import { FaSearch } from 'react-icons/fa';
+import Searchbar from '../Searchbar';
 
 const StudentBalance = () => {
   const [students, setStudents] = useState([]);
@@ -52,6 +68,67 @@ const StudentBalance = () => {
   const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
   const pageCount = Math.ceil(filteredStudents.length / rowsPerPage);
 
+  const getStatusColor = (balance) => {
+    return parseFloat(balance) > 0 ? 'error' : 'success';
+  };
+
+  const getStatusText = (balance) => {
+    return parseFloat(balance) > 0 ? 'With Balance' : 'Cleared';
+  };
+
+  if (loading) {
+    return (
+      <div className="right-content w-100">
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="hd mt-2 pb-0">Student Balance Management</h3>
+        </div>
+
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="hd">
+            Students Balance {yearLevel ? `- Year ${yearLevel}` : ''}
+          </h3>
+
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex gap-3">
+              <Searchbar value={searchTerm} onChange={setSearchTerm} />
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+                <Select
+                  labelId="semester-filter-label"
+                  value={selectedSemester}
+                  onChange={handleSemesterChange}
+                  label="Filter by Semester"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">All Semesters</MenuItem>
+                  <MenuItem value="1st">1st Semester</MenuItem>
+                  <MenuItem value="2nd">2nd Semester</MenuItem>
+                  <MenuItem value="Summer">Summer</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+          </div>
+
+          {/* Loading State for Table */}
+          <Paper elevation={3} className="p-4">
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '300px' }}>
+              <CircularProgress style={{ color: '#c70202' }} />
+            </div>
+          </Paper>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
@@ -65,34 +142,7 @@ const StudentBalance = () => {
 
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div className="d-flex gap-3">
-            <TextField
-              size="small"
-              placeholder="Search by ID, name, or program"
-              variant="outlined"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ 
-                width: '300px',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: '#c70202',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#a00000',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#c70202',
-                  },
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <FaSearch style={{ color: '#c70202' }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <Searchbar value={searchTerm} onChange={setSearchTerm} />
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
               <Select
@@ -100,6 +150,16 @@ const StudentBalance = () => {
                 value={selectedSemester}
                 onChange={handleSemesterChange}
                 label="Filter by Semester"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
               >
                 <MenuItem value="">All Semesters</MenuItem>
                 <MenuItem value="1st">1st Semester</MenuItem>
@@ -110,57 +170,55 @@ const StudentBalance = () => {
           </div>
         </div>
 
-        <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align">
-            <thead className="thead-dark">
-              <tr>
-                <th>Student ID</th>
-                <th>Name</th>
-                <th>Year Level</th>
-                <th>Program</th>
-                <th>Total Balance</th>
-                <th>Last Payment Date</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: "center" }}>Loading...</td>
-                </tr>
-              ) : filteredStudents.length > 0 ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student ID</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Name</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Total Balance</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Last Payment Date</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedStudents.length > 0 ? (
                 paginatedStudents.map((student) => (
-                  <tr key={student.student_id}>
-                    <td className="text-center">{student.student_id}</td>
-                    <td>{student.student_name}</td>
-                    <td className="text-center">{student.year_level}</td>
-                    <td className="text-center">{student.program_name}</td>
-                    <td className="text-center">₱{parseFloat(student.balance).toLocaleString()}</td>
-                    <td className="text-center">{student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}</td>
-                    <td className="text-center">
-                      <span className={`badge ${parseFloat(student.balance) > 0 ? 'bg-danger' : 'bg-success'}`}>
-                        {parseFloat(student.balance) > 0 ? 'With Balance' : 'Cleared'}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <div className="actions d-flex align-items-center gap-2">
-                        <Button variant="contained" color="primary" size="small">
-                          View Details
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                  <TableRow key={student.student_id}>
+                    <TableCell>{student.student_id}</TableCell>
+                    <TableCell>{student.student_name}</TableCell>
+                    <TableCell>{student.year_level}</TableCell>
+                    <TableCell>{student.program_name}</TableCell>
+                    <TableCell style={{ fontWeight: 'bold' }}>
+                      ₱{parseFloat(student.balance).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      {student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString() : 'No payments yet'}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getStatusText(student.balance)}
+                        color={getStatusColor(student.balance)}
+                        size="small"
+                      />
+                    </TableCell>
+                  </TableRow>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: "center" }}>
+                <TableRow>
+                  <TableCell colSpan="7" style={{ textAlign: "center" }}>
                     No students with balance found.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Pagination */}
+        {filteredStudents.length > 0 && (
           <div className="d-flex tableFooter">
             <Pagination 
               count={pageCount}
@@ -170,9 +228,19 @@ const StudentBalance = () => {
               className="pagination"
               showFirstButton 
               showLastButton 
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  '&.Mui-selected': {
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  },
+                },
+              }}
             />
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
