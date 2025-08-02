@@ -1,8 +1,8 @@
-import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography } from '@mui/material';
+import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography, TextField, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { FaCirclePlus } from "react-icons/fa6";
-import { Snackbar, Alert, CircularProgress } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
 import { useCallback } from 'react';
 import { MyContext } from '../../App';
 import { FaEye } from "react-icons/fa";
@@ -21,6 +21,8 @@ const RequestDocument = () => {
   const handleClose = () => setShowRequestModal(false);
   const context = useContext(MyContext);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -47,6 +49,7 @@ const RequestDocument = () => {
   const [newRequest, setNewRequest] = useState({
     id: user?.id || null,
     doc_type: "",
+    description: "", // Added description field
     requestDate: new Date().toISOString().slice(0, 10),
     status: "Pending",
   });
@@ -57,17 +60,29 @@ const RequestDocument = () => {
     severity: 'success'
   });
 
+  // Filter requests
+  const filteredRequests = requestList.filter(request => {
+    const matchesSearch = !searchTerm || 
+      request.doc_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || request.req_status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedRequests = requestList.slice(startIndex, endIndex);
-  const pageCount = Math.ceil(requestList.length / rowsPerPage);
+  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(filteredRequests.length / rowsPerPage);
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
 
   // Add this near other useRef declarations
   const requestDataCache = useRef({
@@ -129,7 +144,7 @@ const RequestDocument = () => {
   const handleAddRequest = async (e) => {
     e.preventDefault();
   
-    const { doc_type } = newRequest;
+    const { doc_type, description } = newRequest;
   
     if (!doc_type) {
       setSnackbar({
@@ -139,11 +154,20 @@ const RequestDocument = () => {
       });
       return;
     }
+
+    if (!description.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Please provide a reason for your request.',
+        severity: 'error'
+      });
+      return;
+    }
   
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post("/api/requesting-document", 
-        { doc_type }, 
+        { doc_type, description }, // Include description in request
         {
           headers: { 
             'Authorization': `Bearer ${token}`,
@@ -159,6 +183,14 @@ const RequestDocument = () => {
           open: true,
           message: 'Request added successfully.',
           severity: 'success'
+        });
+        // Reset form
+        setNewRequest({
+          id: user?.id || null,
+          doc_type: "",
+          description: "",
+          requestDate: new Date().toISOString().slice(0, 10),
+          status: "Pending",
         });
         fetchRequestData();
       }
@@ -234,6 +266,7 @@ const RequestDocument = () => {
       document.body.removeChild(link);
     }
   };
+
   if (loading) {
     return (
       <div className="right-content w-100">
@@ -246,111 +279,208 @@ const RequestDocument = () => {
 
   // Add this component before the closing div of your return statement
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="request-document-page">
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="hd mt-2 pb-0" data-testid="page-title">Document Request Management</h3>
       </div>
 
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd">Requested Documents</h3>
-
-        <div className="addreq d-flex justify-content-end mb-3">
+      <div className="card shadow border-0 p-3">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h3 className="hd">Requested Documents</h3>
           <Button
             variant="contained"
-            color="primary"
             onClick={handleOpen}
             data-testid="request-document-button"
+            sx={{
+              bgcolor: '#c70202',
+              '&:hover': {
+                bgcolor: '#a00000',
+              },
+            }}
           >
             <FaCirclePlus/> Request Document
           </Button>
         </div>
 
-        <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align" data-testid="requests-table">
-            <thead className="thead-dark">
-              <tr>
-                <th>Document Type</th>
-                <th>Date of Request</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-            {paginatedRequests.length > 0 ? (
-              paginatedRequests.map((request) => (
-                <tr key={request.req_id}>
-                  <td>{request.doc_type}</td>
-                  <td>{new Date(request.req_date).toLocaleDateString()}</td>
-                  <td>{request.req_status}</td>
-                  <td>
-                    {request.req_status === 'Approved' && (
-                      <IconButton
-                        onClick={() => handleViewDocument(request)}
-                        color="primary"
-                        size="small"
-                        title="View Document"
-                      >
-                        <FaEye />
-                      </IconButton>
-                    )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" style={{ textAlign: "center" }} data-testid="no-requests-message">
-                  No document requests available.
-                </td>
-              </tr>
-            )}
-          </tbody>
-          </table>
+        {/* Filters */}
+        <Paper elevation={3} className="p-3 mb-4">
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={4}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SEARCH</Typography>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search by document type or reason..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STATUS</Typography>
+              <FormControl fullWidth size="small">
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Status</em>
+                  </MenuItem>
+                  <MenuItem value="Pending">Pending</MenuItem>
+                  <MenuItem value="Approved">Approved</MenuItem>
+                  <MenuItem value="Rejected">Rejected</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>&nbsp;</Typography>
+              <Button 
+                variant="contained"
+                onClick={fetchRequestData}
+                fullWidth
+                sx={{
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  },
+                }}
+              >
+                Apply Filters
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
 
-          {/* Pagination */}
-          <div className="d-flex justify-content-center mt-3">
+        {/* Table */}
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Document Type</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Reason/Description</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Date of Request</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedRequests.length > 0 ? (
+                paginatedRequests.map((request, index) => (
+                  <TableRow key={request.req_id} data-testid={`request-row-${index}`}>
+                    <TableCell data-testid={`doc-type-${index}`}>
+                      {request.doc_type}
+                    </TableCell>
+                    <TableCell data-testid={`description-${index}`}>
+                      {request.description || 'No reason provided'}
+                    </TableCell>
+                    <TableCell data-testid={`date-${index}`}>
+                      {new Date(request.req_date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell data-testid={`status-${index}`}>
+                      {request.req_status}
+                    </TableCell>
+                    <TableCell>
+                      {request.req_status === 'Approved' && (
+                        <IconButton
+                          onClick={() => handleViewDocument(request)}
+                          color="primary"
+                          size="small"
+                          title="View Document"
+                          data-testid={`view-button-${index}`}
+                        >
+                          <FaEye />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan="5" style={{ textAlign: "center" }} data-testid="no-requests-message">
+                    {searchTerm || statusFilter ? 'No requests found matching your filters' : 'No document requests available.'}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Pagination */}
+        {filteredRequests.length > 0 && (
+          <div className="d-flex justify-content-center mt-4">
             <Pagination
               data-testid="pagination"
               count={pageCount}
               page={page}
-              onChange={(e, newPage) => setPage(newPage)}
+              onChange={handlePageChange}
               color="primary"
               showFirstButton
               showLastButton
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  '&.Mui-selected': {
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  },
+                },
+              }}
             />
           </div>
-        </div>
+        )}
       </div>
 
       <Dialog
-      open={showPdfModal}
-      onClose={handleClosePdfModal}
-      maxWidth="md"
-      fullWidth
-    >
-      <Box sx={{ height: '80vh', position: 'relative' }}>
-        <Button
-          onClick={handleDownload}
-          variant="contained"
-          sx={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            zIndex: 1,
-            bgcolor: '#c70202',
-            '&:hover': {
-              bgcolor: '#a00000',
-            }
-          }}
-        >
-          Download PDF
-        </Button>
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-          {pdfUrl && (
-            <Viewer fileUrl={pdfUrl} />
-          )}
-        </Worker>
-      </Box>
-    </Dialog>
+        open={showPdfModal}
+        onClose={handleClosePdfModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <Box sx={{ height: '80vh', position: 'relative' }}>
+          <Button
+            onClick={handleDownload}
+            variant="contained"
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              zIndex: 1,
+              bgcolor: '#c70202',
+              '&:hover': {
+                bgcolor: '#a00000',
+              }
+            }}
+          >
+            Download PDF
+          </Button>
+          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+            {pdfUrl && (
+              <Viewer fileUrl={pdfUrl} />
+            )}
+          </Worker>
+        </Box>
+      </Dialog>
 
       {/* Request Document Modal */}
       <Modal
@@ -370,7 +500,9 @@ const RequestDocument = () => {
           boxShadow: 24,
           p: 4,
         }}>
-          <Typography variant="h6" className="hd mb-4">Request a Document</Typography>
+          <Typography variant="h6" className="hd mb-4" sx={{ color: '#c70202', fontWeight: 'bold' }}>
+            Request a Document
+          </Typography>
           <form onSubmit={handleAddRequest}>
             <FormControl fullWidth margin="normal">
               <InputLabel id="document-type-label">Document Type</InputLabel>
@@ -383,7 +515,17 @@ const RequestDocument = () => {
                 required
                 aria-label="Document Type"
                 data-testid="document-type-select"
-                data-value={newRequest.doc_type} // Add this line
+                data-value={newRequest.doc_type}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
               >
                 <MenuItem value="Certificate of Grades">Certificate of Grades</MenuItem>
                 <MenuItem value="Good Moral Certificate">Good Moral Certificate</MenuItem>
@@ -391,8 +533,45 @@ const RequestDocument = () => {
               </Select>
             </FormControl>
 
-            <div className="d-flex justify-content-end gap-2 mt-3">
-              <Button onClick={handleClose}>Cancel</Button>
+            <TextField
+              label="Reason for Request"
+              name="description"
+              value={newRequest.description}
+              onChange={handleInputChange}
+              fullWidth
+              margin="normal"
+              multiline
+              rows={3}
+              placeholder="Please explain why you need this document (e.g., job application, scholarship, transfer, etc.)"
+              required
+              data-testid="description-input"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#c70202',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#c70202',
+                  },
+                },
+              }}
+            />
+
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <Button 
+                onClick={handleClose}
+                variant="outlined"
+                sx={{
+                  borderColor: '#c70202',
+                  color: '#c70202',
+                  '&:hover': {
+                    borderColor: '#a00000',
+                    color: '#a00000',
+                  },
+                }}
+              >
+                Cancel
+              </Button>
               <Button 
                 type="submit" 
                 variant="contained"
@@ -402,7 +581,10 @@ const RequestDocument = () => {
                   bgcolor: '#c70202',
                   '&:hover': {
                     bgcolor: '#a00000',
-                  }
+                  },
+                  '&:disabled': {
+                    bgcolor: '#ccc',
+                  },
                 }}
               >
                 {isLoading ? "Requesting..." : "Submit Request"}
