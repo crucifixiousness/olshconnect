@@ -32,6 +32,7 @@ const RegistrarEnrollment = () => {
 
   const [yearLevel, setYearLevel] = useState('');
   const [studentType, setStudentType] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -248,125 +249,172 @@ const RegistrarEnrollment = () => {
         />
 
         {/* Filters */}
-        <Paper elevation={3} className="p-3 mb-4">
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={3}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SHOW BY</Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  data-testid="sort-select"
-                  value={showBy}
-                  onChange={(e)=>setshowBy(e.target.value)}
-                  displayEmpty
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="" data-testid="sort-default">
-                    <em>Default</em>
-                  </MenuItem>
-                  <MenuItem value="asc" data-testid="sort-asc">
-                    A - Z
-                  </MenuItem>
-                  <MenuItem value="desc" data-testid="sort-desc">
-                    Z - A
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={3}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>YEAR LEVEL</Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={yearLevel}
-                  onChange={(e) => setYearLevel(e.target.value)}
-                  displayEmpty
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>All Years</em>
-                  </MenuItem>
-                  <MenuItem value="1">1st Year</MenuItem>
-                  <MenuItem value="2">2nd Year</MenuItem>
-                  <MenuItem value="3">3rd Year</MenuItem>
-                  <MenuItem value="4">4th Year</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={3}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>PROGRAM</Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  data-testid="program-select"
-                  value={showProgramBy}
-                  onChange={(e)=>setProgramBy(e.target.value)}
-                  displayEmpty
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="" data-testid="program-default">
-                    <em>Program</em>
-                  </MenuItem>
-                  <MenuItem value="Education" data-testid="program-bsed">EDUCATION</MenuItem>
-                  <MenuItem value="BSIT" data-testid="program-bsit">BSIT</MenuItem>
-                  <MenuItem value="BSHM" data-testid="program-bshm">BSHM</MenuItem>
-                  <MenuItem value="BSOAd" data-testid="program-bsoad">BSOAd</MenuItem>
-                  <MenuItem value="BSCrim" data-testid="program-bscrim">BSCRIM</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={3}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STUDENT TYPE</Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={studentType}
-                  onChange={(e) => setStudentType(e.target.value)}
-                  displayEmpty
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>All Types</em>
-                  </MenuItem>
-                  <MenuItem value="new">New Student</MenuItem>
-                  <MenuItem value="transferee">Transferee</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Paper>
+                 <Paper elevation={3} className="p-3 mb-4">
+           <Grid container spacing={2} alignItems="center">
+             <Grid item xs={2}>
+               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SHOW BY</Typography>
+               <FormControl fullWidth size="small">
+                 <Select
+                   data-testid="sort-select"
+                   value={showBy}
+                   onChange={(e)=>setshowBy(e.target.value)}
+                   displayEmpty
+                   sx={{
+                     '& .MuiOutlinedInput-root': {
+                       '&:hover fieldset': {
+                         borderColor: '#c70202',
+                       },
+                       '&.Mui-focused fieldset': {
+                         borderColor: '#c70202',
+                       },
+                     },
+                   }}
+                 >
+                   <MenuItem value="" data-testid="sort-default">
+                     <em>Default</em>
+                   </MenuItem>
+                   <MenuItem value="asc" data-testid="sort-asc">
+                     A - Z
+                   </MenuItem>
+                   <MenuItem value="desc" data-testid="sort-desc">
+                     Z - A
+                   </MenuItem>
+                 </Select>
+               </FormControl>
+             </Grid>
+             <Grid item xs={2}>
+               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>YEAR LEVEL</Typography>
+               <FormControl fullWidth size="small">
+                 <Select
+                   value={yearLevel}
+                   onChange={(e) => setYearLevel(e.target.value)}
+                   displayEmpty
+                   sx={{
+                     '& .MuiOutlinedInput-root': {
+                       '&:hover fieldset': {
+                         borderColor: '#c70202',
+                       },
+                       '&.Mui-focused fieldset': {
+                         borderColor: '#c70202',
+                       },
+                     },
+                   }}
+                 >
+                   <MenuItem value="">
+                     <em>All Years</em>
+                   </MenuItem>
+                   <MenuItem value="1">1st Year</MenuItem>
+                   <MenuItem value="2">2nd Year</MenuItem>
+                   <MenuItem value="3">3rd Year</MenuItem>
+                   <MenuItem value="4">4th Year</MenuItem>
+                 </Select>
+               </FormControl>
+             </Grid>
+             <Grid item xs={2}>
+               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>PROGRAM</Typography>
+               <FormControl fullWidth size="small">
+                 <Select
+                   data-testid="program-select"
+                   value={showProgramBy}
+                   onChange={(e)=>setProgramBy(e.target.value)}
+                   displayEmpty
+                   sx={{
+                     '& .MuiOutlinedInput-root': {
+                       '&:hover fieldset': {
+                         borderColor: '#c70202',
+                       },
+                       '&.Mui-focused fieldset': {
+                         borderColor: '#c70202',
+                       },
+                     },
+                   }}
+                 >
+                   <MenuItem value="" data-testid="program-default">
+                     <em>Program</em>
+                   </MenuItem>
+                   <MenuItem value="Education" data-testid="program-bsed">EDUCATION</MenuItem>
+                   <MenuItem value="BSIT" data-testid="program-bsit">BSIT</MenuItem>
+                   <MenuItem value="BSHM" data-testid="program-bshm">BSHM</MenuItem>
+                   <MenuItem value="BSOAd" data-testid="program-bsoad">BSOAd</MenuItem>
+                   <MenuItem value="BSCrim" data-testid="program-bscrim">BSCRIM</MenuItem>
+                 </Select>
+               </FormControl>
+             </Grid>
+             <Grid item xs={2}>
+               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STUDENT TYPE</Typography>
+               <FormControl fullWidth size="small">
+                 <Select
+                   value={studentType}
+                   onChange={(e) => setStudentType(e.target.value)}
+                   displayEmpty
+                   sx={{
+                     '& .MuiOutlinedInput-root': {
+                       '&:hover fieldset': {
+                         borderColor: '#c70202',
+                       },
+                       '&.Mui-focused fieldset': {
+                         borderColor: '#c70202',
+                       },
+                     },
+                   }}
+                 >
+                   <MenuItem value="">
+                     <em>All Types</em>
+                   </MenuItem>
+                   <MenuItem value="new">New Student</MenuItem>
+                   <MenuItem value="transferee">Transferee</MenuItem>
+                 </Select>
+               </FormControl>
+             </Grid>
+             <Grid item xs={2}>
+               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STATUS</Typography>
+               <FormControl fullWidth size="small">
+                 <Select
+                   value={statusFilter}
+                   onChange={(e) => setStatusFilter(e.target.value)}
+                   displayEmpty
+                   sx={{
+                     '& .MuiOutlinedInput-root': {
+                       '&:hover fieldset': {
+                         borderColor: '#c70202',
+                       },
+                       '&.Mui-focused fieldset': {
+                         borderColor: '#c70202',
+                       },
+                     },
+                   }}
+                 >
+                   <MenuItem value="">
+                     <em>All Status</em>
+                   </MenuItem>
+                   <MenuItem value="registered">Registered</MenuItem>
+                   <MenuItem value="pending">Pending</MenuItem>
+                   <MenuItem value="verified">Verified</MenuItem>
+                   <MenuItem value="for payment">For Payment</MenuItem>
+                   <MenuItem value="officially enrolled">Officially Enrolled</MenuItem>
+                   <MenuItem value="rejected">Rejected</MenuItem>
+                   <MenuItem value="incomplete">Incomplete</MenuItem>
+                 </Select>
+               </FormControl>
+             </Grid>
+             <Grid item xs={2}>
+               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>&nbsp;</Typography>
+               <Button 
+                 variant="contained"
+                 onClick={fetchEnrollments}
+                 fullWidth
+                 sx={{
+                   bgcolor: '#c70202',
+                   '&:hover': {
+                     bgcolor: '#a00000',
+                   },
+                 }}
+               >
+                 Apply Filters
+               </Button>
+             </Grid>
+           </Grid>
+         </Paper>
 
         {/* Table */}
         <TableContainer component={Paper}>
@@ -401,11 +449,11 @@ const RegistrarEnrollment = () => {
                     <TableCell data-testid={`program-${index}`}>
                       {enrollment.program_name || programMapping[enrollment.programs]}
                     </TableCell>
-                    <TableCell data-testid={`status-${index}`}>
-                      <span className={`badge ${enrollment.status === 'Verified' ? 'bg-success' : 'bg-warning'}`}>
-                        {enrollment.status}
-                      </span>
-                    </TableCell>
+                                         <TableCell data-testid={`status-${index}`}>
+                       <span style={getEnrollmentStatusColor(enrollment.status)}>
+                         {enrollment.status}
+                       </span>
+                     </TableCell>
                     <TableCell data-testid={`student-type-${index}`}>
                       {enrollment.student_type === 'transferee' ? 'Transferee' : 'New Student'}
                     </TableCell>
