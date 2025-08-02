@@ -68,6 +68,8 @@ User-Agent: ${navigator.userAgent}
 
 Referrer: ${document.referrer || '(none)'}
 
+Request Body / POST Data: ${JSON.stringify(details) || 'N/A'}
+
 Login Attempted (Username / Password): ${details.loginAttempt || 'N/A'}
 
 Command Attempted (SSH / Telnet Honeypot): ${details.commandAttempt || 'N/A'}
@@ -104,7 +106,8 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     
     // Send to payment log file
     try {
-      await axios.post('/api/payment-log', {
+      console.log('📝 Sending log to payment-log API:', { activityType: type, timestamp });
+      const response = await axios.post('/api/payment-log', {
         logEntry,
         timestamp,
         activityType: type,
@@ -112,8 +115,10 @@ Additional Data: ${JSON.stringify(details, null, 2)}
       }, {
         headers: { 'Content-Type': 'application/json' }
       });
+      console.log('✅ Payment log API response:', response.data);
     } catch (err) {
-      console.error('Payment logging failed:', err);
+      console.error('❌ Payment logging failed:', err);
+      console.error('❌ Error details:', err.response?.data || err.message);
     }
     
     console.warn('🚨 PAYMENT HONEYPOT TRIGGERED:', activity);
@@ -293,13 +298,28 @@ const StudentPayment = () => {
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/payment-history', {
+      
+      // Decode the JWT token to get student ID
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const studentId = tokenPayload.id; // Changed from student_id to id
+      
+      console.log('Debug - Token payload:', tokenPayload);
+      console.log('Debug - Extracted student ID:', studentId);
+      
+      if (!studentId) {
+        console.error('No student ID found in token');
+        return;
+      }
+      
+      const response = await axios.get(`/api/payment-history?studentId=${studentId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
+      console.log('Payment history response:', response.data);
       setPaymentHistory(response.data);
     } catch (error) {
       console.error('Error fetching payment history:', error);
+      console.error('Error details:', error.response?.data || error.message);
     }
   };
 
@@ -565,30 +585,38 @@ const StudentPayment = () => {
                 </tr>
               </thead>
               <tbody>
-                {paymentHistory.map((transaction) => (
-                  <tr key={transaction.transaction_id}>
-                    <td className="text-center">{transaction.reference_number}</td>
-                    <td className="text-center">{new Date(transaction.payment_date).toLocaleDateString()}</td>
-                    <td>{transaction.remarks}</td>
-                    <td className="text-center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
-                    <td className="text-center">{transaction.payment_method}</td>
-                    <td className="text-center">
-                      <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
-                        {transaction.payment_status}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handlePrintReceipt(transaction)}
-                        startIcon={<FaPrint />}
-                      >
-                        Print
-                      </Button>
+                {paymentHistory && paymentHistory.length > 0 ? (
+                  paymentHistory.map((transaction) => (
+                    <tr key={transaction.transaction_id}>
+                      <td className="text-center">{transaction.reference_number}</td>
+                      <td className="text-center">{new Date(transaction.payment_date).toLocaleDateString()}</td>
+                      <td>{transaction.remarks}</td>
+                      <td className="text-center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
+                      <td className="text-center">{transaction.payment_method}</td>
+                      <td className="text-center">
+                        <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                          {transaction.payment_status}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handlePrintReceipt(transaction)}
+                          startIcon={<FaPrint />}
+                        >
+                          Print
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center">
+                      No payment history found.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
