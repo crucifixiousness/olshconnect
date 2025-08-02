@@ -895,8 +895,8 @@ const StudentProfile = () => {
                     inputProps={{ 'aria-label': 'studentType' }}
                     data-testid="student-type-select"
                   >
-                    <MenuItem value="new">New Student</MenuItem>
-                    <MenuItem value="transferee">Transferee</MenuItem>
+                    <MenuItem value="new">new</MenuItem>
+                    <MenuItem value="transferee">transferee</MenuItem>
                   </Select>
                 </FormControl>
               </div>
