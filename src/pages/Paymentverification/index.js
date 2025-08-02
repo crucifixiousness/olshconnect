@@ -13,6 +13,8 @@ const PaymentVerification = () => {
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
   const token = localStorage.getItem('token');
 
   // Add snackbar state
@@ -113,6 +115,15 @@ const PaymentVerification = () => {
     fetchPayments();
   }, [fetchPayments]);
 
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedPayments = payments.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(payments.length / rowsPerPage);
+
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
@@ -173,7 +184,7 @@ const PaymentVerification = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {payments.map((payment) => (
+                  {paginatedPayments.map((payment) => (
                     <TableRow
                       key={payment._id}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -269,11 +280,13 @@ const PaymentVerification = () => {
             </TableContainer>
             <div className='d-flex justify-content-center mt-4'>
               <Pagination 
-                count={10} 
+                count={pageCount} 
                 color="primary" 
                 className='pagination' 
                 showFirstButton 
                 showLastButton 
+                page={page}
+                onChange={handlePageChange}
                 sx={{
                   '& .MuiPaginationItem-root': {
                     '&.Mui-selected': {
