@@ -227,20 +227,34 @@ const TuitionManagement = () => {
                           ₱{parseFloat(fee.tuition_amount) + parseFloat(fee.misc_fees) + parseFloat(fee.lab_fees) + parseFloat(fee.other_fees)}
                         </TableCell>
                         <TableCell>
-                          <div className="actions d-flex align-items-center gap-2">
+                          <div className="actions d-flex align-items-center gap-1">
                             <Button 
                               data-testid={`edit-button-${fee.fee_id}`}
-                              className="success" 
+                              variant="contained"
                               color="success" 
                               size="small"
+                              sx={{
+                                minWidth: 'auto',
+                                padding: '6px 8px',
+                                '& .MuiButton-startIcon': {
+                                  margin: 0
+                                }
+                              }}
                             >
                               <FaEdit />
                             </Button>
                             <Button 
                               data-testid={`delete-button-${fee.fee_id}`}
-                              className="error" 
+                              variant="contained"
                               color="error" 
                               size="small"
+                              sx={{
+                                minWidth: 'auto',
+                                padding: '6px 8px',
+                                '& .MuiButton-startIcon': {
+                                  margin: 0
+                                }
+                              }}
                             >
                               <FaTrash />
                             </Button>
