@@ -423,24 +423,18 @@ const CounterPayment = () => {
                 <Typography><strong>Name:</strong> {studentInfo.fullName}</Typography>
                 <Typography><strong>Student ID:</strong> {studentInfo.studentId}</Typography>
                 <Typography><strong>Program:</strong> {studentInfo.program}</Typography>
-                <Chip 
-                  label={studentInfo.enrollmentStatus} 
-                  color={getStatusColor(studentInfo.enrollmentStatus)}
-                  size="small"
-                  className="mt-1"
-                />
+                <span className={`badge ${studentInfo.enrollmentStatus === 'Officially Enrolled' ? 'bg-success' : studentInfo.enrollmentStatus === 'Verified' ? 'bg-info' : 'bg-warning'} mt-1`}>
+                  {studentInfo.enrollmentStatus}
+                </span>
               </Grid>
               <Grid item xs={6}>
                 <Typography><strong>Total Fee:</strong> ₱{studentInfo.totalFee?.toLocaleString()}</Typography>
                 <Typography><strong>Amount Paid:</strong> ₱{studentInfo.amountPaid?.toLocaleString()}</Typography>
                 <Typography><strong>Balance:</strong> ₱{studentInfo.balance?.toLocaleString()}</Typography>
                 {studentInfo.balance <= 0 && (
-                  <Chip 
-                    label="Fully Paid" 
-                    color="success"
-                    size="small"
-                    className="mt-1"
-                  />
+                  <span className="badge bg-success mt-1">
+                    Fully Paid
+                  </span>
                 )}
               </Grid>
             </Grid>
@@ -576,11 +570,9 @@ const CounterPayment = () => {
                       <TableCell>₱{parseFloat(payment.amount_paid).toLocaleString()}</TableCell>
                       <TableCell>{payment.payment_method}</TableCell>
                       <TableCell>
-                        <Chip 
-                          label={payment.payment_status} 
-                          color={payment.payment_status === 'Fully Paid' ? 'success' : 'warning'}
-                          size="small"
-                        />
+                        <span className={`badge ${payment.payment_status === 'Fully Paid' ? 'bg-success' : 'bg-warning'}`}>
+                          {payment.payment_status}
+                        </span>
                       </TableCell>
                       <TableCell>{payment.reference_number}</TableCell>
                       <TableCell>
