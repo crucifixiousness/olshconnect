@@ -369,9 +369,11 @@ const CounterPayment = () => {
 
   return (
     <div className="right-content w-100">
-      <div className="card shadow border-0 p-3">
-        <Typography variant="h5" className="mb-4" style={{ color: '#c70202' }}>Counter Payment</Typography>
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="hd mt-2 pb-0">Counter Payment</h3>
+      </div>
 
+      <div className="card shadow border-0 p-3">
         {/* Search Student Section */}
         <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0' }}>
           <Grid container spacing={2} alignItems="center">
