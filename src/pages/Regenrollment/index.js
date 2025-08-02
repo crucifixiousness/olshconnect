@@ -658,9 +658,9 @@ const RegistrarEnrollment = () => {
                       Birth Certificate
                     </Typography>
                   </div>
-                  {selectedEnrollment.birth_certificate_doc ? (
+                  {selectedEnrollment.birthCertificateDoc ? (
                     <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.birth_certificate_doc}`} 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.birthCertificateDoc}`} 
                       alt="Birth Certificate" 
                       style={{ width: '100%', borderRadius: '8px' }}
                     />
@@ -675,9 +675,9 @@ const RegistrarEnrollment = () => {
                       Form 137
                     </Typography>
                   </div>
-                  {selectedEnrollment.form137_doc ? (
+                  {selectedEnrollment.form137Doc ? (
                     <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.form137_doc}`} 
+                      src={`data:image/jpeg;base64,${selectedEnrollment.form137Doc}`} 
                       alt="Form 137" 
                       style={{ width: '100%', borderRadius: '8px' }}
                     />
@@ -695,9 +695,9 @@ const RegistrarEnrollment = () => {
                           Transfer Certificate
                         </Typography>
                       </div>
-                      {selectedEnrollment.transfer_certificate_doc ? (
+                      {selectedEnrollment.transferCertificateDoc ? (
                         <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.transfer_certificate_doc}`} 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.transferCertificateDoc}`} 
                           alt="Transfer Certificate" 
                           style={{ width: '100%', borderRadius: '8px' }}
                         />
@@ -712,9 +712,9 @@ const RegistrarEnrollment = () => {
                           Transcript of Records (TOR)
                         </Typography>
                       </div>
-                      {selectedEnrollment.tor_doc ? (
+                      {selectedEnrollment.torDoc ? (
                         <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.tor_doc}`} 
+                          src={`data:image/jpeg;base64,${selectedEnrollment.torDoc}`} 
                           alt="Transcript of Records" 
                           style={{ width: '100%', borderRadius: '8px' }}
                         />
