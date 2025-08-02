@@ -129,17 +129,17 @@ module.exports = async (req, res) => {
 
       const yearResult = await client.query(
         "SELECT year_id FROM program_year WHERE program_id = $1 AND year_level = $2",
-        [fields.programs, fields.yearLevel]
+        [programs, yearLevel]
       );
 
       let year_id;
       if (yearResult.rows.length === 0) {
-        const paddedYearLevel = String(fields.yearLevel).padStart(2, '0');
-        year_id = parseInt(fields.programs + paddedYearLevel);
+        const paddedYearLevel = String(yearLevel).padStart(2, '0');
+        year_id = parseInt(programs + paddedYearLevel);
         
         await client.query(
           "INSERT INTO program_year (year_id, program_id, year_level) VALUES ($1, $2, $3)",
-          [year_id, fields.programs, fields.yearLevel]
+          [year_id, programs, yearLevel]
         );
       } else {
         year_id = yearResult.rows[0].year_id;
@@ -187,7 +187,7 @@ module.exports = async (req, res) => {
          VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10, $11, $12, $13)
          RETURNING enrollment_id`,
         [
-          id, fields.programs, year_id, fields.semester, idpic, birthCertificateDoc, 
+          id, programs, year_id, fields.semester, idpic, birthCertificateDoc, 
           form137Doc, fields.academic_year, fields.studentType, fields.previousSchool || null, 
           fields.previousProgram || null, transferCertificateDoc, torDoc
         ]
