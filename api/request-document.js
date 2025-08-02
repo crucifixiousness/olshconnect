@@ -32,6 +32,7 @@ module.exports = async (req, res) => {
       SELECT 
         req_id,
         doc_type,
+        description,
         req_date,
         req_status
       FROM 
