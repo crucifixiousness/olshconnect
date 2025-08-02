@@ -232,7 +232,6 @@ const TuitionManagement = () => {
                               data-testid={`edit-button-${fee.fee_id}`}
                               variant="contained"
                               size="small"
-                              onClick={() => handleEdit(fee.fee_id)}
                               sx={{
                                 minWidth: '36px',
                                 width: '36px',
@@ -255,7 +254,6 @@ const TuitionManagement = () => {
                               data-testid={`delete-button-${fee.fee_id}`}
                               variant="contained"
                               size="small"
-                              onClick={() => handleDelete(fee.fee_id)}
                               sx={{
                                 minWidth: '36px',
                                 width: '36px',
