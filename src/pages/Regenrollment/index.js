@@ -1,4 +1,4 @@
-import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert } from '@mui/material';
+import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import { FaEye } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa";
@@ -19,6 +19,7 @@ const RegistrarEnrollment = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const token = localStorage.getItem('token');
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -31,7 +32,6 @@ const RegistrarEnrollment = () => {
 
   const [yearLevel, setYearLevel] = useState('');
   const [studentType, setStudentType] = useState('');
-
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -96,6 +96,7 @@ const RegistrarEnrollment = () => {
 
   const fetchEnrollments = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`/api/registrar-enrollments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -104,6 +105,8 @@ const RegistrarEnrollment = () => {
       const err = new Error('Failed to fetch enrollments');
       console.error('Error fetching enrollments:', err);
       setEnrollments([]);
+    } finally {
+      setLoading(false);
     }
   }, [token]); 
 
@@ -154,44 +157,64 @@ const RegistrarEnrollment = () => {
         <h3 className="hd mt-2 pb-0" data-testid="page-title">Enrollment Verification</h3>      
       </div>
 
-      <div className="card shadow border-0 p-3 mt-1">
-        <div className="card shadow border-0 p-3 mt-1">
-          <Searchbar 
-            value={searchTerm}
-            onChange={setSearchTerm}
-            data-testid="enrollment-searchbar"
-          />
-          <h3 className="hd" data-testid="list-title">List</h3>
+      <div className="card shadow border-0 p-3">
+        <Searchbar 
+          value={searchTerm}
+          onChange={setSearchTerm}
+          data-testid="enrollment-searchbar"
+        />
 
-          <div className="row cardFilters mt-3">
-            <div className="col-md-3">
-              <h4>SHOW BY</h4>
-                <FormControl size='small' className='w-100'>
-                  <Select
-                    data-testid="sort-select"
-                    value={showBy}
-                    onChange={(e)=>setshowBy(e.target.value)}
-                    displayEmpty
-                  >
-                    <MenuItem value="" data-testid="sort-default">
-                      <em>Default</em>
-                    </MenuItem>
-                    <MenuItem value="asc" data-testid="sort-asc">
-                      A - Z
-                    </MenuItem>
-                    <MenuItem value="desc" data-testid="sort-desc">
-                      Z - A
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-            </div>
-            <div className="col-md-3">
-              <h4>YEAR LEVEL</h4>
-              <FormControl size='small' className='w-100'>
+        {/* Filters */}
+        <Paper elevation={3} className="p-3 mb-4">
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={3}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SHOW BY</Typography>
+              <FormControl fullWidth size="small">
+                <Select
+                  data-testid="sort-select"
+                  value={showBy}
+                  onChange={(e)=>setshowBy(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="" data-testid="sort-default">
+                    <em>Default</em>
+                  </MenuItem>
+                  <MenuItem value="asc" data-testid="sort-asc">
+                    A - Z
+                  </MenuItem>
+                  <MenuItem value="desc" data-testid="sort-desc">
+                    Z - A
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={3}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>YEAR LEVEL</Typography>
+              <FormControl fullWidth size="small">
                 <Select
                   value={yearLevel}
                   onChange={(e) => setYearLevel(e.target.value)}
                   displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="">
                     <em>All Years</em>
@@ -202,15 +225,25 @@ const RegistrarEnrollment = () => {
                   <MenuItem value="4">4th Year</MenuItem>
                 </Select>
               </FormControl>
-            </div>
-            <div className="col-md-3">
-              <h4>PROGRAM</h4>
-              <FormControl size='small' className='w-100'>
+            </Grid>
+            <Grid item xs={3}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>PROGRAM</Typography>
+              <FormControl fullWidth size="small">
                 <Select
                   data-testid="program-select"
                   value={showProgramBy}
                   onChange={(e)=>setProgramBy(e.target.value)}
                   displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="" data-testid="program-default">
                     <em>Program</em>
@@ -222,14 +255,24 @@ const RegistrarEnrollment = () => {
                   <MenuItem value="BSCrim" data-testid="program-bscrim">BSCRIM</MenuItem>
                 </Select>
               </FormControl>
-            </div>
-            <div className="col-md-3">
-              <h4>STUDENT TYPE</h4>
-              <FormControl size='small' className='w-100'>
+            </Grid>
+            <Grid item xs={3}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STUDENT TYPE</Typography>
+              <FormControl fullWidth size="small">
                 <Select
                   value={studentType}
                   onChange={(e) => setStudentType(e.target.value)}
                   displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="">
                     <em>All Types</em>
@@ -238,44 +281,59 @@ const RegistrarEnrollment = () => {
                   <MenuItem value="transferee">Transferee</MenuItem>
                 </Select>
               </FormControl>
-            </div>
-          </div>
+            </Grid>
+          </Grid>
+        </Paper>
 
-          <div className='table-responsive mt-3'>
-            <table className='table table-bordered v-align' data-testid="enrollments-table">
-              <thead className='thead-dark'>
-                <tr>
-                  <th>STUDENT NAME</th>
-                  <th>YEAR LEVEL</th>
-                  <th>PROGRAM</th>
-                  <th>STATUS</th>
-                  <th>STUDENT TYPE</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Update to use paginatedEnrollments */}
-                {paginatedEnrollments.map((enrollment, index) => (
-                  <tr key={enrollment._id} data-testid={`enrollment-row-${index}`}>
-                    <td data-testid={`student-name-${index}`}>{formatStudentName(
+        {/* Table */}
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT NAME</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>YEAR LEVEL</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>PROGRAM</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STATUS</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT TYPE</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan="6" style={{ textAlign: "center", padding: "40px 0" }}>
+                    <CircularProgress style={{ color: '#c70202' }} />
+                  </TableCell>
+                </TableRow>
+              ) : paginatedEnrollments.length > 0 ? (
+                paginatedEnrollments.map((enrollment, index) => (
+                  <TableRow key={enrollment._id} data-testid={`enrollment-row-${index}`}>
+                    <TableCell data-testid={`student-name-${index}`}>{formatStudentName(
                       enrollment.student.firstName,
                       enrollment.student.middleName,
                       enrollment.student.lastName,
                       enrollment.student.suffix
-                    )}</td>
-                    <td data-testid={`year-level-${index}`}>{enrollment.year_level}</td>
-                    <td data-testid={`program-${index}`}>
+                    )}</TableCell>
+                    <TableCell data-testid={`year-level-${index}`}>{enrollment.year_level}</TableCell>
+                    <TableCell data-testid={`program-${index}`}>
                       {enrollment.program_name || programMapping[enrollment.programs]}
-                    </td>
-                    <td data-testid={`status-${index}`}>{enrollment.status}</td>
-                    <td data-testid={`student-type-${index}`}>{enrollment.student_type === 'transferee' ? 'Transferee' : 'New Student'}</td>
-                    <td className='action'>
+                    </TableCell>
+                    <TableCell data-testid={`status-${index}`}>
+                      <span className={`badge ${enrollment.status === 'Verified' ? 'bg-success' : 'bg-warning'}`}>
+                        {enrollment.status}
+                      </span>
+                    </TableCell>
+                    <TableCell data-testid={`student-type-${index}`}>
+                      {enrollment.student_type === 'transferee' ? 'Transferee' : 'New Student'}
+                    </TableCell>
+                    <TableCell>
                       <div className='actions d-flex align-items-center'>
                         <Button 
                           data-testid={`view-button-${index}`}
                           className="secondary" 
                           color="secondary"
                           onClick={() => handleViewDetails(enrollment)}
+                          sx={{ mr: 1 }}
                         >
                           <FaEye/>
                         </Button>
@@ -290,25 +348,45 @@ const RegistrarEnrollment = () => {
                           </Button>
                         )}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className='d-flex tableFooter'>
-              <Pagination 
-                data-testid="pagination"
-                count={pageCount}
-                page={page}
-                onChange={handlePageChange} 
-                color="primary" 
-                className='pagination' 
-                showFirstButton 
-                showLastButton 
-              />
-            </div>
-          </div>          
-        </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan="6" style={{ textAlign: "center" }}>
+                    No enrollment records found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Pagination */}
+        {filteredEnrollments.length > 0 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination 
+              data-testid="pagination"
+              count={pageCount}
+              page={page}
+              onChange={handlePageChange} 
+              color="primary" 
+              className='pagination' 
+              showFirstButton 
+              showLastButton 
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  '&.Mui-selected': {
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <Modal 
