@@ -1,5 +1,5 @@
 // Update imports
-import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert } from '@mui/material';
+import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { useState, useEffect, useCallback } from 'react';
 import { FaEye } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa";
@@ -122,8 +122,6 @@ const PaymentVerification = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
           <Searchbar/>
-          <h3 className="hd">List</h3>
-
           <div className="row cardFilters mt-3">
             <div className="col-md-3">
               <h4>SHOW BY</h4>
@@ -163,61 +161,130 @@ const PaymentVerification = () => {
 
           <div className='table-responsive mt-3'>
             {console.log('🎯 Rendering payments table with data:', payments)}
-            <table className='table table-bordered v-align'>
-              <thead className='thead-dark'>
-                <tr>
-                  <th>STUDENT NAME</th>
-                  <th>PROGRAM</th>
-                  <th>YEAR LEVEL</th>
-                  <th>ENROLLMENT STATUS</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((payment) => (
-                  <tr key={payment._id}>
-                    <td>{payment.studentName}</td>
-                    <td>{payment.program}</td>
-                    <td>{payment.yearLevel}</td>
-                    <td>{payment.enrollmentStatus}</td>
-                    <td className='action'>
-                      <div className='actions d-flex align-items-center'>
-                        <Button 
-                          className="secondary" 
-                          color="secondary"
-                          onClick={() => handleViewDetails(payment)}
-                          title="View Enrollment Receipt"
-                        >
-                          <FaEye/>
-                        </Button>
-                        {payment.enrollmentStatus === 'Verified' && (
-                          <>
-                            <Button 
-                              className="success" 
-                              color="success"
-                              onClick={() => handleVerify(payment._id)}
-                              title="Mark as Officially Enrolled"
-                            >
-                              <FaCheck/>
-                            </Button>
-                            <Button 
-                              className="error" 
-                              color="error"
-                              onClick={() => handleReject(payment._id)}
-                              title="Reject Enrollment"
-                            >
-                              <IoClose/>
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className='d-flex tableFooter'>
-              <Pagination count={10} color="primary" className='pagination' showFirstButton showLastButton />
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT NAME</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>PROGRAM</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>YEAR LEVEL</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ENROLLMENT STATUS</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {payments.map((payment) => (
+                    <TableRow
+                      key={payment._id}
+                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    >
+                      <TableCell>{payment.studentName}</TableCell>
+                      <TableCell>{payment.program}</TableCell>
+                      <TableCell>{payment.yearLevel}</TableCell>
+                      <TableCell>{payment.enrollmentStatus}</TableCell>
+                      <TableCell className='action'>
+                        <div className='actions d-flex align-items-center gap-1'>
+                          <Button 
+                            variant="contained"
+                            color="secondary"
+                            size="small"
+                            onClick={() => handleViewDetails(payment)}
+                            title="View Enrollment Receipt"
+                            sx={{
+                              minWidth: '36px',
+                              width: '36px',
+                              height: '36px',
+                              padding: 0,
+                              borderRadius: '8px',
+                              bgcolor: '#f3e5f5',
+                              color: '#7b1fa2',
+                              '&:hover': {
+                                bgcolor: '#e1bee7',
+                              },
+                              '& .MuiButton-startIcon': {
+                                margin: 0
+                              }
+                            }}
+                          >
+                            <FaEye/>
+                          </Button>
+                          {payment.enrollmentStatus === 'Verified' && (
+                            <>
+                              <Button 
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                onClick={() => handleVerify(payment._id)}
+                                title="Mark as Officially Enrolled"
+                                sx={{
+                                  minWidth: '36px',
+                                  width: '36px',
+                                  height: '36px',
+                                  padding: 0,
+                                  borderRadius: '8px',
+                                  bgcolor: '#e8f5e8',
+                                  color: '#2e7d32',
+                                  '&:hover': {
+                                    bgcolor: '#c8e6c9',
+                                  },
+                                  '& .MuiButton-startIcon': {
+                                    margin: 0
+                                  }
+                                }}
+                              >
+                                <FaCheck/>
+                              </Button>
+                              <Button 
+                                variant="contained"
+                                color="error"
+                                size="small"
+                                onClick={() => handleReject(payment._id)}
+                                title="Reject Enrollment"
+                                sx={{
+                                  minWidth: '36px',
+                                  width: '36px',
+                                  height: '36px',
+                                  padding: 0,
+                                  borderRadius: '8px',
+                                  bgcolor: '#ffebee',
+                                  color: '#c62828',
+                                  '&:hover': {
+                                    bgcolor: '#ffcdd2',
+                                  },
+                                  '& .MuiButton-startIcon': {
+                                    margin: 0
+                                  }
+                                }}
+                              >
+                                <IoClose/>
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <div className='d-flex justify-content-center mt-4'>
+              <Pagination 
+                count={10} 
+                color="primary" 
+                className='pagination' 
+                showFirstButton 
+                showLastButton 
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    '&.Mui-selected': {
+                      bgcolor: '#c70202',
+                      '&:hover': {
+                        bgcolor: '#a00000',
+                      },
+                    },
+                  },
+                }}
+              />
             </div>
           </div>          
         </div>
