@@ -254,6 +254,11 @@ const StudentProfile = () => {
         } else {
           setFormDataa({ ...formDataa, studentType: value, yearLevel: '' });
         }
+      } else if (name === 'yearLevel') {
+        // Only allow year level changes if student type is not 'new'
+        if (formDataa.studentType !== 'new') {
+          setFormDataa({ ...formDataa, [name]: value });
+        }
       } else {
         setFormDataa({ ...formDataa, [name]: value });
       }
@@ -930,7 +935,7 @@ const StudentProfile = () => {
                 <FormControl fullWidth margin="normal" required>
                   <Select
                     name="yearLevel"
-                    value={formDataa.yearLevel}
+                    value={formDataa.studentType === 'new' ? 1 : formDataa.yearLevel}
                     onChange={handleInputChange}
                     inputProps={{ 'aria-label': 'yearLevel' }}
                     data-testid="year-level-select"
