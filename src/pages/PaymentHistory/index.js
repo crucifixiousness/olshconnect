@@ -64,8 +64,6 @@ const PaymentHistory = () => {
     return (
       <div className="right-content w-100">
         <div className="card shadow border-0 p-3">
-          <Typography variant="h5" className="mb-4" style={{ color: '#c70202' }}>Payment History</Typography>
-
           {/* Filters */}
           <Paper elevation={3} className="p-3 mb-4">
             <Grid container spacing={2} alignItems="center">
