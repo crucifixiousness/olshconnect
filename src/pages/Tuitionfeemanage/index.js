@@ -198,7 +198,7 @@ const TuitionManagement = () => {
               </Box>
             ) : (
               <TableContainer component={Paper}>
-                <Table>
+                <Table aria-label="simple table">
                   <TableHead>
                     <TableRow>
                       <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
@@ -215,7 +215,10 @@ const TuitionManagement = () => {
                   <TableBody>
                     {paginatedTuitionFees.length > 0 ? (
                       paginatedTuitionFees.map((fee) => (
-                        <TableRow key={fee.fee_id}>
+                        <TableRow 
+                          key={fee.fee_id}
+                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        >
                           <TableCell>{fee.program_name}</TableCell>
                           <TableCell>{fee.year_level}</TableCell>
                           <TableCell>{fee.semester}</TableCell>
