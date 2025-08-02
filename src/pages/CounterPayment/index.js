@@ -22,6 +22,7 @@ import {
 import { FaSearch, FaPrint, FaHistory } from 'react-icons/fa';
 import axios from 'axios';
 import { Snackbar, Alert } from '@mui/material';
+import officialolshcologo from '../../asset/images/officialolshcologo.png';
 
 const CounterPayment = () => {
   // Add this state with other states
@@ -218,6 +219,7 @@ const CounterPayment = () => {
     const receiptContent = `
       <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
         <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px; object-fit: contain;"/>
           <h2 style="color: #c70202; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
           <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
           <h3 style="color: #c70202; margin: 15px 0;">Student Payment Receipt</h3>
@@ -291,12 +293,17 @@ const CounterPayment = () => {
     const receiptContent = `
       <div style="font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px;">
         <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${officialolshcologo}" alt="OLSHCO Logo" style="width: 100px; height: 100px; margin-bottom: 10px; object-fit: contain;"/>
           <h2 style="color: #c70202; margin: 5px 0;">Our Lady of the Sacred Heart College of Guimba Inc.</h2>
           <p style="color: #666; margin: 5px 0;">Guimba, Nueva Ecija</p>
-          <h3 style="color: #c70202; margin: 15px 0;">Student Payment Receipt</h3>
+          <h3 style="color: #c70202; margin: 15px 0;">Payment Receipt</h3>
         </div>
         <div style="border-top: 2px solid #c70202; border-bottom: 2px solid #c70202; padding: 15px 0; margin: 15px 0;">
           <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 5px 0;"><strong>Receipt No:</strong></td>
+              <td>${payment.reference_number}</td>
+            </tr>
             <tr>
               <td style="padding: 5px 0;"><strong>Student Name:</strong></td>
               <td>${studentInfo.fullName}</td>
@@ -310,29 +317,29 @@ const CounterPayment = () => {
               <td>${studentInfo.program}</td>
             </tr>
             <tr>
-              <td style="padding: 5px 0;"><strong>Enrollment Status:</strong></td>
-              <td>${studentInfo.enrollmentStatus}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px 0;"><strong>Total Fee:</strong></td>
-              <td>₱${studentInfo.totalFee?.toLocaleString()}</td>
+              <td style="padding: 5px 0;"><strong>Payment Date:</strong></td>
+              <td>${new Date(payment.payment_date).toLocaleDateString()}</td>
             </tr>
             <tr>
               <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
-              <td>₱${payment.amount_paid?.toLocaleString()}</td>
+              <td>₱${parseFloat(payment.amount_paid).toLocaleString()}</td>
             </tr>
             <tr>
-              <td style="padding: 5px 0;"><strong>Remaining Balance:</strong></td>
-              <td>₱${studentInfo.balance?.toLocaleString()}</td>
+              <td style="padding: 5px 0;"><strong>Payment Method:</strong></td>
+              <td>${payment.payment_method}</td>
             </tr>
             <tr>
-              <td style="padding: 5px 0;"><strong>Date:</strong></td>
-              <td>${new Date(payment.payment_date).toLocaleDateString()}</td>
+              <td style="padding: 5px 0;"><strong>Payment Status:</strong></td>
+              <td>${payment.payment_status}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0;"><strong>Remarks:</strong></td>
+              <td>${payment.remarks}</td>
             </tr>
           </table>
         </div>
         <div style="text-align: center; margin-top: 30px;">
-          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is a payment summary. Please keep this for your records.</p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0;">This is your official payment receipt. Please keep this for your records.</p>
           <p style="color: #666; font-size: 12px; margin: 5px 0;">Thank you for your payment!</p>
         </div>
       </div>
@@ -342,7 +349,7 @@ const CounterPayment = () => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Student Payment Receipt</title>
+          <title>Payment Receipt</title>
         </head>
         <body style="margin: 0; padding: 20px;">
           ${receiptContent}
