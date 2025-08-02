@@ -95,7 +95,7 @@ const StudentBalance = () => {
               </div>
               <div style={{ marginLeft: 'auto' }}>
                 <FormControl sx={{ minWidth: 180, height: '40px' }}>
-                  <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+                  <InputLabel id="semester-filter-label" sx={{ fontSize: '0.875rem' }}>Filter by Semester</InputLabel>
                   <Select
                     labelId="semester-filter-label"
                     value={selectedSemester}
@@ -104,6 +104,7 @@ const StudentBalance = () => {
                     size="small"
                     sx={{
                       height: '40px',
+                      fontSize: '0.875rem',
                       '& .MuiOutlinedInput-root': {
                         height: '40px',
                         '&:hover fieldset': {
@@ -113,12 +114,17 @@ const StudentBalance = () => {
                           borderColor: '#c70202',
                         },
                       },
+                      '& .MuiSelect-select': {
+                        fontSize: '0.875rem',
+                        paddingTop: '8px',
+                        paddingBottom: '8px',
+                      },
                     }}
                   >
-                    <MenuItem value="">All Semesters</MenuItem>
-                    <MenuItem value="1st">1st Semester</MenuItem>
-                    <MenuItem value="2nd">2nd Semester</MenuItem>
-                    <MenuItem value="Summer">Summer</MenuItem>
+                    <MenuItem value="" sx={{ fontSize: '0.875rem' }}>All Semesters</MenuItem>
+                    <MenuItem value="1st" sx={{ fontSize: '0.875rem' }}>1st Semester</MenuItem>
+                    <MenuItem value="2nd" sx={{ fontSize: '0.875rem' }}>2nd Semester</MenuItem>
+                    <MenuItem value="Summer" sx={{ fontSize: '0.875rem' }}>Summer</MenuItem>
                   </Select>
                 </FormControl>
               </div>
@@ -154,7 +160,7 @@ const StudentBalance = () => {
             </div>
             <div style={{ marginLeft: 'auto' }}>
               <FormControl sx={{ minWidth: 180, height: '40px' }}>
-                <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+                <InputLabel id="semester-filter-label" sx={{ fontSize: '0.875rem' }}>Filter by Semester</InputLabel>
                 <Select
                   labelId="semester-filter-label"
                   value={selectedSemester}
@@ -163,6 +169,7 @@ const StudentBalance = () => {
                   size="small"
                   sx={{
                     height: '40px',
+                    fontSize: '0.875rem',
                     '& .MuiOutlinedInput-root': {
                       height: '40px',
                       '&:hover fieldset': {
@@ -172,12 +179,17 @@ const StudentBalance = () => {
                         borderColor: '#c70202',
                       },
                     },
+                    '& .MuiSelect-select': {
+                      fontSize: '0.875rem',
+                      paddingTop: '8px',
+                      paddingBottom: '8px',
+                    },
                   }}
                 >
-                  <MenuItem value="">All Semesters</MenuItem>
-                  <MenuItem value="1st">1st Semester</MenuItem>
-                  <MenuItem value="2nd">2nd Semester</MenuItem>
-                  <MenuItem value="Summer">Summer</MenuItem>
+                  <MenuItem value="" sx={{ fontSize: '0.875rem' }}>All Semesters</MenuItem>
+                  <MenuItem value="1st" sx={{ fontSize: '0.875rem' }}>1st Semester</MenuItem>
+                  <MenuItem value="2nd" sx={{ fontSize: '0.875rem' }}>2nd Semester</MenuItem>
+                  <MenuItem value="Summer" sx={{ fontSize: '0.875rem' }}>Summer</MenuItem>
                 </Select>
               </FormControl>
             </div>
