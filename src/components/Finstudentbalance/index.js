@@ -89,32 +89,39 @@ const StudentBalance = () => {
           </h3>
 
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <div className="d-flex gap-3">
-              <Searchbar value={searchTerm} onChange={setSearchTerm} />
-              <FormControl sx={{ minWidth: 200 }}>
-                <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
-                <Select
-                  labelId="semester-filter-label"
-                  value={selectedSemester}
-                  onChange={handleSemesterChange}
-                  label="Filter by Semester"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
+            <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
+              <div style={{ width: '300px' }}>
+                <Searchbar value={searchTerm} onChange={setSearchTerm} />
+              </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <FormControl sx={{ minWidth: 180, height: '40px' }}>
+                  <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+                  <Select
+                    labelId="semester-filter-label"
+                    value={selectedSemester}
+                    onChange={handleSemesterChange}
+                    label="Filter by Semester"
+                    size="small"
+                    sx={{
+                      height: '40px',
+                      '& .MuiOutlinedInput-root': {
+                        height: '40px',
+                        '&:hover fieldset': {
+                          borderColor: '#c70202',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#c70202',
+                        },
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Semesters</MenuItem>
-                  <MenuItem value="1st">1st Semester</MenuItem>
-                  <MenuItem value="2nd">2nd Semester</MenuItem>
-                  <MenuItem value="Summer">Summer</MenuItem>
-                </Select>
-              </FormControl>
+                    }}
+                  >
+                    <MenuItem value="">All Semesters</MenuItem>
+                    <MenuItem value="1st">1st Semester</MenuItem>
+                    <MenuItem value="2nd">2nd Semester</MenuItem>
+                    <MenuItem value="Summer">Summer</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
             </div>
           </div>
 
@@ -141,32 +148,39 @@ const StudentBalance = () => {
         </h3>
 
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="d-flex gap-3">
-            <Searchbar value={searchTerm} onChange={setSearchTerm} />
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
-              <Select
-                labelId="semester-filter-label"
-                value={selectedSemester}
-                onChange={handleSemesterChange}
-                label="Filter by Semester"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#c70202',
+          <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
+            <div style={{ width: '300px' }}>
+              <Searchbar value={searchTerm} onChange={setSearchTerm} />
+            </div>
+            <div style={{ marginLeft: 'auto' }}>
+              <FormControl sx={{ minWidth: 180, height: '40px' }}>
+                <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+                <Select
+                  labelId="semester-filter-label"
+                  value={selectedSemester}
+                  onChange={handleSemesterChange}
+                  label="Filter by Semester"
+                  size="small"
+                  sx={{
+                    height: '40px',
+                    '& .MuiOutlinedInput-root': {
+                      height: '40px',
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#c70202',
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="">All Semesters</MenuItem>
-                <MenuItem value="1st">1st Semester</MenuItem>
-                <MenuItem value="2nd">2nd Semester</MenuItem>
-                <MenuItem value="Summer">Summer</MenuItem>
-              </Select>
-            </FormControl>
+                  }}
+                >
+                  <MenuItem value="">All Semesters</MenuItem>
+                  <MenuItem value="1st">1st Semester</MenuItem>
+                  <MenuItem value="2nd">2nd Semester</MenuItem>
+                  <MenuItem value="Summer">Summer</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
           </div>
         </div>
 
