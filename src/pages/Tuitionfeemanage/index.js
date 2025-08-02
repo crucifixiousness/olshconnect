@@ -234,8 +234,11 @@ const TuitionManagement = () => {
                               color="success" 
                               size="small"
                               sx={{
-                                minWidth: 'auto',
-                                padding: '6px 8px',
+                                minWidth: '36px',
+                                width: '36px',
+                                height: '36px',
+                                padding: 0,
+                                borderRadius: '8px',
                                 '& .MuiButton-startIcon': {
                                   margin: 0
                                 }
@@ -249,8 +252,11 @@ const TuitionManagement = () => {
                               color="error" 
                               size="small"
                               sx={{
-                                minWidth: 'auto',
-                                padding: '6px 6px',
+                                minWidth: '36px',
+                                width: '36px',
+                                height: '36px',
+                                padding: 0,
+                                borderRadius: '8px',
                                 '& .MuiButton-startIcon': {
                                   margin: 0
                                 }
