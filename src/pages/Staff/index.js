@@ -1,21 +1,21 @@
-import { Modal, Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography } from '@mui/material';
+import { Modal, Button, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Snackbar, Alert } from '@mui/material';
 import Pagination from '@mui/material/Pagination';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FaEye } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
-import { Snackbar, Alert } from '@mui/material';
 
 const Staff = () => {
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  
   const handleOpen = () => setShowAddStaffModal(true);
   const handleClose = () => setShowAddStaffModal(false);
   const [newStaff, setNewStaff] = useState({
@@ -26,18 +26,34 @@ const Staff = () => {
     program_id: "", // Add this to track selected program
   });
 
-  // Fetch staff data on component mount
-  useEffect(() => {
-    fetchStaffData();
-  }, []);
+  const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
+  const [isVisible, setIsVisible] = useState(false);
+  const [isCreated, setIsCreated] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  const fetchStaffData = async () => {
+  // Fetch staff data on component mount
+  const fetchStaffData = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await axios.get("/api/stafflist");
       setStaffList(response.data);
     } catch (error) {
       console.error("Error fetching staff data:", error);
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchStaffData();
+  }, [fetchStaffData]);
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
   };
 
   // Handle new staff input changes
@@ -45,6 +61,24 @@ const Staff = () => {
     setNewStaff({ ...newStaff, [e.target.name]: e.target.value });
   };
 
+  // Filter and sort staff
+  const filteredStaff = staffList.filter(staff => {
+    const matchesSearch = !searchTerm || 
+      staff.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff.role?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = !roleFilter || staff.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
+
+  // Pagination
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(filteredStaff.length / rowsPerPage);
+
+  // Add new staff
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -56,7 +90,7 @@ const Staff = () => {
       setSnackbar({
         open: true,
         message: `Please select a program for the ${role === "program head" ? "Program Head" : "Instructor"}.`,
-        severity: 'warning'
+        severity: "error"
       });
       setIsLoading(false);
       return;
@@ -82,155 +116,434 @@ const Staff = () => {
       if (response.ok) {
         setSnackbar({
           open: true,
-          message: 'Staff account created successfully!',
-          severity: 'success'
+          message: "Staff account created successfully!",
+          severity: "success"
         });
         setShowAddStaffModal(false);
-        fetchStaffData();
+        setIsCreated(true);
+        fetchStaffData(); // Reload the staff list
+        // Reset form
+        setNewStaff({
+          full_name: "",
+          staff_username: "",
+          staff_password: "",
+          role: "",
+          program_id: "",
+        });
       } else {
         setSnackbar({
           open: true,
-          message: 'Registration failed. Please try again.',
-          severity: 'error'
+          message: "Registration failed. Please try again.",
+          severity: "error"
         });
       }
     } catch (error) {
       console.error("Error during the request:", error);
       setSnackbar({
         open: true,
-        message: 'Server error. Please try again later.',
-        severity: 'error'
+        message: "Server error. Please try again later.",
+        severity: "error"
       });
     } finally {
+      setTimeout(() => {
+        setIsVisible(false);
+        setShowAddStaffModal(false);
+      }, 2000);
       setIsLoading(false);
     }
   };
-  
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   // Update the form JSX part
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="staff-page">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Staff Management</h3>
+        <h3 className="hd mt-2 pb-0" data-testid="page-title">Staff Management</h3>
       </div>
 
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd">Staff List</h3>
-
-        {/* Add Staff Button */}
-        <div className="d-flex justify-content-end mb-3">
+      <div className="card shadow border-0 p-3">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h3 className="hd">Staff List</h3>
           <Button
             variant="contained"
-            color="primary"
             onClick={handleOpen}
+            sx={{
+              bgcolor: '#c70202',
+              '&:hover': {
+                bgcolor: '#a00000',
+              },
+            }}
           >
             + Add Staff
           </Button>
         </div>
 
+        {/* Filters */}
+        <Paper elevation={3} className="p-3 mb-4">
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={4}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SEARCH</Typography>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search by name or role..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>ROLE</Typography>
+              <FormControl fullWidth size="small">
+                <Select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Roles</em>
+                  </MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
+                  <MenuItem value="instructor">Instructor</MenuItem>
+                  <MenuItem value="registrar">Registrar</MenuItem>
+                  <MenuItem value="finance">Finance</MenuItem>
+                  <MenuItem value="program head">Program Head</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>&nbsp;</Typography>
+              <Button 
+                variant="contained"
+                onClick={fetchStaffData}
+                fullWidth
+                sx={{
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  },
+                }}
+              >
+                Apply Filters
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+
         {/* Staff Table */}
-        <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align">
-            <thead className="thead-dark">
-              <tr>
-                <th>NAME</th>
-                <th>ROLE</th>
-                <th>ACTION</th>
-              </tr>
-            </thead>
-            <tbody>
-              {staffList.length > 0 ? (
-                staffList.map((staff) => (
-                  <tr key={staff.staff_id}>
-                    <td>{staff.full_name}</td>
-                    <td>{staff.role}</td>
-                    <td>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>NAME</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ROLE</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan="3" style={{ textAlign: "center", padding: "40px 0" }}>
+                    <CircularProgress style={{ color: '#c70202' }} />
+                  </TableCell>
+                </TableRow>
+              ) : paginatedStaff.length > 0 ? (
+                paginatedStaff.map((staff, index) => (
+                  <TableRow key={staff.staff_id} data-testid={`staff-row-${index}`}>
+                    <TableCell data-testid={`staff-name-${index}`}>
+                      {staff.full_name}
+                    </TableCell>
+                    <TableCell data-testid={`staff-role-${index}`}>
+                      {staff.role}
+                    </TableCell>
+                    <TableCell>
                       <div className="actions d-flex align-items-center">
-                        <Button className="secondary" color="secondary"><FaEye /></Button>
-                        <Button className="success" color="success"><FaPencilAlt /></Button>
-                        <Button className="error" color="error"><MdDelete /></Button>
+                        <Button 
+                          data-testid={`view-button-${index}`}
+                          className="secondary" 
+                          color="secondary"
+                          sx={{ mr: 1 }}
+                        >
+                          <FaEye />
+                        </Button>
+                        <Button 
+                          data-testid={`edit-button-${index}`}
+                          className="success" 
+                          color="success"
+                          sx={{ mr: 1 }}
+                        >
+                          <FaPencilAlt />
+                        </Button>
+                        <Button 
+                          data-testid={`delete-button-${index}`}
+                          className="error" 
+                          color="error"
+                        >
+                          <MdDelete />
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="3" style={{ textAlign: "center" }}>
-                    No staff data available.
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan="3" style={{ textAlign: "center" }}>
+                    {searchTerm || roleFilter ? 'No staff found matching your filters' : 'No staff data available.'}
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-          {/* Pagination */}
-          <div className="d-flex tableFooter">
-            <Pagination count={10} color="primary" className="pagination" showFirstButton showLastButton />
+        {/* Pagination */}
+        {filteredStaff.length > 0 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination 
+              data-testid="pagination"
+              count={pageCount}
+              page={page}
+              onChange={handlePageChange} 
+              color="primary" 
+              className="pagination" 
+              showFirstButton 
+              showLastButton 
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  '&.Mui-selected': {
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                  },
+                },
+              }}
+            />
           </div>
-        </div>
+        )}
       </div>
 
       {/* Add Staff Modal */}
       <Modal
         open={showAddStaffModal}
         onClose={handleClose}
-        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.5)' } }}
+        data-testid="add-staff-modal"
       >
-        <div
-          className="modal-container p-4"
-          style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', maxWidth: '500px', width: '100%',
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 500,
+          bgcolor: 'background.paper',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          borderRadius: 4,
+          p: 4,
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}>
+          <Typography variant="h5" sx={{ 
+            fontWeight: 'bold',
+            color: '#c70202',
+            mb: 3
           }}>
-          <h3>Create Staff Account</h3>
-          <form onSubmit={handleAddStaff}>
-            <TextField label="Full Name" name="full_name" value={newStaff.full_name} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-full_name"/>
-            <TextField label="Username" name="staff_username" value={newStaff.staff_username} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-staff_username"/>
-            <TextField label="Password" name="staff_password" type="password" value={newStaff.staff_password} onChange={handleInputChange} fullWidth margin="normal" data-testid="input-staff_password"/>
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="role-label">Role</InputLabel>
-              <Select labelId="role-label" name="role" value={newStaff.role} onChange={handleInputChange} label="Role" data-testid="input-role">
-                <MenuItem value="admin">admin</MenuItem>
-                <MenuItem value="instructor">instructor</MenuItem>
-                <MenuItem value="registrar">registrar</MenuItem>
-                <MenuItem value="finance">finance</MenuItem>
-                <MenuItem value="program head">program head</MenuItem>
-              </Select>
-            </FormControl>
-            {/* Show program selection for both program head and instructor */}
-            {(newStaff.role === "program head" || newStaff.role === "instructor") && (
+            Create Staff Account
+          </Typography>
+          
+          {!isCreated ? (
+            <form onSubmit={handleAddStaff}>
+              <TextField 
+                label="Full Name" 
+                name="full_name" 
+                value={newStaff.full_name} 
+                onChange={handleInputChange} 
+                fullWidth 
+                margin="normal" 
+                data-testid="input-full_name"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
+              />
+              <TextField 
+                label="Username" 
+                name="staff_username" 
+                value={newStaff.staff_username} 
+                onChange={handleInputChange} 
+                fullWidth 
+                margin="normal" 
+                data-testid="input-staff_username"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
+              />
+              <TextField 
+                label="Password" 
+                name="staff_password" 
+                type="password" 
+                value={newStaff.staff_password} 
+                onChange={handleInputChange} 
+                fullWidth 
+                margin="normal" 
+                data-testid="input-staff_password"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
+              />
               <FormControl fullWidth margin="normal">
-                <InputLabel id="program-label">Program</InputLabel>
-                <Select
-                  labelId="program-label"
-                  name="program_id"
-                  value={newStaff.program_id}
-                  onChange={handleInputChange}
-                  label="Program"
+                <InputLabel id="role-label">Role</InputLabel>
+                <Select 
+                  labelId="role-label" 
+                  name="role" 
+                  value={newStaff.role} 
+                  onChange={handleInputChange} 
+                  label="Role" 
+                  data-testid="input-role"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
                 >
-                  <MenuItem value="1">BSIT</MenuItem>
-                  <MenuItem value="2">BSHM</MenuItem>
-                  <MenuItem value="3">Education</MenuItem>
-                  <MenuItem value="4">BSOAd</MenuItem>
-                  <MenuItem value="5">BSCrim</MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
+                  <MenuItem value="instructor">Instructor</MenuItem>
+                  <MenuItem value="registrar">Registrar</MenuItem>
+                  <MenuItem value="finance">Finance</MenuItem>
+                  <MenuItem value="program head">Program Head</MenuItem>
                 </Select>
               </FormControl>
-            )}
-            <div className="d-flex justify-content-end mt-3">
-              <Button onClick={() => setShowAddStaffModal(false)}>Cancel</Button>
-              <Button type="submit" color="primary" variant="contained" disabled={isLoading} data-testid="submit-button">
-                {isLoading ? "Saving..." : "Save"}
-              </Button>
-            </div>
-          </form>
-        </div>
+              
+              {/* Show program selection for both program head and instructor */}
+              {(newStaff.role === "program head" || newStaff.role === "instructor") && (
+                <FormControl fullWidth margin="normal">
+                  <InputLabel id="program-label">Program</InputLabel>
+                  <Select
+                    labelId="program-label"
+                    name="program_id"
+                    value={newStaff.program_id}
+                    onChange={handleInputChange}
+                    label="Program"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#c70202',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#c70202',
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value="1">BSIT</MenuItem>
+                    <MenuItem value="2">BSHM</MenuItem>
+                    <MenuItem value="3">Education</MenuItem>
+                    <MenuItem value="4">BSOAd</MenuItem>
+                    <MenuItem value="5">BSCrim</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+
+              <div className="d-flex justify-content-end mt-4" style={{ gap: '12px' }}>
+                <Button 
+                  onClick={() => setShowAddStaffModal(false)}
+                  variant="outlined"
+                  sx={{
+                    borderColor: '#c70202',
+                    color: '#c70202',
+                    '&:hover': {
+                      borderColor: '#a00000',
+                      color: '#a00000',
+                    },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  disabled={isLoading} 
+                  data-testid="submit-button"
+                  sx={{
+                    bgcolor: '#c70202',
+                    '&:hover': {
+                      bgcolor: '#a00000',
+                    },
+                    '&:disabled': {
+                      bgcolor: '#ccc',
+                    },
+                  }}
+                >
+                  {isLoading ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <Typography
+              variant="h6"
+              align="center"
+              sx={{ color: "green", fontWeight: "bold", mt: 4 }}
+            >
+              {statusMessage.message}
+            </Typography>
+          )}
+        </Box>
       </Modal>
+
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        <Alert 
+          onClose={handleSnackbarClose} 
           severity={snackbar.severity}
           variant="filled"
           sx={{ width: '100%' }}
