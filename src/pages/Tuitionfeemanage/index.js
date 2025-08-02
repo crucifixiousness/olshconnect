@@ -214,7 +214,13 @@ const TuitionManagement = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedTuitionFees.length > 0 ? (
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan="9" style={{ textAlign: "center", padding: "40px 0" }}>
+                          <CircularProgress style={{ color: '#c70202' }} />
+                        </TableCell>
+                      </TableRow>
+                    ) : paginatedTuitionFees.length > 0 ? (
                       paginatedTuitionFees.map((fee) => (
                         <TableRow 
                           key={fee.fee_id}
