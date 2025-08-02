@@ -166,31 +166,32 @@ const TuitionManagement = () => {
         </h3>
       </div>
 
-      <div className="card shadow border-0 p-3 mt-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
-            <div style={{ width: '850px' }}>
-              <div className="searchbar-container" style={{ marginBottom: '0' }}>
-                <Searchbar value={searchTerm} onChange={setSearchTerm} />
+      <div className="card shadow border-0 p-3 mt-1">
+        <div className="card shadow border-0 p-3 mt-1">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
+              <div style={{ width: '850px' }}>
+                <div className="searchbar-container" style={{ marginBottom: '0' }}>
+                  <Searchbar value={searchTerm} onChange={setSearchTerm} />
+                </div>
+              </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <Button 
+                  variant="contained" 
+                  onClick={() => setOpenModal(true)}
+                  sx={{ 
+                    bgcolor: '#c70202', 
+                    '&:hover': { bgcolor: '#a00000' },
+                    height: '40px',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  <FaPlus className="me-2"/> Set New Tuition Fee
+                </Button>
               </div>
             </div>
-            <div style={{ marginLeft: 'auto' }}>
-              <Button 
-                variant="contained" 
-                onClick={() => setOpenModal(true)}
-                sx={{ 
-                  bgcolor: '#c70202', 
-                  '&:hover': { bgcolor: '#a00000' },
-                  height: '40px',
-                  fontSize: '0.875rem'
-                }}
-              >
-                <FaPlus className="me-2"/> Set New Tuition Fee
-              </Button>
-            </div>
           </div>
-        </div>
-        <div className="card shadow border-0 p-3">
+
           <div className="table-responsive mt-3">
             {loading ? (
               <Box display="flex" justifyContent="center" py={3}>
@@ -290,34 +291,33 @@ const TuitionManagement = () => {
                 </Table>
               </TableContainer>
             )}
-          </div>
-        </div>
-        
 
-        {/* Pagination */}
-        {filteredTuitionFees.length > 0 && (
-          <div className="d-flex justify-content-center mt-4">
-            <Pagination 
-              count={pageCount}
-              page={page}
-              onChange={handlePageChange}
-              color="primary" 
-              className="pagination"
-              showFirstButton 
-              showLastButton 
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  '&.Mui-selected': {
-                    bgcolor: '#c70202',
-                    '&:hover': {
-                      bgcolor: '#a00000',
+            {/* Pagination */}
+            {filteredTuitionFees.length > 0 && (
+              <div className="d-flex justify-content-center mt-4">
+                <Pagination 
+                  count={pageCount}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary" 
+                  className="pagination"
+                  showFirstButton 
+                  showLastButton 
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      '&.Mui-selected': {
+                        bgcolor: '#c70202',
+                        '&:hover': {
+                          bgcolor: '#a00000',
+                        },
+                      },
                     },
-                  },
-                },
-              }}
-            />
-          </div>
-        )}
+                  }}
+                />
+              </div>
+            )}
+          </div>          
+        </div>
       </div>
 
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
