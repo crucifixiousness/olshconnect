@@ -32,6 +32,7 @@ const RegistrarEnrollment = () => {
 
   const [yearLevel, setYearLevel] = useState('');
   const [studentType, setStudentType] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -41,6 +42,103 @@ const RegistrarEnrollment = () => {
     const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
     const suffixText = suffix ? ` ${suffix}` : '';
     return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
+  };
+
+  const getEnrollmentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'registered':
+        return {
+          backgroundColor: '#6c757d', // Gray - Initial registration
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      case 'pending':
+      case 'under review':
+        return {
+          backgroundColor: '#ffc107', // Yellow - Under review
+          color: '#212529',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      case 'verified':
+      case 'approved':
+        return {
+          backgroundColor: '#28a745', // Green - Verified
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      case 'for payment':
+        return {
+          backgroundColor: '#17a2b8', // Blue - Payment required
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      case 'officially enrolled':
+        return {
+          backgroundColor: '#28a745', // Green - Successfully enrolled
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      case 'rejected':
+      case 'declined':
+        return {
+          backgroundColor: '#dc3545', // Red - Rejected
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      case 'incomplete':
+      case 'missing documents':
+        return {
+          backgroundColor: '#fd7e14', // Orange - Incomplete
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+      default:
+        return {
+          backgroundColor: '#6c757d', // Gray - Unknown status
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        };
+    }
   };
 
   // Update the filteredEnrollments logic
@@ -62,8 +160,10 @@ const RegistrarEnrollment = () => {
       const matchesSearch = !searchTerm || searchString.includes(searchTerm.toLowerCase());
       
       const matchesStudentType = !studentType || enrollment.student_type === studentType;
+      
+      const matchesStatus = !statusFilter || enrollment.status.toLowerCase() === statusFilter.toLowerCase();
 
-      return matchesProgram && matchesSearch && matchesYear && matchesStudentType;
+      return matchesProgram && matchesSearch && matchesYear && matchesStudentType && matchesStatus;
     })
     // Then apply sorting to filtered results
     .sort((a, b) => {
@@ -167,7 +267,7 @@ const RegistrarEnrollment = () => {
         {/* Filters */}
         <Paper elevation={3} className="p-3 mb-4">
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SHOW BY</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -198,7 +298,7 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>YEAR LEVEL</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -226,7 +326,7 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>PROGRAM</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -256,7 +356,7 @@ const RegistrarEnrollment = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STUDENT TYPE</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -281,6 +381,53 @@ const RegistrarEnrollment = () => {
                   <MenuItem value="transferee">Transferee</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>STATUS</Typography>
+              <FormControl fullWidth size="small">
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Status</em>
+                  </MenuItem>
+                  <MenuItem value="registered">Registered</MenuItem>
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="verified">Verified</MenuItem>
+                  <MenuItem value="for payment">For Payment</MenuItem>
+                  <MenuItem value="officially enrolled">Officially Enrolled</MenuItem>
+                  <MenuItem value="rejected">Rejected</MenuItem>
+                  <MenuItem value="incomplete">Incomplete</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>&nbsp;</Typography>
+              <Button 
+                variant="contained"
+                onClick={fetchEnrollments}
+                fullWidth
+                sx={{
+                  bgcolor: '#c70202',
+                  '&:hover': {
+                    bgcolor: '#a00000',
+                  },
+                }}
+              >
+                Apply Filters
+              </Button>
             </Grid>
           </Grid>
         </Paper>
@@ -319,7 +466,7 @@ const RegistrarEnrollment = () => {
                       {enrollment.program_name || programMapping[enrollment.programs]}
                     </TableCell>
                     <TableCell data-testid={`status-${index}`}>
-                      <span className={`badge ${enrollment.status === 'Verified' ? 'bg-success' : 'bg-warning'}`}>
+                      <span style={getEnrollmentStatusColor(enrollment.status)}>
                         {enrollment.status}
                       </span>
                     </TableCell>
