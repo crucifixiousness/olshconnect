@@ -779,10 +779,6 @@ const Homepage = () => {
                                                     Address Information
                                                 </Typography>
                                                 <div className="mb-3">
-                                                    <Typography variant="h6" style={{ color: '#c70202', marginBottom: '8px', marginTop: '20px' }}>
-                                                        Address Information
-                                                    </Typography>
-                                                    <hr style={{ border: '1px solid #c70202', marginBottom: '20px' }} />
                                                     <Grid container spacing={2}>
                                                         <Grid item xs={12} sm={6}>
                                                             <Select
