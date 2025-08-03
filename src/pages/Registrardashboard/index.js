@@ -186,16 +186,6 @@ const RegistrarDashboard = () => {
               <IoIosPeople size={40} />
             </div>
           </div>
-          
-          <div className="dashboardBox" style={{ background: 'linear-gradient(135deg, #ed6c02, #e65100)' }}>
-            <div className="col1">
-              <h4>For Payment</h4>
-              <span>{dashboardData.totalForPayment}</span>
-            </div>
-            <div className="icon">
-              <FaFileAlt size={40} />
-            </div>
-          </div>
 
           <div className="dashboardBox" style={{ background: 'linear-gradient(135deg, #2e7d32, #1b5e20)' }}>
             <div className="col1">
