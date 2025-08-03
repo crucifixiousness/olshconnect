@@ -31,6 +31,7 @@ module.exports = async (req, res) => {
       SELECT 
         dr.req_id,
         dr.doc_type,
+        dr.description,
         dr.req_date,
         dr.req_status,
         s.first_name,
