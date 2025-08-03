@@ -132,6 +132,76 @@ const Homepage = () => {
         barangay: ''
     });
 
+    // Dropdown data state
+    const [regionData, setRegionData] = useState([]);
+    const [provinceData, setProvinceData] = useState([]);
+    const [cityData, setCityData] = useState([]);
+    const [barangayData, setBarangayData] = useState([]);
+
+    // Load regions on component mount
+    useEffect(() => {
+        const loadRegions = async () => {
+            try {
+                const regionsList = await regions();
+                setRegionData(regionsList);
+            } catch (error) {
+                console.error('Error loading regions:', error);
+            }
+        };
+        loadRegions();
+    }, []);
+
+    // Load provinces when region changes
+    useEffect(() => {
+        const loadProvinces = async () => {
+            if (address.region) {
+                try {
+                    const provincesList = await provinces(address.region);
+                    setProvinceData(provincesList);
+                } catch (error) {
+                    console.error('Error loading provinces:', error);
+                }
+            } else {
+                setProvinceData([]);
+            }
+        };
+        loadProvinces();
+    }, [address.region]);
+
+    // Load cities when province changes
+    useEffect(() => {
+        const loadCities = async () => {
+            if (address.province) {
+                try {
+                    const citiesList = await cities(address.province);
+                    setCityData(citiesList);
+                } catch (error) {
+                    console.error('Error loading cities:', error);
+                }
+            } else {
+                setCityData([]);
+            }
+        };
+        loadCities();
+    }, [address.province]);
+
+    // Load barangays when city changes
+    useEffect(() => {
+        const loadBarangays = async () => {
+            if (address.city) {
+                try {
+                    const barangaysList = await barangays(address.city);
+                    setBarangayData(barangaysList);
+                } catch (error) {
+                    console.error('Error loading barangays:', error);
+                }
+            } else {
+                setBarangayData([]);
+            }
+        };
+        loadBarangays();
+    }, [address.city]);
+
     // Update form data when address selections change
     useEffect(() => {
         const addressParts = [
@@ -718,18 +788,18 @@ const Homepage = () => {
                                                                 data-testid="input-region"
                                                                 value={address.region}
                                                                 onChange={(e) => {
-                                                                    const selectedRegion = regions.find(r => r.code === e.target.value);
+                                                                    const selectedRegion = regionData.find(r => r.region_code === e.target.value);
                                                                     setAddress({ ...address, region: e.target.value, province: '', city: '', barangay: '' });
-                                                                    setAddressNames({ ...addressNames, region: selectedRegion ? selectedRegion.name : '', province: '', city: '', barangay: '' });
+                                                                    setAddressNames({ ...addressNames, region: selectedRegion ? selectedRegion.region_name : '', province: '', city: '', barangay: '' });
                                                                 }}
                                                                 displayEmpty
                                                                 label="Select Region"
                                                                 required
                                                             >
                                                                 <MenuItem value=""><em>Select Region</em></MenuItem>
-                                                                {regions.map((region) => (
-                                                                    <MenuItem key={region.code} value={region.code}>
-                                                                        {region.name}
+                                                                {regionData.map((region) => (
+                                                                    <MenuItem key={region.region_code} value={region.region_code}>
+                                                                        {region.region_name}
                                                                     </MenuItem>
                                                                 ))}
                                                             </Select>
@@ -742,17 +812,17 @@ const Homepage = () => {
                                                                 data-testid="input-province"
                                                                 value={address.province}
                                                                 onChange={(e) => {
-                                                                    const selectedProvince = provinces(address.region).find(p => p.code === e.target.value);
+                                                                    const selectedProvince = provinceData.find(p => p.province_code === e.target.value);
                                                                     setAddress({ ...address, province: e.target.value, city: '', barangay: '' });
-                                                                    setAddressNames({ ...addressNames, province: selectedProvince ? selectedProvince.name : '', city: '', barangay: '' });
+                                                                    setAddressNames({ ...addressNames, province: selectedProvince ? selectedProvince.province_name : '', city: '', barangay: '' });
                                                                 }}
                                                                 label="Select Province"
                                                                 required
                                                             >
                                                                 <MenuItem value=""><em>Select Province</em></MenuItem>
-                                                                {provinces(address.region).map((province) => (
-                                                                    <MenuItem key={province.code} value={province.code}>
-                                                                        {province.name}
+                                                                {provinceData.map((province) => (
+                                                                    <MenuItem key={province.province_code} value={province.province_code}>
+                                                                        {province.province_name}
                                                                     </MenuItem>
                                                                 ))}
                                                             </Select>
@@ -765,17 +835,17 @@ const Homepage = () => {
                                                                 data-testid="input-city"
                                                                 value={address.city}
                                                                 onChange={(e) => {
-                                                                    const selectedCity = cities(address.region, address.province).find(c => c.code === e.target.value);
+                                                                    const selectedCity = cityData.find(c => c.city_code === e.target.value);
                                                                     setAddress({ ...address, city: e.target.value, barangay: '' });
-                                                                    setAddressNames({ ...addressNames, city: selectedCity ? selectedCity.name : '', barangay: '' });
+                                                                    setAddressNames({ ...addressNames, city: selectedCity ? selectedCity.city_name : '', barangay: '' });
                                                                 }}
                                                                 label="Select City"
                                                                 required
                                                             >
                                                                 <MenuItem value=""><em>Select City</em></MenuItem>
-                                                                {cities(address.region, address.province).map((city) => (
-                                                                    <MenuItem key={city.code} value={city.code}>
-                                                                        {city.name}
+                                                                {cityData.map((city) => (
+                                                                    <MenuItem key={city.city_code} value={city.city_code}>
+                                                                        {city.city_name}
                                                                     </MenuItem>
                                                                 ))}
                                                             </Select>
@@ -788,17 +858,17 @@ const Homepage = () => {
                                                                 data-testid="input-barangay"
                                                                 value={address.barangay}
                                                                 onChange={(e) => {
-                                                                    const selectedBarangay = barangays(address.region, address.province, address.city).find(b => b.code === e.target.value);
+                                                                    const selectedBarangay = barangayData.find(b => b.brgy_code === e.target.value);
                                                                     setAddress({ ...address, barangay: e.target.value });
-                                                                    setAddressNames({ ...addressNames, barangay: selectedBarangay ? selectedBarangay.name : '' });
+                                                                    setAddressNames({ ...addressNames, barangay: selectedBarangay ? selectedBarangay.brgy_name : '' });
                                                                 }}
                                                                 label="Select Barangay"
                                                                 required
                                                             >
                                                                 <MenuItem value=""><em>Select Barangay</em></MenuItem>
-                                                                {barangays(address.region, address.province, address.city).map((barangay) => (
-                                                                    <MenuItem key={barangay.code} value={barangay.code}>
-                                                                        {barangay.name}
+                                                                {barangayData.map((barangay) => (
+                                                                    <MenuItem key={barangay.brgy_code} value={barangay.brgy_code}>
+                                                                        {barangay.brgy_name}
                                                                     </MenuItem>
                                                                 ))}
                                                             </Select>
