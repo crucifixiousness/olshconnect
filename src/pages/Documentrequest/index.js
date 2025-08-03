@@ -134,16 +134,12 @@ const DocumentRequests = () => {
   return (
     <div className="right-content w-100" data-testid="document-requests-page">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0" data-testid="page-title" style={{ color: '#c70202', fontWeight: 'bold' }}>
-          Document Requests Management
-        </h3>
+        <h3 className="hd mt-2 pb-0" data-testid="page-title">Document Requests Management</h3>
       </div>
 
       <div className="card shadow border-0 p-3">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h3 className="hd" data-testid="section-title" style={{ color: '#c70202', fontWeight: 'bold' }}>
-            Requested Documents
-          </h3>
+          <h3 className="hd" data-testid="section-title">Requested Documents</h3>
         </div>
 
         {/* Filters */}
@@ -217,10 +213,10 @@ const DocumentRequests = () => {
         </Paper>
 
         {/* Table */}
-        <TableContainer component={Paper} elevation={2}>
+        <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Document Type</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Request Date</TableCell>
@@ -230,53 +226,24 @@ const DocumentRequests = () => {
             </TableHead>
             <TableBody>
               {paginatedRequests.length > 0 ? (
-                paginatedRequests.map((request) => (
-                  <TableRow 
-                    key={request.req_id} 
-                    data-testid={`request-row-${request.req_id}`}
-                    sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}
-                  >
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                        {formatStudentName(
-                          request.first_name,
-                          request.middle_name,
-                          request.last_name,
-                          request.suffix
-                        )}
-                      </Typography>
+                paginatedRequests.map((request, index) => (
+                  <TableRow key={request.req_id} data-testid={`request-row-${index}`}>
+                    <TableCell data-testid={`student-name-${index}`}>
+                      {formatStudentName(
+                        request.first_name,
+                        request.middle_name,
+                        request.last_name,
+                        request.suffix
+                      )}
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {request.doc_type}
-                      </Typography>
+                    <TableCell data-testid={`doc-type-${index}`}>
+                      {request.doc_type}
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {new Date(request.req_date).toLocaleDateString()}
-                      </Typography>
+                    <TableCell data-testid={`date-${index}`}>
+                      {new Date(request.req_date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      <Box
-                        sx={{
-                          display: 'inline-block',
-                          px: 2,
-                          py: 0.5,
-                          borderRadius: 1,
-                          backgroundColor: 
-                            request.req_status === 'Approved' ? '#e8f5e8' :
-                            request.req_status === 'Rejected' ? '#ffeaea' :
-                            '#fff3e0',
-                          color: 
-                            request.req_status === 'Approved' ? '#2e7d32' :
-                            request.req_status === 'Rejected' ? '#d32f2f' :
-                            '#ed6c02',
-                          fontWeight: 'medium',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        {request.req_status}
-                      </Box>
+                    <TableCell data-testid={`status-${index}`}>
+                      {request.req_status}
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
@@ -329,9 +296,7 @@ const DocumentRequests = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan="5" style={{ textAlign: "center" }} data-testid="no-data-message">
-                    <Typography variant="body1" color="textSecondary" sx={{ py: 4 }}>
-                      {searchTerm || filterBy ? 'No requests found matching your filters' : 'No document requests available'}
-                    </Typography>
+                    {searchTerm || filterBy ? 'No requests found matching your filters' : 'No document requests available'}
                   </TableCell>
                 </TableRow>
               )}
@@ -341,13 +306,13 @@ const DocumentRequests = () => {
 
         {/* Pagination */}
         {filteredRequests.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <div className="d-flex justify-content-center mt-4">
             <Pagination 
               data-testid="pagination"
               count={pageCount}
               page={page}
               onChange={handlePageChange}
-              color="primary" 
+              color="primary"
               showFirstButton 
               showLastButton 
               sx={{
@@ -361,7 +326,7 @@ const DocumentRequests = () => {
                 },
               }}
             />
-          </Box>
+          </div>
         )}
       </div>
       
