@@ -19,8 +19,7 @@ import {
   TableHead, 
   TableRow,
   Box,
-  CircularProgress,
-  Chip
+  CircularProgress
 } from '@mui/material';
 import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
@@ -122,16 +121,44 @@ const DocumentRequests = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
+  const getRequestStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
       case 'approved':
-        return 'success';
+        return {
+          backgroundColor: '#28a745', // Green - Approved
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
       case 'rejected':
-        return 'error';
+        return {
+          backgroundColor: '#dc3545', // Red - Rejected
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
       case 'pending':
-        return 'warning';
+        return {
+          backgroundColor: '#ffc107', // Yellow - Pending
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
       default:
-        return 'default';
+        return {
+          backgroundColor: '#6c757d', // Gray - Unknown status
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
     }
   };
 
@@ -258,29 +285,9 @@ const DocumentRequests = () => {
                       {new Date(request.req_date).toLocaleDateString()}
                     </TableCell>
                     <TableCell data-testid={`status-${index}`}>
-                      <Chip
-                        label={request.req_status}
-                        color={getStatusColor(request.req_status)}
-                        size="small"
-                        sx={{
-                          fontWeight: 'medium',
-                          '&.MuiChip-colorSuccess': {
-                            backgroundColor: '#d4edda',
-                            color: '#155724',
-                            border: '1px solid #c3e6cb'
-                          },
-                          '&.MuiChip-colorError': {
-                            backgroundColor: '#f8d7da',
-                            color: '#721c24',
-                            border: '1px solid #f5c6cb'
-                          },
-                          '&.MuiChip-colorWarning': {
-                            backgroundColor: '#fff3cd',
-                            color: '#856404',
-                            border: '1px solid #ffeaa7'
-                          }
-                        }}
-                      />
+                      <span style={getRequestStatusColor(request.req_status)}>
+                        {request.req_status}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
