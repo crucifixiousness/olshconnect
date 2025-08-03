@@ -15,8 +15,7 @@ import logo from '../../asset/images/olshco-logo1.png';
 import announcement from '../../asset/images/anno.png';
 import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
-import { SelectPhilippinesAddress } from 'select-philippines-address';
-import 'select-philippines-address/dist/style.css';
+import { regions, provinces, cities, barangays } from 'select-philippines-address';
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -125,12 +124,20 @@ const Homepage = () => {
         barangay: ''
     });
 
+    // Address display names for the full address text
+    const [addressNames, setAddressNames] = useState({
+        region: '',
+        province: '',
+        city: '',
+        barangay: ''
+    });
+
     // Update form data when address selections change
     useEffect(() => {
         const addressParts = [
-            address.barangay,
-            address.city,
-            address.province
+            addressNames.barangay,
+            addressNames.city,
+            addressNames.province
         ].filter(Boolean); // Remove empty values
         
         const fullAddress = addressParts.join(', ');
@@ -139,7 +146,7 @@ const Homepage = () => {
             ...prev,
             street_text: fullAddress
         }));
-    }, [address]);
+    }, [addressNames]);
 
     const handleInputChange = (e) => {
         let { name, value } = e.target;
@@ -704,46 +711,97 @@ const Homepage = () => {
                                                 <div className="mb-3">
                                                     <Grid container spacing={2}>
                                                         <Grid item xs={12} sm={6}>
-                                                            <SelectPhilippinesAddress
-                                                                type="region"
+                                                            <Select
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="region"
+                                                                data-testid="input-region"
                                                                 value={address.region}
-                                                                onChange={(selected) => setAddress({ ...address, region: selected })}
-                                                                placeholder="Select Region"
+                                                                onChange={(e) => {
+                                                                    const selectedRegion = regions.find(r => r.code === e.target.value);
+                                                                    setAddress({ ...address, region: e.target.value, province: '', city: '', barangay: '' });
+                                                                    setAddressNames({ ...addressNames, region: selectedRegion ? selectedRegion.name : '', province: '', city: '', barangay: '' });
+                                                                }}
+                                                                displayEmpty
+                                                                label="Select Region"
                                                                 required
-                                                            />
+                                                            >
+                                                                <MenuItem value=""><em>Select Region</em></MenuItem>
+                                                                {regions.map((region) => (
+                                                                    <MenuItem key={region.code} value={region.code}>
+                                                                        {region.name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
                                                         </Grid>
                                                         <Grid item xs={12} sm={6}>
-                                                            <SelectPhilippinesAddress
-                                                                type="province"
+                                                            <Select
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="province"
+                                                                data-testid="input-province"
                                                                 value={address.province}
-                                                                onChange={(selected) => setAddress({ ...address, province: selected })}
-                                                                placeholder="Select Province"
-                                                                region={address.region}
+                                                                onChange={(e) => {
+                                                                    const selectedProvince = provinces(address.region).find(p => p.code === e.target.value);
+                                                                    setAddress({ ...address, province: e.target.value, city: '', barangay: '' });
+                                                                    setAddressNames({ ...addressNames, province: selectedProvince ? selectedProvince.name : '', city: '', barangay: '' });
+                                                                }}
+                                                                label="Select Province"
                                                                 required
-                                                            />
+                                                            >
+                                                                <MenuItem value=""><em>Select Province</em></MenuItem>
+                                                                {provinces(address.region).map((province) => (
+                                                                    <MenuItem key={province.code} value={province.code}>
+                                                                        {province.name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
                                                         </Grid>
                                                         <Grid item xs={12} sm={6}>
-                                                            <SelectPhilippinesAddress
-                                                                type="city"
+                                                            <Select
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="city"
+                                                                data-testid="input-city"
                                                                 value={address.city}
-                                                                onChange={(selected) => setAddress({ ...address, city: selected })}
-                                                                placeholder="Select City"
-                                                                region={address.region}
-                                                                province={address.province}
+                                                                onChange={(e) => {
+                                                                    const selectedCity = cities(address.region, address.province).find(c => c.code === e.target.value);
+                                                                    setAddress({ ...address, city: e.target.value, barangay: '' });
+                                                                    setAddressNames({ ...addressNames, city: selectedCity ? selectedCity.name : '', barangay: '' });
+                                                                }}
+                                                                label="Select City"
                                                                 required
-                                                            />
+                                                            >
+                                                                <MenuItem value=""><em>Select City</em></MenuItem>
+                                                                {cities(address.region, address.province).map((city) => (
+                                                                    <MenuItem key={city.code} value={city.code}>
+                                                                        {city.name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
                                                         </Grid>
                                                         <Grid item xs={12} sm={6}>
-                                                            <SelectPhilippinesAddress
-                                                                type="barangay"
+                                                            <Select
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="barangay"
+                                                                data-testid="input-barangay"
                                                                 value={address.barangay}
-                                                                onChange={(selected) => setAddress({ ...address, barangay: selected })}
-                                                                placeholder="Select Barangay"
-                                                                region={address.region}
-                                                                province={address.province}
-                                                                city={address.city}
+                                                                onChange={(e) => {
+                                                                    const selectedBarangay = barangays(address.region, address.province, address.city).find(b => b.code === e.target.value);
+                                                                    setAddress({ ...address, barangay: e.target.value });
+                                                                    setAddressNames({ ...addressNames, barangay: selectedBarangay ? selectedBarangay.name : '' });
+                                                                }}
+                                                                label="Select Barangay"
                                                                 required
-                                                            />
+                                                            >
+                                                                <MenuItem value=""><em>Select Barangay</em></MenuItem>
+                                                                {barangays(address.region, address.province, address.city).map((barangay) => (
+                                                                    <MenuItem key={barangay.code} value={barangay.code}>
+                                                                        {barangay.name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
                                                         </Grid>
                                                         <Grid item xs={12}>
                                                             <TextField
