@@ -19,7 +19,8 @@ import {
   TableHead, 
   TableRow,
   Box,
-  CircularProgress
+  CircularProgress,
+  Chip
 } from '@mui/material';
 import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
@@ -121,15 +122,18 @@ const DocumentRequests = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
-        </div>
-      </div>
-    );
-  }
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      case 'pending':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
 
   return (
     <div className="right-content w-100" data-testid="document-requests-page">
@@ -225,7 +229,18 @@ const DocumentRequests = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedRequests.length > 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan="5" style={{ textAlign: "center" }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                      <CircularProgress style={{ color: '#c70202' }} />
+                      <Typography variant="body2" sx={{ ml: 2, color: '#666' }}>
+                        Loading document requests...
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedRequests.length > 0 ? (
                 paginatedRequests.map((request, index) => (
                   <TableRow key={request.req_id} data-testid={`request-row-${index}`}>
                     <TableCell data-testid={`student-name-${index}`}>
@@ -243,7 +258,29 @@ const DocumentRequests = () => {
                       {new Date(request.req_date).toLocaleDateString()}
                     </TableCell>
                     <TableCell data-testid={`status-${index}`}>
-                      {request.req_status}
+                      <Chip
+                        label={request.req_status}
+                        color={getStatusColor(request.req_status)}
+                        size="small"
+                        sx={{
+                          fontWeight: 'medium',
+                          '&.MuiChip-colorSuccess': {
+                            backgroundColor: '#d4edda',
+                            color: '#155724',
+                            border: '1px solid #c3e6cb'
+                          },
+                          '&.MuiChip-colorError': {
+                            backgroundColor: '#f8d7da',
+                            color: '#721c24',
+                            border: '1px solid #f5c6cb'
+                          },
+                          '&.MuiChip-colorWarning': {
+                            backgroundColor: '#fff3cd',
+                            color: '#856404',
+                            border: '1px solid #ffeaa7'
+                          }
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
