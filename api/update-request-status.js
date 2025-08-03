@@ -46,6 +46,7 @@ module.exports = async (req, res) => {
       `SELECT 
         dr.req_id,
         dr.doc_type,
+        dr.description,
         dr.req_date,
         dr.req_status,
         CONCAT(s.first_name, ' ', s.last_name) as student_name
