@@ -205,7 +205,47 @@ const RegistrarDashboard = () => {
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Enrollment Statistics</Typography>
               
-              {/* Monthly Enrollment Chart */}
+              {/* Program-wise Statistics */}
+              {enrollmentStats.programStats.length > 0 ? (
+                <Box mb={3}>
+                  <Typography variant="subtitle2" className="mb-2">Enrollments by Program</Typography>
+                  <TableContainer component={Paper} elevation={0}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Program</TableCell>
+                          <TableCell align="right">Total</TableCell>
+                          <TableCell align="right">Verified</TableCell>
+                          <TableCell align="right">Pending</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {enrollmentStats.programStats.map((program, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{program.program_name}</TableCell>
+                            <TableCell align="right">{program.total_enrollments}</TableCell>
+                            <TableCell align="right" style={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                              {program.verified_enrollments}
+                            </TableCell>
+                            <TableCell align="right" style={{ color: '#ed6c02', fontWeight: 'bold' }}>
+                              {program.pending_enrollments}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              ) : (
+                <Box mb={3}>
+                  <Typography variant="subtitle2" className="mb-2">Enrollments by Program</Typography>
+                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
+                    No program enrollment data available
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Monthly Enrollments Chart */}
               {enrollmentStats.monthlyData.length > 0 ? (
                 <Box mb={3}>
                   <Typography variant="subtitle2" className="mb-2">Monthly Enrollments (Last 6 Months)</Typography>
@@ -236,83 +276,6 @@ const RegistrarDashboard = () => {
                   <Typography variant="subtitle2" className="mb-2">Monthly Enrollments (Last 6 Months)</Typography>
                   <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
                     No monthly enrollment data available
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Enrollment Status Distribution */}
-              {enrollmentStats.statusDistribution.length > 0 ? (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Enrollment Status Distribution</Typography>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={enrollmentStats.statusDistribution}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="count"
-                        nameKey="enrollment_status"
-                      >
-                        {enrollmentStats.statusDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={getStatusColor(entry.enrollment_status)} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name) => [value, name]}
-                        labelFormatter={(value) => value}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Enrollment Status Distribution</Typography>
-                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                    No enrollment status data available
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Program-wise Statistics */}
-              {enrollmentStats.programStats.length > 0 ? (
-                <Box>
-                  <Typography variant="subtitle2" className="mb-2">Enrollments by Program</Typography>
-                  <TableContainer component={Paper} elevation={0}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Program</TableCell>
-                          <TableCell align="right">Total</TableCell>
-                          <TableCell align="right">Verified</TableCell>
-                          <TableCell align="right">Pending</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {enrollmentStats.programStats.map((program, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{program.program_name}</TableCell>
-                            <TableCell align="right">{program.total_enrollments}</TableCell>
-                            <TableCell align="right" style={{ color: '#2e7d32', fontWeight: 'bold' }}>
-                              {program.verified_enrollments}
-                            </TableCell>
-                            <TableCell align="right" style={{ color: '#ed6c02', fontWeight: 'bold' }}>
-                              {program.pending_enrollments}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              ) : (
-                <Box>
-                  <Typography variant="subtitle2" className="mb-2">Enrollments by Program</Typography>
-                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                    No program enrollment data available
                   </Typography>
                 </Box>
               )}
