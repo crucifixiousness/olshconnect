@@ -779,6 +779,10 @@ const Homepage = () => {
                                                     Address Information
                                                 </Typography>
                                                 <div className="mb-3">
+                                                    <Typography variant="h6" style={{ color: '#c70202', marginBottom: '8px', marginTop: '20px' }}>
+                                                        Address Information
+                                                    </Typography>
+                                                    <hr style={{ border: '1px solid #c70202', marginBottom: '20px' }} />
                                                     <Grid container spacing={2}>
                                                         <Grid item xs={12} sm={6}>
                                                             <Select
@@ -816,6 +820,7 @@ const Homepage = () => {
                                                                     setAddress({ ...address, province: e.target.value, city: '', barangay: '' });
                                                                     setAddressNames({ ...addressNames, province: selectedProvince ? selectedProvince.province_name : '', city: '', barangay: '' });
                                                                 }}
+                                                                displayEmpty
                                                                 label="Select Province"
                                                                 required
                                                             >
@@ -839,6 +844,7 @@ const Homepage = () => {
                                                                     setAddress({ ...address, city: e.target.value, barangay: '' });
                                                                     setAddressNames({ ...addressNames, city: selectedCity ? selectedCity.city_name : '', barangay: '' });
                                                                 }}
+                                                                displayEmpty
                                                                 label="Select City"
                                                                 required
                                                             >
@@ -862,6 +868,7 @@ const Homepage = () => {
                                                                     setAddress({ ...address, barangay: e.target.value });
                                                                     setAddressNames({ ...addressNames, barangay: selectedBarangay ? selectedBarangay.brgy_name : '' });
                                                                 }}
+                                                                displayEmpty
                                                                 label="Select Barangay"
                                                                 required
                                                             >
@@ -885,7 +892,7 @@ const Homepage = () => {
                                                                 InputProps={{
                                                                     readOnly: true,
                                                                 }}
-                                                                placeholder="Select region, province, city, and barangay to generate address"
+                                                                placeholder="Select province, city, and barangay to generate address"
                                                             />
                                                         </Grid>
                                                     </Grid>
