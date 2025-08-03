@@ -28,11 +28,11 @@ module.exports = async (req, res) => {
     // Verify token
     authenticateToken(req);
 
-    // Get total enrollments by program
+    // Get total enrollments by program (only Officially Enrolled)
     const programStatsResult = await pool.query(`
       SELECT 
         p.program_name,
-        COUNT(e.enrollment_id) as total_enrollments,
+        COUNT(CASE WHEN e.enrollment_status = 'Officially Enrolled' THEN 1 END) as total_enrollments,
         COUNT(CASE WHEN e.enrollment_status = 'Verified' THEN 1 END) as verified_enrollments,
         COUNT(CASE WHEN e.enrollment_status = 'Pending' THEN 1 END) as pending_enrollments,
         COUNT(CASE WHEN e.enrollment_status = 'Rejected' THEN 1 END) as rejected_enrollments
@@ -42,14 +42,13 @@ module.exports = async (req, res) => {
       ORDER BY total_enrollments DESC
     `);
 
-    // Get total students by year level
+    // Get total students by year level (only Officially Enrolled)
     const yearLevelStatsResult = await pool.query(`
       SELECT 
         py.year_level,
-        COUNT(e.enrollment_id) as total_students
+        COUNT(CASE WHEN e.enrollment_status = 'Officially Enrolled' THEN 1 END) as total_students
       FROM program_year py
       LEFT JOIN enrollments e ON py.year_id = e.year_id
-      WHERE e.enrollment_status IN ('Verified', 'For Payment', 'Officially Enrolled')
       GROUP BY py.year_level, py.year_id
       ORDER BY py.year_id
     `);
@@ -86,11 +85,11 @@ module.exports = async (req, res) => {
       LIMIT 10
     `);
 
-    // Get enrollment statistics for charts
+    // Get enrollment statistics for charts (only Officially Enrolled for total count)
     const enrollmentStatsResult = await pool.query(`
       SELECT 
         DATE_TRUNC('month', enrollment_date) as month,
-        COUNT(*) as enrollment_count,
+        COUNT(CASE WHEN enrollment_status = 'Officially Enrolled' THEN 1 END) as enrollment_count,
         COUNT(CASE WHEN enrollment_status = 'Verified' THEN 1 END) as verified_count,
         COUNT(CASE WHEN enrollment_status = 'Pending' THEN 1 END) as pending_count
       FROM enrollments
@@ -99,28 +98,18 @@ module.exports = async (req, res) => {
       ORDER BY month DESC
     `);
 
-    // Get enrollment status distribution
-    const enrollmentStatusStatsResult = await pool.query(`
-      SELECT 
-        enrollment_status,
-        COUNT(*) as count
-      FROM enrollments
-      GROUP BY enrollment_status
-      ORDER BY count DESC
-    `);
-
-    // Get document completion statistics
+    // Get document completion statistics (only Officially Enrolled)
     const documentStatsResult = await pool.query(`
       SELECT 
-        COUNT(*) as total_enrollments,
-        COUNT(CASE WHEN idpic IS NOT NULL THEN 1 END) as with_id_pic,
-        COUNT(CASE WHEN birth_certificate_doc IS NOT NULL THEN 1 END) as with_birth_cert,
-        COUNT(CASE WHEN form137_doc IS NOT NULL THEN 1 END) as with_form137,
-        COUNT(CASE WHEN idpic IS NOT NULL AND birth_certificate_doc IS NOT NULL AND form137_doc IS NOT NULL THEN 1 END) as complete_documents
+        COUNT(CASE WHEN enrollment_status = 'Officially Enrolled' THEN 1 END) as total_enrollments,
+        COUNT(CASE WHEN enrollment_status = 'Officially Enrolled' AND idpic IS NOT NULL THEN 1 END) as with_id_pic,
+        COUNT(CASE WHEN enrollment_status = 'Officially Enrolled' AND birth_certificate_doc IS NOT NULL THEN 1 END) as with_birth_cert,
+        COUNT(CASE WHEN enrollment_status = 'Officially Enrolled' AND form137_doc IS NOT NULL THEN 1 END) as with_form137,
+        COUNT(CASE WHEN enrollment_status = 'Officially Enrolled' AND idpic IS NOT NULL AND birth_certificate_doc IS NOT NULL AND form137_doc IS NOT NULL THEN 1 END) as complete_documents
       FROM enrollments
     `);
 
-    // Calculate summary statistics
+    // Calculate summary statistics (only Officially Enrolled for total)
     const totalEnrollments = programStatsResult.rows.reduce((sum, program) => sum + parseInt(program.total_enrollments), 0);
     const totalVerified = programStatsResult.rows.reduce((sum, program) => sum + parseInt(program.verified_enrollments), 0);
     const totalPending = programStatsResult.rows.reduce((sum, program) => sum + parseInt(program.pending_enrollments), 0);
@@ -136,7 +125,6 @@ module.exports = async (req, res) => {
         programStats: programStatsResult.rows,
         yearLevelStats: yearLevelStatsResult.rows,
         monthlyData: enrollmentStatsResult.rows,
-        statusDistribution: enrollmentStatusStatsResult.rows,
         documentStats: documentStatsResult.rows[0]
       }
     });
