@@ -1,5 +1,26 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { 
+  Button, 
+  TextField, 
+  Typography, 
+  Modal, 
+  Box, 
+  FormControlLabel, 
+  Checkbox,
+  Snackbar,
+  Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid
+} from '@mui/material';
 import { MyContext } from '../../App';
+import axios from 'axios';
+import regionData from '../../asset/region.json';
+import provinceData from '../../asset/province.json';
+import cityData from '../../asset/city.json';
+import barangayData from '../../asset/barangay.json';
 import homepagebg from '../../asset/images/olshcohomebg.jpg';
 import schoolbg from '../../asset/images/olshcodiamond.jpg';
 import schoolbgg from '../../asset/images/olshcoold.jpg';
@@ -13,8 +34,6 @@ import courses from '../../asset/images/courses.png';
 import { Link } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import announcement from '../../asset/images/anno.png';
-import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
-import axios from "axios";
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -113,7 +132,18 @@ const Homepage = () => {
         street_text: '',
         guardianName: '',
         guardianContactNo: '',
-      });
+    });
+
+    // Address dropdown states
+    const [selectedRegion, setSelectedRegion] = useState('');
+    const [selectedProvince, setSelectedProvince] = useState('');
+    const [selectedCity, setSelectedCity] = useState('');
+    const [selectedBarangay, setSelectedBarangay] = useState('');
+    
+    // Filtered data states
+    const [filteredProvinces, setFilteredProvinces] = useState([]);
+    const [filteredCities, setFilteredCities] = useState([]);
+    const [filteredBarangays, setFilteredBarangays] = useState([]);
     
       const handleInputChange = (e) => {
         let { name, value } = e.target;
@@ -188,6 +218,90 @@ const Homepage = () => {
             setFormData({ ...formData, [name]: value });
         }
     };
+
+    // Address handling functions
+    const handleRegionChange = (event) => {
+        const regionCode = event.target.value;
+        setSelectedRegion(regionCode);
+        setSelectedProvince('');
+        setSelectedCity('');
+        setSelectedBarangay('');
+        
+        // Filter provinces based on selected region
+        if (regionCode) {
+            const provinces = provinceData.filter(province => province.region_code === regionCode);
+            setFilteredProvinces(provinces);
+        } else {
+            setFilteredProvinces([]);
+        }
+        setFilteredCities([]);
+        setFilteredBarangays([]);
+    };
+
+    const handleProvinceChange = (event) => {
+        const provinceCode = event.target.value;
+        setSelectedProvince(provinceCode);
+        setSelectedCity('');
+        setSelectedBarangay('');
+        
+        // Filter cities based on selected province
+        if (provinceCode) {
+            const cities = cityData.filter(city => city.province_code === provinceCode);
+            setFilteredCities(cities);
+        } else {
+            setFilteredCities([]);
+        }
+        setFilteredBarangays([]);
+    };
+
+    const handleCityChange = (event) => {
+        const cityCode = event.target.value;
+        setSelectedCity(cityCode);
+        setSelectedBarangay('');
+        
+        // Filter barangays based on selected city
+        if (cityCode) {
+            const barangays = barangayData.filter(barangay => barangay.city_code === cityCode);
+            setFilteredBarangays(barangays);
+        } else {
+            setFilteredBarangays([]);
+        }
+    };
+
+    const handleBarangayChange = (event) => {
+        setSelectedBarangay(event.target.value);
+    };
+
+    // Update form data when address selections change
+    useEffect(() => {
+        const selectedRegionName = regionData.find(r => r.region_code === selectedRegion)?.region_name || '';
+        const selectedProvinceName = filteredProvinces.find(p => p.province_code === selectedProvince)?.province_name || '';
+        const selectedCityName = filteredCities.find(c => c.city_code === selectedCity)?.city_name || '';
+        const selectedBarangayName = filteredBarangays.find(b => b.barangay_code === selectedBarangay)?.barangay_name || '';
+        
+        // Build address progressively - show what's selected so far
+        let addressParts = [];
+        
+        if (selectedBarangayName) {
+            addressParts.push(selectedBarangayName);
+        }
+        if (selectedCityName) {
+            addressParts.push(selectedCityName);
+        }
+        if (selectedProvinceName) {
+            addressParts.push(selectedProvinceName);
+        }
+        if (selectedRegionName) {
+            addressParts.push(selectedRegionName);
+        }
+        
+        const fullAddress = addressParts.join(', ');
+        
+        setFormData(prev => ({
+            ...prev,
+            street_text: fullAddress
+        }));
+    }, [selectedRegion, selectedProvince, selectedCity, selectedBarangay, filteredProvinces, filteredCities, filteredBarangays]);
 
     const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
     const [isVisible, setIsVisible] = useState(false);
@@ -675,19 +789,106 @@ const Homepage = () => {
                                                 <Typography variant="h6" className="section-title">
                                                     Address Information
                                                 </Typography>
-                                                <div className="mb-3">
-                                                    <TextField
-                                                        label="Full Address"
-                                                        fullWidth
-                                                        margin="normal"
-                                                        name="street_text"
-                                                        data-testid="input-street_text"
-                                                        id="street-text"
-                                                        value={formData.street_text}
-                                                        onChange={handleInputChange}
-                                                        placeholder='Example: Purok 2, Narvacan II, Guimba, Nueva Ecija'
-                                                    />
-                                                </div>
+                                                <Grid container spacing={2}>
+                                                    <Grid item xs={12} sm={6}>
+                                                        <FormControl fullWidth margin="normal">
+                                                            <InputLabel>Region</InputLabel>
+                                                            <Select
+                                                                value={selectedRegion}
+                                                                onChange={handleRegionChange}
+                                                                label="Region"
+                                                                required
+                                                            >
+                                                                <MenuItem value="">
+                                                                    <em>Select Region</em>
+                                                                </MenuItem>
+                                                                {regionData.map((region) => (
+                                                                    <MenuItem key={region.region_code} value={region.region_code}>
+                                                                        {region.region_name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
+                                                        </FormControl>
+                                                    </Grid>
+                                                    <Grid item xs={12} sm={6}>
+                                                        <FormControl fullWidth margin="normal">
+                                                            <InputLabel>Province</InputLabel>
+                                                            <Select
+                                                                value={selectedProvince}
+                                                                onChange={handleProvinceChange}
+                                                                label="Province"
+                                                                disabled={!selectedRegion}
+                                                                required
+                                                            >
+                                                                <MenuItem value="">
+                                                                    <em>Select Province</em>
+                                                                </MenuItem>
+                                                                {filteredProvinces.map((province) => (
+                                                                    <MenuItem key={province.province_code} value={province.province_code}>
+                                                                        {province.province_name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
+                                                        </FormControl>
+                                                    </Grid>
+                                                    <Grid item xs={12} sm={6}>
+                                                        <FormControl fullWidth margin="normal">
+                                                            <InputLabel>City/Municipality</InputLabel>
+                                                            <Select
+                                                                value={selectedCity}
+                                                                onChange={handleCityChange}
+                                                                label="City/Municipality"
+                                                                disabled={!selectedProvince}
+                                                                required
+                                                            >
+                                                                <MenuItem value="">
+                                                                    <em>Select City/Municipality</em>
+                                                                </MenuItem>
+                                                                {filteredCities.map((city) => (
+                                                                    <MenuItem key={city.city_code} value={city.city_code}>
+                                                                        {city.city_name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
+                                                        </FormControl>
+                                                    </Grid>
+                                                    <Grid item xs={12} sm={6}>
+                                                        <FormControl fullWidth margin="normal">
+                                                            <InputLabel>Barangay</InputLabel>
+                                                            <Select
+                                                                value={selectedBarangay}
+                                                                onChange={handleBarangayChange}
+                                                                label="Barangay"
+                                                                disabled={!selectedCity}
+                                                                required
+                                                            >
+                                                                <MenuItem value="">
+                                                                    <em>Select Barangay</em>
+                                                                </MenuItem>
+                                                                {filteredBarangays.map((barangay) => (
+                                                                    <MenuItem key={barangay.barangay_code} value={barangay.barangay_code}>
+                                                                        {barangay.barangay_name}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
+                                                        </FormControl>
+                                                    </Grid>
+                                                    <Grid item xs={12}>
+                                                        <TextField
+                                                            label="Full Address (Auto-generated)"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="street_text"
+                                                            data-testid="input-street_text"
+                                                            id="street-text"
+                                                            value={formData.street_text}
+                                                            InputProps={{
+                                                                readOnly: true,
+                                                            }}
+                                                            placeholder="Select region, province, city, and barangay to generate address"
+                                                        />
+                                                    </Grid>
+                                                </Grid>
                                             </div>
 
                                             {/* Guardian Information */}
@@ -873,21 +1074,21 @@ const Homepage = () => {
                     <div className="announcements-container d-flex flex-wrap">
                         <div className="announcement-card">
                         <h3>No Tuition Fee Increase</h3>
-                        <p>June 22, 2025</p>
+                        <p>June 22, 2021</p>
                         <p>PS-GS & JUNIOR HIGH SCHOOL (Enroll Now!) click Read more to register</p>
                         <button className="btn btn-primary">Read More</button>
                         </div>
 
                         <div className="announcement-card">
                         <h3>No Tuition Fee Increase</h3>
-                        <p>June 22, 2025</p>
+                        <p>June 22, 2021</p>
                         <p>SENIOR HIGH SCHOOL - ABM / HUMSS / STEM / TECHVOC (Enroll Now!) click Read more to register</p>
                         <button className="btn btn-primary">Read More</button>
                         </div>
 
                         <div className="announcement-card">
                         <h3>Upcoming Events</h3>
-                        <p>July 1 - 18, 2025</p>
+                        <p>June 28, 2021</p>
                         <p>OLSHCO ENROLLMENT IS ONGOING!</p>
                         <button className="btn btn-primary">Read More</button>
                         </div>
