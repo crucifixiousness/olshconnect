@@ -1,26 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  Button, 
-  TextField, 
-  Typography, 
-  Modal, 
-  Box, 
-  FormControlLabel, 
-  Checkbox,
-  Snackbar,
-  Alert,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Grid
-} from '@mui/material';
+import React, { useEffect, useContext, useState } from 'react';
 import { MyContext } from '../../App';
-import axios from 'axios';
-import regionData from '../../asset/region.json';
-import provinceData from '../../asset/province.json';
-import cityData from '../../asset/city.json';
-import barangayData from '../../asset/barangay.json';
 import homepagebg from '../../asset/images/olshcohomebg.jpg';
 import schoolbg from '../../asset/images/olshcodiamond.jpg';
 import schoolbgg from '../../asset/images/olshcoold.jpg';
@@ -34,6 +13,10 @@ import courses from '../../asset/images/courses.png';
 import { Link } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import announcement from '../../asset/images/anno.png';
+import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
+import axios from "axios";
+import { SelectPhilippinesAddress } from 'select-philippines-address';
+import 'select-philippines-address/dist/style.css';
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -134,18 +117,31 @@ const Homepage = () => {
         guardianContactNo: '',
     });
 
-    // Address dropdown states
-    const [selectedRegion, setSelectedRegion] = useState('');
-    const [selectedProvince, setSelectedProvince] = useState('');
-    const [selectedCity, setSelectedCity] = useState('');
-    const [selectedBarangay, setSelectedBarangay] = useState('');
-    
-    // Filtered data states
-    const [filteredProvinces, setFilteredProvinces] = useState([]);
-    const [filteredCities, setFilteredCities] = useState([]);
-    const [filteredBarangays, setFilteredBarangays] = useState([]);
-    
-      const handleInputChange = (e) => {
+    // Address state for select-philippines-address
+    const [address, setAddress] = useState({
+        region: '',
+        province: '',
+        city: '',
+        barangay: ''
+    });
+
+    // Update form data when address selections change
+    useEffect(() => {
+        const addressParts = [
+            address.barangay,
+            address.city,
+            address.province
+        ].filter(Boolean); // Remove empty values
+        
+        const fullAddress = addressParts.join(', ');
+        
+        setFormData(prev => ({
+            ...prev,
+            street_text: fullAddress
+        }));
+    }, [address]);
+
+    const handleInputChange = (e) => {
         let { name, value } = e.target;
     
         if (name === 'birthdate') {
@@ -218,90 +214,6 @@ const Homepage = () => {
             setFormData({ ...formData, [name]: value });
         }
     };
-
-    // Address handling functions
-    const handleRegionChange = (event) => {
-        const regionCode = event.target.value;
-        setSelectedRegion(regionCode);
-        setSelectedProvince('');
-        setSelectedCity('');
-        setSelectedBarangay('');
-        
-        // Filter provinces based on selected region
-        if (regionCode) {
-            const provinces = provinceData.filter(province => province.region_code === regionCode);
-            setFilteredProvinces(provinces);
-        } else {
-            setFilteredProvinces([]);
-        }
-        setFilteredCities([]);
-        setFilteredBarangays([]);
-    };
-
-    const handleProvinceChange = (event) => {
-        const provinceCode = event.target.value;
-        setSelectedProvince(provinceCode);
-        setSelectedCity('');
-        setSelectedBarangay('');
-        
-        // Filter cities based on selected province
-        if (provinceCode) {
-            const cities = cityData.filter(city => city.province_code === provinceCode);
-            setFilteredCities(cities);
-        } else {
-            setFilteredCities([]);
-        }
-        setFilteredBarangays([]);
-    };
-
-    const handleCityChange = (event) => {
-        const cityCode = event.target.value;
-        setSelectedCity(cityCode);
-        setSelectedBarangay('');
-        
-        // Filter barangays based on selected city
-        if (cityCode) {
-            const barangays = barangayData.filter(barangay => barangay.city_code === cityCode);
-            setFilteredBarangays(barangays);
-        } else {
-            setFilteredBarangays([]);
-        }
-    };
-
-    const handleBarangayChange = (event) => {
-        setSelectedBarangay(event.target.value);
-    };
-
-    // Update form data when address selections change
-    useEffect(() => {
-        const selectedRegionName = regionData.find(r => r.region_code === selectedRegion)?.region_name || '';
-        const selectedProvinceName = filteredProvinces.find(p => p.province_code === selectedProvince)?.province_name || '';
-        const selectedCityName = filteredCities.find(c => c.city_code === selectedCity)?.city_name || '';
-        const selectedBarangayName = filteredBarangays.find(b => b.barangay_code === selectedBarangay)?.barangay_name || '';
-        
-        // Build address progressively - show what's selected so far
-        let addressParts = [];
-        
-        if (selectedBarangayName) {
-            addressParts.push(selectedBarangayName);
-        }
-        if (selectedCityName) {
-            addressParts.push(selectedCityName);
-        }
-        if (selectedProvinceName) {
-            addressParts.push(selectedProvinceName);
-        }
-        if (selectedRegionName) {
-            addressParts.push(selectedRegionName);
-        }
-        
-        const fullAddress = addressParts.join(', ');
-        
-        setFormData(prev => ({
-            ...prev,
-            street_text: fullAddress
-        }));
-    }, [selectedRegion, selectedProvince, selectedCity, selectedBarangay, filteredProvinces, filteredCities, filteredBarangays]);
 
     const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
     const [isVisible, setIsVisible] = useState(false);
@@ -789,106 +701,67 @@ const Homepage = () => {
                                                 <Typography variant="h6" className="section-title">
                                                     Address Information
                                                 </Typography>
-                                                <Grid container spacing={2}>
-                                                    <Grid item xs={12} sm={6}>
-                                                        <FormControl fullWidth margin="normal">
-                                                            <InputLabel>Region</InputLabel>
-                                                            <Select
-                                                                value={selectedRegion}
-                                                                onChange={handleRegionChange}
-                                                                label="Region"
+                                                <div className="mb-3">
+                                                    <Grid container spacing={2}>
+                                                        <Grid item xs={12} sm={6}>
+                                                            <SelectPhilippinesAddress
+                                                                type="region"
+                                                                value={address.region}
+                                                                onChange={(selected) => setAddress({ ...address, region: selected })}
+                                                                placeholder="Select Region"
                                                                 required
-                                                            >
-                                                                <MenuItem value="">
-                                                                    <em>Select Region</em>
-                                                                </MenuItem>
-                                                                {regionData.map((region) => (
-                                                                    <MenuItem key={region.region_code} value={region.region_code}>
-                                                                        {region.region_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </FormControl>
-                                                    </Grid>
-                                                    <Grid item xs={12} sm={6}>
-                                                        <FormControl fullWidth margin="normal">
-                                                            <InputLabel>Province</InputLabel>
-                                                            <Select
-                                                                value={selectedProvince}
-                                                                onChange={handleProvinceChange}
-                                                                label="Province"
-                                                                disabled={!selectedRegion}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12} sm={6}>
+                                                            <SelectPhilippinesAddress
+                                                                type="province"
+                                                                value={address.province}
+                                                                onChange={(selected) => setAddress({ ...address, province: selected })}
+                                                                placeholder="Select Province"
+                                                                region={address.region}
                                                                 required
-                                                            >
-                                                                <MenuItem value="">
-                                                                    <em>Select Province</em>
-                                                                </MenuItem>
-                                                                {filteredProvinces.map((province) => (
-                                                                    <MenuItem key={province.province_code} value={province.province_code}>
-                                                                        {province.province_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </FormControl>
-                                                    </Grid>
-                                                    <Grid item xs={12} sm={6}>
-                                                        <FormControl fullWidth margin="normal">
-                                                            <InputLabel>City/Municipality</InputLabel>
-                                                            <Select
-                                                                value={selectedCity}
-                                                                onChange={handleCityChange}
-                                                                label="City/Municipality"
-                                                                disabled={!selectedProvince}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12} sm={6}>
+                                                            <SelectPhilippinesAddress
+                                                                type="city"
+                                                                value={address.city}
+                                                                onChange={(selected) => setAddress({ ...address, city: selected })}
+                                                                placeholder="Select City"
+                                                                region={address.region}
+                                                                province={address.province}
                                                                 required
-                                                            >
-                                                                <MenuItem value="">
-                                                                    <em>Select City/Municipality</em>
-                                                                </MenuItem>
-                                                                {filteredCities.map((city) => (
-                                                                    <MenuItem key={city.city_code} value={city.city_code}>
-                                                                        {city.city_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </FormControl>
-                                                    </Grid>
-                                                    <Grid item xs={12} sm={6}>
-                                                        <FormControl fullWidth margin="normal">
-                                                            <InputLabel>Barangay</InputLabel>
-                                                            <Select
-                                                                value={selectedBarangay}
-                                                                onChange={handleBarangayChange}
-                                                                label="Barangay"
-                                                                disabled={!selectedCity}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12} sm={6}>
+                                                            <SelectPhilippinesAddress
+                                                                type="barangay"
+                                                                value={address.barangay}
+                                                                onChange={(selected) => setAddress({ ...address, barangay: selected })}
+                                                                placeholder="Select Barangay"
+                                                                region={address.region}
+                                                                province={address.province}
+                                                                city={address.city}
                                                                 required
-                                                            >
-                                                                <MenuItem value="">
-                                                                    <em>Select Barangay</em>
-                                                                </MenuItem>
-                                                                {filteredBarangays.map((barangay) => (
-                                                                    <MenuItem key={barangay.barangay_code} value={barangay.barangay_code}>
-                                                                        {barangay.barangay_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </FormControl>
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            <TextField
+                                                                label="Full Address (Auto-generated)"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                name="street_text"
+                                                                data-testid="input-street_text"
+                                                                id="street-text"
+                                                                value={formData.street_text}
+                                                                InputProps={{
+                                                                    readOnly: true,
+                                                                }}
+                                                                placeholder="Select region, province, city, and barangay to generate address"
+                                                            />
+                                                        </Grid>
                                                     </Grid>
-                                                    <Grid item xs={12}>
-                                                        <TextField
-                                                            label="Full Address (Auto-generated)"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            name="street_text"
-                                                            data-testid="input-street_text"
-                                                            id="street-text"
-                                                            value={formData.street_text}
-                                                            InputProps={{
-                                                                readOnly: true,
-                                                            }}
-                                                            placeholder="Select region, province, city, and barangay to generate address"
-                                                        />
-                                                    </Grid>
-                                                </Grid>
+                                                </div>
                                             </div>
 
                                             {/* Guardian Information */}
