@@ -94,7 +94,8 @@ const DocumentRequests = () => {
   const filteredRequests = requests.filter(request => {
     const matchesSearch = !searchTerm || 
       request.doc_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${request.first_name} ${request.last_name}`.toLowerCase().includes(searchTerm.toLowerCase());
+      `${request.first_name} ${request.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesFilter = !filterBy || request.doc_type === filterBy;
     
@@ -176,12 +177,12 @@ const DocumentRequests = () => {
         {/* Filters */}
         <Paper elevation={3} className="p-3 mb-4">
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SEARCH</Typography>
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Search by document type or student name..."
+                placeholder="Search by document type, student name, or reason..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{
@@ -196,7 +197,7 @@ const DocumentRequests = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>DOCUMENT TYPE</Typography>
               <FormControl fullWidth size="small">
                 <Select
@@ -224,7 +225,7 @@ const DocumentRequests = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>&nbsp;</Typography>
               <Button 
                 variant="contained"
@@ -250,6 +251,7 @@ const DocumentRequests = () => {
               <TableRow>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Document Type</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Reason/Description</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Request Date</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
@@ -258,7 +260,7 @@ const DocumentRequests = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan="5" style={{ textAlign: "center" }}>
+                  <TableCell colSpan="6" style={{ textAlign: "center" }}>
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
                       <CircularProgress style={{ color: '#c70202' }} />
                       <Typography variant="body2" sx={{ ml: 2, color: '#666' }}>
@@ -280,6 +282,9 @@ const DocumentRequests = () => {
                     </TableCell>
                     <TableCell data-testid={`doc-type-${index}`}>
                       {request.doc_type}
+                    </TableCell>
+                    <TableCell data-testid={`description-${index}`}>
+                      {request.description || 'No reason provided'}
                     </TableCell>
                     <TableCell data-testid={`date-${index}`}>
                       {new Date(request.req_date).toLocaleDateString()}
@@ -339,7 +344,7 @@ const DocumentRequests = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan="5" style={{ textAlign: "center" }} data-testid="no-data-message">
+                  <TableCell colSpan="6" style={{ textAlign: "center" }} data-testid="no-data-message">
                     {searchTerm || filterBy ? 'No requests found matching your filters' : 'No document requests available'}
                   </TableCell>
                 </TableRow>
