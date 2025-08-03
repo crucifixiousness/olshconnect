@@ -175,28 +175,47 @@ const RegistrarDashboard = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="mb-4">Registrar Dashboard</h3>
         
-        {/* Stat Cards */}
-        <div className="row">
-          {statCards.map((card, index) => (
-            <div key={index} className="col-md-3 mb-4">
-              <Card 
-                className="h-100 p-3" 
-                sx={{ 
-                  transition: 'transform 0.2s',
-                  '&:hover': { transform: 'translateY(-5px)' },
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div className="d-flex align-items-center mb-3">
-                  <div style={{ color: card.color }}>{card.icon}</div>
-                  <Typography variant="h6" className="ms-2">{card.title}</Typography>
-                </div>
-                <Typography variant="h3" style={{ color: card.color }}>
-                  {card.value}
-                </Typography>
-              </Card>
+        {/* Summary Cards */}
+        <div className="dashboardBoxWrapper">
+          <div className="dashboardBox" style={{ background: 'linear-gradient(135deg, #1976d2, #1565c0)' }}>
+            <div className="col1">
+              <h4>Total Enrollments</h4>
+              <span>{dashboardData.totalEnrollments}</span>
             </div>
-          ))}
+            <div className="icon">
+              <IoIosPeople size={40} />
+            </div>
+          </div>
+          
+          <div className="dashboardBox" style={{ background: 'linear-gradient(135deg, #ed6c02, #e65100)' }}>
+            <div className="col1">
+              <h4>For Payment</h4>
+              <span>{dashboardData.totalForPayment}</span>
+            </div>
+            <div className="icon">
+              <FaFileAlt size={40} />
+            </div>
+          </div>
+
+          <div className="dashboardBox" style={{ background: 'linear-gradient(135deg, #2e7d32, #1b5e20)' }}>
+            <div className="col1">
+              <h4>Verified</h4>
+              <span>{dashboardData.totalVerified}</span>
+            </div>
+            <div className="icon">
+              <FaCheckCircle size={40} />
+            </div>
+          </div>
+
+          <div className="dashboardBox" style={{ background: 'linear-gradient(135deg, #d32f2f, #c62828)' }}>
+            <div className="col1">
+              <h4>Pending</h4>
+              <span>{dashboardData.totalPending}</span>
+            </div>
+            <div className="icon">
+              <FaTimesCircle size={40} />
+            </div>
+          </div>
         </div>
 
         <div className="row mt-4">
@@ -215,6 +234,7 @@ const RegistrarDashboard = () => {
                         <TableRow>
                           <TableCell>Program</TableCell>
                           <TableCell align="right">Total</TableCell>
+                          <TableCell align="right">For Payment</TableCell>
                           <TableCell align="right">Verified</TableCell>
                           <TableCell align="right">Pending</TableCell>
                         </TableRow>
@@ -224,6 +244,9 @@ const RegistrarDashboard = () => {
                           <TableRow key={index}>
                             <TableCell>{program.program_name}</TableCell>
                             <TableCell align="right">{program.total_enrollments}</TableCell>
+                            <TableCell align="right" style={{ color: '#ed6c02', fontWeight: 'bold' }}>
+                              {program.for_payment_enrollments}
+                            </TableCell>
                             <TableCell align="right" style={{ color: '#2e7d32', fontWeight: 'bold' }}>
                               {program.verified_enrollments}
                             </TableCell>
