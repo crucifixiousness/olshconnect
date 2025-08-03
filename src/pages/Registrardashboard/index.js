@@ -1,16 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { Card, Typography, CircularProgress, Box } from '@mui/material';
-import { GiBookshelf } from "react-icons/gi";
-import { RiPoliceBadgeFill } from "react-icons/ri";
-import { MdTour } from "react-icons/md";
-import { FaComputer } from "react-icons/fa6";
-import { PiComputerTowerFill } from "react-icons/pi";
 import { IoIosPeople } from "react-icons/io";
-import { FaUserGraduate, FaFileAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaFileAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { MyContext } from "../../App";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const RegistrarDashboard = () => {
   const context = useContext(MyContext);
@@ -105,14 +100,6 @@ const RegistrarDashboard = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   const formatMonth = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -168,18 +155,8 @@ const RegistrarDashboard = () => {
           </div>
 
           <div className="row mt-4">
-            {/* Recent Enrollments - Loading State */}
-            <div className="col-md-6 mb-4">
-              <Card className="h-100 p-3">
-                <Typography variant="h6" className="mb-3">Recent Enrollments</Typography>
-                <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
-                  <CircularProgress style={{ color: '#c70202' }} />
-                </div>
-              </Card>
-            </div>
-
             {/* Enrollment Statistics - Loading State */}
-            <div className="col-md-6 mb-4">
+            <div className="col-md-12 mb-4">
               <Card className="h-100 p-3">
                 <Typography variant="h6" className="mb-3">Enrollment Statistics</Typography>
                 <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
@@ -223,58 +200,8 @@ const RegistrarDashboard = () => {
         </div>
 
         <div className="row mt-4">
-          {/* Recent Enrollments */}
-          <div className="col-md-6 mb-4">
-            <Card className="h-100 p-3">
-              <Typography variant="h6" className="mb-3">Recent Enrollments</Typography>
-              <TableContainer component={Paper} elevation={0}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Date</TableCell>
-                      <TableCell>Student</TableCell>
-                      <TableCell>Program</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Documents</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {enrollmentStats.programStats.slice(0, 5).map((enrollment, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{formatDate(enrollment.enrollment_date || new Date())}</TableCell>
-                        <TableCell>
-                          <div style={{ fontWeight: 'bold' }}>{enrollment.student_name || 'N/A'}</div>
-                          <div style={{ fontSize: '0.8em', color: 'gray' }}>ID: {enrollment.student_id || 'N/A'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div>{enrollment.program_name}</div>
-                          <div style={{ fontSize: '0.8em', color: 'gray' }}>{enrollment.year_level || 'N/A'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <span style={{ 
-                            color: getStatusColor(enrollment.enrollment_status),
-                            fontWeight: 'bold'
-                          }}>
-                            {enrollment.enrollment_status || 'N/A'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div style={{ fontSize: '0.8em' }}>
-                            <div>ID Pic: {enrollment.has_id_pic || 'No'}</div>
-                            <div>Birth Cert: {enrollment.has_birth_cert || 'No'}</div>
-                            <div>Form 137: {enrollment.has_form137 || 'No'}</div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Card>
-          </div>
-
           {/* Enrollment Statistics */}
-          <div className="col-md-6 mb-4">
+          <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Enrollment Statistics</Typography>
               
