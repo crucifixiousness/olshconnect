@@ -50,7 +50,7 @@ const AcademicRecords = () => {
 
         {/* Personal Information */}
         <div className="mt-3">
-          <Typography variant="h6" sx={{ color: '#c70202', mb: 2 }}>Personal Information</Typography>
+          <h4>Personal Information</h4>
           <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
             <p><strong>Name:</strong> {user?.lastName}, {user?.firstName} {user?.middleName?.charAt(0)}. </p>
             <p><strong>Student No:</strong> {user?.id}</p>
@@ -62,7 +62,7 @@ const AcademicRecords = () => {
 
         {/* Grades Overview */}
         <div className="mt-3">
-          <Typography variant="h6" sx={{ color: '#c70202', mb: 2 }}>Grades Overview</Typography>
+          <h4>Grades Overview</h4>
           <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
             <TableContainer>
               <Table aria-label="grades table">
@@ -111,7 +111,7 @@ const AcademicRecords = () => {
 
         {/* GPA Overview */}
         <div className="mt-3">
-          <Typography variant="h6" sx={{ color: '#c70202', mb: 2 }}>GPA Overview</Typography>
+          <h4>GPA Overview</h4>
           <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
             <p><strong>Semester GPA:</strong> 3.5</p>
             <p><strong>Cumulative GPA:</strong> 3.2</p>
@@ -120,7 +120,7 @@ const AcademicRecords = () => {
 
         {/* Enrollment History */}
         <div className="mt-3">
-          <Typography variant="h6" sx={{ color: '#c70202', mb: 2 }}>Enrollment History</Typography>
+          <h4>Enrollment History</h4>
           <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
             <TableContainer>
               <Table aria-label="enrollment history table">
@@ -138,9 +138,9 @@ const AcademicRecords = () => {
                     <TableCell>2024-2025</TableCell>
                     <TableCell>1st Semester</TableCell>
                     <TableCell align="center">
-                      <span className="badge bg-primary">Enrolled</span>
+                      <span className="badge bg-success">Enrolled</span>
                     </TableCell>
-                    <TableCell align="center">21</TableCell>
+                    <TableCell align="center">18</TableCell>
                     <TableCell align="center">18</TableCell>
                   </TableRow>
                   <TableRow hover>
@@ -158,8 +158,8 @@ const AcademicRecords = () => {
                     <TableCell align="center">
                       <span className="badge bg-success">Completed</span>
                     </TableCell>
-                    <TableCell align="center">21</TableCell>
-                    <TableCell align="center">21</TableCell>
+                    <TableCell align="center">18</TableCell>
+                    <TableCell align="center">18</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
