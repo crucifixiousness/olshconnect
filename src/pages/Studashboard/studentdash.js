@@ -103,28 +103,6 @@ const StuDashboard = () => {
             </TableContainer>
           </Paper>
         </div>
-        
-        {/* Pagination */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Pagination 
-            count={10} 
-            color="primary" 
-            showFirstButton 
-            showLastButton 
-            sx={{
-              '& .MuiPaginationItem-root': {
-                color: '#666',
-                '&.Mui-selected': {
-                  backgroundColor: '#c70202',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: '#a00000'
-                  }
-                }
-              }
-            }}
-          />
-        </Box>
       </div>
     </div>
   );
