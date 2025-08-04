@@ -542,8 +542,8 @@ const StudentPayment = () => {
               </Paper>
             </div>
 
-            <div className="table-responsive mt-3">
-              <Paper elevation={3}>
+            <div className="mt-3">
+              <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
                 <TableContainer>
                   <Table aria-label="payment table">
                     <TableHead>
@@ -600,8 +600,8 @@ const StudentPayment = () => {
             </div>
           </>
         ) : (
-          <div className="table-responsive">
-            <Paper elevation={3}>
+          <div>
+            <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
               <TableContainer>
                 <Table aria-label="payment history table">
                   <TableHead>
