@@ -467,32 +467,9 @@ const AssignCourses = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
-              <Select
-                labelId="semester-filter-label"
-                value={selectedSemester}
-                onChange={handleSemesterChange}
-                label="Filter by Semester"
-                data-testid="semester-filter"
-                size="small"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#c70202',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#c70202',
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="">All Semesters</MenuItem>
-                <MenuItem value="1st">1st Semester</MenuItem>
-                <MenuItem value="2nd">2nd Semester</MenuItem>
-                <MenuItem value="Summer">Summer</MenuItem>
-              </Select>
-            </FormControl>
+            <h3 className="hd">
+              Courses {yearLevel ? `- Year ${yearLevel}` : ''}
+            </h3>
             <Button 
               variant="contained" 
               onClick={handleOpen} 
@@ -506,6 +483,25 @@ const AssignCourses = () => {
             >
               <FaCirclePlus/> Assign Course
             </Button>
+          </div>
+
+          <div className="row cardFilters mt-3">
+            <div className="col-md-3">
+              <h4>SEMESTER</h4>
+              <FormControl size='small' className='w-100'>
+                <Select
+                  value={selectedSemester}
+                  onChange={handleSemesterChange}
+                  displayEmpty
+                  inputProps={{ 'aria-label': 'Without label' }}
+                >
+                  <MenuItem value=""><em>All Semesters</em></MenuItem>
+                  <MenuItem value="1st">1st Semester</MenuItem>
+                  <MenuItem value="2nd">2nd Semester</MenuItem>
+                  <MenuItem value="Summer">Summer</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
           </div>
 
           <div className='table-responsive mt-3'>
