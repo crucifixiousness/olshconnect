@@ -469,13 +469,67 @@ const StudentProfile = () => {
     <div className="right-content w-100" data-testid="student-profile">
       <ThemeProvider theme={theme}>
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Stepper activeStep={activeStep} alternativeLabel data-testid="enrollment-stepper">
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+          <div style={{
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            '&::-webkit-scrollbar': {
+              display: 'none'
+            }
+          }}>
+            <div style={{
+              minWidth: 'max-content',
+              padding: '0 16px'
+            }}>
+              <Stepper 
+                activeStep={activeStep} 
+                alternativeLabel 
+                data-testid="enrollment-stepper"
+                sx={{
+                  '& .MuiStepLabel-root': {
+                    '& .MuiStepLabel-label': {
+                      fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+                      fontWeight: 500,
+                      color: '#666',
+                      '&.Mui-active': {
+                        color: '#c70202',
+                        fontWeight: 600
+                      },
+                      '&.Mui-completed': {
+                        color: '#c70202',
+                        fontWeight: 600
+                      }
+                    },
+                    '& .MuiStepLabel-iconContainer': {
+                      '& .MuiStepIcon-root': {
+                        fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+                        '&.Mui-active': {
+                          color: '#c70202'
+                        },
+                        '&.Mui-completed': {
+                          color: '#c70202'
+                        }
+                      }
+                    }
+                  },
+                  '& .MuiStepConnector-root': {
+                    '& .MuiStepConnector-line': {
+                      borderColor: '#e0e0e0',
+                      borderTopWidth: 2
+                    }
+                  }
+                }}
+              >
+                {steps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel>{label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            </div>
+          </div>
         </Paper>
       </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
