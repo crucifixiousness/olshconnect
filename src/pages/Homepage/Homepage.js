@@ -507,7 +507,7 @@ const Homepage = () => {
                                 REGISTER NOW!
                             </button>
                             <p>
-                                Already have an account? Proceed to <a href="/login" className="text-primary">Login</a> to continue to enrollment.
+                                Already have an account? Proceed to <a href="/login" style={{ color: '#c70202', textDecoration: 'none' }}>Login</a> to continue to enrollment.
                             </p>
 
                             {/* Modal */}
