@@ -180,11 +180,11 @@ const PaymentVerification = () => {
               <Table aria-label="simple table">
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT NAME</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>PROGRAM</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>YEAR LEVEL</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ENROLLMENT STATUS</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Enrollment Status</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
