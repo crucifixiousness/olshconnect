@@ -463,30 +463,6 @@ const StudentPayment = () => {
     printWindow.document.close();
   };
 
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="right-content w-100" data-testid="student-payment">
-        <div className="card shadow border-0 p-3 mt-1">
-          <h3 className="hd mt-2 pb-0">Payment Information</h3>
-        </div>
-        <div className="card shadow border-0 p-3 mt-3">
-          <div className="alert alert-info" role="alert">
-            {error}
-          </div>
-        </div>
-      </div>
-    );
-  }
   return (
     <div className="right-content w-100" data-testid="student-payment">
       <div className="card shadow border-0 p-3 mt-1">
@@ -496,282 +472,296 @@ const StudentPayment = () => {
       </div>
 
       <div className="card shadow border-0 p-3 mt-3">
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs 
-            value={activeTab} 
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            sx={{
-              '& .MuiTab-root': {
-                color: '#666',
-                '&.Mui-selected': {
-                  color: '#c70202',
-                },
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#c70202',
-              },
-            }}
-          >
-            <Tab label="Current Balance" />
-            <Tab label="Payment History" />
-          </Tabs>
-        </Box>
-
-        {activeTab === 0 ? (
-          <>
-            {/* Existing Payment Summary and Current Balance Table */}
-            <div className="mb-3">
-              <h4 className="hd">Payment Summary</h4>
-              <Paper elevation={0} className="p-3 bg-light" data-testid="payment-summary">
-                <div className="row">
-                  <div className="col-md-6">
-                    <h5>Remaining Balance: ₱{totalBalance.toFixed(2)}</h5>
-                  </div>
-                  <div className="col-md-6">
-                    <h5>Breakdown:</h5>
-                    {payments[0]?.breakdown && (
-                      <div className="ms-3">
-                        <p>Tuition Fee: ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
-                        <p>Miscellaneous: ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
-                        <p>Laboratory: ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
-                        <p>Other Fees: ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Paper>
-            </div>
-
-            <div className="mt-3">
-              <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-                <TableContainer>
-                  <Table aria-label="payment table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Due Date</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Amount</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {payments.map((payment) => (
-                        <TableRow 
-                          key={payment.id}
-                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                          hover
-                        >
-                          <TableCell>{payment.description}</TableCell>
-                          <TableCell align="center">{payment.dueDate}</TableCell>
-                          <TableCell align="center">₱{payment.amount.toFixed(2)}</TableCell>
-                          <TableCell align="center">
-                            <span className={`badge ${payment.status.toLowerCase() === 'fully paid' ? 'bg-success' : payment.status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
-                              {payment.status}
-                            </span>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => {                            
-                                setOpenVerifyDialog(true);
-                              }}
-                              sx={{
-                                minWidth: '100px !important',
-                                height: '30px',
-                                padding: '4px 8px',
-                                fontSize: '11px',
-                                backgroundColor: '#c70202',
-                                '&:hover': {
-                                  backgroundColor: '#a00000'
-                                }
-                              }}
-                            >
-                              Upload Receipt
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            </div>
-          </>
-        ) : (
-          <div>
-            <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-              <TableContainer>
-                <Table aria-label="payment history table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Receipt No.</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Date</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Amount Paid</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Payment Method</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Action</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {paymentHistory && paymentHistory.length > 0 ? (
-                      paymentHistory.map((transaction) => (
-                        <TableRow 
-                          key={transaction.transaction_id}
-                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                          hover
-                        >
-                          <TableCell align="center">{transaction.reference_number}</TableCell>
-                          <TableCell align="center">{new Date(transaction.payment_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{transaction.remarks}</TableCell>
-                          <TableCell align="center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</TableCell>
-                          <TableCell align="center">{transaction.payment_method}</TableCell>
-                          <TableCell align="center">
-                            <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
-                              {transaction.payment_status}
-                            </span>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handlePrintReceipt(transaction)}
-                              startIcon={<FaPrint />}
-                              sx={{
-                                borderColor: '#c70202',
-                                color: '#c70202',
-                                '&:hover': {
-                                  borderColor: '#a00000',
-                                  backgroundColor: '#c70202',
-                                  color: 'white'
-                                }
-                              }}
-                            >
-                              Print
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan="7" align="center">
-                          No payment history found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+            <CircularProgress style={{ color: '#c70202' }} />
           </div>
-        )}
-        <Dialog open={openVerifyDialog} onClose={() => {
-          setOpenVerifyDialog(false);
-          setError(null); // Clear error when closing dialog
-        }}>
-          <DialogTitle>Upload Payment Receipt</DialogTitle>
-          <DialogContent>
-            {error && (
-              <div className="alert alert-danger mb-3" role="alert">
-                {error}
+        ) : error ? (
+          <div className="alert alert-info" role="alert">
+            {error}
+          </div>
+        ) : (
+          <>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+              <Tabs 
+                value={activeTab} 
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                sx={{
+                  '& .MuiTab-root': {
+                    color: '#666',
+                    '&.Mui-selected': {
+                      color: '#c70202',
+                    },
+                  },
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: '#c70202',
+                  },
+                }}
+              >
+                <Tab label="Current Balance" />
+                <Tab label="Payment History" />
+              </Tabs>
+            </Box>
+
+            {activeTab === 0 ? (
+              <>
+                {/* Existing Payment Summary and Current Balance Table */}
+                <div className="mb-3">
+                  <h4 className="hd">Payment Summary</h4>
+                  <Paper elevation={0} className="p-3 bg-light" data-testid="payment-summary">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <h5>Remaining Balance: ₱{totalBalance.toFixed(2)}</h5>
+                      </div>
+                      <div className="col-md-6">
+                        <h5>Breakdown:</h5>
+                        {payments[0]?.breakdown && (
+                          <div className="ms-3">
+                            <p>Tuition Fee: ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
+                            <p>Miscellaneous: ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
+                            <p>Laboratory: ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
+                            <p>Other Fees: ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Paper>
+                </div>
+
+                <div className="mt-3">
+                  <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+                    <TableContainer>
+                      <Table aria-label="payment table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
+                            <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Due Date</TableCell>
+                            <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Amount</TableCell>
+                            <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
+                            <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Action</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {payments.map((payment) => (
+                            <TableRow 
+                              key={payment.id}
+                              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                              hover
+                            >
+                              <TableCell>{payment.description}</TableCell>
+                              <TableCell align="center">{payment.dueDate}</TableCell>
+                              <TableCell align="center">₱{payment.amount.toFixed(2)}</TableCell>
+                              <TableCell align="center">
+                                <span className={`badge ${payment.status.toLowerCase() === 'fully paid' ? 'bg-success' : payment.status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                                  {payment.status}
+                                </span>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => {                            
+                                    setOpenVerifyDialog(true);
+                                  }}
+                                  sx={{
+                                    minWidth: '100px !important',
+                                    height: '30px',
+                                    padding: '4px 8px',
+                                    fontSize: '11px',
+                                    backgroundColor: '#c70202',
+                                    '&:hover': {
+                                      backgroundColor: '#a00000'
+                                    }
+                                  }}
+                                >
+                                  Upload Receipt
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                </div>
+              </>
+            ) : (
+              <div>
+                <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+                  <TableContainer>
+                    <Table aria-label="payment history table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Receipt No.</TableCell>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Date</TableCell>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Amount Paid</TableCell>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Payment Method</TableCell>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
+                          <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Action</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {paymentHistory && paymentHistory.length > 0 ? (
+                          paymentHistory.map((transaction) => (
+                            <TableRow 
+                              key={transaction.transaction_id}
+                              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                              hover
+                            >
+                              <TableCell align="center">{transaction.reference_number}</TableCell>
+                              <TableCell align="center">{new Date(transaction.payment_date).toLocaleDateString()}</TableCell>
+                              <TableCell>{transaction.remarks}</TableCell>
+                              <TableCell align="center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</TableCell>
+                              <TableCell align="center">{transaction.payment_method}</TableCell>
+                              <TableCell align="center">
+                                <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                                  {transaction.payment_status}
+                                </span>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  onClick={() => handlePrintReceipt(transaction)}
+                                  startIcon={<FaPrint />}
+                                  sx={{
+                                    borderColor: '#c70202',
+                                    color: '#c70202',
+                                    '&:hover': {
+                                      borderColor: '#a00000',
+                                      backgroundColor: '#c70202',
+                                      color: 'white'
+                                    }
+                                  }}
+                                >
+                                  Print
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan="7" align="center">
+                              No payment history found.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Paper>
               </div>
             )}
-            <input
-              accept="*/*"
-              style={{ display: 'none' }}
-              id="receipt-image-upload"
-              type="file"
-              onChange={(e) => {
-                setReceiptImage(e.target.files[0]);
-                setError(null); // Clear error when new file selected
-              }}
-            />
-            <label htmlFor="receipt-image-upload">
-              <Button
-                component="span"
-                variant="outlined"
-                startIcon={<PhotoCamera />}
-                sx={{ mt: 2, mb: 1 }}
-                fullWidth
-              >
-                Upload Receipt Image
-              </Button>
-            </label>
-            {receiptImage && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Selected file: {receiptImage.name}
-              </Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => {
-              setOpenVerifyDialog(false);
-              setReceiptImage(null);
-            }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleReceiptSubmit}
-              disabled={!receiptImage}
-              sx={{
-                bgcolor: '#c70202',
-                color: 'white',
-                '&:hover': { bgcolor: '#a00000' }
-              }}
-            >
-              Submit for Verification
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Honeypot: Fake Receipt Dialog - Looks identical to real one */}
-        <Dialog open={showFakeReceiptDialog} onClose={handleFakeReceiptClose}>
-          <DialogTitle>Upload Payment Receipt</DialogTitle>
-          <DialogContent>
-            <input
-              accept="*/*"
-              style={{ display: 'none' }}
-              id="fake-receipt-image-upload"
-              type="file"
-              onChange={handleFakeReceiptFileChange}
-            />
-            <label htmlFor="fake-receipt-image-upload">
-              <Button
-                component="span"
-                variant="outlined"
-                startIcon={<PhotoCamera />}
-                sx={{ mt: 2, mb: 1 }}
-                fullWidth
-              >
-                Upload Receipt Image
-              </Button>
-            </label>
-            {fakeReceiptImage && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Selected file: {fakeReceiptImage.name}
-              </Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleFakeReceiptClose}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleFakeReceiptSubmit}
-              disabled={!fakeReceiptImage}
-              sx={{
-                bgcolor: '#c70202',
-                color: 'white',
-                '&:hover': { bgcolor: '#a00000' }
-              }}
-            >
-              Submit for Verification
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </>
+        )}
       </div>
+
+      <Dialog open={openVerifyDialog} onClose={() => {
+        setOpenVerifyDialog(false);
+        setError(null); // Clear error when closing dialog
+      }}>
+        <DialogTitle>Upload Payment Receipt</DialogTitle>
+        <DialogContent>
+          {error && (
+            <div className="alert alert-danger mb-3" role="alert">
+              {error}
+            </div>
+          )}
+          <input
+            accept="*/*"
+            style={{ display: 'none' }}
+            id="receipt-image-upload"
+            type="file"
+            onChange={(e) => {
+              setReceiptImage(e.target.files[0]);
+              setError(null); // Clear error when new file selected
+            }}
+          />
+          <label htmlFor="receipt-image-upload">
+            <Button
+              component="span"
+              variant="outlined"
+              startIcon={<PhotoCamera />}
+              sx={{ mt: 2, mb: 1 }}
+              fullWidth
+            >
+              Upload Receipt Image
+            </Button>
+          </label>
+          {receiptImage && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Selected file: {receiptImage.name}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setOpenVerifyDialog(false);
+            setReceiptImage(null);
+          }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleReceiptSubmit}
+            disabled={!receiptImage}
+            sx={{
+              bgcolor: '#c70202',
+              color: 'white',
+              '&:hover': { bgcolor: '#a00000' }
+            }}
+          >
+            Submit for Verification
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Honeypot: Fake Receipt Dialog - Looks identical to real one */}
+      <Dialog open={showFakeReceiptDialog} onClose={handleFakeReceiptClose}>
+        <DialogTitle>Upload Payment Receipt</DialogTitle>
+        <DialogContent>
+          <input
+            accept="*/*"
+            style={{ display: 'none' }}
+            id="fake-receipt-image-upload"
+            type="file"
+            onChange={handleFakeReceiptFileChange}
+          />
+          <label htmlFor="fake-receipt-image-upload">
+            <Button
+              component="span"
+              variant="outlined"
+              startIcon={<PhotoCamera />}
+              sx={{ mt: 2, mb: 1 }}
+              fullWidth
+            >
+              Upload Receipt Image
+            </Button>
+          </label>
+          {fakeReceiptImage && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Selected file: {fakeReceiptImage.name}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleFakeReceiptClose}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleFakeReceiptSubmit}
+            disabled={!fakeReceiptImage}
+            sx={{
+              bgcolor: '#c70202',
+              color: 'white',
+              '&:hover': { bgcolor: '#a00000' }
+            }}
+          >
+            Submit for Verification
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
       <Snackbar 
         open={snackbar.open} 
         autoHideDuration={6000} 
