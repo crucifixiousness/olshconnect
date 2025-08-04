@@ -34,22 +34,15 @@ const StuDashboard = () => {
     <div className="right-content w-100">
       {
         context.isLogin !== false ? (
-          <div className="card shadow border-0 p-3">      
-            <Typography variant="h5" sx={{ color: '#c70202', mb: 1 }}>
-              Hi, {user?.firstName}
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#666' }}>
-              Welcome back, @{user?.username}
-            </Typography>
+          <div className="card shadow border-0 p-3 mt-1">      
+            <h3 className="hd mt-2 pb-0">Hi, {user?.firstName}</h3>
           </div>
         ) : null
       }
         
       {/* Schedule Section */}
-      <div className="card shadow border-0 p-3 mt-3">
-        <Typography variant="h5" sx={{ color: '#c70202', mb: 3 }}>
-          Schedule
-        </Typography>
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="hd">Schedule</h3>
 
         {/* Schedule Table */}
         <div className="mt-3">
