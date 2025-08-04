@@ -48,7 +48,7 @@ const ProgramHeadSidebar = () => {
             </Link>
           </li>
           <li>
-            <Link to="/studentlist">
+            <Link to="/program-studentlist">
               <Button className={`w-100 ${activeTab === 1 && isStudentMenuOpen ? 'active' : ''}`} onClick={() => toggleStudentMenu(1)}>
                 <span className='icon'><PiStudentBold /></span>
                 Student List
