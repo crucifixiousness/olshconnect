@@ -461,105 +461,189 @@ const AssignCourses = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Assign Courses to Year Level</h3>
+        <h3 className="hd mt-2 pb-0">Assign Courses to Year Level</h3>      
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd">
-          Courses {yearLevel ? `- Year ${yearLevel}` : ''}
-        </h3>
-
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
-            <Select
-              labelId="semester-filter-label"
-              value={selectedSemester}
-              onChange={handleSemesterChange}
-              label="Filter by Semester"
-              data-testid="semester-filter"
+        <div className="card shadow border-0 p-3 mt-1">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+              <Select
+                labelId="semester-filter-label"
+                value={selectedSemester}
+                onChange={handleSemesterChange}
+                label="Filter by Semester"
+                data-testid="semester-filter"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#c70202',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#c70202',
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="">All Semesters</MenuItem>
+                <MenuItem value="1st">1st Semester</MenuItem>
+                <MenuItem value="2nd">2nd Semester</MenuItem>
+                <MenuItem value="Summer">Summer</MenuItem>
+              </Select>
+            </FormControl>
+            <Button 
+              variant="contained" 
+              onClick={handleOpen} 
+              data-testid="assign-course-button"
+              sx={{
+                bgcolor: '#c70202',
+                '&:hover': {
+                  bgcolor: '#a00000',
+                },
+              }}
             >
-              <MenuItem value="">All Semesters</MenuItem>
-              <MenuItem value="1st">1st Semester</MenuItem>
-              <MenuItem value="2nd">2nd Semester</MenuItem>
-              <MenuItem value="Summer">Summer</MenuItem>
-            </Select>
-          </FormControl>
-          <div className="addreq d-flex justify-content-end">
-          <Button variant="contained" color="primary" onClick={handleOpen} data-testid="assign-course-button">
-            <FaCirclePlus/> ASSIGN COURSE
-          </Button>
+              <FaCirclePlus/> Assign Course
+            </Button>
           </div>
-        </div>
 
-        <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align" data-testid="courses-table">
-            <thead className="thead-dark">
-              <tr>
-                <th>Program</th>
-                <th>Year Level</th>
-                <th>Course Code</th>
-                <th>Course Name</th>
-                <th>Units</th>
-                <th>Semester</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-            {paginatedCourses.length > 0 ? (
-              paginatedCourses.map((assignment, index) => (
-                  <tr key={index}>
-                    <td>{assignment.program_name}</td>
-                    <td>{assignment.year_level}</td>
-                    <td>{assignment.course_code}</td>
-                    <td>{assignment.course_name}</td>
-                    <td>{assignment.units}</td>
-                    <td>{assignment.semester}</td>
-                    <td>
-                      <div className="actions d-flex align-items-center gap-2">
-                        <Button 
-                          className="success" 
-                          color="success" 
-                          size="small"
-                          onClick={() => handleEditOpen(assignment)}
-                        >
-                          <FaEdit />
-                        </Button>
-                        <Button 
-                          className="info" 
-                          color="info" 
-                          size="small"
-                          onClick={() => handleViewOpen(assignment)}
-                        >
-                          <FaEye />
-                        </Button>
-                        <Button className="error" color="error" size="small">
-                          <FaTrash />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" style={{ textAlign: "center" }}>
-                    No course assignments available{yearLevel ? ` for Year ${yearLevel}` : ''}.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div className="d-flex tableFooter">
-            <Pagination 
-              count={pageCount}
-              page={page}
-              onChange={handlePageChange}
-              color="primary" 
-              className="pagination"
-              showFirstButton 
-              showLastButton 
-            />
-          </div>
+          <div className='table-responsive mt-3'>
+            <TableContainer component={Paper}>
+              <Table aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course Code</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course Name</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Units</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedCourses.length > 0 ? (
+                    paginatedCourses.map((assignment, index) => (
+                      <TableRow
+                        key={index}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                      >
+                        <TableCell>{assignment.program_name}</TableCell>
+                        <TableCell>{assignment.year_level}</TableCell>
+                        <TableCell>{assignment.course_code}</TableCell>
+                        <TableCell>{assignment.course_name}</TableCell>
+                        <TableCell>{assignment.units}</TableCell>
+                        <TableCell>{assignment.semester}</TableCell>
+                        <TableCell className='action'>
+                          <div className='actions d-flex align-items-center gap-1'>
+                            <Button 
+                              variant="contained"
+                              color="success"
+                              size="small"
+                              onClick={() => handleEditOpen(assignment)}
+                              title="Edit Assignment"
+                              sx={{
+                                minWidth: '36px',
+                                width: '36px',
+                                height: '36px',
+                                padding: 0,
+                                borderRadius: '8px',
+                                bgcolor: '#e8f5e8',
+                                color: '#2e7d32',
+                                '&:hover': {
+                                  bgcolor: '#c8e6c9',
+                                },
+                                '& .MuiButton-startIcon': {
+                                  margin: 0
+                                }
+                              }}
+                            >
+                              <FaEdit/>
+                            </Button>
+                            <Button 
+                              variant="contained"
+                              color="secondary"
+                              size="small"
+                              onClick={() => handleViewOpen(assignment)}
+                              title="View Details"
+                              sx={{
+                                minWidth: '36px',
+                                width: '36px',
+                                height: '36px',
+                                padding: 0,
+                                borderRadius: '8px',
+                                bgcolor: '#f3e5f5',
+                                color: '#7b1fa2',
+                                '&:hover': {
+                                  bgcolor: '#e1bee7',
+                                },
+                                '& .MuiButton-startIcon': {
+                                  margin: 0
+                                }
+                              }}
+                            >
+                              <FaEye/>
+                            </Button>
+                            <Button 
+                              variant="contained"
+                              color="error"
+                              size="small"
+                              title="Delete Assignment"
+                              sx={{
+                                minWidth: '36px',
+                                width: '36px',
+                                height: '36px',
+                                padding: 0,
+                                borderRadius: '8px',
+                                bgcolor: '#ffebee',
+                                color: '#c62828',
+                                '&:hover': {
+                                  bgcolor: '#ffcdd2',
+                                },
+                                '& .MuiButton-startIcon': {
+                                  margin: 0
+                                }
+                              }}
+                            >
+                              <FaTrash/>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan="7" style={{ textAlign: "center" }}>
+                        No course assignments available{yearLevel ? ` for Year ${yearLevel}` : ''}.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <div className='d-flex justify-content-center mt-4'>
+              <Pagination 
+                count={pageCount}
+                page={page}
+                onChange={handlePageChange}
+                color="primary" 
+                className='pagination' 
+                showFirstButton 
+                showLastButton 
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    '&.Mui-selected': {
+                      bgcolor: '#c70202',
+                      '&:hover': {
+                        bgcolor: '#a00000',
+                      },
+                    },
+                  },
+                }}
+              />
+            </div>
+          </div>          
         </div>
       </div>
 
