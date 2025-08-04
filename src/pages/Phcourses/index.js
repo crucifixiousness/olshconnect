@@ -516,7 +516,7 @@ const AssignCourses = () => {
 
           {/* Table */}
           <div className="table-responsive mt-3">
-            <TableContainer component={Paper} elevation={1}>
+            <TableContainer component={Paper} elevation={3}>
               <Table>
                 <TableHead>
                   <TableRow>
