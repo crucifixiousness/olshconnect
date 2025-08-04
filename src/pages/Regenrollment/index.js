@@ -421,12 +421,12 @@ const RegistrarEnrollment = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT NAME</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>YEAR LEVEL</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>PROGRAM</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STATUS</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT TYPE</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Type</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
