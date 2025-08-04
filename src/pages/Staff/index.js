@@ -257,9 +257,9 @@ const Staff = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>NAME</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ROLE</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Name</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Role</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
