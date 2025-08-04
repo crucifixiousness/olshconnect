@@ -1014,25 +1014,28 @@ const Homepage = () => {
                     alignItems: 'center', 
                     position: 'relative', 
                     zIndex: 1,
-                    padding: '20px 0'
+                    padding: '40px 0'
                 }}>
-                    <header className="header-bar" style={{ marginBottom: '20px' }}>
+                    <header className="header-bar" style={{ marginBottom: '40px' }}>
                         <div>
                             <h1 style={{ 
                                 fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
                                 textAlign: 'center',
-                                margin: '0'
+                                margin: '0',
+                                color: 'white',
+                                textShadow: '2px 2px 4px rgba(0,0,0,0.7)'
                             }}>Courses We Offer</h1>
                         </div>
                     </header>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                        gap: '20px',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                        gap: '30px',
                         maxWidth: '1200px',
                         width: '100%',
                         padding: '0 20px',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        alignItems: 'start'
                     }}>
                         {/* BSIT */}
                         <div style={{ 
