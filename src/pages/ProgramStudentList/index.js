@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FormControl, Select, MenuItem, Button, Pagination, Typography, Modal, Box, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from '@mui/material';
+import { Button, FormControl, Select, MenuItem, Pagination, Modal, Box, Typography, TextField, Snackbar, Alert } from '@mui/material';
 import { FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import Searchbar from '../../components/Searchbar';
 import axios from 'axios';
@@ -142,27 +142,6 @@ const ProgramStudentList = () => {
     student.year_level?.toString().includes(searchTerm)
   );
 
-  // Sort students based on showBy filter
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
-    if (showBy === 'asc') {
-      return a.student_name.localeCompare(b.student_name);
-    } else if (showBy === 'desc') {
-      return b.student_name.localeCompare(a.student_name);
-    }
-    return 0;
-  });
-
-  // Calculate pagination
-  const startIndex = (page - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedStudents = sortedStudents.slice(startIndex, endIndex);
-  const pageCount = Math.ceil(sortedStudents.length / rowsPerPage);
-
-  // Handle page change
-  const handlePageChange = (event, newPage) => {
-    setPage(newPage);
-  };
-
   // Helper function to get year suffix
   const getYearSuffix = (year) => {
     if (year === 1) return 'st';
@@ -270,17 +249,19 @@ const ProgramStudentList = () => {
   };
 
   return (
-    <div className="right-content w-100">
+    <div className="right-content w-100" data-testid="student-list">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Student List - {programName}</h3>      
+        <h3 className="hd mt-2 pb-0">Student List</h3>      
       </div>
-
+  
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
           <Searchbar
             value={searchTerm}
             onChange={setSearchTerm}
           />
+          <h3 className="hd">Student List - {programName}</h3>
+  
           <div className="row cardFilters mt-3">
             <div className="col-md-3">
               <h4>SHOW BY</h4>
@@ -289,7 +270,8 @@ const ProgramStudentList = () => {
                   value={showBy}
                   onChange={(e) => setshowBy(e.target.value)}
                   displayEmpty
-                  inputProps={{ 'aria-label': 'Without label' }}
+                  inputProps={{ 'aria-label': 'Show by filter' }}
+                  className='w-100'
                 >
                   <MenuItem value=""><em>Default</em></MenuItem>
                   <MenuItem value="asc">A - Z</MenuItem>
@@ -297,7 +279,7 @@ const ProgramStudentList = () => {
                 </Select>
               </FormControl>
             </div>
-
+  
             <div className="col-md-3">
               <h4>YEAR LEVEL</h4>
               <FormControl size='small' className='w-100'>
@@ -305,7 +287,7 @@ const ProgramStudentList = () => {
                   value={yearLevel}
                   onChange={(e) => setYearLevel(e.target.value)}
                   displayEmpty
-                  inputProps={{ 'aria-label': 'Without label' }}
+                  className='w-100'
                 >
                   <MenuItem value=""><em>All Years</em></MenuItem>
                   <MenuItem value={1}>1st Year</MenuItem>
@@ -315,7 +297,7 @@ const ProgramStudentList = () => {
                 </Select>
               </FormControl>
             </div>
-
+  
             <div className="col-md-3">
               <h4>BLOCK</h4>
               <FormControl size='small' className='w-100'>
@@ -323,7 +305,7 @@ const ProgramStudentList = () => {
                   value={block}
                   onChange={(e) => setBlock(e.target.value)}
                   displayEmpty
-                  inputProps={{ 'aria-label': 'Without label' }}
+                  className='w-100'
                 >
                   <MenuItem value=""><em>All Blocks</em></MenuItem>
                   <MenuItem value="A">Block A</MenuItem>
@@ -333,136 +315,87 @@ const ProgramStudentList = () => {
               </FormControl>
             </div>
           </div>
-
+  
           <div className='table-responsive mt-3'>
-            <TableContainer component={Paper}>
-              <Table aria-label="simple table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>STUDENT NAME</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>YEAR LEVEL</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>BLOCK</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>SEX</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>ACTION</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan="5" style={{ textAlign: "center", padding: "40px 0" }}>
-                        <CircularProgress style={{ color: '#c70202' }} />
-                      </TableCell>
-                    </TableRow>
-                  ) : paginatedStudents.length > 0 ? (
-                    paginatedStudents.map((student) => (
-                      <TableRow
-                        key={student.id}
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                      >
-                        <TableCell>{student.student_name}</TableCell>
-                        <TableCell>
-                          {student.year_level === 0 ? 
-                            <span style={{ color: '#6c757d' }}>N/A</span> : 
-                            `${student.year_level}${getYearSuffix(student.year_level)} Year`
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {student.block === 'Not Assigned' ? 
-                            <span style={{ color: '#6c757d' }}>Not Assigned</span> : 
-                            `Block ${student.block}`
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {student.sex === 'N/A' ? 
-                            <span style={{ color: '#6c757d' }}>N/A</span> : 
-                            student.sex
-                          }
-                        </TableCell>
-                        <TableCell className='action'>
-                          <div className='actions d-flex align-items-center gap-1'>
+            <table className='table table-bordered v-align' data-testid="student-table">
+              <thead className='thead-dark'>
+                <tr>
+                  <th>STUDENT NAME</th>
+                  <th className="text-center">YEAR LEVEL</th>
+                  <th className="text-center">BLOCK</th>
+                  <th className="text-center">SEX</th>
+                  <th className="text-center">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center">Loading...</td>
+                  </tr>
+                ) : filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center">
+                      {searchTerm ? 'No students found matching your search' : 'No enrolled students found'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((student) => (
+                    <tr key={student.id}>
+                      <td>{student.student_name}</td>
+                      <td className="text-center">
+                        {student.year_level === 0 ? 
+                          <span className="text-muted">N/A</span> : 
+                          `${student.year_level}${getYearSuffix(student.year_level)} Year`
+                        }
+                      </td>
+                      <td className="text-center">
+                        {student.block === 'Not Assigned' ? 
+                          <span className="text-muted">Not Assigned</span> : 
+                          `Block ${student.block}`
+                        }
+                      </td>
+                      <td className="text-center">
+                        {student.sex === 'N/A' ? 
+                          <span className="text-muted">N/A</span> : 
+                          student.sex
+                        }
+                      </td>
+                      <td className="text-center">
+                        <div className="d-flex gap-2 justify-content-center">
+                          <Button 
+                            variant="contained"
+                            size="small"
+                            startIcon={<FaEye/>}
+                            sx={{
+                              bgcolor: '#0d6efd',
+                              '&:hover': { bgcolor: '#0b5ed7' }
+                            }}
+                          >
+                            View
+                          </Button>
+                          {student.block === 'Not Assigned' && (
                             <Button 
                               variant="contained"
-                              color="secondary"
                               size="small"
-                              title="View Student Details"
+                              startIcon={<FaEdit/>}
+                              onClick={() => handleAssignBlock(student)}
                               sx={{
-                                minWidth: '36px',
-                                width: '36px',
-                                height: '36px',
-                                padding: 0,
-                                borderRadius: '8px',
-                                bgcolor: '#f3e5f5',
-                                color: '#7b1fa2',
-                                '&:hover': {
-                                  bgcolor: '#e1bee7',
-                                },
-                                '& .MuiButton-startIcon': {
-                                  margin: 0
-                                }
+                                bgcolor: '#28a745',
+                                '&:hover': { bgcolor: '#218838' }
                               }}
                             >
-                              <FaEye/>
+                              Assign Block
                             </Button>
-                            {student.block === 'Not Assigned' && (
-                              <Button 
-                                variant="contained"
-                                color="success"
-                                size="small"
-                                onClick={() => handleAssignBlock(student)}
-                                title="Assign Block"
-                                sx={{
-                                  minWidth: '36px',
-                                  width: '36px',
-                                  height: '36px',
-                                  padding: 0,
-                                  borderRadius: '8px',
-                                  bgcolor: '#e8f5e8',
-                                  color: '#2e7d32',
-                                  '&:hover': {
-                                    bgcolor: '#c8e6c9',
-                                  },
-                                  '& .MuiButton-startIcon': {
-                                    margin: 0
-                                  }
-                                }}
-                              >
-                                <FaEdit/>
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan="5" style={{ textAlign: "center" }}>
-                        No students found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <div className='d-flex justify-content-center mt-4'>
-              <Pagination 
-                count={pageCount} 
-                color="primary" 
-                className='pagination' 
-                showFirstButton 
-                showLastButton 
-                page={page}
-                onChange={handlePageChange}
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    '&.Mui-selected': {
-                      bgcolor: '#c70202',
-                      '&:hover': {
-                        bgcolor: '#a00000',
-                      },
-                    },
-                  },
-                }}
-              />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+            <div className='d-flex tableFooter'>
+              <Pagination count={10} color="primary" className='pagination' showFirstButton showLastButton />
             </div>
           </div>          
         </div>
@@ -511,6 +444,7 @@ const ProgramStudentList = () => {
                     <MenuItem value="">
                       <em>Choose a block</em>
                     </MenuItem>
+                    {console.log('Rendering dropdown with existingBlocks:', existingBlocks)}
                     {existingBlocks.length > 0 ? (
                       existingBlocks.map((block) => (
                         <MenuItem key={block} value={block}>
