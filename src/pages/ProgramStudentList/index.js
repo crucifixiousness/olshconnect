@@ -327,14 +327,14 @@ const ProgramStudentList = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <div className="card shadow border-0 p-3 mt-1">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
-              <div style={{ width: '850px' }}>
+            <div className="d-flex align-items-center gap-3" style={{ width: '100%' }}>
+              <div style={{ flex: 1, maxWidth: '600px' }}>
                 <div className="searchbar-container" style={{ marginBottom: '0' }}>
                   <Searchbar value={searchTerm} onChange={setSearchTerm} />
                 </div>
               </div>
-              <div style={{ marginLeft: 'auto' }}>
-                <FormControl sx={{ minWidth: 180, height: '40px', mr: 2 }}>
+              <div className="d-flex gap-2" style={{ alignItems: 'flex-start' }}>
+                <FormControl sx={{ minWidth: 180, height: '40px' }}>
                   <InputLabel id="year-level-filter-label" sx={{ fontSize: '0.875rem' }}>Filter by Year Level</InputLabel>
                   <Select
                     labelId="year-level-filter-label"
