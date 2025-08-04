@@ -497,7 +497,21 @@ const StudentPayment = () => {
 
       <div className="card shadow border-0 p-3 mt-3">
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                color: '#666',
+                '&.Mui-selected': {
+                  color: '#c70202',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#c70202',
+              },
+            }}
+          >
             <Tab label="Current Balance" />
             <Tab label="Payment History" />
           </Tabs>
@@ -529,7 +543,7 @@ const StudentPayment = () => {
             </div>
 
             <div className="table-responsive mt-3">
-              <TableContainer component={Paper}>
+              <TableContainer component={Paper} elevation={3}>
                 <Table aria-label="payment table">
                   <TableHead>
                     <TableRow>
@@ -585,7 +599,7 @@ const StudentPayment = () => {
           </>
         ) : (
           <div className="table-responsive">
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} elevation={3}>
               <Table aria-label="payment history table">
                 <TableHead>
                   <TableRow>
@@ -622,6 +636,15 @@ const StudentPayment = () => {
                             size="small"
                             onClick={() => handlePrintReceipt(transaction)}
                             startIcon={<FaPrint />}
+                            sx={{
+                              borderColor: '#c70202',
+                              color: '#c70202',
+                              '&:hover': {
+                                borderColor: '#a00000',
+                                backgroundColor: '#c70202',
+                                color: 'white'
+                              }
+                            }}
                           >
                             Print
                           </Button>
