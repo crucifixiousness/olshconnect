@@ -13,7 +13,14 @@ import {
   DialogActions,
   Typography,
   TextField,
-  Grid
+  Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Pagination
 } from '@mui/material';
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
@@ -163,6 +170,10 @@ const StudentPayment = () => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [receiptImage, setReceiptImage] = useState(null);
 
@@ -177,6 +188,17 @@ const StudentPayment = () => {
     severity: 'success'
   });
 
+  // Pagination handlers
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Calculate pagination for payment history
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedPaymentHistory = paymentHistory.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(paymentHistory.length / rowsPerPage);
+  
   // Honeypot handlers
   const handleFakeReceiptOpen = async () => {
     setShowFakeReceiptDialog(true);
@@ -522,103 +544,141 @@ const StudentPayment = () => {
             </div>
 
             <div className="table-responsive mt-3">
-              <table className="table table-bordered v-align" data-testid="payment-table">
-                <thead className="thead-dark">
-                  <tr>
-                    <th data-testid="header-description">Description</th>
-                    <th data-testid="header-due-date" className="text-center">Due Date</th>
-                    <th data-testid="header-amount" className="text-center">Amount</th>
-                    <th data-testid="header-status" className="text-center">Status</th>
-                    <th data-testid="header-action" className="text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment) => (
-                    <tr key={payment.id}>
-                      <td>{payment.description}</td>
-                      <td className="text-center">{payment.dueDate}</td>
-                      <td className="text-center">₱{payment.amount.toFixed(2)}</td>
-                      <td className="text-center">
-                        <span className={`badge ${payment.status.toLowerCase() === 'fully paid' ? 'bg-success' : payment.status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
-                          {payment.status}
-                        </span>
-                      </td>
-                      <td className="text-center">
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => {                            
-                            setOpenVerifyDialog(true);
-                          }}
-                          sx={{
-                            minWidth: '100px !important',
-                            height: '30px',
-                            padding: '4px 8px',
-                            fontSize: '11px',
-                            backgroundColor: '#c70202',
-                            '&:hover': {
-                              backgroundColor: '#a00000'
-                            }
-                          }}
-                        >
-                          Upload Receipt
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TableContainer component={Paper}>
+                <Table aria-label="payment table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Due Date</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Amount</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Action</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {payments.map((payment) => (
+                      <TableRow 
+                        key={payment.id}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        hover
+                      >
+                        <TableCell>{payment.description}</TableCell>
+                        <TableCell align="center">{payment.dueDate}</TableCell>
+                        <TableCell align="center">₱{payment.amount.toFixed(2)}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={payment.status}
+                            color={getStatusColor(payment.status)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => {                            
+                              setOpenVerifyDialog(true);
+                            }}
+                            sx={{
+                              minWidth: '100px !important',
+                              height: '30px',
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              backgroundColor: '#c70202',
+                              '&:hover': {
+                                backgroundColor: '#a00000'
+                              }
+                            }}
+                          >
+                            Upload Receipt
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </div>
           </>
         ) : (
           <div className="table-responsive">
-            <table className="table table-bordered v-align">
-              <thead className="thead-dark">
-                <tr>
-                  <th>Receipt No.</th>
-                  <th className="text-center">Date</th>
-                  <th>Description</th>
-                  <th className="text-center">Amount Paid</th>
-                  <th className="text-center">Payment Method</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paymentHistory && paymentHistory.length > 0 ? (
-                  paymentHistory.map((transaction) => (
-                    <tr key={transaction.transaction_id}>
-                      <td className="text-center">{transaction.reference_number}</td>
-                      <td className="text-center">{new Date(transaction.payment_date).toLocaleDateString()}</td>
-                      <td>{transaction.remarks}</td>
-                      <td className="text-center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</td>
-                      <td className="text-center">{transaction.payment_method}</td>
-                      <td className="text-center">
-                        <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
-                          {transaction.payment_status}
-                        </span>
-                      </td>
-                      <td className="text-center">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handlePrintReceipt(transaction)}
-                          startIcon={<FaPrint />}
-                        >
-                          Print
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center">
-                      No payment history found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            <TableContainer component={Paper}>
+              <Table aria-label="payment history table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Receipt No.</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Date</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Amount Paid</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Payment Method</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedPaymentHistory && paginatedPaymentHistory.length > 0 ? (
+                    paginatedPaymentHistory.map((transaction) => (
+                      <TableRow 
+                        key={transaction.transaction_id}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        hover
+                      >
+                        <TableCell align="center">{transaction.reference_number}</TableCell>
+                        <TableCell align="center">{new Date(transaction.payment_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{transaction.remarks}</TableCell>
+                        <TableCell align="center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</TableCell>
+                        <TableCell align="center">{transaction.payment_method}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={transaction.payment_status}
+                            color={getStatusColor(transaction.payment_status)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handlePrintReceipt(transaction)}
+                            startIcon={<FaPrint />}
+                          >
+                            Print
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan="7" align="center">
+                        No payment history found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {pageCount > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Pagination
+                  count={pageCount}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      '&.Mui-selected': {
+                        bgcolor: '#c70202',
+                        '&:hover': {
+                          bgcolor: '#a00000',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            )}
           </div>
         )}
         <Dialog open={openVerifyDialog} onClose={() => {
