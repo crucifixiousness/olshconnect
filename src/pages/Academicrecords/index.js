@@ -42,13 +42,11 @@ const AcademicRecords = () => {
       {user && user.firstName && (
         <div className="card shadow border-0 p-3">
           <h3 className="hd mt-2 pb-0" data-testid="page-title">Academic Records</h3>
-          <p className="text-muted">Welcome to your Academic Records, {user?.firstName}</p>
         </div>
       )}
 
       {/* Academic Records Section */}
       <div className="card shadow border-0 p-3 mt-3">
-        <h3 className="hd">Academic Records</h3>
 
         {/* Personal Information */}
         <div className="mt-3">
