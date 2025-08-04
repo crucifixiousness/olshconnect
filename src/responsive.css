@@ -75,12 +75,11 @@
 
 .course-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    grid-template-columns: 1fr !important;
     gap: 20px !important;
     width: 95% !important;
     max-width: none !important;
     padding: 10px !important;
-    justify-items: center !important;
 }
 
 .course-item {
