@@ -1001,66 +1001,235 @@ const Homepage = () => {
 
                 {/* Section 3: Offered Course */}
                 <section id="courses" className="section"
-                style={{backgroundImage: `url(${courses})`, backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', zIndex: 1}}>
-                    <header className="header-bar">
-                        <div >
-                            <h1>Courses We Offer</h1>
+                style={{
+                    backgroundImage: `url(${courses})`, 
+                    backgroundPosition: 'center', 
+                    backgroundSize: 'cover', 
+                    backgroundRepeat: 'no-repeat', 
+                    minHeight: '100vh', 
+                    width: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    position: 'relative', 
+                    zIndex: 1,
+                    padding: '20px 0'
+                }}>
+                    <header className="header-bar" style={{ marginBottom: '20px' }}>
+                        <div>
+                            <h1 style={{ 
+                                fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+                                textAlign: 'center',
+                                margin: '0'
+                            }}>Courses We Offer</h1>
                         </div>
                     </header>
-                    <div className="course-grid">
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: '20px',
+                        maxWidth: '1200px',
+                        width: '100%',
+                        padding: '0 20px',
+                        justifyContent: 'center'
+                    }}>
                         {/* BSIT */}
-                        <div className="course-item" style={{ backgroundColor: '#28a745', color: 'white' }}>
-                        <img
-                            src={it}
-                            alt="Bachelor of Science in Information Technology"
-                            
-                        />
-                        <h3>BS Information Technology</h3>
+                        <div style={{ 
+                            backgroundColor: '#28a745', 
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s ease',
+                            cursor: 'pointer',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <img
+                                src={it}
+                                alt="Bachelor of Science in Information Technology"
+                                style={{
+                                    width: '100%',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    marginBottom: '10px'
+                                }}
+                            />
+                            <h3 style={{ 
+                                margin: '0',
+                                fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                                fontWeight: 'bold'
+                            }}>BS Information Technology</h3>
                         </div>
 
                         {/* BSHM */}
-                        <div className="course-item" style={{ backgroundColor: '#ffc107', color: 'white' }}>
-                        <img
-                            src={hm}
-                            alt="Bachelor of Science in Hospitality Management"
-                        />
-                        <h3>BS Hospitality Management</h3>
+                        <div style={{ 
+                            backgroundColor: '#ffc107', 
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s ease',
+                            cursor: 'pointer',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <img
+                                src={hm}
+                                alt="Bachelor of Science in Hospitality Management"
+                                style={{
+                                    width: '100%',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    marginBottom: '10px'
+                                }}
+                            />
+                            <h3 style={{ 
+                                margin: '0',
+                                fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                                fontWeight: 'bold'
+                            }}>BS Hospitality Management</h3>
                         </div>
 
                         {/* BEED */}
-                        <div className="course-item" style={{ backgroundColor: '#007bff', color: 'white' }}>
-                        <img
-                            src={educ}
-                            alt="Bachelor of Elementary Education"
-                        />
-                        <h3>Bachelor of Elementary Education</h3>
+                        <div style={{ 
+                            backgroundColor: '#007bff', 
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s ease',
+                            cursor: 'pointer',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <img
+                                src={educ}
+                                alt="Bachelor of Elementary Education"
+                                style={{
+                                    width: '100%',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    marginBottom: '10px'
+                                }}
+                            />
+                            <h3 style={{ 
+                                margin: '0',
+                                fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                                fontWeight: 'bold'
+                            }}>Bachelor of Elementary Education</h3>
                         </div>
 
                         {/* BSEd */}
-                        <div className="course-item" style={{ backgroundColor: '#0056b3', color: 'white' }}>
-                        <img
-                            src={educc}
-                            alt="Bachelor of Secondary Education"
-                        />
-                        <h3>Bachelor of Secondary Education</h3>
+                        <div style={{ 
+                            backgroundColor: '#0056b3', 
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s ease',
+                            cursor: 'pointer',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <img
+                                src={educc}
+                                alt="Bachelor of Secondary Education"
+                                style={{
+                                    width: '100%',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    marginBottom: '10px'
+                                }}
+                            />
+                            <h3 style={{ 
+                                margin: '0',
+                                fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                                fontWeight: 'bold'
+                            }}>Bachelor of Secondary Education</h3>
                         </div>
 
                         {/* BSCrim */}
-                        <div className="course-item" style={{ backgroundColor: '#dc3545', color: 'white' }}>
-                        <img
-                            src={crim}
-                            alt="Bachelor of Science in Criminology"
-                        />
-                        <h3>BS Criminology</h3>
+                        <div style={{ 
+                            backgroundColor: '#dc3545', 
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s ease',
+                            cursor: 'pointer',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <img
+                                src={crim}
+                                alt="Bachelor of Science in Criminology"
+                                style={{
+                                    width: '100%',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    marginBottom: '10px'
+                                }}
+                            />
+                            <h3 style={{ 
+                                margin: '0',
+                                fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                                fontWeight: 'bold'
+                            }}>BS Criminology</h3>
                         </div>
 
                         {/* BSOAd */}
-                        <div className="course-item" style={{ backgroundColor: '#1e3a8a', color: 'white' }}>
-                        <img
-                            src={oad}
-                            alt="Bachelor of Science in Office Administration"
-                        />
-                        <h3>BS Office Administration</h3>
+                        <div style={{ 
+                            backgroundColor: '#1e3a8a', 
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s ease',
+                            cursor: 'pointer',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <img
+                                src={oad}
+                                alt="Bachelor of Science in Office Administration"
+                                style={{
+                                    width: '100%',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    marginBottom: '10px'
+                                }}
+                            />
+                            <h3 style={{ 
+                                margin: '0',
+                                fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                                fontWeight: 'bold'
+                            }}>BS Office Administration</h3>
                         </div>
                     </div>
                 </section>
