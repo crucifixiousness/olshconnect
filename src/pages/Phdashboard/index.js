@@ -44,12 +44,40 @@ const ProgramHeadDashboard = () => {
   // Fetch program_id and set program_name from localStorage
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
+    const userString = localStorage.getItem("user");
+    
+    console.log('Stored program_id from localStorage:', storedProgramId);
+    console.log('User string from localStorage:', userString);
+    
+    let programId = null;
+    
+    // Try to get program_id from localStorage first
     if (storedProgramId) {
-      const programId = parseInt(storedProgramId, 10);
-      if (!isNaN(programId)) {
-        setProgramId(programId);
-        setProgramName(programMapping[programId] || "Unknown");
+      programId = parseInt(storedProgramId, 10);
+      console.log('Using program_id from localStorage:', programId);
+    }
+    
+    // If not found, try to get it from user object
+    if (!programId && userString) {
+      try {
+        const user = JSON.parse(userString);
+        console.log('Parsed user object:', user);
+        if (user.program_id) {
+          programId = parseInt(user.program_id, 10);
+          console.log('Using program_id from user object:', programId);
+        }
+      } catch (error) {
+        console.error('Error parsing user object:', error);
       }
+    }
+    
+    if (!isNaN(programId)) {
+      setProgramId(programId);
+      setProgramName(programMapping[programId] || "Unknown");
+      console.log('Set program_id in state:', programId);
+      console.log('Set program_name in state:', programMapping[programId] || "Unknown");
+    } else {
+      console.error('No valid program_id found');
     }
   }, []);
 
