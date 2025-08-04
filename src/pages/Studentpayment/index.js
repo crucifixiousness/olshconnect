@@ -170,10 +170,6 @@ const StudentPayment = () => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   
-  // Pagination states
-  const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10);
-  
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [receiptImage, setReceiptImage] = useState(null);
 
@@ -188,17 +184,6 @@ const StudentPayment = () => {
     severity: 'success'
   });
 
-  // Pagination handlers
-  const handlePageChange = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  // Calculate pagination for payment history
-  const startIndex = (page - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedPaymentHistory = paymentHistory.slice(startIndex, endIndex);
-  const pageCount = Math.ceil(paymentHistory.length / rowsPerPage);
-  
   // Honeypot handlers
   const handleFakeReceiptOpen = async () => {
     setShowFakeReceiptDialog(true);
@@ -566,11 +551,9 @@ const StudentPayment = () => {
                         <TableCell align="center">{payment.dueDate}</TableCell>
                         <TableCell align="center">₱{payment.amount.toFixed(2)}</TableCell>
                         <TableCell align="center">
-                          <Chip
-                            label={payment.status}
-                            color={getStatusColor(payment.status)}
-                            size="small"
-                          />
+                          <span className={`badge ${payment.status.toLowerCase() === 'fully paid' ? 'bg-success' : payment.status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                            {payment.status}
+                          </span>
                         </TableCell>
                         <TableCell align="center">
                           <Button
@@ -616,8 +599,8 @@ const StudentPayment = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedPaymentHistory && paginatedPaymentHistory.length > 0 ? (
-                    paginatedPaymentHistory.map((transaction) => (
+                  {paymentHistory && paymentHistory.length > 0 ? (
+                    paymentHistory.map((transaction) => (
                       <TableRow 
                         key={transaction.transaction_id}
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -629,11 +612,9 @@ const StudentPayment = () => {
                         <TableCell align="center">₱{parseFloat(transaction.amount_paid).toFixed(2)}</TableCell>
                         <TableCell align="center">{transaction.payment_method}</TableCell>
                         <TableCell align="center">
-                          <Chip
-                            label={transaction.payment_status}
-                            color={getStatusColor(transaction.payment_status)}
-                            size="small"
-                          />
+                          <span className={`badge ${transaction.payment_status.toLowerCase() === 'fully paid' ? 'bg-success' : transaction.payment_status.toLowerCase() === 'partial' ? 'bg-warning' : 'bg-danger'}`}>
+                            {transaction.payment_status}
+                          </span>
                         </TableCell>
                         <TableCell align="center">
                           <Button
@@ -657,28 +638,6 @@ const StudentPayment = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            {pageCount > 1 && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                <Pagination
-                  count={pageCount}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  showFirstButton
-                  showLastButton
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      '&.Mui-selected': {
-                        bgcolor: '#c70202',
-                        '&:hover': {
-                          bgcolor: '#a00000',
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            )}
           </div>
         )}
         <Dialog open={openVerifyDialog} onClose={() => {
