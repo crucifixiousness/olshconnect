@@ -56,7 +56,12 @@ const ProgramHeadDashboard = () => {
   // Fetch student data when program_id is available
   useEffect(() => {
     const fetchProgramData = async () => {
-      if (!program_id) return;
+      if (!program_id) {
+        console.log('No program_id available yet');
+        return;
+      }
+      
+      console.log('Fetching data for program_id:', program_id);
       
       try {
         const token = localStorage.getItem('token');
@@ -66,12 +71,16 @@ const ProgramHeadDashboard = () => {
           return;
         }
 
+        console.log('Making API call to program-head-dashboard...');
         const response = await axios.get(`/api/program-head-dashboard?program_id=${program_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        console.log('API Response:', response.data);
         setProgramData(response.data);
       } catch (error) {
         console.error('Error fetching program data:', error);
+        console.error('Error response:', error.response?.data);
       } finally {
         setLoading(false);
       }
