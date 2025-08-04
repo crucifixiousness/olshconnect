@@ -468,7 +468,7 @@ const StudentProfile = () => {
   return (
     <div className="right-content w-100" data-testid="student-profile">
       <ThemeProvider theme={theme}>
-        <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+        <Paper elevation={3} sx={{ p: { xs: 1, md: 3 }, mb: 3 }}>
           <Stepper 
             activeStep={activeStep} 
             alternativeLabel 
@@ -476,9 +476,13 @@ const StudentProfile = () => {
             sx={{
               '& .MuiStepLabel-root': {
                 '& .MuiStepLabel-label': {
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+                  fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' },
                   fontWeight: 500,
                   color: '#666',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: { xs: '60px', sm: '80px', md: '100px' },
                   '&.Mui-active': {
                     color: '#c70202',
                     fontWeight: 600
@@ -490,7 +494,7 @@ const StudentProfile = () => {
                 },
                 '& .MuiStepLabel-iconContainer': {
                   '& .MuiStepIcon-root': {
-                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
                     '&.Mui-active': {
                       color: '#c70202'
                     },
@@ -505,6 +509,9 @@ const StudentProfile = () => {
                   borderColor: '#e0e0e0',
                   borderTopWidth: 2
                 }
+              },
+              '& .MuiStep-root': {
+                padding: { xs: '0 4px', sm: '0 8px', md: '0 12px' }
               }
             }}
           >
