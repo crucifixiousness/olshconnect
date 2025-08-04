@@ -1009,7 +1009,7 @@ const Homepage = () => {
                     </header>
                     <div className="course-grid">
                         {/* BSIT */}
-                        <div className="course-item">
+                        <div className="course-item" style={{ backgroundColor: '#28a745', color: 'white' }}>
                         <img
                             src={it}
                             alt="Bachelor of Science in Information Technology"
@@ -1019,7 +1019,7 @@ const Homepage = () => {
                         </div>
 
                         {/* BSHM */}
-                        <div className="course-item">
+                        <div className="course-item" style={{ backgroundColor: '#ffc107', color: 'black' }}>
                         <img
                             src={hm}
                             alt="Bachelor of Science in Hospitality Management"
@@ -1028,7 +1028,7 @@ const Homepage = () => {
                         </div>
 
                         {/* BEED */}
-                        <div className="course-item">
+                        <div className="course-item" style={{ backgroundColor: '#007bff', color: 'white' }}>
                         <img
                             src={educ}
                             alt="Bachelor of Elementary Education"
@@ -1037,7 +1037,7 @@ const Homepage = () => {
                         </div>
 
                         {/* BSEd */}
-                        <div className="course-item">
+                        <div className="course-item" style={{ backgroundColor: '#0056b3', color: 'white' }}>
                         <img
                             src={educc}
                             alt="Bachelor of Secondary Education"
@@ -1046,7 +1046,7 @@ const Homepage = () => {
                         </div>
 
                         {/* BSCrim */}
-                        <div className="course-item">
+                        <div className="course-item" style={{ backgroundColor: '#dc3545', color: 'white' }}>
                         <img
                             src={crim}
                             alt="Bachelor of Science in Criminology"
@@ -1055,7 +1055,7 @@ const Homepage = () => {
                         </div>
 
                         {/* BSOAd */}
-                        <div className="course-item">
+                        <div className="course-item" style={{ backgroundColor: '#1e3a8a', color: 'white' }}>
                         <img
                             src={oad}
                             alt="Bachelor of Science in Office Administration"
