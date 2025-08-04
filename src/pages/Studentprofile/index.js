@@ -468,8 +468,46 @@ const StudentProfile = () => {
   return (
     <div className="right-content w-100" data-testid="student-profile">
       <ThemeProvider theme={theme}>
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Stepper activeStep={activeStep} alternativeLabel data-testid="enrollment-stepper">
+        <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+          <Stepper 
+            activeStep={activeStep} 
+            alternativeLabel 
+            data-testid="enrollment-stepper"
+            sx={{
+              '& .MuiStepLabel-root': {
+                '& .MuiStepLabel-label': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+                  fontWeight: 500,
+                  color: '#666',
+                  '&.Mui-active': {
+                    color: '#c70202',
+                    fontWeight: 600
+                  },
+                  '&.Mui-completed': {
+                    color: '#c70202',
+                    fontWeight: 600
+                  }
+                },
+                '& .MuiStepLabel-iconContainer': {
+                  '& .MuiStepIcon-root': {
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+                    '&.Mui-active': {
+                      color: '#c70202'
+                    },
+                    '&.Mui-completed': {
+                      color: '#c70202'
+                    }
+                  }
+                }
+              },
+              '& .MuiStepConnector-root': {
+                '& .MuiStepConnector-line': {
+                  borderColor: '#e0e0e0',
+                  borderTopWidth: 2
+                }
+              }
+            }}
+          >
             {steps.map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -507,12 +545,14 @@ const StudentProfile = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <div className="profile-container">
           <div className="profile-card">
-            <div className="row">
+            <div className="row g-3">
               {/* Profile Picture Section */}
-              <div className="col-md-4 text-center">
+              <div className="col-12 col-md-4 text-center">
                 <div className="profile-picture-container mb-4" style={{
-                  width: '200px',
-                  height: '200px',
+                  width: 'min(200px, 80vw)',
+                  height: 'min(200px, 80vw)',
+                  maxWidth: '200px',
+                  maxHeight: '200px',
                   border: '3px solid #c70202',
                   borderRadius: '50%',
                   overflow: 'hidden',
@@ -520,9 +560,7 @@ const StudentProfile = () => {
                   boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                   transition: 'transform 0.3s ease',
                   cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'scale(1.05)'
-                  }
+                  position: 'relative'
                 }}>
                   {studentData?.enrollment?.idpic ? (
                     <img
@@ -531,7 +569,8 @@ const StudentProfile = () => {
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover'
+                        objectFit: 'cover',
+                        objectPosition: 'center'
                       }}
                     />
                   ) : (
@@ -541,23 +580,29 @@ const StudentProfile = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       backgroundColor: '#f8f9fa',
-                      color: '#6c757d'
+                      color: '#6c757d',
+                      fontSize: 'clamp(12px, 3vw, 16px)'
                     }}>
                       <span>No Photo</span>
                     </div>
                   )}
                 </div>
-                <h4 className="mt-3" style={{ color: '#c70202' }}>
+                <h4 className="mt-3" style={{ 
+                  color: '#c70202',
+                  fontSize: 'clamp(18px, 4vw, 24px)',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word'
+                }}>
                   {formatFullName(studentData)}
                 </h4>
-                <p className="text-muted">Student</p>
+                <p className="text-muted" style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}>Student</p>
               </div>
 
               {/* Student Details Section */}
-              <div className="col-md-8">
+              <div className="col-12 col-md-8">
                 <div className="profile-details p-3">
-                  <div className="row">
-                    <div className="col-md-6">
+                  <div className="row g-3">
+                    <div className="col-12 col-md-6">
                       <div className="info-group mb-4" style={{
                         padding: '15px',
                         backgroundColor: '#f8f9fa',
@@ -585,7 +630,7 @@ const StudentProfile = () => {
                       </div>
                     </div>
 
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <div className="info-group mb-4" style={{
                         padding: '15px',
                         backgroundColor: '#f8f9fa',
