@@ -1,5 +1,14 @@
 import { useContext, useEffect, useState } from 'react';
-import { CircularProgress } from '@mui/material';
+import { 
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
 import { MyContext } from "../../App";
 
 const StudentCourses = () => {
@@ -18,80 +27,84 @@ const StudentCourses = () => {
     setTimeout(() => setLoading(false), 1000);
   }, [context]);
 
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="right-content w-100" data-testid="student-courses">
-      <div className="card shadow border-0 p-3 mt-1">      
+      <div className="card shadow border-0 p-3">      
         <h3 className="hd mt-2 pb-0">My Courses</h3>
       </div>
  
       {/* Course List Section */}
-      <div className="card shadow border-0 p-3 mt-1">
+      <div className="card shadow border-0 p-3 mt-3">
         {/* Course Table */}
-        <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align" data-testid="courses-table">
-            <thead className="thead-dark">
-              <tr>
-                <th data-testid="header-course-title">COURSE TITLE</th>
-                <th data-testid="header-code">CODE</th>
-                <th data-testid="header-units">UNIT/S</th>
-                <th data-testid="header-prerequisite">PRE-REQUISITE</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Application Development and Emerging Technologies</td>
-                <td>CC106</td>
-                <td>3</td>
-                <td>*</td>
-              </tr>
-              <tr>
-                <td>Cybersecuirity Principles 1</td>
-                <td>SPT1-CYBER1</td>
-                <td>3</td>
-                <td>*</td>
-              </tr>
-              <tr>
-                <td>Information Assurance and Security</td>
-                <td>IAS102</td>
-                <td>3</td>
-                <td>*</td>
-              </tr>
-              <tr>
-                <td>Web Systems Technology 2</td>
-                <td>WS102</td>
-                <td>3</td>
-                <td>*</td>
-              </tr>
-              <tr>
-                <td>Project Management for IT</td>
-                <td>SPT3</td>
-                <td>3</td>
-                <td>--</td>
-              </tr>
-              <tr>
-                <td>Internet of Things</td>
-                <td>SPT4</td>
-                <td>3</td>
-                <td>--</td>
-              </tr>
-              <tr>
-                <td>Capstone Project and Research 1</td>
-                <td>CAP101</td>
-                <td>3</td>
-                <td>*</td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="mt-3">
+          <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+            <TableContainer>
+              <Table aria-label="courses table" data-testid="courses-table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} data-testid="header-course-title">Course Title</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center" data-testid="header-code">Code</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center" data-testid="header-units">Unit/s</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center" data-testid="header-prerequisite">Pre-requisite</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan="4" style={{ textAlign: "center", padding: "40px 0" }}>
+                        <CircularProgress style={{ color: '#c70202' }} />
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <>
+                      <TableRow hover>
+                        <TableCell>Application Development and Emerging Technologies</TableCell>
+                        <TableCell align="center">CC106</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">*</TableCell>
+                      </TableRow>
+                      <TableRow hover>
+                        <TableCell>Cybersecuirity Principles 1</TableCell>
+                        <TableCell align="center">SPT1-CYBER1</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">*</TableCell>
+                      </TableRow>
+                      <TableRow hover>
+                        <TableCell>Information Assurance and Security</TableCell>
+                        <TableCell align="center">IAS102</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">*</TableCell>
+                      </TableRow>
+                      <TableRow hover>
+                        <TableCell>Web Systems Technology 2</TableCell>
+                        <TableCell align="center">WS102</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">*</TableCell>
+                      </TableRow>
+                      <TableRow hover>
+                        <TableCell>Project Management for IT</TableCell>
+                        <TableCell align="center">SPT3</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">--</TableCell>
+                      </TableRow>
+                      <TableRow hover>
+                        <TableCell>Internet of Things</TableCell>
+                        <TableCell align="center">SPT4</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">--</TableCell>
+                      </TableRow>
+                      <TableRow hover>
+                        <TableCell>Capstone Project and Research 1</TableCell>
+                        <TableCell align="center">CAP101</TableCell>
+                        <TableCell align="center">3</TableCell>
+                        <TableCell align="center">*</TableCell>
+                      </TableRow>
+                    </>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
         </div>
       </div>
     </div>
