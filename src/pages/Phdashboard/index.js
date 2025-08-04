@@ -59,7 +59,16 @@ const ProgramHeadDashboard = () => {
       if (!program_id) return;
       
       try {
-        const response = await axios.get(`http://localhost:4000/program/${program_id}/students`);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No token found');
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get(`/api/program-head-dashboard?program_id=${program_id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setProgramData(response.data);
       } catch (error) {
         console.error('Error fetching program data:', error);
@@ -109,6 +118,7 @@ const ProgramHeadDashboard = () => {
     setTimeout(() => setLoading(false), 1000);
   }, [context]);
 
+  // Replace the current loading state
   if (loading) {
     return (
       <div className="right-content w-100">
@@ -119,7 +129,6 @@ const ProgramHeadDashboard = () => {
     );
   }
 
-  // In your return statement, use program_name instead of programData.program_name
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
