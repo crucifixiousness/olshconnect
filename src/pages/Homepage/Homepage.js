@@ -1019,7 +1019,7 @@ const Homepage = () => {
                         </div>
 
                         {/* BSHM */}
-                        <div className="course-item" style={{ backgroundColor: '#ffc107', color: 'black' }}>
+                        <div className="course-item" style={{ backgroundColor: '#ffc107', color: 'white' }}>
                         <img
                             src={hm}
                             alt="Bachelor of Science in Hospitality Management"
@@ -1100,17 +1100,75 @@ const Homepage = () => {
                 </section>                
             </div>
 
-            <footer id="contact" className="footer-section">
-            <h2>Contact Us</h2>
-                <p>
-                    Have questions or need assistance? Feel free to reach out to us:
-                </p>
-                <ul>
-                    <li>Email: olshco.acesschools.ph</li>
-                    <li>Tel. No.: 0956-2774029</li>
-                    <li>2024 by OUR LADY OF THE SACRED HEART COLLEGE OF GUIMBA, INC..
-                    Created by BSIT-3B Von Mamaid, Dianne Paderan, Aileen Rigor, Lorence Gamboa</li>
-                </ul>
+            <footer id="contact" className="footer-section" style={{
+                backgroundColor: '#1a1a1a',
+                color: 'white',
+                padding: '40px 0',
+                textAlign: 'center',
+                marginTop: '0'
+            }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+                    <h2 style={{ 
+                        color: '#c70202', 
+                        marginBottom: '20px',
+                        fontSize: '2.5rem',
+                        fontWeight: 'bold'
+                    }}>
+                        Contact Us
+                    </h2>
+                    
+                    <p style={{ 
+                        fontSize: '1.1rem', 
+                        marginBottom: '30px',
+                        color: '#cccccc'
+                    }}>
+                        Have questions or need assistance? Feel free to reach out to us:
+                    </p>
+                    
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        flexWrap: 'wrap',
+                        gap: '40px',
+                        marginBottom: '30px'
+                    }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <h4 style={{ color: '#c70202', marginBottom: '10px' }}>📧 Email</h4>
+                            <p style={{ margin: '0', color: '#cccccc' }}>olshco.acesschools.ph</p>
+                        </div>
+                        
+                        <div style={{ textAlign: 'center' }}>
+                            <h4 style={{ color: '#c70202', marginBottom: '10px' }}>📞 Phone</h4>
+                            <p style={{ margin: '0', color: '#cccccc' }}>0956-2774029</p>
+                        </div>
+                        
+                        <div style={{ textAlign: 'center' }}>
+                            <h4 style={{ color: '#c70202', marginBottom: '10px' }}>📍 Location</h4>
+                            <p style={{ margin: '0', color: '#cccccc' }}>Guimba, Nueva Ecija</p>
+                        </div>
+                    </div>
+                    
+                    <div style={{ 
+                        borderTop: '1px solid #333', 
+                        paddingTop: '20px',
+                        marginTop: '20px'
+                    }}>
+                        <p style={{ 
+                            margin: '0 0 10px 0', 
+                            fontSize: '1rem',
+                            color: '#cccccc'
+                        }}>
+                            © 2024 OUR LADY OF THE SACRED HEART COLLEGE OF GUIMBA, INC.
+                        </p>
+                        <p style={{ 
+                            margin: '0', 
+                            fontSize: '0.9rem',
+                            color: '#999999'
+                        }}>
+                            Created by BSIT-3B: Von Mamaid, Dianne Paderan, Aileen Rigor, Lorence Gamboa
+                        </p>
+                    </div>
+                </div>
             </footer>
     </>
   );
