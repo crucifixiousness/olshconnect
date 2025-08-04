@@ -45,15 +45,51 @@ const ProgramStudentList = () => {
 
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
+    const userString = localStorage.getItem("user");
+    
+    console.log('ProgramStudentList - Stored program_id from localStorage:', storedProgramId);
+    console.log('ProgramStudentList - User string from localStorage:', userString);
+    
+    let programId = null;
+    
+    // Try to get program_id from localStorage first
     if (storedProgramId) {
-      setProgramId(storedProgramId);
-      setProgramName(programMapping[storedProgramId] || "Unknown Program");
+      programId = parseInt(storedProgramId, 10);
+      console.log('ProgramStudentList - Using program_id from localStorage:', programId);
+    }
+    
+    // If not found, try to get it from user object
+    if (!programId && userString) {
+      try {
+        const user = JSON.parse(userString);
+        console.log('ProgramStudentList - Parsed user object:', user);
+        if (user.program_id) {
+          programId = parseInt(user.program_id, 10);
+          console.log('ProgramStudentList - Using program_id from user object:', programId);
+        }
+      } catch (error) {
+        console.error('ProgramStudentList - Error parsing user object:', error);
+      }
+    }
+    
+    if (!isNaN(programId)) {
+      setProgramId(programId);
+      setProgramName(programMapping[programId] || "Unknown Program");
+      console.log('ProgramStudentList - Set program_id in state:', programId);
+      console.log('ProgramStudentList - Set program_name in state:', programMapping[programId] || "Unknown Program");
+    } else {
+      console.error('ProgramStudentList - No valid program_id found');
     }
   }, []);
 
   useEffect(() => {
     const fetchStudents = async () => {
-      if (!programId) return;
+      if (!programId) {
+        console.log('ProgramStudentList - No programId available yet');
+        return;
+      }
+      
+      console.log('ProgramStudentList - Fetching students for programId:', programId);
       
       try {
         // Only include non-empty filter values and ensure year_level is a number
@@ -63,10 +99,13 @@ const ProgramStudentList = () => {
           ...(block && block !== '' && { block_name: block })
         };
 
+        console.log('ProgramStudentList - API call parameters:', params);
         const response = await axios.get('/api/get-program-students', { params });
+        console.log('ProgramStudentList - API response:', response.data);
         setStudents(response.data);
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('ProgramStudentList - Error fetching students:', error);
+        console.error('ProgramStudentList - Error response:', error.response?.data);
         setStudents([]);
       } finally {
         setLoading(false);
@@ -82,8 +121,11 @@ const ProgramStudentList = () => {
       if (!programId) return;
       
       try {
+        console.log('Fetching existing blocks for program_id:', programId);
         const response = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
+        console.log('API response for existing blocks:', response.data);
         setExistingBlocks(response.data);
+        console.log('existingBlocks state set to:', response.data);
       } catch (error) {
         console.error('Error fetching existing blocks:', error);
         setExistingBlocks([]);
@@ -402,6 +444,7 @@ const ProgramStudentList = () => {
                     <MenuItem value="">
                       <em>Choose a block</em>
                     </MenuItem>
+                    {console.log('Rendering dropdown with existingBlocks:', existingBlocks)}
                     {existingBlocks.length > 0 ? (
                       existingBlocks.map((block) => (
                         <MenuItem key={block} value={block}>
