@@ -304,10 +304,11 @@ table.v-align td{vertical-align: middle !important;}
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
-  width: 90%;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+  justify-items: center;
 }
 
 /* Course Item Container */
@@ -353,6 +354,22 @@ table.v-align td{vertical-align: middle !important;}
 
 .course-item.bsoad {
   border-color: #1e3a8a;
+}
+
+/* Responsive breakpoints for course grid */
+@media (max-width: 1200px) {
+  .course-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .course-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    gap: 20px;
+  }
 }
 
 /* Course Image */
