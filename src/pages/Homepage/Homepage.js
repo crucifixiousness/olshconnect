@@ -267,8 +267,13 @@ const Homepage = () => {
             setFormData({ ...formData, birthdate: value, age: age }); 
         } 
         // Restrict non-numeric inputs for first name, middle name, last name, suffix, place of birth, and religion
-        else if (['firstName', 'middleName', 'lastName', 'suffix', 'placeOfBirth', 'religion', 'guardianName'].includes(name)) {
+        else if (['firstName', 'middleName', 'lastName', 'suffix', 'placeOfBirth', 'religion'].includes(name)) {
             const validValue = value.replace(/[^a-zA-Z\s-]/g, '');
+            setFormData({ ...formData, [name]: validValue });
+        }
+        // Allow letters, spaces, hyphens, and periods for guardian name
+        else if (name === 'guardianName') {
+            const validValue = value.replace(/[^a-zA-Z\s-.]/g, '');
             setFormData({ ...formData, [name]: validValue });
         } 
         // Allow only numbers for the contact number, guardian contact, and age
