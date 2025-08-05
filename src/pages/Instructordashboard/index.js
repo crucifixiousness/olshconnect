@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { Card, Typography, CircularProgress, Box, Skeleton, Grid } from '@mui/material';
+import { Card, Typography, CircularProgress, Box } from '@mui/material';
 import { FaChalkboardTeacher, FaUserGraduate, FaClipboardList, FaClock } from 'react-icons/fa';
 import { MyContext } from '../../App';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
@@ -71,70 +71,34 @@ const InstructorDashboard = () => {
       title: 'Assigned Classes',
       value: dashboardData.assignedClasses,
       icon: <FaChalkboardTeacher size={30} />,
-      color: '#1976d2'
+      color: '#d32f2f'
     },
     {
       title: 'Total Students',
       value: dashboardData.totalStudents,
       icon: <FaUserGraduate size={30} />,
-      color: '#1976d2'
+      color: '#d32f2f'
     },
     {
       title: 'Pending Grades',
       value: dashboardData.pendingGrades,
       icon: <FaClipboardList size={30} />,
-      color: '#1976d2'
+      color: '#d32f2f'
     },
     {
       title: 'Classes Today',
       value: dashboardData.todayClasses,
       icon: <FaClock size={30} />,
-      color: '#1976d2'
+      color: '#d32f2f'
     }
   ];
 
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="right-content w-100">
-      <div className="card shadow border-0 p-3 mt-1">
-        <Skeleton variant="text" width="300px" height={40} sx={{ mb: 4 }} />
-        
-        {/* Stats Cards Skeleton */}
-        <div className="row">
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="col-md-3 mb-4">
-              <Card className="h-100 p-3">
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Skeleton variant="circular" width={30} height={30} />
-                  <Skeleton variant="text" width="120px" height={24} sx={{ ml: 2 }} />
-                </Box>
-                <Skeleton variant="text" width="60px" height={48} />
-              </Card>
-            </div>
-          ))}
-        </div>
-
-        {/* Schedule and Activities Skeleton */}
-        <div className="row mt-4">
-          <div className="col-md-6 mb-4">
-            <Card className="h-100 p-3">
-              <Skeleton variant="text" width="150px" height={32} sx={{ mb: 3 }} />
-              <Skeleton variant="rectangular" width="100%" height={200} />
-            </Card>
-          </div>
-          <div className="col-md-6 mb-4">
-            <Card className="h-100 p-3">
-              <Skeleton variant="text" width="150px" height={32} sx={{ mb: 3 }} />
-              <Skeleton variant="rectangular" width="100%" height={200} />
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   if (loading) {
-    return <LoadingSkeleton />;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+        <CircularProgress color="error" />
+      </div>
+    );
   }
 
   return (
@@ -163,7 +127,6 @@ const InstructorDashboard = () => {
             </div>
           ))}
         </div>
-
         {/* Recent Activities Section */}
         <div className="row mt-4">
           <div className="col-md-6 mb-4">
