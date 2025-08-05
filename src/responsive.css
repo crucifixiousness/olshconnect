@@ -269,6 +269,85 @@ footer ul li {
     font-size: 14px !important;
   }
 
+  /* Staff Login Page Responsive Styling */
+  .signupSection {
+    padding: 20px 15px !important;
+  }
+
+  .signupSection .row {
+    flex-direction: column !important;
+  }
+
+  .signupSection .part1 {
+    order: 2 !important;
+    padding: 20px 15px !important;
+    text-align: center !important;
+  }
+
+  .signupSection .part1 h1 {
+    font-size: 1.5rem !important;
+    margin-bottom: 15px !important;
+  }
+
+  .signupSection .part1 p {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+  }
+
+  .signupSection .col-md-4 {
+    order: 1 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin-bottom: 20px !important;
+  }
+
+  .signupSection .loginBox {
+    width: 100% !important;
+    max-width: 350px !important;
+    margin: 0 auto !important;
+  }
+
+  .signupSection .loginBox .logo {
+    margin-bottom: 15px !important;
+  }
+
+  .signupSection .loginBox .logo img {
+    width: 50px !important;
+  }
+
+  .signupSection .loginBox .loginHeader {
+    font-size: 1.2rem !important;
+  }
+
+  .signupSection .loginBox .loginWrap {
+    padding: 25px 20px !important;
+  }
+
+  .signupSection .loginBox .loginWrap .form-control {
+    height: 45px !important;
+    font-size: 14px !important;
+  }
+
+  .signupSection .loginBox .loginWrap .form-group {
+    margin-bottom: 15px !important;
+  }
+
+  .signupSection .loginBox .loginWrap .form-group .icon {
+    font-size: 20px !important;
+    top: 12px !important;
+  }
+
+  .signupSection .loginBox .loginWrap .showPass {
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .signupSection .loginBox .loginWrap .btn-blue {
+    height: 45px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+
   
 }
 
@@ -390,5 +469,69 @@ footer ul li {
 
 .loginSection .loginBox .footer span {
     font-size: 13px !important;
+}
+
+/* Staff Login Page Responsive Styling for Small Mobile */
+.signupSection {
+    padding: 15px 10px !important;
+}
+
+.signupSection .part1 {
+    padding: 15px 10px !important;
+}
+
+.signupSection .part1 h1 {
+    font-size: 1.3rem !important;
+    margin-bottom: 12px !important;
+}
+
+.signupSection .part1 p {
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+}
+
+.signupSection .col-md-4 {
+    margin-bottom: 15px !important;
+}
+
+.signupSection .loginBox {
+    max-width: 320px !important;
+}
+
+.signupSection .loginBox .logo img {
+    width: 45px !important;
+}
+
+.signupSection .loginBox .loginHeader {
+    font-size: 1.1rem !important;
+}
+
+.signupSection .loginBox .loginWrap {
+    padding: 20px 15px !important;
+}
+
+.signupSection .loginBox .loginWrap .form-control {
+    height: 42px !important;
+    font-size: 13px !important;
+}
+
+.signupSection .loginBox .loginWrap .form-group {
+    margin-bottom: 12px !important;
+}
+
+.signupSection .loginBox .loginWrap .form-group .icon {
+    font-size: 18px !important;
+    top: 11px !important;
+}
+
+.signupSection .loginBox .loginWrap .showPass {
+    top: 11px !important;
+    right: 10px !important;
+}
+
+.signupSection .loginBox .loginWrap .btn-blue {
+    height: 42px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
 }
 }
