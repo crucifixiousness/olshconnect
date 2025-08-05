@@ -166,11 +166,11 @@ header button.rounded-circle:hover svg{color: #c70202 !important;}
 
 .ml-auto{margin-left: auto;}
 
-.loginSection{width: 100%; height: 100vh; padding: 35px 25px; background: #fff; position: relative;}
+.loginSection{width: 100%; height: 100vh; padding: 35px 25px; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;}
 .loginHeader{font-weight: bold !important; padding-bottom: 1px;}
 .loginBg{width: 100%; height: 100%; opacity: 0.1; position: fixed; top: 0; left: 0; z-index: 99; pointer-events: none;}
 
-.loginSection .loginBox{width: 350px; height: auto; margin:auto;}
+.loginSection .loginBox{width: 350px; height: auto; margin: auto;}
 .loginSection .loginBox .loginWrap{width: 100%; height: auto; background: #e8e8e8; position: relative; z-index: 100; padding: 35px;}
 
 .loginSection .loginBox .loginWrap .form-control{background: #fff !important; box-shadow: none !important; outline: none !important; border-radius: 8px !important; font-size: 14px; font-weight: 600; height: 45px; padding-left: 40px;}
