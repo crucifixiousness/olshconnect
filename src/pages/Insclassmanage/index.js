@@ -1,5 +1,28 @@
 import { useState, useEffect } from "react";
-import { Button, FormControl, InputLabel, Select, MenuItem, Snackbar, Alert } from "@mui/material";
+import { 
+  Button, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Snackbar, 
+  Alert, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Box, 
+  Chip,
+  Skeleton,
+  Grid,
+  Paper
+} from "@mui/material";
+import { 
+  School as SchoolIcon, 
+  Schedule as ScheduleIcon, 
+  Group as GroupIcon,
+  Assignment as AssignmentIcon,
+  FilterList as FilterIcon
+} from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,9 +51,24 @@ const ClassManagement = () => {
     return `${formattedHour}:${minutes} ${ampm}`;
   };
 
+  const getDayColor = (day) => {
+    const colors = {
+      'Monday': '#1976d2',
+      'Tuesday': '#388e3c',
+      'Wednesday': '#f57c00',
+      'Thursday': '#7b1fa2',
+      'Friday': '#d32f2f',
+      'Saturday': '#5d4037'
+    };
+    return colors[day] || '#757575';
+  };
+
   useEffect(() => {
     const fetchInstructorCourses = async () => {
-      const staff_id = localStorage.getItem('staff_id');
+      // Get staff_id from localStorage with safe parsing
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      const staff_id = user?.staff_id;
       const token = localStorage.getItem('token');
 
       if (!staff_id || !token) {
@@ -81,80 +119,250 @@ const ClassManagement = () => {
     selectedSemester ? course.semester === selectedSemester : true
   );
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <Grid container spacing={3}>
+      {[1, 2, 3].map((item) => (
+        <Grid item xs={12} md={6} lg={4} key={item}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Skeleton variant="text" width="60%" height={32} />
+              <Skeleton variant="text" width="80%" height={24} />
+              <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                <Skeleton variant="rectangular" width={80} height={24} />
+                <Skeleton variant="rectangular" width={100} height={24} />
+              </Box>
+              <Skeleton variant="text" width="70%" height={20} sx={{ mt: 1 }} />
+              <Skeleton variant="rectangular" width="100%" height={36} sx={{ mt: 2 }} />
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+
   return (
-    <div className="right-content w-100">
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Class Management</h3>
-      </div>
+    <Box sx={{ p: 3 }}>
+      {/* Header Section */}
+      <Paper elevation={2} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <SchoolIcon sx={{ fontSize: 40, color: 'white' }} />
+          <Box>
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
+              Class Management
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+              Manage your assigned courses and view class schedules
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
 
-      <div className="card shadow border-0 p-3 mt-1">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
-            <Select
-              data-testid="semester-select"
-              labelId="semester-filter-label"
-              value={selectedSemester}
-              onChange={handleSemesterChange}
-              label="Filter by Semester"
-            >
-              <MenuItem value="">All Semesters</MenuItem>
-              <MenuItem value="1st">1st Semester</MenuItem>
-              <MenuItem value="2nd">2nd Semester</MenuItem>
-              <MenuItem value="Summer">Summer</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white'
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <AssignmentIcon sx={{ fontSize: 40 }} />
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    {loading ? '...' : courses.length}
+                  </Typography>
+                  <Typography variant="body2">Total Courses</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: 'white'
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ScheduleIcon sx={{ fontSize: 40 }} />
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    {loading ? '...' : filteredCourses.length}
+                  </Typography>
+                  <Typography variant="body2">Active Courses</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white'
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <GroupIcon sx={{ fontSize: 40 }} />
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    {loading ? '...' : courses.filter(c => c.semester === '1st').length}
+                  </Typography>
+                  <Typography variant="body2">1st Semester</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            color: 'white'
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <SchoolIcon sx={{ fontSize: 40 }} />
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    {loading ? '...' : courses.filter(c => c.semester === '2nd').length}
+                  </Typography>
+                  <Typography variant="body2">2nd Semester</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-        <div className="table-responsive">
-          <table className="table table-hover">
-            <thead className="thead-dark">
-              <tr>
-                <th>Course Code</th>
-                <th>Course Name</th>
-                <th>Section</th>
-                <th>Schedule</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="text-center">Loading...</td>
-                </tr>
-              ) : filteredCourses.length > 0 ? (
-                filteredCourses.map((course, index) => (
-                  <tr key={index}>
-                    <td>{course.course_code}</td>
-                    <td>{course.course_name}</td>
-                    <td>{course.section}</td>
-                    <td data-testid={`schedule-${index}`}>
-                      {`${course.day} ${formatTime(course.start_time)} - ${formatTime(course.end_time)}`}
-                    </td>
-                    <td>
-                      <Button 
-                        data-testid={`manage-button-${index}`}
-                        variant="contained" 
-                        color="primary" 
-                        size="small"
-                        onClick={() => handleCourseClick(course)}
-                      >
-                        Manage Class
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center" data-testid="no-courses-message">
-                    No courses found{selectedSemester ? ` for ${selectedSemester} semester` : ''}.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Filter Section */}
+      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <FilterIcon color="primary" />
+          <Typography variant="h6">Filter Courses</Typography>
+        </Box>
+        <FormControl sx={{ minWidth: 250 }}>
+          <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
+          <Select
+            data-testid="semester-select"
+            labelId="semester-filter-label"
+            value={selectedSemester}
+            onChange={handleSemesterChange}
+            label="Filter by Semester"
+          >
+            <MenuItem value="">All Semesters</MenuItem>
+            <MenuItem value="1st">1st Semester</MenuItem>
+            <MenuItem value="2nd">2nd Semester</MenuItem>
+            <MenuItem value="Summer">Summer</MenuItem>
+          </Select>
+        </FormControl>
+      </Paper>
+
+      {/* Courses Grid */}
+      {loading ? (
+        <LoadingSkeleton />
+      ) : filteredCourses.length > 0 ? (
+        <Grid container spacing={3}>
+          {filteredCourses.map((course, index) => (
+            <Grid item xs={12} md={6} lg={4} key={index}>
+              <Card 
+                sx={{ 
+                  height: '100%',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4
+                  }
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                        {course.course_code}
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
+                        {course.course_name}
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={course.units + ' units'} 
+                      size="small" 
+                      color="primary" 
+                      variant="outlined"
+                    />
+                  </Box>
+
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Section: <strong>{course.section}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Program: <strong>{course.program_name}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Year Level: <strong>{course.year_level}</strong>
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {course.day} • {formatTime(course.start_time)} - {formatTime(course.end_time)}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <Chip 
+                      label={course.semester} 
+                      size="small" 
+                      sx={{ 
+                        backgroundColor: course.semester === '1st' ? '#e3f2fd' : 
+                                       course.semester === '2nd' ? '#f3e5f5' : '#fff3e0',
+                        color: course.semester === '1st' ? '#1976d2' : 
+                               course.semester === '2nd' ? '#7b1fa2' : '#f57c00'
+                      }}
+                    />
+                    <Chip 
+                      label={course.day} 
+                      size="small" 
+                      sx={{ 
+                        backgroundColor: getDayColor(course.day) + '20',
+                        color: getDayColor(course.day),
+                        fontWeight: 'bold'
+                      }}
+                    />
+                  </Box>
+
+                  <Button 
+                    data-testid={`manage-button-${index}`}
+                    variant="contained" 
+                    fullWidth
+                    onClick={() => handleCourseClick(course)}
+                    sx={{ 
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
+                      }
+                    }}
+                  >
+                    Manage Class
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Paper elevation={1} sx={{ p: 6, textAlign: 'center' }}>
+          <SchoolIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h5" color="text.secondary" sx={{ mb: 1 }}>
+            No courses found
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {selectedSemester ? `No courses available for ${selectedSemester} semester.` : 'You have not been assigned to any courses yet.'}
+          </Typography>
+        </Paper>
+      )}
 
       <Snackbar
         open={snackbar.open}
@@ -171,7 +379,7 @@ const ClassManagement = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 
