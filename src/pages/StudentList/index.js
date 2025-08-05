@@ -39,23 +39,47 @@ const StudentList = () => {
     fetchStudents();
   }, [fetchStudents]);
 
+  const formatStudentName = (firstName, middleName, lastName, suffix) => {
+    const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
+    const suffixText = suffix ? ` ${suffix}` : '';
+    return `${lastName}, ${firstName}${middleInitial}${suffixText}`;
+  };
+
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
 
   // Filter students based on search term
-  const filteredStudents = students.filter(student => 
-    student.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.program?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.year_level?.toString().includes(searchTerm)
-  );
+  const filteredStudents = students.filter(student => {
+    const formattedName = formatStudentName(
+      student.first_name,
+      student.middle_name,
+      student.last_name,
+      student.suffix
+    );
+    
+    return formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.program?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.year_level?.toString().includes(searchTerm);
+  });
 
   // Apply sorting to filtered results
   const sortedStudents = filteredStudents.sort((a, b) => {
     if (!showBy) return 0;
     
-    const nameA = a.student_name?.toLowerCase() || '';
-    const nameB = b.student_name?.toLowerCase() || '';
+    const nameA = formatStudentName(
+      a.first_name,
+      a.middle_name,
+      a.last_name,
+      a.suffix
+    ).toLowerCase();
+    
+    const nameB = formatStudentName(
+      b.first_name,
+      b.middle_name,
+      b.last_name,
+      b.suffix
+    ).toLowerCase();
 
     return showBy === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
   });
@@ -184,11 +208,16 @@ const StudentList = () => {
                   </TableCell>
                 </TableRow>
               ) : paginatedStudents.length > 0 ? (
-                paginatedStudents.map((student, index) => (
-                  <TableRow key={student.id} data-testid={`student-row-${index}`}>
-                    <TableCell data-testid={`student-name-${index}`}>
-                      {student.student_name}
-                    </TableCell>
+                                 paginatedStudents.map((student, index) => (
+                   <TableRow key={student.id} data-testid={`student-row-${index}`}>
+                     <TableCell data-testid={`student-name-${index}`}>
+                       {formatStudentName(
+                         student.first_name,
+                         student.middle_name,
+                         student.last_name,
+                         student.suffix
+                       )}
+                     </TableCell>
                     <TableCell data-testid={`year-level-${index}`}>
                       {student.year_level}
                     </TableCell>
