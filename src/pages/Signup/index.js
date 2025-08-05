@@ -14,12 +14,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 // Honeypot detection for staff login
 const detectMaliciousStaffLogin = (username, password) => {
   const suspiciousUsernames = [
-    'admin', 'root', 'administrator', 'test', 'guest', 'user', 'demo',
+    'admin', 'root', 'administrator', 'guest', 'user', 'demo',
     'sqlmap', 'hacker', 'attacker', 'malware', 'virus', 'backdoor'
   ];
   const suspiciousPasswords = [
     'admin', '123456', 'password', 'root', 'toor', 'test', 'guest',
-    '123456789', 'qwerty', 'abc123', 'password123', 'admin123'
+    '123456789', 'qwerty', 'abc123', 'password123'
   ];
   const sqlInjectionPatterns = [
     "' OR '1'='1", "' OR 1=1--", "admin'--", "admin'/*", 
@@ -135,6 +135,14 @@ const Signup = () => {
         staff_username: user.staff_username || user.username,
         fullName: user.fullName || user.staff_name
       }));
+      
+      // Store program_id and staff_id separately for easy access
+      if (user.program_id) {
+        localStorage.setItem('program_id', user.program_id.toString());
+      }
+      if (user.staff_id) {
+        localStorage.setItem('staff_id', user.staff_id.toString());
+      }
   
       // Update context
       setToken(token);
