@@ -36,6 +36,7 @@
     padding: 25px 15px !important;
     margin: 0 auto !important;
     margin-top: 60px !important;
+    text-align: center !important;
 }
 
 .intro h2 {
@@ -57,6 +58,7 @@
     height: 55px !important;
     font-size: 1.2rem !important;
     margin: 20px auto !important;
+    display: block !important;
 }
 
 /* Section 2: School */
@@ -162,6 +164,7 @@ footer ul li {
     width: 58.33333%; /* Equivalent to col-sm-7 (7 out of 12 columns) */
     margin-left: auto;
     margin-right: 0 !important;
+    justify-content: flex-end !important;
   }
 
   /* Sidebar styles (hidden by default) */
