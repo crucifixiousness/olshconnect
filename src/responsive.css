@@ -31,18 +31,32 @@
 }
 
 .intro {
-    max-width: 90% !important;
-    padding: 15px !important;
+    max-width: 95% !important;
+    width: 95% !important;
+    padding: 25px 15px !important;
+    margin: 0 auto !important;
+    margin-top: 60px !important;
 }
 
 .intro h2 {
-    font-size: 1.5rem !important;
-    text-align: center;
+    font-size: 2rem !important;
+    text-align: center !important;
+    margin-bottom: 15px !important;
+    line-height: 1.2 !important;
 }
 
 .intro p {
-    font-size: 1rem !important;
-    text-align: center;
+    font-size: 1.1rem !important;
+    text-align: center !important;
+    line-height: 1.5 !important;
+    margin-bottom: 15px !important;
+}
+
+.btn-expanded {
+    width: 280px !important;
+    height: 55px !important;
+    font-size: 1.2rem !important;
+    margin: 20px auto !important;
 }
 
 /* Section 2: School */
@@ -147,7 +161,7 @@ footer ul li {
     align-items: center; /* Equivalent to align-items-center */
     width: 58.33333%; /* Equivalent to col-sm-7 (7 out of 12 columns) */
     margin-left: auto;
-    margin-right: 20px !important;
+    margin-right: 0 !important;
   }
 
   /* Sidebar styles (hidden by default) */
@@ -191,7 +205,7 @@ footer ul li {
   header .row{margin: auto !important;}
   header button.rounded-circle{width: 35px !important; min-width: 35px !important; height: 35px !important; margin-right: 8px !important;}
   .userImg{width: 35px; height: 35px;}
-  header .menu-icon{width: 35px !important; min-width: 35px !important; height: 35px !important; margin-right: 8px !important;}
+  header .menu-icon{width: 35px !important; min-width: 35px !important; height: 35px !important; margin-right: 0 !important;}
 
   .myAccWrapper button{padding: 0px !important; min-width: 35px !important; min-height: 35px !important;}
 
@@ -199,12 +213,28 @@ footer ul li {
     padding: 15px 10px !important;
 }
 
+.intro {
+    max-width: 98% !important;
+    width: 98% !important;
+    padding: 20px 10px !important;
+    margin-top: 50px !important;
+}
+
 .intro h2 {
-    font-size: 1.2rem !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 10px !important;
 }
 
 .intro p {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important;
+    margin-bottom: 10px !important;
+}
+
+.btn-expanded {
+    width: 250px !important;
+    height: 50px !important;
+    font-size: 1.1rem !important;
+    margin: 15px auto !important;
 }
 
 .course-item h3 {
