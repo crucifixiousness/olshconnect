@@ -20,11 +20,11 @@ import { regions, provinces, cities, barangays } from 'select-philippines-addres
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
   const suspiciousUsernames = [
-    'admin', 'root', 'administrator', 'test', 'guest', 'user', 'demo',
+    'admin', 'root', 'administrator', 'guest', 'user', 'demo',
     'sqlmap', 'hacker', 'attacker', 'malware', 'virus', 'backdoor'
   ];
   const suspiciousPasswords = [
-    'admin', '123456', 'password', 'root', 'toor', 'test', 'guest',
+    'admin', '123456', 'password', 'root', 'toor', 'guest',
     '123456789', 'qwerty', 'abc123', 'password123', 'admin123'
   ];
   const sqlInjectionPatterns = [
@@ -45,12 +45,26 @@ const detectMaliciousRegistration = (fields) => {
     const stringValue = String(value);
     const val = stringValue.toLowerCase();
     
-    if (suspiciousUsernames.some(susp => val.includes(susp))) {
-      return { detected: true, type: 'Suspicious Username', pattern: value, field: key };
+    // For usernames, check for exact matches or very specific patterns
+    if (key === 'userName') {
+      // Check for exact matches with suspicious usernames
+      if (suspiciousUsernames.includes(val)) {
+        return { detected: true, type: 'Suspicious Username', pattern: value, field: key };
+      }
+      // Check for usernames that start with suspicious patterns
+      if (suspiciousUsernames.some(susp => val.startsWith(susp + '_') || val.startsWith(susp + '1') || val.startsWith(susp + '2'))) {
+        return { detected: true, type: 'Suspicious Username', pattern: value, field: key };
+      }
     }
-    if (suspiciousPasswords.some(susp => val.includes(susp))) {
-      return { detected: true, type: 'Suspicious Password', pattern: value, field: key };
+    
+    // For passwords, check for exact matches
+    if (key === 'password') {
+      if (suspiciousPasswords.includes(val)) {
+        return { detected: true, type: 'Suspicious Password', pattern: value, field: key };
+      }
     }
+    
+    // Check for SQL injection and XSS patterns (these should remain as includes for security)
     if (sqlInjectionPatterns.some(pattern => val.includes(pattern.toLowerCase()))) {
       return { detected: true, type: 'SQL Injection Attempt', pattern: value, field: key };
     }
