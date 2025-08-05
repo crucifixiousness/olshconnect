@@ -307,6 +307,7 @@ footer ul li {
     margin: 0 auto !important;
     border-radius: 15px !important;
     overflow: hidden !important;
+    max-height: 400px !important;
   }
 
   .signupSection .loginBox .logo {
@@ -500,6 +501,7 @@ footer ul li {
     max-width: 320px !important;
     border-radius: 12px !important;
     overflow: hidden !important;
+    max-height: 350px !important;
 }
 
 .signupSection .loginBox .logo img {
