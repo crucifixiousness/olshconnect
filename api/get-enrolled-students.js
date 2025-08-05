@@ -16,7 +16,10 @@ module.exports = async (req, res) => {
     const result = await pool.query(`
       SELECT 
         s.id,
-        CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
+        s.first_name,
+        s.middle_name,
+        s.last_name,
+        s.suffix,
         p.program_name as program,
         py.year_level,
         s.sex,
@@ -26,7 +29,7 @@ module.exports = async (req, res) => {
       JOIN program p ON e.program_id = p.program_id
       JOIN program_year py ON e.year_id = py.year_id
       WHERE e.enrollment_status = 'Officially Enrolled'
-      ORDER BY student_name ASC
+      ORDER BY s.last_name ASC, s.first_name ASC
     `);
 
     res.status(200).json(result.rows);
