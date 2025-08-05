@@ -71,32 +71,37 @@ const InstructorDashboard = () => {
       title: 'Assigned Classes',
       value: dashboardData.assignedClasses,
       icon: <FaChalkboardTeacher size={30} />,
-      color: '#d32f2f'
+      color: '#c70202'
     },
     {
       title: 'Total Students',
       value: dashboardData.totalStudents,
       icon: <FaUserGraduate size={30} />,
-      color: '#d32f2f'
+      color: '#c70202'
     },
     {
       title: 'Pending Grades',
       value: dashboardData.pendingGrades,
       icon: <FaClipboardList size={30} />,
-      color: '#d32f2f'
+      color: '#c70202'
     },
     {
       title: 'Classes Today',
       value: dashboardData.todayClasses,
       icon: <FaClock size={30} />,
-      color: '#d32f2f'
+      color: '#c70202'
     }
   ];
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-        <CircularProgress color="error" />
+      <div className="right-content w-100">
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="mb-4">Instructor Dashboard</h3>
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+            <CircularProgress sx={{ color: '#c70202' }} />
+          </div>
+        </div>
       </div>
     );
   }
