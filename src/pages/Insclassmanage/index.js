@@ -152,24 +152,27 @@ const ClassManagement = () => {
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                       <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                          {course.course_code}
-                        </Typography>
+                                               <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#495057' }}>
+                         {course.course_code}
+                       </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
                           {course.course_name}
                         </Typography>
                       </Box>
-                      <Chip 
-                        label={course.units + ' units'} 
-                        size="small" 
-                        color="primary" 
-                        variant="outlined"
-                      />
+                                             <Chip 
+                         label={course.units + ' units'} 
+                         size="small" 
+                         sx={{ 
+                           backgroundColor: '#f8f9fa',
+                           color: '#6c757d',
+                           border: '1px solid #dee2e6'
+                         }}
+                       />
                     </Box>
 
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Section: <strong>{course.section}</strong>
+                        Block: <strong>{course.section}</strong>
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Program: <strong>{course.program_name}</strong>
@@ -187,41 +190,40 @@ const ClassManagement = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                      <Chip 
-                        label={course.semester} 
-                        size="small" 
-                        sx={{ 
-                          backgroundColor: course.semester === '1st' ? '#e3f2fd' : 
-                                         course.semester === '2nd' ? '#f3e5f5' : '#fff3e0',
-                          color: course.semester === '1st' ? '#1976d2' : 
-                                 course.semester === '2nd' ? '#7b1fa2' : '#f57c00'
-                        }}
-                      />
-                      <Chip 
-                        label={course.day} 
-                        size="small" 
-                        sx={{ 
-                          backgroundColor: getDayColor(course.day) + '20',
-                          color: getDayColor(course.day),
-                          fontWeight: 'bold'
-                        }}
-                      />
+                                             <Chip 
+                         label={course.semester} 
+                         size="small" 
+                         sx={{ 
+                           backgroundColor: '#f8f9fa',
+                           color: '#6c757d',
+                           border: '1px solid #dee2e6'
+                         }}
+                       />
+                                             <Chip 
+                         label={course.day} 
+                         size="small" 
+                         sx={{ 
+                           backgroundColor: getDayColor(course.day) + '20',
+                           color: getDayColor(course.day),
+                           fontWeight: 'bold'
+                         }}
+                       />
                     </Box>
 
-                    <Button 
-                      data-testid={`manage-button-${index}`}
-                      variant="contained" 
-                      fullWidth
-                      onClick={() => handleCourseClick(course)}
-                      sx={{ 
-                        backgroundColor: '#1976d2',
-                        '&:hover': {
-                          backgroundColor: '#1565c0'
-                        }
-                      }}
-                    >
-                      Manage Class
-                    </Button>
+                                         <Button 
+                       data-testid={`manage-button-${index}`}
+                       variant="contained" 
+                       fullWidth
+                       onClick={() => handleCourseClick(course)}
+                       sx={{ 
+                         backgroundColor: '#6c757d',
+                         '&:hover': {
+                           backgroundColor: '#5a6268'
+                         }
+                       }}
+                     >
+                       Manage Class
+                     </Button>
                   </CardContent>
                 </Card>
               </Grid>
