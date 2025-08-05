@@ -40,7 +40,7 @@ const Sidebar = () =>{
         <div className="sidebar">
           <ul>
             <li>
-              <Link to="/">
+              <Link to="/dashboard">
                 <Button className={`w-100 ${activeTab===0 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(0)}>
                   <span className='icon'><RiDashboardHorizontalLine /></span>
                     Dashboard 
