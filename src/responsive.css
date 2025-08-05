@@ -305,10 +305,12 @@ footer ul li {
     width: 100% !important;
     max-width: 350px !important;
     margin: 0 auto !important;
+    border-radius: 15px !important;
+    overflow: hidden !important;
   }
 
   .signupSection .loginBox .logo {
-    margin-bottom: 15px !important;
+    margin-bottom: 10px !important;
   }
 
   .signupSection .loginBox .logo img {
@@ -320,7 +322,7 @@ footer ul li {
   }
 
   .signupSection .loginBox .loginWrap {
-    padding: 25px 20px !important;
+    padding: 20px 20px !important;
   }
 
   .signupSection .loginBox .loginWrap .form-control {
@@ -329,7 +331,7 @@ footer ul li {
   }
 
   .signupSection .loginBox .loginWrap .form-group {
-    margin-bottom: 15px !important;
+    margin-bottom: 12px !important;
   }
 
   .signupSection .loginBox .loginWrap .form-group .icon {
@@ -496,6 +498,8 @@ footer ul li {
 
 .signupSection .loginBox {
     max-width: 320px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
 }
 
 .signupSection .loginBox .logo img {
@@ -507,7 +511,7 @@ footer ul li {
 }
 
 .signupSection .loginBox .loginWrap {
-    padding: 20px 15px !important;
+    padding: 15px 15px !important;
 }
 
 .signupSection .loginBox .loginWrap .form-control {
@@ -516,7 +520,7 @@ footer ul li {
 }
 
 .signupSection .loginBox .loginWrap .form-group {
-    margin-bottom: 12px !important;
+    margin-bottom: 10px !important;
 }
 
 .signupSection .loginBox .loginWrap .form-group .icon {
