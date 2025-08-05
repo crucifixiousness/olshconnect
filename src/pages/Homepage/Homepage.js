@@ -481,7 +481,7 @@ const Homepage = () => {
                             </li>
                         </ul>                        
                     </div>
-                    <div className="part3">
+                    <div className="part3 d-flex justify-content-end">
                         <div className="menu-icon" onClick={toggleSidebar}>
                             &#9776; {/* Hamburger icon */}
                         </div>
