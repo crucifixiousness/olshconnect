@@ -14,11 +14,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 // Honeypot detection for staff login
 const detectMaliciousStaffLogin = (username, password) => {
   const suspiciousUsernames = [
-    'admin', 'root', 'administrator', 'guest', 'user', 'demo',
+    'root', 'administrator', 'guest', 'user', 'demo',
     'sqlmap', 'hacker', 'attacker', 'malware', 'virus', 'backdoor'
   ];
   const suspiciousPasswords = [
-    'admin', '123456', 'password', 'root', 'toor', 'test', 'guest',
+    '123456', 'password', 'root', 'toor', 'test', 'guest',
     '123456789', 'qwerty', 'abc123', 'password123'
   ];
   const sqlInjectionPatterns = [
