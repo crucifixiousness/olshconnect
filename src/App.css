@@ -35,10 +35,10 @@ h1,h2,h3,h4,h5,h6,p{color: #403e57;}
 
 
 
-header{width: 100%; height: 70px; background: rgba(255, 255, 255, 0.7); position: fixed; top: 0px; left: 0px; z-index: 1000; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);}
+header{width: 100%; height: 70px; background: rgba(255, 255, 255, 0.7); position: fixed; top: 0px; left: 0px; z-index: 1000; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); display: flex; align-items: center;}
 
 
-header .row{margin: 0px !important;}
+header .row{margin: 0px !important; width: 100%;}
 header .logo{text-decoration: none;}
 header .logo img{width: 45px;}
 header .logo span{color: #c70202; font-weight: 800; font-size: 24px; padding-left: 5px;}
@@ -47,6 +47,7 @@ header button.rounded-circle{min-width: 40px !important; width: 40px !important;
 header button.rounded-circle svg{color: #292929; font-size: 18px !important; transition: all 0 2s ease-in-out;}
 
 header .part2{padding-left: 45px !important;}
+header .part3{display: flex; justify-content: flex-end; align-items: center;}
 
 header button.rounded-circle:hover svg{color: #c70202 !important;}
 
@@ -458,9 +459,7 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .intro {
-  margin-right: auto;
-  margin-left: 20px;
-  margin-top: 70px;
+  margin: 70px auto 0 auto;
   padding: 20px; 
   max-width: 800px; 
   border-radius: 10px; 
@@ -472,12 +471,14 @@ table.v-align td{vertical-align: middle !important;}
   margin-bottom: 20px; 
   color: #fff; 
   font-weight: 800;
+  text-align: center;
 }
 
 .intro p {
   font-size: 1.2rem; 
   line-height: 1.6; 
   color: #fff;
+  text-align: center;
 }
 
 .btn-expanded {
@@ -487,6 +488,8 @@ table.v-align td{vertical-align: middle !important;}
   padding: 15px;
   background-color: #c70202 !important;
   border-radius: 15px !important;
+  display: block;
+  margin: 20px auto;
 }
 
 /* Add responsive styles for mobile */
