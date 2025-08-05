@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { createContext, useEffect, useState } from 'react';
 import Login from './pages/Login';
+import FakeLogin from './pages/FakeLogin';
 import Signup from './pages/Signup';
 import StudentList from './pages/StudentList';
 import Homepage from './pages/Homepage/Homepage';
@@ -144,6 +145,8 @@ function App() {
                   <ProgramHeadSidebar />
                 ) : role === 'instructor' ? (
                   <InstructorSidebar />
+                ) : role === 'admin' ? (
+                  <Sidebar />
                 ) : (
                   <Sidebar />
                 )}
@@ -157,8 +160,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
-              <Route path="/dashboard" exact={true} element={token ? <Dashboard /> : <Navigate to="/stafflogin" />} />
+              <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={<Login />} />
+              <Route path="/logIn" exact={true} element={<FakeLogin />} />
               <Route path="/stafflogin" exact={true} element={<Signup />} />
               <Route path="/studentlist" exact={true} element={<ProtectedRoute element={<StudentList />} requiredRole={['registrar', 'admin', 'finance', 'instructor']} redirectTo="/stafflogin" />} />
               <Route path="/staffs" exact={true} element={<ProtectedRoute element={<Staff />} requiredRole={['registrar', 'admin', 'finance', 'instructor', 'program head']} redirectTo="/stafflogin" />} />
