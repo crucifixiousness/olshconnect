@@ -107,7 +107,7 @@ const ClassManagement = () => {
       <div className="card shadow border-0 p-3 mt-1">
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-            <CircularProgress color="error" />
+            <CircularProgress sx={{ color: '#c70202' }} />
           </Box>
         ) : courses.length > 0 ? (
           <Grid container spacing={3}>
@@ -186,9 +186,9 @@ const ClassManagement = () => {
                       fullWidth
                       onClick={() => handleCourseClick(course)}
                       sx={{ 
-                        backgroundColor: '#d32f2f',
+                        backgroundColor: '#c70202',
                         '&:hover': {
-                          backgroundColor: '#b71c1c'
+                          backgroundColor: '#a00101'
                         }
                       }}
                     >
