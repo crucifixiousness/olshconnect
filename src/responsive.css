@@ -201,6 +201,74 @@ footer ul li {
     font-size: 18px;
   }
 
+  /* Login Page Responsive Styling */
+  .loginSection {
+    padding: 20px 15px !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .loginSection .loginBox {
+    width: 100% !important;
+    max-width: 350px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .loginSection .loginBox .loginWrap {
+    padding: 25px 20px !important;
+    margin-top: 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .loginSection .loginBox .loginWrap .logo img {
+    width: 50px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .loginHeader {
+    font-size: 1.2rem !important;
+    margin-top: 10px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .form-control {
+    height: 45px !important;
+    font-size: 14px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .form-group {
+    margin-bottom: 15px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .form-group .icon {
+    font-size: 20px !important;
+    top: 12px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .showPass {
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .btn-blue {
+    height: 45px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+
+  .loginSection .loginBox .footer {
+    padding: 15px !important;
+    margin-top: 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .loginSection .loginBox .footer span {
+    font-size: 14px !important;
+  }
+
   
 }
 
@@ -254,5 +322,73 @@ footer ul li {
 
 .footer-section ul li {
     font-size: 0.8rem !important;
+}
+
+/* Login Page Responsive Styling for Small Mobile */
+.loginSection {
+    padding: 15px 10px !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.loginSection .loginBox {
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.loginSection .loginBox .loginWrap {
+    padding: 20px 15px !important;
+    margin-top: 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.loginSection .loginBox .loginWrap .logo img {
+    width: 45px !important;
+}
+
+.loginSection .loginBox .loginWrap .loginHeader {
+    font-size: 1.1rem !important;
+    margin-top: 8px !important;
+}
+
+.loginSection .loginBox .loginWrap .form-control {
+    height: 42px !important;
+    font-size: 13px !important;
+}
+
+.loginSection .loginBox .loginWrap .form-group {
+    margin-bottom: 12px !important;
+}
+
+.loginSection .loginBox .loginWrap .form-group .icon {
+    font-size: 18px !important;
+    top: 11px !important;
+}
+
+.loginSection .loginBox .loginWrap .showPass {
+    top: 11px !important;
+    right: 10px !important;
+}
+
+.loginSection .loginBox .loginWrap .btn-blue {
+    height: 42px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+
+.loginSection .loginBox .footer {
+    padding: 12px !important;
+    margin-top: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.loginSection .loginBox .footer span {
+    font-size: 13px !important;
 }
 }
