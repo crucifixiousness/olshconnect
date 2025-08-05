@@ -14,8 +14,19 @@ import {
   MenuItem,
   TextField,
   Button,
-  CircularProgress
+  CircularProgress,
+  Box,
+  Alert,
+  Snackbar,
+  Chip,
+  FormControl,
+  InputLabel
 } from '@mui/material';
+import { 
+  School as SchoolIcon, 
+  Save as SaveIcon,
+  Assignment as AssignmentIcon
+} from '@mui/icons-material';
 
 const InstructorGrades = () => {
   const [loading, setLoading] = useState(true);
@@ -24,22 +35,42 @@ const InstructorGrades = () => {
   const [students, setStudents] = useState([]);
   const [grades, setGrades] = useState({});
   const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem('user'));
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        const staff_id = user?.staff_id;
         const token = localStorage.getItem('token');
         
-        const response = await axios.get(
-          `http://localhost:4000/instructor-courses/${user.staff_id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        if (!staff_id || !token) {
+          setSnackbar({
+            open: true,
+            message: "Please login again",
+            severity: 'error'
+          });
+          return;
+        }
+
+        const response = await axios.get(`/api/instructor-subjects?staff_id=${staff_id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
         setCourses(response.data);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching courses:', error);
+        setSnackbar({
+          open: true,
+          message: "Failed to fetch courses",
+          severity: 'error'
+        });
         setLoading(false);
       }
     };
@@ -69,6 +100,11 @@ const InstructorGrades = () => {
       
     } catch (error) {
       console.error('Error fetching students:', error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch students",
+        severity: 'error'
+      });
     }
     
     setLoading(false);
@@ -98,18 +134,39 @@ const InstructorGrades = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      alert('Grades saved successfully!');
+      setSnackbar({
+        open: true,
+        message: "Grades saved successfully!",
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Error saving grades:', error);
-      alert('Failed to save grades. Please try again.');
+      setSnackbar({
+        open: true,
+        message: "Failed to save grades. Please try again.",
+        severity: 'error'
+      });
     }
     setSaving(false);
   };
 
-  if (loading) {
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const getSelectedCourseInfo = () => {
+    return courses.find(course => course.pc_id === selectedCourse);
+  };
+
+  if (loading && !selectedCourse) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-        <CircularProgress />
+      <div className="right-content w-100">
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="mb-4">Grade Entry</h3>
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+            <CircularProgress sx={{ color: '#c70202' }} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -119,74 +176,213 @@ const InstructorGrades = () => {
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="mb-4">Grade Entry</h3>
         
-        <Card className="mb-4 p-3">
+        {/* Course Selection Card */}
+        <Card className="mb-4 p-3" sx={{ 
+          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+          border: '1px solid #dee2e6'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <SchoolIcon sx={{ color: '#c70202', fontSize: 28 }} />
+            <Typography variant="h6" sx={{ color: '#495057', fontWeight: 'bold' }}>
+              Select Course for Grade Entry
+            </Typography>
+          </Box>
+          
           <div className="row align-items-center">
             <div className="col-md-6">
-              <Typography variant="subtitle1" className="mb-2">Select Course</Typography>
-              <Select
-                fullWidth
-                value={selectedCourse}
-                onChange={(e) => handleCourseChange(e.target.value)}
-              >
-                {courses.map((course) => (
-                  <MenuItem key={course.pc_id} value={course.pc_id}>
-                    {course.course_code} - {course.course_name} ({course.section})
-                  </MenuItem>
-                ))}
-              </Select>
+              <FormControl fullWidth>
+                <InputLabel>Course</InputLabel>
+                <Select
+                  value={selectedCourse}
+                  onChange={(e) => handleCourseChange(e.target.value)}
+                  label="Course"
+                  sx={{ 
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#c70202'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#a00101'
+                    }
+                  }}
+                >
+                  {courses.map((course) => (
+                    <MenuItem key={course.pc_id} value={course.pc_id}>
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                          {course.course_code} - {course.course_name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Block: {course.section} • {course.day} {course.start_time}-{course.end_time}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </div>
+            
+            {selectedCourse && (
+              <div className="col-md-6">
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip 
+                    label={`${students.length} Students`} 
+                    color="primary" 
+                    variant="outlined"
+                    sx={{ borderColor: '#c70202', color: '#c70202' }}
+                  />
+                  <Chip 
+                    label={getSelectedCourseInfo()?.semester || ''} 
+                    variant="outlined"
+                    sx={{ borderColor: '#6c757d', color: '#6c757d' }}
+                  />
+                </Box>
+              </div>
+            )}
           </div>
         </Card>
 
+        {/* Students and Grades Table */}
         {selectedCourse && students.length > 0 && (
-          <Card className="p-3">
-            <TableContainer component={Paper} elevation={0}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Student ID</TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Final Grade</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {students.map((student) => (
-                    <TableRow key={student.student_id}>
-                      <TableCell>{student.student_id}</TableCell>
-                      <TableCell>{student.name}</TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          inputProps={{ 
-                            step: "0.1",
-                            min: "1.0",
-                            max: "5.0"
+          <Card className="p-3" sx={{ 
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              boxShadow: 4
+            }
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <AssignmentIcon sx={{ color: '#c70202', fontSize: 24 }} />
+              <Typography variant="h6" sx={{ color: '#495057', fontWeight: 'bold' }}>
+                Student Grades
+              </Typography>
+            </Box>
+
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+                <CircularProgress sx={{ color: '#c70202' }} />
+              </Box>
+            ) : (
+              <>
+                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #dee2e6' }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                        <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Student ID</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Final Grade</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {students.map((student, index) => (
+                        <TableRow 
+                          key={student.student_id}
+                          sx={{ 
+                            '&:nth-of-type(odd)': { backgroundColor: '#f8f9fa' },
+                            '&:hover': { backgroundColor: '#e9ecef' }
                           }}
-                          value={grades[student.student_id]}
-                          onChange={(e) => handleGradeChange(student.student_id, e.target.value)}
-                          size="small"
-                          style={{ width: '100px' }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            
-            <div className="d-flex justify-content-end mt-3">
-              <Button 
-                variant="contained" 
-                color="primary"
-                onClick={handleSaveGrades}
-                disabled={saving}
-              >
-                {saving ? <CircularProgress size={24} /> : 'Save Grades'}
-              </Button>
-            </div>
+                        >
+                          <TableCell sx={{ fontWeight: '500' }}>{student.student_id}</TableCell>
+                          <TableCell sx={{ fontWeight: '500' }}>{student.name}</TableCell>
+                          <TableCell>
+                            <TextField
+                              type="number"
+                              inputProps={{ 
+                                step: "0.1",
+                                min: "1.0",
+                                max: "5.0"
+                              }}
+                              value={grades[student.student_id]}
+                              onChange={(e) => handleGradeChange(student.student_id, e.target.value)}
+                              size="small"
+                              sx={{ 
+                                width: '120px',
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: grades[student.student_id] ? '#c70202' : '#dee2e6'
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#c70202'
+                                  }
+                                }
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={grades[student.student_id] ? 'Graded' : 'Pending'} 
+                              size="small"
+                              sx={{ 
+                                backgroundColor: grades[student.student_id] ? '#d4edda' : '#fff3cd',
+                                color: grades[student.student_id] ? '#155724' : '#856404',
+                                fontWeight: 'bold'
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Students: {students.length} • 
+                    Graded: {Object.values(grades).filter(grade => grade !== '').length} • 
+                    Pending: {Object.values(grades).filter(grade => grade === '').length}
+                  </Typography>
+                  
+                  <Button 
+                    variant="contained" 
+                    onClick={handleSaveGrades}
+                    disabled={saving}
+                    startIcon={saving ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <SaveIcon />}
+                    sx={{ 
+                      backgroundColor: '#c70202',
+                      '&:hover': {
+                        backgroundColor: '#a00101'
+                      },
+                      '&:disabled': {
+                        backgroundColor: '#6c757d'
+                      }
+                    }}
+                  >
+                    {saving ? 'Saving...' : 'Save Grades'}
+                  </Button>
+                </Box>
+              </>
+            )}
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {selectedCourse && students.length === 0 && !loading && (
+          <Card className="p-5" sx={{ textAlign: 'center' }}>
+            <SchoolIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h5" color="text.secondary" sx={{ mb: 1 }}>
+              No students found
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              No students are enrolled in this course yet.
+            </Typography>
           </Card>
         )}
       </div>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
