@@ -51,11 +51,17 @@ const StudentList = () => {
 
   // Filter students based on search term
   const filteredStudents = students.filter(student => {
+    // Check if student has the new structure or old structure
+    const firstName = student.firstName || student.first_name;
+    const middleName = student.middleName || student.middle_name;
+    const lastName = student.lastName || student.last_name;
+    const suffix = student.suffix;
+    
     const formattedName = formatStudentName(
-      student.firstName,
-      student.middleName,
-      student.lastName,
-      student.suffix
+      firstName,
+      middleName,
+      lastName,
+      suffix
     );
     
     return formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,18 +73,28 @@ const StudentList = () => {
   const sortedStudents = filteredStudents.sort((a, b) => {
     if (!showBy) return 0;
     
+    const firstNameA = a.firstName || a.first_name;
+    const middleNameA = a.middleName || a.middle_name;
+    const lastNameA = a.lastName || a.last_name;
+    const suffixA = a.suffix;
+    
+    const firstNameB = b.firstName || b.first_name;
+    const middleNameB = b.middleName || b.middle_name;
+    const lastNameB = b.lastName || b.last_name;
+    const suffixB = b.suffix;
+    
     const nameA = formatStudentName(
-      a.firstName,
-      a.middleName,
-      a.lastName,
-      a.suffix
+      firstNameA,
+      middleNameA,
+      lastNameA,
+      suffixA
     ).toLowerCase();
     
     const nameB = formatStudentName(
-      b.firstName,
-      b.middleName,
-      b.lastName,
-      b.suffix
+      firstNameB,
+      middleNameB,
+      lastNameB,
+      suffixB
     ).toLowerCase();
 
     return showBy === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
@@ -209,15 +225,15 @@ const StudentList = () => {
                 </TableRow>
               ) : paginatedStudents.length > 0 ? (
                 paginatedStudents.map((student, index) => (
-                  <TableRow key={student.id} data-testid={`student-row-${index}`}>
-                    <TableCell data-testid={`student-name-${index}`}>
-                      {formatStudentName(
-                        student.firstName,
-                        student.middleName,
-                        student.lastName,
-                        student.suffix
-                      )}
-                    </TableCell>
+                                     <TableRow key={student.id} data-testid={`student-row-${index}`}>
+                     <TableCell data-testid={`student-name-${index}`}>
+                       {formatStudentName(
+                         student.firstName || student.first_name,
+                         student.middleName || student.middle_name,
+                         student.lastName || student.last_name,
+                         student.suffix
+                       )}
+                     </TableCell>
                     <TableCell data-testid={`year-level-${index}`}>
                       {student.year_level}
                     </TableCell>
