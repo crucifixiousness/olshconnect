@@ -8,7 +8,7 @@ import {
   Typography, 
   Box, 
   Chip,
-  Skeleton,
+  CircularProgress,
   Grid,
   Paper
 } from "@mui/material";
@@ -31,11 +31,9 @@ const ClassManagement = () => {
 
   const formatTime = (time) => {
     if (!time) return '';
-    // If time already includes AM/PM, return as is
     if (time.includes('AM') || time.includes('PM')) {
       return time;
     }
-    // Otherwise, format the time
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -57,7 +55,6 @@ const ClassManagement = () => {
 
   useEffect(() => {
     const fetchInstructorCourses = async () => {
-      // Get staff_id from localStorage with safe parsing
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       const staff_id = user?.staff_id;
@@ -98,43 +95,20 @@ const ClassManagement = () => {
   };
 
   const handleCourseClick = (course) => {
-    // Store selected course details for sub-pages
     localStorage.setItem('selectedCourse', JSON.stringify(course));
     navigate(`/instructor-classes/grades?course=${course.pc_id}`);
   };
-
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <Grid container spacing={3}>
-      {[1, 2, 3].map((item) => (
-        <Grid item xs={12} md={6} lg={4} key={item}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Skeleton variant="text" width="60%" height={32} />
-              <Skeleton variant="text" width="80%" height={24} />
-              <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                <Skeleton variant="rectangular" width={80} height={24} />
-                <Skeleton variant="rectangular" width={100} height={24} />
-              </Box>
-              <Skeleton variant="text" width="70%" height={20} sx={{ mt: 1 }} />
-              <Skeleton variant="rectangular" width="100%" height={36} sx={{ mt: 2 }} />
-            </CardContent>
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
-  );
 
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="hd mt-2 pb-0">Class Management</h3>
       </div>
-
-      {/* Courses Grid */}
       <div className="card shadow border-0 p-3 mt-1">
         {loading ? (
-          <LoadingSkeleton />
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+            <CircularProgress color="error" />
+          </Box>
         ) : courses.length > 0 ? (
           <Grid container spacing={3}>
             {courses.map((course, index) => (
@@ -152,24 +126,23 @@ const ClassManagement = () => {
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                       <Box>
-                                               <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#495057' }}>
-                         {course.course_code}
-                       </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#495057' }}>
+                          {course.course_code}
+                        </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
                           {course.course_name}
                         </Typography>
                       </Box>
-                                             <Chip 
-                         label={course.units + ' units'} 
-                         size="small" 
-                         sx={{ 
-                           backgroundColor: '#f8f9fa',
-                           color: '#6c757d',
-                           border: '1px solid #dee2e6'
-                         }}
-                       />
+                      <Chip 
+                        label={course.units + ' units'} 
+                        size="small" 
+                        sx={{ 
+                          backgroundColor: '#f8f9fa',
+                          color: '#6c757d',
+                          border: '1px solid #dee2e6'
+                        }}
+                      />
                     </Box>
-
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Block: <strong>{course.section}</strong>
@@ -181,49 +154,46 @@ const ClassManagement = () => {
                         Year Level: <strong>{course.year_level}</strong>
                       </Typography>
                     </Box>
-
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                       <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         {course.day} • {formatTime(course.start_time)} - {formatTime(course.end_time)}
                       </Typography>
                     </Box>
-
                     <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                                             <Chip 
-                         label={course.semester} 
-                         size="small" 
-                         sx={{ 
-                           backgroundColor: '#f8f9fa',
-                           color: '#6c757d',
-                           border: '1px solid #dee2e6'
-                         }}
-                       />
-                                             <Chip 
-                         label={course.day} 
-                         size="small" 
-                         sx={{ 
-                           backgroundColor: getDayColor(course.day) + '20',
-                           color: getDayColor(course.day),
-                           fontWeight: 'bold'
-                         }}
-                       />
+                      <Chip 
+                        label={course.semester} 
+                        size="small" 
+                        sx={{ 
+                          backgroundColor: '#f8f9fa',
+                          color: '#6c757d',
+                          border: '1px solid #dee2e6'
+                        }}
+                      />
+                      <Chip 
+                        label={course.day} 
+                        size="small" 
+                        sx={{ 
+                          backgroundColor: getDayColor(course.day) + '20',
+                          color: getDayColor(course.day),
+                          fontWeight: 'bold'
+                        }}
+                      />
                     </Box>
-
-                                         <Button 
-                       data-testid={`manage-button-${index}`}
-                       variant="contained" 
-                       fullWidth
-                       onClick={() => handleCourseClick(course)}
-                       sx={{ 
-                         backgroundColor: '#6c757d',
-                         '&:hover': {
-                           backgroundColor: '#5a6268'
-                         }
-                       }}
-                     >
-                       Manage Class
-                     </Button>
+                    <Button 
+                      data-testid={`manage-button-${index}`}
+                      variant="contained" 
+                      fullWidth
+                      onClick={() => handleCourseClick(course)}
+                      sx={{ 
+                        backgroundColor: '#d32f2f',
+                        '&:hover': {
+                          backgroundColor: '#b71c1c'
+                        }
+                      }}
+                    >
+                      Manage Class
+                    </Button>
                   </CardContent>
                 </Card>
               </Grid>
@@ -241,7 +211,6 @@ const ClassManagement = () => {
           </Paper>
         )}
       </div>
-
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
