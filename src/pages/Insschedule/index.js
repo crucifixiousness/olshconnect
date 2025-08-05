@@ -1,5 +1,30 @@
 import { useState, useEffect } from "react";
-import { FormControl, InputLabel, Select, MenuItem, Snackbar, Alert } from "@mui/material";
+import { 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Snackbar, 
+  Alert, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Box, 
+  Chip, 
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from "@mui/material";
+import { 
+  Schedule as ScheduleIcon, 
+  FilterList as FilterIcon,
+  School as SchoolIcon
+} from '@mui/icons-material';
 import axios from 'axios';
 
 const InstructorSchedule = () => {
@@ -16,7 +41,7 @@ const InstructorSchedule = () => {
   useEffect(() => {
     const fetchInstructorSchedule = async () => {
       try {
-        setLoading(true); // Set loading before any operations
+        setLoading(true);
         
         // Get staff_id from localStorage with safe parsing
         const userStr = localStorage.getItem("user");
@@ -50,7 +75,6 @@ const InstructorSchedule = () => {
           severity: 'error'
         });
       } finally {
-        // Ensure loading state has time to be visible in tests
         setTimeout(() => {
           setLoading(false);
         }, 100);
@@ -70,16 +94,26 @@ const InstructorSchedule = () => {
 
   const formatTime = (time) => {
     if (!time) return '';
-    // If time already includes AM/PM, return as is
     if (time.includes('AM') || time.includes('PM')) {
       return time;
     }
-    // Otherwise, format the time
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
+  const getDayColor = (day) => {
+    const colors = {
+      'Monday': '#1976d2',
+      'Tuesday': '#388e3c',
+      'Wednesday': '#f57c00',
+      'Thursday': '#7b1fa2',
+      'Friday': '#d32f2f',
+      'Saturday': '#5d4037'
+    };
+    return colors[day] || '#757575';
   };
 
   const filteredSchedules = schedules.filter(schedule => 
@@ -94,15 +128,37 @@ const InstructorSchedule = () => {
     return a.start_time.localeCompare(b.start_time);
   });
 
+  // Group schedules by day
+  const groupedSchedules = sortedSchedules.reduce((acc, schedule) => {
+    if (!acc[schedule.day]) {
+      acc[schedule.day] = [];
+    }
+    acc[schedule.day].push(schedule);
+    return acc;
+  }, {});
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="hd mt-2 pb-0" data-testid="page-title">My Teaching Schedule</h3>
       </div>
 
-      <div className="card shadow border-0 p-3 mt-1">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <FormControl sx={{ minWidth: 200 }}>
+      {/* Filter Section */}
+      <Card className="mb-4 p-3" sx={{ 
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        border: '1px solid #dee2e6'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <FilterIcon sx={{ color: '#c70202', fontSize: 24 }} />
+          <Typography variant="h6" sx={{ color: '#495057', fontWeight: 'bold' }}>
+            Filter Schedule
+          </Typography>
+        </Box>
+        
+        <div className="d-flex justify-content-between align-items-center">
+          <FormControl sx={{ minWidth: 250 }}>
             <InputLabel id="semester-filter-label">Filter by Semester</InputLabel>
             <Select
               data-testid="semester-filter"
@@ -110,6 +166,14 @@ const InstructorSchedule = () => {
               value={selectedSemester}
               onChange={handleSemesterChange}
               label="Filter by Semester"
+              sx={{ 
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#c70202'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#a00101'
+                }
+              }}
             >
               <MenuItem value="" data-testid="all-semesters">All Semesters</MenuItem>
               <MenuItem value="1st" data-testid="first-semester">1st Semester</MenuItem>
@@ -117,57 +181,147 @@ const InstructorSchedule = () => {
               <MenuItem value="Summer" data-testid="summer-semester">Summer</MenuItem>
             </Select>
           </FormControl>
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip 
+              label={`${sortedSchedules.length} Classes`} 
+              color="primary" 
+              variant="outlined"
+              sx={{ borderColor: '#c70202', color: '#c70202' }}
+            />
+            {selectedSemester && (
+              <Chip 
+                label={selectedSemester} 
+                variant="outlined"
+                sx={{ borderColor: '#6c757d', color: '#6c757d' }}
+              />
+            )}
+          </Box>
         </div>
+      </Card>
 
-        <div className="table-responsive mt-3">
-          <table className="table table-bordered v-align" data-testid="schedule-table">
-            <thead className="thead-dark">
-              <tr>
-                <th>Course Code</th>
-                <th>Course Name</th>
-                <th>Units</th>
-                <th>Section</th>
-                <th>Day</th>
-                <th>Time</th>
-                <th>Program</th>
-                <th>Year Level</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="8" className="text-center" data-testid="loading-message">Loading...</td>
-                </tr>
-              ) : sortedSchedules.length > 0 ? (
-                sortedSchedules.map((schedule, index) => (
-                  <tr key={index} data-testid={`schedule-row-${index}`}>
-                    <td data-testid={`course-code-${index}`}>{schedule.course_code}</td>
-                    <td>{schedule.course_name}</td>
-                    <td>{schedule.units}</td>
-                    <td>{schedule.section}</td>
-                    <td data-testid={`day-${index}`}>{schedule.day}</td>
-                    <td data-testid={`time-${index}`}>
-                      {`${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`}
-                    </td>
-                    <td>{schedule.program_name}</td>
-                    <td>{schedule.year_level}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td 
-                    colSpan="8" 
-                    className="text-center" 
-                    data-testid="empty-message"
-                  >
-                    No schedules available{selectedSemester ? ` for ${selectedSemester} Semester` : ''}.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Schedule Display */}
+      <Card className="p-3" sx={{ 
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: 4
+        }
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <ScheduleIcon sx={{ color: '#c70202', fontSize: 24 }} />
+          <Typography variant="h6" sx={{ color: '#495057', fontWeight: 'bold' }}>
+            Teaching Schedule
+          </Typography>
+        </Box>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+            <CircularProgress sx={{ color: '#c70202' }} />
+          </Box>
+        ) : sortedSchedules.length > 0 ? (
+          <div>
+            {/* Day-by-Day Schedule */}
+            {days.map(day => {
+              const daySchedules = groupedSchedules[day];
+              if (!daySchedules || daySchedules.length === 0) return null;
+              
+              return (
+                <Card key={day} className="mb-3" sx={{ 
+                  border: `2px solid ${getDayColor(day)}20`,
+                  '&:hover': {
+                    borderColor: getDayColor(day),
+                    boxShadow: 2
+                  }
+                }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Chip 
+                        label={day} 
+                        size="small" 
+                        sx={{ 
+                          backgroundColor: getDayColor(day) + '20',
+                          color: getDayColor(day),
+                          fontWeight: 'bold',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                      <Typography variant="h6" sx={{ color: getDayColor(day), fontWeight: 'bold' }}>
+                        {daySchedules.length} Class{daySchedules.length > 1 ? 'es' : ''}
+                      </Typography>
+                    </Box>
+                    
+                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #dee2e6' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Time</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Course</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Block</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Units</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Program</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Year Level</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {daySchedules.map((schedule, index) => (
+                            <TableRow 
+                              key={index} 
+                              data-testid={`schedule-row-${index}`}
+                              sx={{ 
+                                '&:nth-of-type(odd)': { backgroundColor: '#f8f9fa' },
+                                '&:hover': { backgroundColor: '#e9ecef' }
+                              }}
+                            >
+                              <TableCell sx={{ fontWeight: '500', color: getDayColor(day) }}>
+                                {`${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`}
+                              </TableCell>
+                              <TableCell>
+                                <Box>
+                                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                    {schedule.course_code}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {schedule.course_name}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell>{schedule.section}</TableCell>
+                              <TableCell>
+                                <Chip 
+                                  label={`${schedule.units} units`} 
+                                  size="small" 
+                                  variant="outlined"
+                                  sx={{ 
+                                    borderColor: '#6c757d', 
+                                    color: '#6c757d',
+                                    fontSize: '0.7rem'
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>{schedule.program_name}</TableCell>
+                              <TableCell>{schedule.year_level}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Paper elevation={1} sx={{ p: 6, textAlign: 'center' }}>
+            <SchoolIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h5" color="text.secondary" sx={{ mb: 1 }}>
+              No schedules available
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {selectedSemester ? `No schedules found for ${selectedSemester} semester.` : 'You have not been assigned to any classes yet.'}
+            </Typography>
+          </Paper>
+        )}
+      </Card>
 
       <Snackbar
         data-testid="snackbar"
