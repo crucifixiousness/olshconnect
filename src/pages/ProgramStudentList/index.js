@@ -146,6 +146,9 @@ const ProgramStudentList = () => {
         console.log('Fetching existing blocks for program_id:', programId);
         const response = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
         console.log('API response for existing blocks:', response.data);
+        console.log('Response data type:', typeof response.data);
+        console.log('Response data length:', response.data?.length);
+        console.log('Full response data structure:', JSON.stringify(response.data, null, 2));
         
         // Filter out null/undefined values and ensure we have valid block names
         let blocks = [];
