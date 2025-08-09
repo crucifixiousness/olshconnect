@@ -227,6 +227,30 @@ function App() {
 
       document.addEventListener('keydown', handleKeyDown);
 
+      // Also prevent direct navigation to login pages when authenticated
+      const currentPath = window.location.pathname;
+      if (currentPath === '/login' || currentPath === '/stafflogin') {
+        let redirectPath = '/homepage';
+        if (role === 'student') {
+          redirectPath = '/student-dashboard';
+        } else if (role === 'admin') {
+          redirectPath = '/dashboard';
+        } else if (role === 'registrar') {
+          redirectPath = '/registrar-dashboard';
+        } else if (role === 'finance') {
+          redirectPath = '/finance-dashboard';
+        } else if (role === 'program head') {
+          redirectPath = '/programhead-dashboard';
+        } else if (role === 'instructor') {
+          redirectPath = '/instructor-dashboard';
+        }
+        
+        // Use replace to avoid adding to history
+        window.history.replaceState(null, '', redirectPath);
+        // Force a page reload to ensure proper routing
+        window.location.href = redirectPath;
+      }
+
       return () => {
         window.removeEventListener('popstate', handlePopState);
         document.removeEventListener('keydown', handleKeyDown);
@@ -254,16 +278,44 @@ function App() {
 
     // Check if user is authenticated
     if (!token) {
-      // Only redirect if we're not already on the login page to prevent loops
-      if (window.location.pathname !== redirectTo) {
-        return <Navigate to={redirectTo} replace />;
+      // Determine the appropriate redirect path based on the intended role
+      let redirectPath = redirectTo;
+      if (requiredRole && Array.isArray(requiredRole)) {
+        // For routes that accept multiple roles, redirect to the first role's dashboard
+        const firstRole = requiredRole[0];
+        if (firstRole === 'student') {
+          redirectPath = '/login';
+        } else {
+          redirectPath = '/stafflogin';
+        }
+      } else if (requiredRole === 'student') {
+        redirectPath = '/login';
+      } else {
+        redirectPath = '/stafflogin';
       }
-      return null;
+      
+      return <Navigate to={redirectPath} replace />;
     }
 
     // Check if user has required role
     if (requiredRole && !requiredRole.includes(role)) {
-      return <Navigate to={redirectTo} replace />;
+      // Redirect to appropriate dashboard based on current user's role
+      let redirectPath = '/homepage';
+      if (role === 'student') {
+        redirectPath = '/student-dashboard';
+      } else if (role === 'admin') {
+        redirectPath = '/dashboard';
+      } else if (role === 'registrar') {
+        redirectPath = '/registrar-dashboard';
+      } else if (role === 'finance') {
+        redirectPath = '/finance-dashboard';
+      } else if (role === 'program head') {
+        redirectPath = '/programhead-dashboard';
+      } else if (role === 'instructor') {
+        redirectPath = '/instructor-dashboard';
+      }
+      
+      return <Navigate to={redirectPath} replace />;
     }
 
     return element;
