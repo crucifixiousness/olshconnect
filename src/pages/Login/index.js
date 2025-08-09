@@ -181,6 +181,8 @@ const Login = () => {
   const [isShowPass, setIsShowPass] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // Move this up with other useState calls
+  
   const context = useContext(MyContext);
   const navigate = useNavigate();
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
@@ -207,11 +209,6 @@ const Login = () => {
       }
     }
   }, [navigate]);
-
-  // If already logged in, don't render the login form
-  if (isLogin) {
-    return null; // or a loading spinner
-  }
   
   useEffect(() => {
       context.setIsHideComponents(true);
@@ -221,13 +218,15 @@ const Login = () => {
       setInputIndex(index);
   }
 
-    const handleInputChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
-    };
+  };
 
-    // Add loading state
-    const [isLoading, setIsLoading] = useState(false);
+  // Check if already logged in AFTER all hooks
+  if (isLogin) {
+    return null; // or a loading spinner
+  }
 
     // Then modify your handleLogin function to remove the redirect logic
     const handleLogin = async (e) => {
