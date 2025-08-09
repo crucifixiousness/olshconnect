@@ -165,114 +165,79 @@ function App() {
     console.log('App State Update:', { token, role, user, isAuthLoading });
   }, [token, role, user, isAuthLoading]);
 
-  // Completely disable backward navigation for authenticated users
+  // Prevent backward navigation for authenticated users using React Router history
   useEffect(() => {
     if (token && role) {
-      // Disable browser back button completely
-      const disableBackButton = () => {
-        // Push current state to history to prevent going back
-        window.history.pushState(null, '', window.location.href);
+      console.log('🔒 [BACK BUTTON] Setting up history listener for role:', role);
+      
+      // Import useNavigate and useLocation from react-router-dom
+      const handlePopState = () => {
+        console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to appropriate dashboard');
         
-        // Listen for popstate and immediately push forward again
-        const handlePopState = () => {
-          window.history.pushState(null, '', window.location.href);
-        };
+        // Redirect to appropriate dashboard based on role
+        let redirectPath = '/homepage';
+        if (role === 'student') {
+          redirectPath = '/student-dashboard';
+        } else if (role === 'admin') {
+          redirectPath = '/dashboard';
+        } else if (role === 'registrar') {
+          redirectPath = '/registrar-dashboard';
+        } else if (role === 'finance') {
+          redirectPath = '/finance-dashboard';
+        } else if (role === 'program head') {
+          redirectPath = '/programhead-dashboard';
+        } else if (role === 'instructor') {
+          redirectPath = '/instructor-dashboard';
+        }
         
-        window.addEventListener('popstate', handlePopState);
-        
-        // Disable keyboard shortcuts for back navigation
-        const handleKeyDown = (event) => {
-          if ((event.altKey && event.key === 'ArrowLeft') || 
-              (event.metaKey && event.key === '[') ||
-              (event.ctrlKey && event.key === '[') ||
-              (event.key === 'Backspace' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA')) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-          }
-        };
-        
-        document.addEventListener('keydown', handleKeyDown, true);
-        
-        // Disable right-click context menu that might have "Back" option
-        const handleContextMenu = (event) => {
-          event.preventDefault();
-          return false;
-        };
-        
-        document.addEventListener('contextmenu', handleContextMenu);
-        
-        // Disable middle-click on back button (if exists)
-        const handleMouseDown = (event) => {
-          if (event.button === 1) { // Middle mouse button
-            event.preventDefault();
-            return false;
-          }
-        };
-        
-        document.addEventListener('mousedown', handleMouseDown);
-        
-        // Override history methods to prevent manipulation
-        const originalPushState = window.history.pushState;
-        const originalReplaceState = window.history.replaceState;
-        const originalGo = window.history.go;
-        const originalBack = window.history.back;
-        const originalForward = window.history.forward;
-        
-        window.history.pushState = function(...args) {
-          // Only allow forward navigation, block backward
-          if (args[2] && args[2].includes('back')) {
-            return;
-          }
-          return originalPushState.apply(this, args);
-        };
-        
-        window.history.replaceState = function(...args) {
-          // Only allow forward navigation, block backward
-          if (args[2] && args[2].includes('back')) {
-            return;
-          }
-          return originalReplaceState.apply(this, args);
-        };
-        
-        window.history.go = function(delta) {
-          // Only allow forward navigation (positive delta)
-          if (delta > 0) {
-            return originalGo.apply(this, arguments);
-          }
-          return;
-        };
-        
-        window.history.back = function() {
-          // Completely disable back function
-          return;
-        };
-        
-        window.history.forward = function() {
-          // Allow forward navigation
-          return originalForward.apply(this, arguments);
-        };
-        
-        return () => {
-          // Restore original history methods when component unmounts
-          window.history.pushState = originalPushState;
-          window.history.replaceState = originalReplaceState;
-          window.history.go = originalGo;
-          window.history.back = originalBack;
-          window.history.forward = originalForward;
-          
-          // Remove event listeners
-          window.removeEventListener('popstate', handlePopState);
-          document.removeEventListener('keydown', handleKeyDown, true);
-          document.removeEventListener('contextmenu', handleContextMenu);
-          document.removeEventListener('mousedown', handleMouseDown);
-        };
+        // Use window.location.href for immediate redirect
+        window.location.href = redirectPath;
       };
       
-      // Initialize the back button disable
-      const cleanup = disableBackButton();
+      // Listen for browser back/forward button clicks
+      window.addEventListener('popstate', handlePopState);
+      console.log('🔒 [BACK BUTTON] Added popstate listener');
       
-      return cleanup;
+      // Also prevent going back with keyboard shortcuts
+      const handleKeyDown = (event) => {
+        if ((event.altKey && event.key === 'ArrowLeft') || 
+            (event.metaKey && event.key === '[') ||
+            (event.ctrlKey && event.key === '[')) {
+          console.log('🔒 [BACK BUTTON] Blocked keyboard shortcut:', event.key);
+          event.preventDefault();
+          event.stopPropagation();
+          
+          // Redirect to appropriate dashboard
+          let redirectPath = '/homepage';
+          if (role === 'student') {
+            redirectPath = '/student-dashboard';
+          } else if (role === 'admin') {
+            redirectPath = '/dashboard';
+          } else if (role === 'registrar') {
+            redirectPath = '/registrar-dashboard';
+          } else if (role === 'finance') {
+            redirectPath = '/finance-dashboard';
+          } else if (role === 'program head') {
+            redirectPath = '/programhead-dashboard';
+          } else if (role === 'instructor') {
+            redirectPath = '/instructor-dashboard';
+          }
+          
+          window.location.href = redirectPath;
+          return false;
+        }
+      };
+      
+      document.addEventListener('keydown', handleKeyDown);
+      console.log('🔒 [BACK BUTTON] Added keyboard listener');
+      
+      return () => {
+        console.log('🔒 [BACK BUTTON] Cleaning up event listeners');
+        window.removeEventListener('popstate', handlePopState);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      console.log('🔒 [BACK BUTTON] User not authenticated or no role, skipping back button prevention');
     }
   }, [token, role]);
 
