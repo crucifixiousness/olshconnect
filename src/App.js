@@ -60,7 +60,7 @@ if (typeof document !== 'undefined') {
 
 const MyContext = createContext();
 
-// Custom hook for authentication
+// Custom hook for authenticatio
 const useAuth = () => {
   const context = useContext(MyContext);
   if (!context) {
