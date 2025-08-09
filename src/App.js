@@ -178,8 +178,16 @@ function App() {
           let redirectPath = '/homepage';
           if (role === 'student') {
             redirectPath = '/student-dashboard';
-          } else if (['admin', 'registrar', 'finance', 'program head', 'instructor'].includes(role)) {
+          } else if (role === 'admin') {
             redirectPath = '/dashboard';
+          } else if (role === 'registrar') {
+            redirectPath = '/registrar-dashboard';
+          } else if (role === 'finance') {
+            redirectPath = '/finance-dashboard';
+          } else if (role === 'program head') {
+            redirectPath = '/programhead-dashboard';
+          } else if (role === 'instructor') {
+            redirectPath = '/instructor-dashboard';
           }
           
           // Use replace to avoid adding to history
@@ -202,8 +210,16 @@ function App() {
           let redirectPath = '/homepage';
           if (role === 'student') {
             redirectPath = '/student-dashboard';
-          } else if (['admin', 'registrar', 'finance', 'program head', 'instructor'].includes(role)) {
+          } else if (role === 'admin') {
             redirectPath = '/dashboard';
+          } else if (role === 'registrar') {
+            redirectPath = '/registrar-dashboard';
+          } else if (role === 'finance') {
+            redirectPath = '/finance-dashboard';
+          } else if (role === 'program head') {
+            redirectPath = '/programhead-dashboard';
+          } else if (role === 'instructor') {
+            redirectPath = '/instructor-dashboard';
           }
           window.location.href = redirectPath;
         }
