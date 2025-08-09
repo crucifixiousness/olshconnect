@@ -170,28 +170,34 @@ function App() {
     if (token && role) {
       console.log('🔒 [BACK BUTTON] Setting up history listener for role:', role);
       
-      // Import useNavigate and useLocation from react-router-dom
+      // Determine the appropriate dashboard path for this role
+      let dashboardPath = '/homepage';
+      if (role === 'student') {
+        dashboardPath = '/student-dashboard';
+      } else if (role === 'admin') {
+        dashboardPath = '/dashboard';
+      } else if (role === 'registrar') {
+        dashboardPath = '/registrar-dashboard';
+      } else if (role === 'finance') {
+        dashboardPath = '/finance-dashboard';
+      } else if (role === 'program head') {
+        dashboardPath = '/programhead-dashboard';
+      } else if (role === 'instructor') {
+        dashboardPath = '/instructor-dashboard';
+      }
+      
+      // Push the dashboard to history to prevent going back further
+      window.history.pushState(null, '', dashboardPath);
+      
       const handlePopState = () => {
-        console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to appropriate dashboard');
+        console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to dashboard:', dashboardPath);
         
-        // Redirect to appropriate dashboard based on role
-        let redirectPath = '/homepage';
-        if (role === 'student') {
-          redirectPath = '/student-dashboard';
-        } else if (role === 'admin') {
-          redirectPath = '/dashboard';
-        } else if (role === 'registrar') {
-          redirectPath = '/registrar-dashboard';
-        } else if (role === 'finance') {
-          redirectPath = '/finance-dashboard';
-        } else if (role === 'program head') {
-          redirectPath = '/programhead-dashboard';
-        } else if (role === 'instructor') {
-          redirectPath = '/instructor-dashboard';
-        }
+        // Replace the current history entry with the dashboard path
+        // This prevents adding multiple entries to browser history
+        window.history.replaceState(null, '', dashboardPath);
         
-        // Use window.location.href for immediate redirect
-        window.location.href = redirectPath;
+        // Force a page reload to ensure the dashboard renders
+        window.location.reload();
       };
       
       // Listen for browser back/forward button clicks
@@ -207,23 +213,9 @@ function App() {
           event.preventDefault();
           event.stopPropagation();
           
-          // Redirect to appropriate dashboard
-          let redirectPath = '/homepage';
-          if (role === 'student') {
-            redirectPath = '/student-dashboard';
-          } else if (role === 'admin') {
-            redirectPath = '/dashboard';
-          } else if (role === 'registrar') {
-            redirectPath = '/registrar-dashboard';
-          } else if (role === 'finance') {
-            redirectPath = '/finance-dashboard';
-          } else if (role === 'program head') {
-            redirectPath = '/programhead-dashboard';
-          } else if (role === 'instructor') {
-            redirectPath = '/instructor-dashboard';
-          }
-          
-          window.location.href = redirectPath;
+          // Replace current history entry and reload
+          window.history.replaceState(null, '', dashboardPath);
+          window.location.reload();
           return false;
         }
       };
