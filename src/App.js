@@ -186,9 +186,6 @@ function App() {
         dashboardPath = '/instructor-dashboard';
       }
       
-      // Push the dashboard to history to prevent going back further
-      window.history.pushState(null, '', dashboardPath);
-      
       const handlePopState = () => {
         console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to dashboard:', dashboardPath);
         
@@ -196,8 +193,9 @@ function App() {
         // This prevents adding multiple entries to browser history
         window.history.replaceState(null, '', dashboardPath);
         
-        // Force a page reload to ensure the dashboard renders
-        window.location.reload();
+        // Instead of reloading, use window.location.href to properly navigate
+        // This ensures the React Router picks up the route change
+        window.location.href = dashboardPath;
       };
       
       // Listen for browser back/forward button clicks
@@ -213,9 +211,9 @@ function App() {
           event.preventDefault();
           event.stopPropagation();
           
-          // Replace current history entry and reload
+          // Replace current history entry and navigate properly
           window.history.replaceState(null, '', dashboardPath);
-          window.location.reload();
+          window.location.href = dashboardPath;
           return false;
         }
       };
@@ -305,7 +303,6 @@ function App() {
           <div className={`content ${isHideComponents === true && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`} onClick={() => { if (isOpenNav) { setIsOpenNav(false); } }}>
             <Routes>
               <Route path="/notfound" element={<NotFound />} />
-              <Route path="*" element={<NotFound />} />
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
@@ -349,6 +346,8 @@ function App() {
               <Route path="/instructor-schedule" exact={true} element={<ProtectedRoute element={<InstructorSchedule />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-classes" exact={true} element={<ProtectedRoute element={<ClassManagement />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-classes/grades" exact={true} element={<ProtectedRoute element={<InstructorGrades />} requiredRole="instructor" redirectTo="/stafflogin" />} />
+              {/* Catch-all route for unmatched paths - should be last */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
         </div>
