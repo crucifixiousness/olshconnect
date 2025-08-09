@@ -592,23 +592,19 @@ const ProgramStudentList = () => {
                     <MenuItem value="">
                       <em>Choose a block</em>
                     </MenuItem>
-                    {/* Always show default blocks as fallback */}
-                    <MenuItem value="A">Block A</MenuItem>
-                    <MenuItem value="B">Block B</MenuItem>
-                    <MenuItem value="C">Block C</MenuItem>
                     
-                    {/* Show additional existing blocks if available */}
-                    {existingBlocks.length > 0 && existingBlocks.map((block) => {
-                      // Only show blocks that aren't A, B, or C to avoid duplicates
-                      if (block && !['A', 'B', 'C'].includes(block)) {
-                        return (
-                          <MenuItem key={block} value={block}>
-                            Block {block}
-                          </MenuItem>
-                        );
-                      }
-                      return null;
-                    })}
+                    {/* Show blocks from existingBlocks state */}
+                    {existingBlocks.length > 0 ? (
+                      existingBlocks.map((block) => (
+                        <MenuItem key={block} value={block}>
+                          Block {block}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem value="" disabled>
+                        <em>No blocks available</em>
+                      </MenuItem>
+                    )}
                   </Select>
                 </FormControl>
 
