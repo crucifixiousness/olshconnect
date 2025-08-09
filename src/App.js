@@ -192,14 +192,22 @@ function App() {
       const handlePopState = () => {
         console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to dashboard:', dashboardPath);
         console.log('🔒 [BACK BUTTON] Current URL before redirect:', window.location.pathname);
+        console.log('🔒 [BACK BUTTON] Event details:', { type: 'popstate', timestamp: new Date().toISOString() });
+        
+        // Prevent the default back navigation
+        event.preventDefault();
         
         // Replace the current history entry with the dashboard path
         // This prevents adding multiple entries to browser history
         window.history.replaceState(null, '', dashboardPath);
+        console.log('🔒 [BACK BUTTON] History state replaced with:', dashboardPath);
         
-        // Instead of reloading, use window.location.href to properly navigate
-        // This ensures the React Router picks up the route change
-        window.location.href = dashboardPath;
+        // Use pushState to ensure we're on the correct route
+        window.history.pushState(null, '', dashboardPath);
+        console.log('🔒 [BACK BUTTON] Pushed new state:', dashboardPath);
+        
+        // Force a page reload to ensure React Router picks up the route change
+        window.location.reload();
       };
       
       // Listen for browser back/forward button clicks
@@ -215,9 +223,10 @@ function App() {
           event.preventDefault();
           event.stopPropagation();
           
-          // Replace current history entry and navigate properly
+          // Replace current history entry and reload
           window.history.replaceState(null, '', dashboardPath);
-          window.location.href = dashboardPath;
+          window.history.pushState(null, '', dashboardPath);
+          window.location.reload();
           return false;
         }
       };
