@@ -146,11 +146,25 @@ const ProgramStudentList = () => {
         console.log('Fetching existing blocks for program_id:', programId);
         const response = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
         console.log('API response for existing blocks:', response.data);
-        setExistingBlocks(response.data);
-        console.log('existingBlocks state set to:', response.data);
+        
+        // Filter out null/undefined values and ensure we have valid block names
+        let blocks = [];
+        if (Array.isArray(response.data)) {
+          blocks = response.data.filter(block => block && block !== null && block !== undefined && block !== '');
+        }
+        
+        // If no valid blocks from API, use default blocks
+        if (blocks.length === 0) {
+          blocks = ['A', 'B', 'C'];
+          console.log('No valid blocks from API, using default blocks:', blocks);
+        }
+        
+        setExistingBlocks(blocks);
+        console.log('existingBlocks state set to:', blocks);
       } catch (error) {
         console.error('Error fetching existing blocks:', error);
-        setExistingBlocks([]);
+        // Set default blocks if API fails
+        setExistingBlocks(['A', 'B', 'C']);
       }
     };
 
@@ -573,19 +587,23 @@ const ProgramStudentList = () => {
                     <MenuItem value="">
                       <em>Choose a block</em>
                     </MenuItem>
-                    {existingBlocks.length > 0 ? (
-                      existingBlocks.map((block) => (
-                        <MenuItem key={block} value={block}>
-                          Block {block}
-                        </MenuItem>
-                      ))
-                    ) : (
-                      <>
-                        <MenuItem value="A">Block A</MenuItem>
-                        <MenuItem value="B">Block B</MenuItem>
-                        <MenuItem value="C">Block C</MenuItem>
-                      </>
-                    )}
+                    {/* Always show default blocks as fallback */}
+                    <MenuItem value="A">Block A</MenuItem>
+                    <MenuItem value="B">Block B</MenuItem>
+                    <MenuItem value="C">Block C</MenuItem>
+                    
+                    {/* Show additional existing blocks if available */}
+                    {existingBlocks.length > 0 && existingBlocks.map((block) => {
+                      // Only show blocks that aren't A, B, or C to avoid duplicates
+                      if (block && !['A', 'B', 'C'].includes(block)) {
+                        return (
+                          <MenuItem key={block} value={block}>
+                            Block {block}
+                          </MenuItem>
+                        );
+                      }
+                      return null;
+                    })}
                   </Select>
                 </FormControl>
 
