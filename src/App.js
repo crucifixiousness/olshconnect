@@ -165,96 +165,114 @@ function App() {
     console.log('App State Update:', { token, role, user, isAuthLoading });
   }, [token, role, user, isAuthLoading]);
 
-  // Prevent backward navigation for authenticated users
+  // Completely disable backward navigation for authenticated users
   useEffect(() => {
     if (token && role) {
-      const handlePopState = (event) => {
-        // Prevent going back to login pages or other sensitive routes
-        const currentPath = window.location.pathname;
-        const sensitiveRoutes = ['/login', '/stafflogin', '/homepage'];
+      // Disable browser back button completely
+      const disableBackButton = () => {
+        // Push current state to history to prevent going back
+        window.history.pushState(null, '', window.location.href);
         
-        if (sensitiveRoutes.includes(currentPath)) {
-          // Redirect to appropriate dashboard based on role
-          let redirectPath = '/homepage';
-          if (role === 'student') {
-            redirectPath = '/student-dashboard';
-          } else if (role === 'admin') {
-            redirectPath = '/dashboard';
-          } else if (role === 'registrar') {
-            redirectPath = '/registrar-dashboard';
-          } else if (role === 'finance') {
-            redirectPath = '/finance-dashboard';
-          } else if (role === 'program head') {
-            redirectPath = '/programhead-dashboard';
-          } else if (role === 'instructor') {
-            redirectPath = '/instructor-dashboard';
+        // Listen for popstate and immediately push forward again
+        const handlePopState = () => {
+          window.history.pushState(null, '', window.location.href);
+        };
+        
+        window.addEventListener('popstate', handlePopState);
+        
+        // Disable keyboard shortcuts for back navigation
+        const handleKeyDown = (event) => {
+          if ((event.altKey && event.key === 'ArrowLeft') || 
+              (event.metaKey && event.key === '[') ||
+              (event.ctrlKey && event.key === '[') ||
+              (event.key === 'Backspace' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA')) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
           }
-          
-          // Use replace to avoid adding to history
-          window.history.replaceState(null, '', redirectPath);
-          // Force a page reload to ensure proper routing
-          window.location.href = redirectPath;
-        }
-      };
-
-      // Listen for browser back/forward button clicks
-      window.addEventListener('popstate', handlePopState);
-      
-      // Also prevent going back with keyboard shortcuts
-      const handleKeyDown = (event) => {
-        if ((event.altKey && event.key === 'ArrowLeft') || 
-            (event.metaKey && event.key === '[') ||
-            (event.ctrlKey && event.key === '[')) {
+        };
+        
+        document.addEventListener('keydown', handleKeyDown, true);
+        
+        // Disable right-click context menu that might have "Back" option
+        const handleContextMenu = (event) => {
           event.preventDefault();
-          // Redirect to appropriate dashboard
-          let redirectPath = '/homepage';
-          if (role === 'student') {
-            redirectPath = '/student-dashboard';
-          } else if (role === 'admin') {
-            redirectPath = '/dashboard';
-          } else if (role === 'registrar') {
-            redirectPath = '/registrar-dashboard';
-          } else if (role === 'finance') {
-            redirectPath = '/finance-dashboard';
-          } else if (role === 'program head') {
-            redirectPath = '/programhead-dashboard';
-          } else if (role === 'instructor') {
-            redirectPath = '/instructor-dashboard';
-          }
-          window.location.href = redirectPath;
-        }
-      };
-
-      document.addEventListener('keydown', handleKeyDown);
-
-      // Also prevent direct navigation to login pages when authenticated
-      const currentPath = window.location.pathname;
-      if (currentPath === '/login' || currentPath === '/stafflogin') {
-        let redirectPath = '/homepage';
-        if (role === 'student') {
-          redirectPath = '/student-dashboard';
-        } else if (role === 'admin') {
-          redirectPath = '/dashboard';
-        } else if (role === 'registrar') {
-          redirectPath = '/registrar-dashboard';
-        } else if (role === 'finance') {
-          redirectPath = '/finance-dashboard';
-        } else if (role === 'program head') {
-          redirectPath = '/programhead-dashboard';
-        } else if (role === 'instructor') {
-          redirectPath = '/instructor-dashboard';
-        }
+          return false;
+        };
         
-        // Use replace to avoid adding to history
-        window.history.replaceState(null, '', redirectPath);
-        // Force a page reload to ensure proper routing
-        window.location.href = redirectPath;
-      }
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-        document.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener('contextmenu', handleContextMenu);
+        
+        // Disable middle-click on back button (if exists)
+        const handleMouseDown = (event) => {
+          if (event.button === 1) { // Middle mouse button
+            event.preventDefault();
+            return false;
+          }
+        };
+        
+        document.addEventListener('mousedown', handleMouseDown);
+        
+        // Override history methods to prevent manipulation
+        const originalPushState = window.history.pushState;
+        const originalReplaceState = window.history.replaceState;
+        const originalGo = window.history.go;
+        const originalBack = window.history.back;
+        const originalForward = window.history.forward;
+        
+        window.history.pushState = function(...args) {
+          // Only allow forward navigation, block backward
+          if (args[2] && args[2].includes('back')) {
+            return;
+          }
+          return originalPushState.apply(this, args);
+        };
+        
+        window.history.replaceState = function(...args) {
+          // Only allow forward navigation, block backward
+          if (args[2] && args[2].includes('back')) {
+            return;
+          }
+          return originalReplaceState.apply(this, args);
+        };
+        
+        window.history.go = function(delta) {
+          // Only allow forward navigation (positive delta)
+          if (delta > 0) {
+            return originalGo.apply(this, arguments);
+          }
+          return;
+        };
+        
+        window.history.back = function() {
+          // Completely disable back function
+          return;
+        };
+        
+        window.history.forward = function() {
+          // Allow forward navigation
+          return originalForward.apply(this, arguments);
+        };
+        
+        return () => {
+          // Restore original history methods when component unmounts
+          window.history.pushState = originalPushState;
+          window.history.replaceState = originalReplaceState;
+          window.history.go = originalGo;
+          window.history.back = originalBack;
+          window.history.forward = originalForward;
+          
+          // Remove event listeners
+          window.removeEventListener('popstate', handlePopState);
+          document.removeEventListener('keydown', handleKeyDown, true);
+          document.removeEventListener('contextmenu', handleContextMenu);
+          document.removeEventListener('mousedown', handleMouseDown);
+        };
       };
+      
+      // Initialize the back button disable
+      const cleanup = disableBackButton();
+      
+      return cleanup;
     }
   }, [token, role]);
 
@@ -278,44 +296,12 @@ function App() {
 
     // Check if user is authenticated
     if (!token) {
-      // Determine the appropriate redirect path based on the intended role
-      let redirectPath = redirectTo;
-      if (requiredRole && Array.isArray(requiredRole)) {
-        // For routes that accept multiple roles, redirect to the first role's dashboard
-        const firstRole = requiredRole[0];
-        if (firstRole === 'student') {
-          redirectPath = '/login';
-        } else {
-          redirectPath = '/stafflogin';
-        }
-      } else if (requiredRole === 'student') {
-        redirectPath = '/login';
-      } else {
-        redirectPath = '/stafflogin';
-      }
-      
-      return <Navigate to={redirectPath} replace />;
+      return <Navigate to={redirectTo} replace />;
     }
 
     // Check if user has required role
     if (requiredRole && !requiredRole.includes(role)) {
-      // Redirect to appropriate dashboard based on current user's role
-      let redirectPath = '/homepage';
-      if (role === 'student') {
-        redirectPath = '/student-dashboard';
-      } else if (role === 'admin') {
-        redirectPath = '/dashboard';
-      } else if (role === 'registrar') {
-        redirectPath = '/registrar-dashboard';
-      } else if (role === 'finance') {
-        redirectPath = '/finance-dashboard';
-      } else if (role === 'program head') {
-        redirectPath = '/programhead-dashboard';
-      } else if (role === 'instructor') {
-        redirectPath = '/instructor-dashboard';
-      }
-      
-      return <Navigate to={redirectPath} replace />;
+      return <Navigate to={redirectTo} replace />;
     }
 
     return element;
