@@ -185,6 +185,34 @@ const Login = () => {
   const navigate = useNavigate();
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
+  // Check if user is already logged in and redirect if necessary
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const storedIsLogin = localStorage.getItem('isLogin');
+    
+    if (storedToken && storedUser && storedIsLogin === 'true') {
+      try {
+        const userData = JSON.parse(storedUser);
+        const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
+          ? '/student-dashboard' 
+          : '/student-profile';
+        
+        // Use navigate instead of window.location.href for better routing
+        navigate(redirectPath, { replace: true });
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        // Clear invalid data
+        localStorage.clear();
+      }
+    }
+  }, [navigate]);
+
+  // If already logged in, don't render the login form
+  if (isLogin) {
+    return null; // or a loading spinner
+  }
+  
   useEffect(() => {
       context.setIsHideComponents(true);
   }, [context]);
@@ -201,17 +229,6 @@ const Login = () => {
     // Add loading state
     const [isLoading, setIsLoading] = useState(false);
 
-    // Add this useEffect after your existing useEffect
-    useEffect(() => {
-      if (isLogin) {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
-          ? '/student-dashboard' 
-          : '/student-profile';
-        window.location.href = redirectPath;
-      }
-    }, [isLogin]);
-    
     // Then modify your handleLogin function to remove the redirect logic
     const handleLogin = async (e) => {
       e.preventDefault();
@@ -271,6 +288,14 @@ const Login = () => {
         setRole(user.role);
         setUser(user);
         setIsLogin(true);
+        
+        // Redirect immediately after successful login
+        const redirectPath = user.enrollment_status === 'Officially Enrolled' 
+          ? '/student-dashboard' 
+          : '/student-profile';
+        
+        // Use navigate for better routing control
+        navigate(redirectPath, { replace: true });
     
       } catch (error) {
         let errorMsg = 'Login failed. Please try again.';
