@@ -1,11 +1,11 @@
 import './App.css';
 import './responsive.css';
-import { BrowserRouter, Navigate, Route, Routes, useContext } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import "bootstrap/dist/css/bootstrap.min.css";
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState, useContext } from 'react';
 import Login from './pages/Login';
 import FakeLogin from './pages/FakeLogin';
 import Signup from './pages/Signup';
@@ -60,7 +60,7 @@ if (typeof document !== 'undefined') {
 
 const MyContext = createContext();
 
-// Custom hook for authenticatio
+// Custom hook for authentication
 const useAuth = () => {
   const context = useContext(MyContext);
   if (!context) {
