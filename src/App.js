@@ -343,7 +343,23 @@ function App() {
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
               <Route path="/stafflogin" exact={true} element={
                 token && role && role !== 'student' ? (
-                  <Navigate to="/dashboard" replace />
+                  (() => {
+                    // Redirect staff to their specific dashboard based on role
+                    if (role === 'admin') {
+                      return <Navigate to="/dashboard" replace />;
+                    } else if (role === 'registrar') {
+                      return <Navigate to="/registrar-dashboard" replace />;
+                    } else if (role === 'finance') {
+                      return <Navigate to="/finance-dashboard" replace />;
+                    } else if (role === 'program head') {
+                      return <Navigate to="/programhead-dashboard" replace />;
+                    } else if (role === 'instructor') {
+                      return <Navigate to="/instructor-dashboard" replace />;
+                    } else {
+                      // Fallback to homepage for unknown roles
+                      return <Navigate to="/homepage" replace />;
+                    }
+                  })()
                 ) : (
                   <Signup />
                 )
