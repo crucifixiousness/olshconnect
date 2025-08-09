@@ -186,8 +186,12 @@ function App() {
         dashboardPath = '/instructor-dashboard';
       }
       
+      console.log('🔒 [BACK BUTTON] Dashboard path set to:', dashboardPath);
+      console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
+      
       const handlePopState = () => {
         console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to dashboard:', dashboardPath);
+        console.log('🔒 [BACK BUTTON] Current URL before redirect:', window.location.pathname);
         
         // Replace the current history entry with the dashboard path
         // This prevents adding multiple entries to browser history
@@ -228,6 +232,7 @@ function App() {
       };
     } else {
       console.log('🔒 [BACK BUTTON] User not authenticated or no role, skipping back button prevention');
+      console.log('🔒 [BACK BUTTON] Token:', !!token, 'Role:', role);
     }
   }, [token, role]);
 
@@ -251,12 +256,34 @@ function App() {
 
     // Check if user is authenticated
     if (!token) {
+      console.log('🔒 [PROTECTED ROUTE] No token, redirecting to:', redirectTo);
       return <Navigate to={redirectTo} replace />;
     }
 
     // Check if user has required role
-    if (requiredRole && !requiredRole.includes(role)) {
-      return <Navigate to={redirectTo} replace />;
+    if (requiredRole) {
+      console.log('🔒 [PROTECTED ROUTE] Checking role access:');
+      console.log('  - User role:', role);
+      console.log('  - Required role:', requiredRole);
+      console.log('  - Required role type:', typeof requiredRole);
+      console.log('  - Is array?', Array.isArray(requiredRole));
+      
+      let hasAccess = false;
+      
+      if (Array.isArray(requiredRole)) {
+        hasAccess = requiredRole.includes(role);
+        console.log('  - Array check result:', hasAccess);
+      } else {
+        hasAccess = requiredRole === role;
+        console.log('  - String check result:', hasAccess);
+      }
+      
+      if (!hasAccess) {
+        console.log('🔒 [PROTECTED ROUTE] Access denied, redirecting to:', redirectTo);
+        return <Navigate to={redirectTo} replace />;
+      }
+      
+      console.log('🔒 [PROTECTED ROUTE] Access granted!');
     }
 
     return element;
