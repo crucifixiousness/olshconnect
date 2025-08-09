@@ -1,6 +1,6 @@
 import './App.css';
 import './responsive.css';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useContext } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -43,7 +43,31 @@ import CounterPayment from './pages/CounterPayment';
 import PaymentHistory from './pages/PaymentHistory';
 import ProgramStudentList from './pages/ProgramStudentList';
 
+// Add CSS for loading spinner animation
+const loadingStyles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// Inject the styles
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = loadingStyles;
+  document.head.appendChild(style);
+}
+
 const MyContext = createContext();
+
+// Custom hook for authentication
+const useAuth = () => {
+  const context = useContext(MyContext);
+  if (!context) {
+    throw new Error('useAuth must be used within a MyContext.Provider');
+  }
+  return context;
+};
 
 function App() {
   // eslint-disable-next-line
@@ -55,6 +79,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [role, setRole] = useState(localStorage.getItem('role') || null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const handleResize = () => {
@@ -68,17 +93,50 @@ function App() {
   }, []);
    
   useEffect(() => {
-    setRole(localStorage.getItem('role'));
-    setUser(JSON.parse(localStorage.getItem('user')));
-  }, [token]);
+    // Restore authentication state from localStorage
+    const restoreAuthState = () => {
+      try {
+        const storedToken = localStorage.getItem('token');
+        const storedRole = localStorage.getItem('role');
+        const storedUser = localStorage.getItem('user');
+        const storedIsLogin = localStorage.getItem('isLogin');
+
+        if (storedToken && storedRole && storedUser && storedIsLogin === 'true') {
+          setToken(storedToken);
+          setRole(storedRole);
+          setUser(JSON.parse(storedUser));
+          setIsLogin(true);
+        }
+      } catch (error) {
+        console.error('Error restoring auth state:', error);
+        // Clear invalid data
+        localStorage.clear();
+      } finally {
+        setIsAuthLoading(false); // Mark loading as complete
+      }
+    };
+
+    restoreAuthState();
+  }, []); // Only run once on mount
 
   useEffect(() => {
     document.title = "OLSHCOnnect";
   }, []);
 
-
   const openNav = () => {
     setIsOpenNav(true);
+  };
+
+  const logout = () => {
+    // Clear all authentication data
+    localStorage.clear();
+    setToken(null);
+    setRole(null);
+    setUser(null);
+    setIsLogin(false);
+    
+    // Redirect to homepage
+    window.location.href = '/homepage';
   };
 
   const values = {
@@ -98,19 +156,45 @@ function App() {
     setToken,
     role,
     setRole,
+    isAuthLoading, // Add loading state to context
+    useAuth, // Add the hook to context
+    logout, // Add logout function
   };
 
   useEffect(() => {
-    console.log('App State Update:', { token, role, user });
-  }, [token, role, user]);
+    console.log('App State Update:', { token, role, user, isAuthLoading });
+  }, [token, role, user, isAuthLoading]);
 
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
-    if (!token) {
-      return <Navigate to={redirectTo} />;
+    // Show loading while authentication state is being restored
+    if (isAuthLoading) {
+      return (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          <div style={{ fontSize: '24px', color: '#666' }}>Loading...</div>
+          <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        </div>
+      );
     }
 
+    // Check if user is authenticated
+    if (!token) {
+      // Only redirect if we're not already on the login page to prevent loops
+      if (window.location.pathname !== redirectTo) {
+        return <Navigate to={redirectTo} replace />;
+      }
+      return null;
+    }
+
+    // Check if user has required role
     if (requiredRole && !requiredRole.includes(role)) {
-      return <Navigate to={redirectTo} />;
+      return <Navigate to={redirectTo} replace />;
     }
 
     return element;
@@ -161,9 +245,21 @@ function App() {
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
-              <Route path="/login" exact={true} element={<Login />} />
+              <Route path="/login" exact={true} element={
+                token && role === 'student' ? (
+                  <Navigate to="/student-dashboard" replace />
+                ) : (
+                  <Login />
+                )
+              } />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
-              <Route path="/stafflogin" exact={true} element={<Signup />} />
+              <Route path="/stafflogin" exact={true} element={
+                token && role && role !== 'student' ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Signup />
+                )
+              } />
               <Route path="/studentlist" exact={true} element={<ProtectedRoute element={<StudentList />} requiredRole={['registrar', 'admin', 'finance', 'instructor']} redirectTo="/stafflogin" />} />
               <Route path="/staffs" exact={true} element={<ProtectedRoute element={<Staff />} requiredRole={['registrar', 'admin', 'finance', 'instructor', 'program head']} redirectTo="/stafflogin" />} />
               <Route path="/document-request" exact={true} element={<ProtectedRoute element={<DocumentRequests />} requiredRole={['registrar', 'admin']} redirectTo="/stafflogin" />} />
