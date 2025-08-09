@@ -255,8 +255,20 @@ function App() {
     }
 
     // Check if user has required role
-    if (requiredRole && !requiredRole.includes(role)) {
-      return <Navigate to={redirectTo} replace />;
+    if (requiredRole) {
+      let hasRequiredRole = false;
+      
+      if (Array.isArray(requiredRole)) {
+        // If requiredRole is an array, check if user's role is included
+        hasRequiredRole = requiredRole.includes(role);
+      } else {
+        // If requiredRole is a string, check if it matches user's role exactly
+        hasRequiredRole = requiredRole === role;
+      }
+      
+      if (!hasRequiredRole) {
+        return <Navigate to={redirectTo} replace />;
+      }
     }
 
     return element;
