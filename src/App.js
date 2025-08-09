@@ -165,6 +165,59 @@ function App() {
     console.log('App State Update:', { token, role, user, isAuthLoading });
   }, [token, role, user, isAuthLoading]);
 
+  // Prevent backward navigation for authenticated users
+  useEffect(() => {
+    if (token && role) {
+      const handlePopState = (event) => {
+        // Prevent going back to login pages or other sensitive routes
+        const currentPath = window.location.pathname;
+        const sensitiveRoutes = ['/login', '/stafflogin', '/homepage'];
+        
+        if (sensitiveRoutes.includes(currentPath)) {
+          // Redirect to appropriate dashboard based on role
+          let redirectPath = '/homepage';
+          if (role === 'student') {
+            redirectPath = '/student-dashboard';
+          } else if (['admin', 'registrar', 'finance', 'program head', 'instructor'].includes(role)) {
+            redirectPath = '/dashboard';
+          }
+          
+          // Use replace to avoid adding to history
+          window.history.replaceState(null, '', redirectPath);
+          // Force a page reload to ensure proper routing
+          window.location.href = redirectPath;
+        }
+      };
+
+      // Listen for browser back/forward button clicks
+      window.addEventListener('popstate', handlePopState);
+      
+      // Also prevent going back with keyboard shortcuts
+      const handleKeyDown = (event) => {
+        if ((event.altKey && event.key === 'ArrowLeft') || 
+            (event.metaKey && event.key === '[') ||
+            (event.ctrlKey && event.key === '[')) {
+          event.preventDefault();
+          // Redirect to appropriate dashboard
+          let redirectPath = '/homepage';
+          if (role === 'student') {
+            redirectPath = '/student-dashboard';
+          } else if (['admin', 'registrar', 'finance', 'program head', 'instructor'].includes(role)) {
+            redirectPath = '/dashboard';
+          }
+          window.location.href = redirectPath;
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [token, role]);
+
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
     // Show loading while authentication state is being restored
     if (isAuthLoading) {
