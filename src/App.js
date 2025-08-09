@@ -189,28 +189,17 @@ function App() {
       console.log('🔒 [BACK BUTTON] Dashboard path set to:', dashboardPath);
       console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
       
+      // Set initial history state to prevent going back further
+      window.history.pushState({ role, dashboardPath }, '', dashboardPath);
+      console.log('🔒 [BACK BUTTON] Initial history state set');
+      
       const handlePopState = (event) => {
-        console.log('🔒 [BACK BUTTON] Back navigation detected, redirecting to dashboard:', dashboardPath);
-        console.log('🔒 [BACK BUTTON] Current URL before redirect:', window.location.pathname);
-        console.log('🔒 [BACK BUTTON] Event details:', { type: 'popstate', timestamp: new Date().toISOString() });
+        console.log('🔒 [BACK BUTTON] Back navigation detected!');
+        console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
+        console.log('🔒 [BACK BUTTON] Target dashboard:', dashboardPath);
         
-        // Prevent the default back navigation
-        event.preventDefault();
-        
-        // Replace the current history entry with the dashboard path
-        // This prevents adding multiple entries to browser history
-        window.history.replaceState(null, '', dashboardPath);
-        console.log('🔒 [BACK BUTTON] History state replaced with:', dashboardPath);
-        
-        // Use pushState to ensure we're on the correct route
-        window.history.pushState(null, '', dashboardPath);
-        console.log('🔒 [BACK BUTTON] Pushed new state:', dashboardPath);
-        
-        // Instead of reloading, just ensure the URL is correct
-        // The React Router should handle the route change without losing auth state
-        if (window.location.pathname !== dashboardPath) {
-          window.location.pathname = dashboardPath;
-        }
+        // Immediately redirect back to the dashboard
+        window.location.href = dashboardPath;
       };
       
       // Listen for browser back/forward button clicks
@@ -226,13 +215,8 @@ function App() {
           event.preventDefault();
           event.stopPropagation();
           
-          // Replace current history entry without reloading
-          window.history.replaceState(null, '', dashboardPath);
-          window.history.pushState(null, '', dashboardPath);
-          
-          if (window.location.pathname !== dashboardPath) {
-            window.location.pathname = dashboardPath;
-          }
+          // Redirect to dashboard
+          window.location.href = dashboardPath;
           return false;
         }
       };
