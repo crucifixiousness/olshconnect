@@ -11,7 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 
-// Honeypot monitoring system for login page
+// Honeypot monitoring system for login pag
 const LoginHoneypotMonitor = {
   suspiciousActivities: [],
   sessionStartTime: Date.now(),
