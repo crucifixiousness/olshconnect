@@ -24,9 +24,7 @@ module.exports = async (req, res) => {
               json_agg(
                 json_build_object(
                   'major_id', m.major_id,
-                  'major_name', m.major_name,
-                  'major_code', m.major_code,
-                  'description', m.description
+                  'major_name', m.major_name
                 )
               ) FILTER (WHERE m.major_id IS NOT NULL), '[]'
             ) AS majors
