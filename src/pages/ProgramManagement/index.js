@@ -32,7 +32,6 @@ import {
   Book as BookIcon
 } from '@mui/icons-material';
 import axios from 'axios';
-import { Snackbar, Alert } from '@mui/material';
 
 const ProgramManagement = () => {
   const [programs, setPrograms] = useState([]);
