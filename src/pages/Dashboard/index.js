@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Typography, CircularProgress, Box, Grid, Chip } from '@mui/material';
 import { GiBookshelf } from "react-icons/gi";
 import { RiPoliceBadgeFill } from "react-icons/ri";
@@ -12,6 +13,7 @@ import { MyContext } from "../../App";
 const Dashboard = () => {
   const context = useContext(MyContext);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -196,15 +198,6 @@ const Dashboard = () => {
                     backgroundColor: '#c70202', 
                     color: 'white',
                     '&:hover': { backgroundColor: '#a00101' },
-                    cursor: 'pointer'
-                  }}
-                />
-                <Chip 
-                  label="Manage Programs" 
-                  sx={{ 
-                    backgroundColor: '#6c757d', 
-                    color: 'white',
-                    '&:hover': { backgroundColor: '#5a6268' },
                     cursor: 'pointer'
                   }}
                 />
