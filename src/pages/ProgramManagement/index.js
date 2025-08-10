@@ -47,8 +47,6 @@ const ProgramManagement = () => {
   const [editingMajor, setEditingMajor] = useState(null);
   const [majorForm, setMajorForm] = useState({
     major_name: '',
-    major_code: '',
-    description: '',
     program_id: ''
   });
   
@@ -141,8 +139,6 @@ const ProgramManagement = () => {
         await axios.put('/api/major-management', {
           major_id: editingMajor.major_id,
           major_name: majorForm.major_name,
-          major_code: majorForm.major_code,
-          description: majorForm.description,
           program_id: majorForm.program_id
         });
         showNotification('Major updated successfully');
@@ -163,8 +159,6 @@ const ProgramManagement = () => {
     setEditingMajor(major);
     setMajorForm({
       major_name: major.major_name,
-      major_code: major.major_code,
-      description: major.description,
       program_id: major.program_id
     });
     setMajorDialogOpen(true);
@@ -187,8 +181,6 @@ const ProgramManagement = () => {
     setEditingMajor(null);
     setMajorForm({
       major_name: '',
-      major_code: '',
-      description: '',
       program_id: ''
     });
   };
@@ -382,8 +374,6 @@ const ProgramManagement = () => {
                   <TableHead>
                     <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
                       <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Major Name</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Major Code</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
                       <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
                       <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Actions</TableCell>
                     </TableRow>
@@ -397,12 +387,6 @@ const ProgramManagement = () => {
                           hover
                         >
                           <TableCell>{major.major_name}</TableCell>
-                          <TableCell>
-                            <code style={{ backgroundColor: '#f8f9fa', padding: '4px 8px', borderRadius: '4px' }}>
-                              {major.major_code}
-                            </code>
-                          </TableCell>
-                          <TableCell>{major.description || '-'}</TableCell>
                           <TableCell>{major.program_name}</TableCell>
                           <TableCell align="center">
                             <IconButton
@@ -434,7 +418,7 @@ const ProgramManagement = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan="5" align="center">
+                        <TableCell colSpan="3" align="center">
                           <Typography variant="body2" color="textSecondary">
                             No majors found.
                           </Typography>
@@ -508,26 +492,6 @@ const ProgramManagement = () => {
             variant="outlined"
             value={majorForm.major_name}
             onChange={(e) => setMajorForm({ ...majorForm, major_name: e.target.value })}
-            sx={{ mt: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Major Code"
-            fullWidth
-            variant="outlined"
-            value={majorForm.major_code}
-            onChange={(e) => setMajorForm({ ...majorForm, major_code: e.target.value })}
-            sx={{ mt: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Description"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={3}
-            value={majorForm.description}
-            onChange={(e) => setMajorForm({ ...majorForm, description: e.target.value })}
             sx={{ mt: 2 }}
           />
           <TextField
