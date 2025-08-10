@@ -4,6 +4,7 @@ import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
+import { FaGraduationCap } from "react-icons/fa";
 import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
@@ -91,8 +92,19 @@ const Sidebar = () =>{
               </Link>              
             </li>
             <li>
-              <Link to="/document-request">
+              <Link to="/program-management">
                 <Button className={`w-100 ${activeTab===4 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(4)}>
+                  <span className='icon'><FaGraduationCap />
+                  </span>
+                    Manage Programs
+                  <span className='arrow'><FaAnglesRight />
+                  </span>
+                </Button>
+              </Link>              
+            </li>
+            <li>
+              <Link to="/document-request">
+                <Button className={`w-100 ${activeTab===5 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(5)}>
                   <span className='icon'><IoIosPeople />
                   </span>
                     Document Request
