@@ -40,6 +40,7 @@ const StudentProfile = () => {
     message: '',
     severity: 'success'
   });
+  const [programs, setPrograms] = useState([]);
   const generateAcademicYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -160,12 +161,27 @@ const StudentProfile = () => {
       setLoading(false);
     }
   }, [token]);
+
+  const fetchPrograms = async () => {
+    try {
+      const response = await axios.get("/api/program-management");
+      setPrograms(response.data);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to load programs",
+        severity: 'error'
+      });
+    }
+  };
   
   useEffect(() => {
     if (!token) {
       navigate("/login");
     } else {
       fetchStudentData();
+      fetchPrograms();
     }
   }, [token, navigate, fetchStudentData]);
 
@@ -941,12 +957,15 @@ const StudentProfile = () => {
                     inputProps={{ 'aria-label': 'programs' }}
                     data-testid="program-select"
                   >
-                    <MenuItem value={2}>Bachelor of Elementary Education</MenuItem>
-                    <MenuItem value={2}>Bachelor of Secondary Education</MenuItem>
-                    <MenuItem value={3}>Bachelor of Science in Hospitality Management</MenuItem>
-                    <MenuItem value={1}>Bachelor of Science in Information Technology</MenuItem>
-                    <MenuItem value={4}>Bachelor of Science in Office Administration</MenuItem>
-                    <MenuItem value={5}>Bachelor of Science in Criminology</MenuItem>
+                    {programs.length > 0 ? (
+                      programs.map((program) => (
+                        <MenuItem key={program.program_id} value={program.program_id}>
+                          {program.program_name}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled>Loading programs...</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
               </div>
