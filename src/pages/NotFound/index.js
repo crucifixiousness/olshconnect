@@ -2,7 +2,6 @@ import React from 'react';
 import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MyContext } from "../../App";
-import './styles.css';
 
 const NotFound = () => {
   const context = useContext(MyContext);
