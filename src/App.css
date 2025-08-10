@@ -688,7 +688,7 @@ table.v-align td{vertical-align: middle !important;}
 /* NotFound Page Styles */
 .not-found-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #c70202 0%, #a00000 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -722,7 +722,7 @@ table.v-align td{vertical-align: middle !important;}
 .digit {
   font-size: 120px;
   font-weight: 900;
-  color: #667eea;
+  color: #c70202;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   animation: bounceIn 1s ease-out 0.3s both;
 }
@@ -736,14 +736,14 @@ table.v-align td{vertical-align: middle !important;}
 .zero {
   width: 100%;
   height: 100%;
-  border: 8px solid #764ba2;
+  border: 8px solid #a00000;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 80px;
   font-weight: 900;
-  color: #764ba2;
+  color: #a00000;
   animation: rotateIn 1.2s ease-out 0.6s both;
   position: relative;
 }
@@ -754,7 +754,7 @@ table.v-align td{vertical-align: middle !important;}
   width: 80%;
   height: 80%;
   border: 4px solid transparent;
-  border-top: 4px solid #667eea;
+  border-top: 4px solid #c70202;
   border-radius: 50%;
   animation: spin 3s linear infinite;
 }
@@ -807,22 +807,22 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #c70202 0%, #a00000 100%);
   color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  background: linear-gradient(135deg, #a00000 0%, #800000 100%);
 }
 
 .btn-secondary {
   background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: #c70202;
+  border: 2px solid #c70202;
 }
 
 .btn-secondary:hover {
-  background: #667eea;
+  background: #c70202;
   color: white;
 }
 
@@ -850,11 +850,11 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .link-item {
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  background: rgba(199, 2, 2, 0.1);
+  border: 1px solid rgba(199, 2, 2, 0.2);
   border-radius: 10px;
   padding: 12px 20px;
-  color: #667eea;
+  color: #c70202;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -863,8 +863,8 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .link-item:hover {
-  background: rgba(102, 126, 234, 0.2);
-  border-color: rgba(102, 126, 234, 0.4);
+  background: rgba(199, 2, 2, 0.2);
+  border-color: rgba(199, 2, 2, 0.4);
   transform: translateY(-1px);
 }
 
@@ -889,7 +889,7 @@ table.v-align td{vertical-align: middle !important;}
 .shape-1 {
   width: 80px;
   height: 80px;
-  background: linear-gradient(45deg, #667eea, #764ba2);
+  background: linear-gradient(45deg, #c70202, #a00000);
   top: 10%;
   left: 10%;
   animation-delay: 0s;
@@ -898,7 +898,7 @@ table.v-align td{vertical-align: middle !important;}
 .shape-2 {
   width: 60px;
   height: 60px;
-  background: linear-gradient(45deg, #764ba2, #667eea);
+  background: linear-gradient(45deg, #a00000, #c70202);
   top: 20%;
   right: 15%;
   animation-delay: 2s;
@@ -907,7 +907,7 @@ table.v-align td{vertical-align: middle !important;}
 .shape-3 {
   width: 100px;
   height: 100px;
-  background: linear-gradient(45deg, #667eea, #764ba2);
+  background: linear-gradient(45deg, #c70202, #a00000);
   bottom: 20%;
   left: 20%;
   animation-delay: 4s;
@@ -916,7 +916,7 @@ table.v-align td{vertical-align: middle !important;}
 .shape-4 {
   width: 40px;
   height: 40px;
-  background: linear-gradient(45deg, #764ba2, #667eea);
+  background: linear-gradient(45deg, #a00000, #c70202);
   bottom: 10%;
   right: 10%;
   animation-delay: 1s;
