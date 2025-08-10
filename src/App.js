@@ -42,6 +42,7 @@ import PaymentVerification from './pages/Paymentverification';
 import CounterPayment from './pages/CounterPayment';
 import PaymentHistory from './pages/PaymentHistory';
 import ProgramStudentList from './pages/ProgramStudentList';
+import ProgramManagement from './pages/ProgramManagement';
 
 // Add CSS for loading spinner animation
 const loadingStyles = `
@@ -332,6 +333,7 @@ function App() {
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
+        <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={
                 token && role === 'student' ? (
                   <Navigate to="/student-dashboard" replace />
