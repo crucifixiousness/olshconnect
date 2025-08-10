@@ -1,42 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
-  Box,
-  Card,
-  CardContent,
+  Paper,
   Button,
-  TextField,
+  Chip,
+  CircularProgress,
+  Tab,
+  Tabs,
+  Box,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Typography,
+  TextField,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  IconButton,
-  Chip,
-  Alert,
-  Snackbar,
-  Tabs,
-  Tab,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
+  IconButton
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ExpandMore as ExpandMoreIcon,
   School as SchoolIcon,
   Book as BookIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import { Snackbar, Alert } from '@mui/material';
 
 const ProgramManagement = () => {
   const [programs, setPrograms] = useState([]);
@@ -202,152 +195,259 @@ const ProgramManagement = () => {
 
   if (loading) {
     return (
-      <Container>
-        <Typography variant="h4" sx={{ mt: 4, mb: 2 }}>
-          Loading...
-        </Typography>
-      </Container>
+      <div className="right-content w-100">
+        <div className="card shadow border-0 p-3 mt-1">
+          <h3 className="hd mt-2 pb-0">Program Management</h3>
+        </div>
+        <div className="card shadow border-0 p-3 mt-3">
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+            <CircularProgress style={{ color: '#c70202' }} />
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <SchoolIcon /> Program Management
-      </Typography>
+    <div className="right-content w-100">
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="hd mt-2 pb-0">
+          Program Management
+        </h3>
+      </div>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-          <Tab label="Programs" icon={<SchoolIcon />} iconPosition="start" />
-          <Tab label="Majors" icon={<BookIcon />} iconPosition="start" />
-        </Tabs>
-      </Box>
+      <div className="card shadow border-0 p-3 mt-3">
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                color: '#666',
+                '&.Mui-selected': {
+                  color: '#c70202',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#c70202',
+              },
+            }}
+          >
+            <Tab label="Programs" icon={<SchoolIcon />} iconPosition="start" />
+            <Tab label="Majors" icon={<BookIcon />} iconPosition="start" />
+          </Tabs>
+        </Box>
 
-      {/* Programs Tab */}
-      {activeTab === 0 && (
-        <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5">Programs</Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setProgramDialogOpen(true)}
-            >
-              Add Program
-            </Button>
-          </Box>
+        {activeTab === 0 ? (
+          <>
+            {/* Programs Tab */}
+            <div className="mb-4">
+              <div className="d-flex justify-content-between align-items-center">
+                <h4 className="hd mb-0">Programs</h4>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setProgramDialogOpen(true)}
+                  sx={{
+                    backgroundColor: '#c70202',
+                    '&:hover': {
+                      backgroundColor: '#a00000'
+                    },
+                    minWidth: '120px',
+                    height: '36px',
+                    fontSize: '14px'
+                  }}
+                >
+                  Add Program
+                </Button>
+              </div>
+            </div>
 
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Program ID</TableCell>
-                  <TableCell>Program Name</TableCell>
-                  <TableCell>Majors</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {programs.map((program) => (
-                  <TableRow key={program.program_id}>
-                    <TableCell>{program.program_id}</TableCell>
-                    <TableCell>{program.program_name}</TableCell>
-                    <TableCell>
-                      {program.majors && program.majors.length > 0 ? (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {program.majors.map((major) => (
-                            <Chip
-                              key={major.major_id}
-                              label={major.major_name}
-                              size="small"
+            <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+              <TableContainer>
+                <Table aria-label="programs table" sx={{ minWidth: 650 }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program Name</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Majors</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {programs.length > 0 ? (
+                      programs.map((program) => (
+                        <TableRow 
+                          key={program.program_id}
+                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                          hover
+                        >
+                          <TableCell>{program.program_name}</TableCell>
+                          <TableCell>
+                            {program.majors && program.majors.length > 0 ? (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {program.majors.map((major) => (
+                                  <Chip
+                                    key={major.major_id}
+                                    label={major.major_name}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{
+                                      borderColor: '#17a2b8',
+                                      color: '#17a2b8',
+                                      '&:hover': {
+                                        backgroundColor: '#17a2b8',
+                                        color: 'white'
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            ) : (
+                              <Typography variant="body2" color="textSecondary">
+                                No majors
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            <IconButton
                               color="primary"
-                              variant="outlined"
-                            />
-                          ))}
-                        </Box>
-                      ) : (
-                        <Typography variant="body2" color="textSecondary">
-                          No majors
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleProgramEdit(program)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleProgramDelete(program.program_id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )}
+                              onClick={() => handleProgramEdit(program)}
+                              sx={{
+                                color: '#c70202',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(199, 2, 2, 0.1)'
+                                }
+                              }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              color="error"
+                              onClick={() => handleProgramDelete(program.program_id)}
+                              sx={{
+                                color: '#dc3545',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(220, 53, 69, 0.1)'
+                                }
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan="3" align="center">
+                          <Typography variant="body2" color="textSecondary">
+                            No programs found.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </>
+        ) : (
+          <>
+            {/* Majors Tab */}
+            <div className="mb-4">
+              <div className="d-flex justify-content-between align-items-center">
+                <h4 className="hd mb-0">Majors</h4>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setMajorDialogOpen(true)}
+                  sx={{
+                    backgroundColor: '#c70202',
+                    '&:hover': {
+                      backgroundColor: '#a00000'
+                    },
+                    minWidth: '120px',
+                    height: '36px',
+                    fontSize: '14px'
+                  }}
+                >
+                  Add Major
+                </Button>
+              </div>
+            </div>
 
-      {/* Majors Tab */}
-      {activeTab === 1 && (
-        <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5">Majors</Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setMajorDialogOpen(true)}
-            >
-              Add Major
-            </Button>
-          </Box>
-
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Major ID</TableCell>
-                  <TableCell>Major Name</TableCell>
-                  <TableCell>Major Code</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Program</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {majors.map((major) => (
-                  <TableRow key={major.major_id}>
-                    <TableCell>{major.major_id}</TableCell>
-                    <TableCell>{major.major_name}</TableCell>
-                    <TableCell>{major.major_code}</TableCell>
-                    <TableCell>{major.description}</TableCell>
-                    <TableCell>{major.program_name}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleMajorEdit(major)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleMajorDelete(major.major_id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )}
+            <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+              <TableContainer>
+                <Table aria-label="majors table" sx={{ minWidth: 650 }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Major Name</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Major Code</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Description</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {majors.length > 0 ? (
+                      majors.map((major) => (
+                        <TableRow 
+                          key={major.major_id}
+                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                          hover
+                        >
+                          <TableCell>{major.major_name}</TableCell>
+                          <TableCell>
+                            <code style={{ backgroundColor: '#f8f9fa', padding: '4px 8px', borderRadius: '4px' }}>
+                              {major.major_code}
+                            </code>
+                          </TableCell>
+                          <TableCell>{major.description || '-'}</TableCell>
+                          <TableCell>{major.program_name}</TableCell>
+                          <TableCell align="center">
+                            <IconButton
+                              color="primary"
+                              onClick={() => handleMajorEdit(major)}
+                              sx={{
+                                color: '#c70202',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(199, 2, 2, 0.1)'
+                                }
+                              }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              color="error"
+                              onClick={() => handleMajorDelete(major.major_id)}
+                              sx={{
+                                color: '#dc3545',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(220, 53, 69, 0.1)'
+                                }
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan="5" align="center">
+                          <Typography variant="body2" color="textSecondary">
+                            No majors found.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </>
+        )}
+      </div>
 
       {/* Program Dialog */}
       <Dialog open={programDialogOpen} onClose={() => setProgramDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -367,8 +467,28 @@ const ProgramManagement = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setProgramDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleProgramSubmit} variant="contained">
+          <Button 
+            onClick={() => setProgramDialogOpen(false)}
+            sx={{
+              color: '#666',
+              '&:hover': {
+                backgroundColor: 'rgba(102, 102, 102, 0.1)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleProgramSubmit} 
+            variant="contained"
+            sx={{
+              bgcolor: '#c70202',
+              color: 'white',
+              '&:hover': { bgcolor: '#a00000' },
+              minWidth: '100px',
+              height: '36px'
+            }}
+          >
             {editingProgram ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
@@ -428,8 +548,28 @@ const ProgramManagement = () => {
           </TextField>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setMajorDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleMajorSubmit} variant="contained">
+          <Button 
+            onClick={() => setMajorDialogOpen(false)}
+            sx={{
+              color: '#666',
+              '&:hover': {
+                backgroundColor: 'rgba(102, 102, 102, 0.1)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleMajorSubmit} 
+            variant="contained"
+            sx={{
+              bgcolor: '#c70202',
+              color: 'white',
+              '&:hover': { bgcolor: '#a00000' },
+              minWidth: '100px',
+              height: '36px'
+            }}
+          >
             {editingMajor ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
@@ -440,16 +580,18 @@ const ProgramManagement = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
+          variant="filled"
           sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </div>
   );
 };
 
