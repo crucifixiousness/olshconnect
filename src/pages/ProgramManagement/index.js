@@ -19,7 +19,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton
+  IconButton,
+  Snackbar,
+  Alert,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -505,9 +508,9 @@ const ProgramManagement = () => {
             sx={{ mt: 2 }}
           >
             {programs.map((program) => (
-              <option key={program.program_id} value={program.program_id}>
+              <MenuItem key={program.program_id} value={program.program_id}>
                 {program.program_name}
-              </option>
+              </MenuItem>
             ))}
           </TextField>
         </DialogContent>
