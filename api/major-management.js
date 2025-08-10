@@ -20,8 +20,6 @@ module.exports = async (req, res) => {
           SELECT 
             m.major_id,
             m.major_name,
-            m.major_code,
-            m.description,
             p.program_id,
             p.program_name
           FROM majors m
@@ -33,9 +31,9 @@ module.exports = async (req, res) => {
         
       case 'POST':
         // Create new major
-        const { major_name, major_code, description, program_id } = req.body;
-        if (!major_name || !major_code || !program_id) {
-          return res.status(400).json({ error: "Major name, code, and program ID are required" });
+        const { major_name, program_id } = req.body;
+        if (!major_name || !program_id) {
+          return res.status(400).json({ error: "Major name and program ID are required" });
         }
         
         // Check if program exists
@@ -48,27 +46,17 @@ module.exports = async (req, res) => {
           return res.status(400).json({ error: "Program not found" });
         }
         
-        // Check if major code already exists
-        const codeCheck = await client.query(
-          "SELECT major_id FROM majors WHERE major_code = $1",
-          [major_code]
-        );
-        
-        if (codeCheck.rows.length > 0) {
-          return res.status(400).json({ error: "Major code already exists" });
-        }
-        
         const newMajor = await client.query(
-          "INSERT INTO majors (major_name, major_code, description, program_id) VALUES ($1, $2, $3, $4) RETURNING *",
-          [major_name, major_code, description, program_id]
+          "INSERT INTO majors (major_name, program_id) VALUES ($1, $2) RETURNING *",
+          [major_name, program_id]
         );
         res.status(201).json(newMajor.rows[0]);
         break;
         
       case 'PUT':
         // Update major
-        const { major_id, major_name: updatedName, major_code: updatedCode, description: updatedDesc, program_id: updatedProgramId } = req.body;
-        if (!major_id || !updatedName || !updatedCode || !updatedProgramId) {
+        const { major_id, major_name: updatedName, program_id: updatedProgramId } = req.body;
+        if (!major_id || !updatedName || !updatedProgramId) {
           return res.status(400).json({ error: "All fields are required" });
         }
         
@@ -82,19 +70,9 @@ module.exports = async (req, res) => {
           return res.status(400).json({ error: "Program not found" });
         }
         
-        // Check if major code already exists (excluding current major)
-        const codeCheckUpdate = await client.query(
-          "SELECT major_id FROM majors WHERE major_code = $1 AND major_id != $2",
-          [updatedCode, major_id]
-        );
-        
-        if (codeCheckUpdate.rows.length > 0) {
-          return res.status(400).json({ error: "Major code already exists" });
-        }
-        
         const updatedMajor = await client.query(
-          "UPDATE majors SET major_name = $1, major_code = $2, description = $3, program_id = $4 WHERE major_id = $5 RETURNING *",
-          [updatedName, updatedCode, updatedDesc, updatedProgramId, major_id]
+          "UPDATE majors SET major_name = $1, program_id = $2 WHERE major_id = $3 RETURNING *",
+          [updatedName, updatedProgramId, major_id]
         );
         
         if (updatedMajor.rows.length === 0) {
