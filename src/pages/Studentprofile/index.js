@@ -70,6 +70,7 @@ const StudentProfile = () => {
     birthCertificateDoc: '',
     form137Doc: '',
     programs: '',
+    major_id: '',        // Add major_id field
     yearLevel: 1,           // Set default to 1 for new students
     semester: '',           // Add this
     academic_year: '',      // Add this
@@ -349,6 +350,20 @@ const StudentProfile = () => {
         setLoading(false);
         return;
       }
+
+      // ✅ Check if major is required (when program has majors)
+      const selectedProgram = programs.find(p => p.program_id == formDataa.programs);
+      const hasMajors = selectedProgram && selectedProgram.majors && selectedProgram.majors.length > 0;
+      
+      if (hasMajors && (!formDataa.major_id || formDataa.major_id === '')) {
+        setSnackbar({
+          open: true,
+          message: "Please select a major for the selected program",
+          severity: 'error'
+        });
+        setLoading(false);
+        return;
+      }
   
       // ✅ Semester validation
       const validSemesters = ['1st', '2nd', 'Summer'];
@@ -399,6 +414,7 @@ const StudentProfile = () => {
   
             const formDataToSend = new FormData();
       formDataToSend.append('programs', String(formDataa.programs));
+      formDataToSend.append('major_id', String(formDataa.major_id || '')); // Add major_id
       formDataToSend.append('yearLevel', String(formDataa.yearLevel));
       formDataToSend.append('semester', formDataa.semester);
       formDataToSend.append('academic_year', formDataa.academic_year);
@@ -444,6 +460,7 @@ const StudentProfile = () => {
   
                  setFormDataa({
            programs: "",
+           major_id: "",        // Reset major_id
            yearLevel: 1,           // Reset to 1 for new students
            semester: "",
            academic_year: "",
@@ -969,6 +986,36 @@ const StudentProfile = () => {
                   </Select>
                 </FormControl>
               </div>
+
+              {/* Major Selection - Only show if program has majors */}
+              {formDataa.programs && (() => {
+                const selectedProgram = programs.find(p => p.program_id == formDataa.programs);
+                const hasMajors = selectedProgram && selectedProgram.majors && selectedProgram.majors.length > 0;
+                
+                return hasMajors ? (
+                  <div className="registration-section">
+                    <Typography variant="h6" className="section-title">
+                      Major Selection
+                    </Typography>
+                    <FormControl fullWidth margin="normal" required>
+                      <Select
+                        name="major_id"
+                        value={formDataa.major_id}
+                        onChange={handleInputChange}
+                        inputProps={{ 'aria-label': 'major_id' }}
+                        data-testid="major-select"
+                      >
+                        <MenuItem value="">Select a major</MenuItem>
+                        {selectedProgram.majors.map((major) => (
+                          <MenuItem key={major.major_id} value={major.major_id}>
+                            {major.major_name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </div>
+                ) : null;
+              })()}
 
               <div className="registration-section">
                 <Typography variant="h6" className="section-title">
