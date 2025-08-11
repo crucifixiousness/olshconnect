@@ -79,17 +79,17 @@ function App() {
    
   useEffect(() => {
     // Restore authentication state from localStorage
-    const storedToken = localStorage.getItem('token');
-    const storedRole = localStorage.getItem('role');
-    const storedUser = localStorage.getItem('user');
-    const storedIsLogin = localStorage.getItem('isLogin');
+        const storedToken = localStorage.getItem('token');
+        const storedRole = localStorage.getItem('role');
+        const storedUser = localStorage.getItem('user');
+        const storedIsLogin = localStorage.getItem('isLogin');
 
-    if (storedToken && storedRole && storedUser && storedIsLogin === 'true') {
-      setToken(storedToken);
-      setRole(storedRole);
-      setUser(JSON.parse(storedUser));
-      setIsLogin(true);
-    }
+        if (storedToken && storedRole && storedUser && storedIsLogin === 'true') {
+          setToken(storedToken);
+          setRole(storedRole);
+          setUser(JSON.parse(storedUser));
+          setIsLogin(true);
+        }
   }, []);
 
   useEffect(() => {
@@ -201,10 +201,22 @@ function App() {
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
-              <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
+        <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={
                 token && role === 'student' ? (
-                  <Navigate to="/student-dashboard" replace />
+                  (() => {
+                    // Check enrollment status to determine redirect
+                    try {
+                      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                      const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
+                        ? '/student-dashboard' 
+                        : '/student-profile';
+                      return <Navigate to={redirectPath} replace />;
+                    } catch (error) {
+                      // If parsing fails, redirect to profile as fallback
+                      return <Navigate to="/student-profile" replace />;
+                    }
+                  })()
                 ) : (
                   <Login />
                 )
