@@ -59,9 +59,22 @@ module.exports = async (req, res) => {
       console.log('🔍 DEBUG: Semester type from formidable:', typeof fields.semester);
       console.log('🔍 DEBUG: Semester length from formidable:', fields.semester?.length);
 
+      // FIX: Extract single values from formidable arrays
+      const normalizedFields = {};
+      Object.keys(fields).forEach(key => {
+        if (Array.isArray(fields[key])) {
+          normalizedFields[key] = fields[key][0]; // Take first element
+        } else {
+          normalizedFields[key] = fields[key];
+        }
+      });
+
+      console.log('🔍 DEBUG: Normalized fields:', normalizedFields);
+      console.log('🔍 DEBUG: Normalized semester:', normalizedFields.semester);
+
       // Convert string values to integers where needed
-      const programs = parseInt(fields.programs);
-      const yearLevel = parseInt(fields.yearLevel);
+      const programs = parseInt(normalizedFields.programs);
+      const yearLevel = parseInt(normalizedFields.yearLevel);
 
       if (isNaN(programs) || isNaN(yearLevel)) {
         return res.status(400).json({
@@ -70,7 +83,7 @@ module.exports = async (req, res) => {
       }
 
       // Validate student type (removed restriction - allowing any value)
-      if (!fields.studentType) {
+      if (!normalizedFields.studentType) {
         return res.status(400).json({
           error: "Student type is required"
         });
@@ -96,7 +109,7 @@ module.exports = async (req, res) => {
       }
 
       // Validate transferee-specific requirements
-      if (fields.studentType === 'transferee') {
+      if (normalizedFields.studentType === 'transferee') {
         if (!files.transferCertificateDoc) {
           return res.status(400).json({
             error: "Transfer certificate is required for transferee students"
@@ -107,12 +120,12 @@ module.exports = async (req, res) => {
             error: "Transcript of Records (TOR) is required for transferee students"
           });
         }
-        if (!fields.previousSchool || !fields.previousSchool.trim()) {
+        if (!normalizedFields.previousSchool || !normalizedFields.previousSchool.trim()) {
           return res.status(400).json({
             error: "Previous school information is required for transferee students"
           });
         }
-        if (!fields.previousProgram || !fields.previousProgram.trim()) {
+        if (!normalizedFields.previousProgram || !normalizedFields.previousProgram.trim()) {
           return res.status(400).json({
             error: "Previous program information is required for transferee students"
           });
@@ -167,7 +180,7 @@ module.exports = async (req, res) => {
         await fs.readFile(files.form137Doc[0].filepath) : null;
       
       // Additional documents for transferee students
-      if (fields.studentType === 'transferee') {
+      if (normalizedFields.studentType === 'transferee') {
         transferCertificateDoc = files.transferCertificateDoc ? 
           await fs.readFile(files.transferCertificateDoc[0].filepath) : null;
         torDoc = files.torDoc ? 
@@ -176,7 +189,7 @@ module.exports = async (req, res) => {
 
       const existingEnrollment = await client.query(
         "SELECT enrollment_id FROM enrollments WHERE student_id = $1 AND academic_year = $2 AND semester = $3",
-        [id, fields.academic_year, fields.semester]
+        [id, normalizedFields.academic_year, normalizedFields.semester]
       );
 
       if (existingEnrollment.rows.length > 0) {
@@ -194,9 +207,9 @@ module.exports = async (req, res) => {
          VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10, $11, $12, $13)
          RETURNING enrollment_id`,
         [
-          id, programs, year_id, fields.semester, idpic, birthCertificateDoc, 
-          form137Doc, fields.academic_year, fields.studentType, fields.previousSchool || null, 
-          fields.previousProgram || null, transferCertificateDoc, torDoc
+          id, programs, year_id, normalizedFields.semester, idpic, birthCertificateDoc, 
+          form137Doc, normalizedFields.academic_year, normalizedFields.studentType, normalizedFields.previousSchool || null, 
+          normalizedFields.previousProgram || null, transferCertificateDoc, torDoc
         ]
       );
 
@@ -207,7 +220,7 @@ module.exports = async (req, res) => {
         fileArray.map(file => fs.unlink(file.filepath))
       ).flat());
       
-      const message = fields.studentType === 'transferee' 
+      const message = normalizedFields.studentType === 'transferee' 
         ? "Enrollment submitted successfully. Your transfer credits will be evaluated by the registrar's office."
         : "Enrollment submitted successfully";
         
@@ -215,9 +228,9 @@ module.exports = async (req, res) => {
         message: message,
         status: "Pending",
         enrollment_id: enrollmentResult.rows[0].enrollment_id,
-        semester: fields.semester,
-        academic_year: fields.academic_year,
-        studentType: fields.studentType
+        semester: normalizedFields.semester,
+        academic_year: normalizedFields.academic_year,
+        studentType: normalizedFields.studentType
       });
     } catch (error) {
       if (client) {
