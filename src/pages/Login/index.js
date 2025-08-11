@@ -209,6 +209,18 @@ const Login = () => {
       }
     }
   }, [isLogin, token, role, user, navigate]);
+
+  // New useEffect to handle redirect after successful login
+  useEffect(() => {
+    if (isLogin && token && role === 'student' && user) {
+      const redirectPath = user.enrollment_status === 'Officially Enrolled' 
+        ? '/student-dashboard' 
+        : '/student-profile';
+      
+      console.log('🔒 [LOGIN] Authentication successful, redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isLogin, token, role, user, navigate]);
   
   useEffect(() => {
       context.setIsHideComponents(true);
@@ -301,13 +313,7 @@ const Login = () => {
         setUser(user);
         setIsLogin(true);
         
-        // Redirect immediately after successful login
-        const redirectPath = user.enrollment_status === 'Officially Enrolled' 
-          ? '/student-dashboard' 
-          : '/student-profile';
-        
-        // Use navigate for better routing control
-        navigate(redirectPath, { replace: true });
+        // Note: Redirect will happen automatically via useEffect below
     
       } catch (error) {
         let errorMsg = 'Login failed. Please try again.';
