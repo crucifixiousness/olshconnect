@@ -9,7 +9,7 @@ const pool = new Pool({
 
 module.exports = async (req, res) => {
   if (req.method === 'POST') {
-    const { program_id, course_code, course_name, units, semester, year_level } = req.body;
+    const { program_id, major_id, course_code, course_name, units, semester, year_level } = req.body;
     let client;
 
     try {
@@ -18,7 +18,23 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      client = await pool.connect();
+      // Validate major_id if provided
+      if (major_id && major_id !== '') {
+        // Check if major exists and belongs to the program
+        client = await pool.connect();
+        const majorCheck = await client.query(
+          "SELECT major_id FROM majors WHERE major_id = $1 AND program_id = $2",
+          [major_id, program_id]
+        );
+        
+        if (majorCheck.rows.length === 0) {
+          return res.status(400).json({ error: "Invalid major ID or major does not belong to the specified program" });
+        }
+      }
+
+      if (!client) {
+        client = await pool.connect();
+      }
       await client.query('BEGIN');
 
       // 1. Create or get course
@@ -57,14 +73,26 @@ module.exports = async (req, res) => {
         year_id = existingYear.rows[0].year_id;
       }
 
-      // 3. Create program course assignmentsdf
-      await client.query(
-        "INSERT INTO program_course (program_id, year_id, course_id, semester) VALUES ($1, $2, $3, $4)",
-        [program_id, year_id, course_id, semester]
+      // 3. Create program course assignment
+      const programCourseResult = await client.query(
+        "INSERT INTO program_course (program_id, major_id, year_id, course_id, semester) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [program_id, major_id || null, year_id, course_id, semester]
       );
 
       await client.query('COMMIT');
-      res.status(201).json({ message: "Course assigned successfully" });
+      res.status(201).json({ 
+        message: "Course assigned successfully",
+        data: {
+          pc_id: programCourseResult.rows[0].pc_id,
+          program_id,
+          major_id: major_id || null,
+          course_code,
+          course_name,
+          units,
+          semester,
+          year_level
+        }
+      });
     } catch (error) {
       if (client) await client.query('ROLLBACK');
       console.error("Error in program-course:", error);
