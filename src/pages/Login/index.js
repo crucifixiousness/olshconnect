@@ -11,7 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 
-// Honeypot monitoring system for login pag
+// Honeypot monitoring system for login page
 const LoginHoneypotMonitor = {
   suspiciousActivities: [],
   sessionStartTime: Date.now(),
@@ -187,11 +187,17 @@ const Login = () => {
   const navigate = useNavigate();
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
+  // Add debugging
+  console.log('🔒 [LOGIN] Component rendering, isLogin:', isLogin, 'context.isLogin:', context.isLogin);
+
   // Check if user is already logged in and redirect if necessary
   useEffect(() => {
+    console.log('🔒 [LOGIN] useEffect running, checking stored data...');
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     const storedIsLogin = localStorage.getItem('isLogin');
+    
+    console.log('🔒 [LOGIN] Stored data:', { storedToken: !!storedToken, storedUser: !!storedUser, storedIsLogin });
     
     if (storedToken && storedUser && storedIsLogin === 'true') {
       try {
@@ -200,6 +206,7 @@ const Login = () => {
           ? '/student-dashboard' 
           : '/student-profile';
         
+        console.log('🔒 [LOGIN] Redirecting to:', redirectPath);
         // Use navigate instead of window.location.href for better routing
         navigate(redirectPath, { replace: true });
       } catch (error) {
@@ -225,7 +232,20 @@ const Login = () => {
 
   // Check if already logged in AFTER all hooks
   if (isLogin) {
-    return null; // or a loading spinner
+    // Show loading spinner instead of returning null
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <div style={{ fontSize: '24px', color: '#666' }}>Redirecting...</div>
+        <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
   }
 
     // Then modify your handleLogin function to remove the redirect logic
