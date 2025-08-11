@@ -52,6 +52,13 @@ module.exports = async (req, res) => {
         });
       });
 
+      // DEBUG: Log what formidable actually parsed
+      console.log('🔍 DEBUG: Formidable parsed fields:', fields);
+      console.log('🔍 DEBUG: Formidable parsed files:', files);
+      console.log('🔍 DEBUG: Raw semester from formidable:', fields.semester);
+      console.log('🔍 DEBUG: Semester type from formidable:', typeof fields.semester);
+      console.log('🔍 DEBUG: Semester length from formidable:', fields.semester?.length);
+
       // Convert string values to integers where needed
       const programs = parseInt(fields.programs);
       const yearLevel = parseInt(fields.yearLevel);
