@@ -196,11 +196,18 @@ const Login = () => {
     if (isLogin && token && role === 'student') {
       try {
         const userData = user || JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // DEBUG: Log the user data and enrollment status
+        console.log('🔒 [LOGIN] User data from localStorage:', userData);
+        console.log('🔒 [LOGIN] Enrollment status from localStorage:', userData.enrollment_status);
+        console.log('🔒 [LOGIN] Enrollment status type from localStorage:', typeof userData.enrollment_status);
+        
         const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
           ? '/student-dashboard' 
           : '/student-profile';
         
         console.log('🔒 [LOGIN] User already logged in, redirecting to:', redirectPath);
+        console.log('🔒 [LOGIN] Redirect condition from localStorage:', userData.enrollment_status === 'Officially Enrolled');
         navigate(redirectPath, { replace: true });
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -213,11 +220,18 @@ const Login = () => {
   // New useEffect to handle redirect after successful login
   useEffect(() => {
     if (isLogin && token && role === 'student' && user) {
+      // DEBUG: Log the user object and enrollment status
+      console.log('🔒 [LOGIN] User object:', user);
+      console.log('🔒 [LOGIN] Enrollment status:', user.enrollment_status);
+      console.log('🔒 [LOGIN] Enrollment status type:', typeof user.enrollment_status);
+      console.log('🔒 [LOGIN] Enrollment status length:', user.enrollment_status?.length);
+      
       const redirectPath = user.enrollment_status === 'Officially Enrolled' 
         ? '/student-dashboard' 
         : '/student-profile';
       
       console.log('🔒 [LOGIN] Authentication successful, redirecting to:', redirectPath);
+      console.log('🔒 [LOGIN] Redirect condition:', user.enrollment_status === 'Officially Enrolled');
       navigate(redirectPath, { replace: true });
     }
   }, [isLogin, token, role, user, navigate]);
