@@ -32,8 +32,11 @@ module.exports = async (req, res) => {
   try {
     const decoded = authenticateToken(req);
     const studentId = decoded.id;
+    
+    console.log('🔍 DEBUG: Student ID from token:', studentId);
 
     client = await pool.connect();
+    console.log('🔍 DEBUG: Database connection established');
 
     // Detect if enrollments.major_id column exists
     const majorColumnCheck = await client.query(
@@ -44,6 +47,7 @@ module.exports = async (req, res) => {
     );
 
     const hasMajorIdColumn = majorColumnCheck.rows.length > 0;
+    console.log('🔍 DEBUG: enrollments.major_id column exists?', hasMajorIdColumn);
 
     // Get the student's latest enrollment details
     const enrollmentQuery = hasMajorIdColumn
@@ -60,47 +64,119 @@ module.exports = async (req, res) => {
          ORDER BY e.enrollment_date DESC
          LIMIT 1`;
 
+    console.log('🔍 DEBUG: Enrollment query:', enrollmentQuery);
+    console.log('🔍 DEBUG: Query parameters:', [studentId]);
+
     const enrollmentResult = await client.query(enrollmentQuery, [studentId]);
+    console.log('🔍 DEBUG: Enrollment query result rows:', enrollmentResult.rows.length);
+    console.log('🔍 DEBUG: Enrollment query result:', JSON.stringify(enrollmentResult.rows, null, 2));
 
     if (enrollmentResult.rows.length === 0) {
+      console.log('❌ DEBUG: No enrollment found for student');
       return res.status(404).json({ error: 'No enrollment found for this student' });
     }
 
     const { program_id, year_id, semester, major_id } = enrollmentResult.rows[0];
+    console.log('🔍 DEBUG: Extracted enrollment data:', {
+      program_id,
+      year_id,
+      semester,
+      major_id,
+      major_id_type: typeof major_id
+    });
+
+    // Check if program_course table has major_id column
+    const programCourseMajorCheck = await client.query(
+      `SELECT 1
+       FROM information_schema.columns
+       WHERE table_name = 'program_course' AND column_name = 'major_id'
+       LIMIT 1`
+    );
+    
+    const hasProgramCourseMajorId = programCourseMajorCheck.rows.length > 0;
+    console.log('🔍 DEBUG: program_course.major_id column exists?', hasProgramCourseMajorId);
 
     // Fetch the courses for the student's program/year/semester and (optional) major
-    // Two sets: common courses (pc.major_id IS NULL) and major-specific courses (pc.major_id = student's major)
-    const coursesResult = await client.query(
-      `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-              pc.major_id, m.major_name
-       FROM program_course pc
-       JOIN course c ON pc.course_id = c.course_id
-       JOIN program_year py ON pc.year_id = py.year_id
-       LEFT JOIN majors m ON pc.major_id = m.major_id
-       WHERE pc.program_id = $1
-         AND pc.year_id = $2
-         AND pc.semester = $3
-         AND (
-           pc.major_id IS NULL
-           OR pc.major_id = $4
-         )
-       ORDER BY c.course_name`,
-      [program_id, year_id, semester, major_id]
-    );
+    let coursesQuery;
+    let queryParams;
+    
+    if (hasProgramCourseMajorId) {
+      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
+                             pc.major_id, m.major_name
+                      FROM program_course pc
+                      JOIN course c ON pc.course_id = c.course_id
+                      JOIN program_year py ON pc.year_id = py.year_id
+                      LEFT JOIN majors m ON pc.major_id = m.major_id
+                      WHERE pc.program_id = $1
+                        AND pc.year_id = $2
+                        AND pc.semester = $3
+                        AND (
+                          pc.major_id IS NULL
+                          OR pc.major_id = $4
+                        )
+                      ORDER BY c.course_name`;
+      queryParams = [program_id, year_id, semester, major_id];
+    } else {
+      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level
+                      FROM program_course pc
+                      JOIN course c ON pc.course_id = c.course_id
+                      JOIN program_year py ON pc.year_id = py.year_id
+                      WHERE pc.program_id = $1
+                        AND pc.year_id = $2
+                        AND pc.semester = $3
+                      ORDER BY c.course_name`;
+      queryParams = [program_id, year_id, semester];
+    }
 
-    return res.status(200).json({
+    console.log('🔍 DEBUG: Courses query:', coursesQuery);
+    console.log('🔍 DEBUG: Courses query parameters:', queryParams);
+
+    const coursesResult = await client.query(coursesQuery, queryParams);
+    console.log('🔍 DEBUG: Courses query result rows:', coursesResult.rows.length);
+    console.log('🔍 DEBUG: Courses query result:', JSON.stringify(coursesResult.rows, null, 2));
+
+    // Let's also check what's actually in the program_course table for this program/year/semester
+    const debugQuery = `SELECT pc_id, program_id, year_id, course_id, semester, 
+                               CASE WHEN column_name = 'major_id' THEN 'EXISTS' ELSE 'MISSING' END as major_id_status
+                        FROM program_course pc
+                        CROSS JOIN (
+                          SELECT column_name 
+                          FROM information_schema.columns 
+                          WHERE table_name = 'program_course' AND column_name = 'major_id'
+                        ) col_check
+                        WHERE pc.program_id = $1 AND pc.year_id = $2 AND pc.semester = $3
+                        LIMIT 5`;
+    
+    try {
+      const debugResult = await client.query(debugQuery, [program_id, year_id, semester]);
+      console.log('🔍 DEBUG: Sample program_course data for this program/year/semester:', JSON.stringify(debugResult.rows, null, 2));
+    } catch (debugErr) {
+      console.log('🔍 DEBUG: Could not run debug query:', debugErr.message);
+    }
+
+    const response = {
       program_id,
       year_id,
       semester,
       major_id,
       courses: coursesResult.rows,
-    });
+      debug_info: {
+        has_enrollments_major_id: hasMajorIdColumn,
+        has_program_course_major_id: hasProgramCourseMajorId,
+        total_courses_found: coursesResult.rows.length
+      }
+    };
+
+    console.log('🔍 DEBUG: Final response:', JSON.stringify(response, null, 2));
+    return res.status(200).json(response);
   } catch (error) {
     const status = error.status || 500;
-    console.error('Error fetching student courses:', error);
+    console.error('❌ ERROR: Error fetching student courses:', error);
+    console.error('❌ ERROR: Error stack:', error.stack);
     return res.status(status).json({ error: error.message || 'Server error' });
   } finally {
     if (client) client.release();
+    console.log('🔍 DEBUG: Database connection released');
   }
 };
 
