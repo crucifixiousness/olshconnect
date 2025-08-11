@@ -44,21 +44,6 @@ import PaymentHistory from './pages/PaymentHistory';
 import ProgramStudentList from './pages/ProgramStudentList';
 import ProgramManagement from './pages/ProgramManagement';
 
-// Add CSS for loading spinner animation
-const loadingStyles = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-
-// Inject the styles
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.textContent = loadingStyles;
-  document.head.appendChild(style);
-}
-
 const MyContext = createContext();
 
 // Custom hook for authentication
@@ -80,23 +65,6 @@ function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [role, setRole] = useState(localStorage.getItem('role') || null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true); // Add loading state
-
-  // Add CSS animation for spinner
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -111,30 +79,18 @@ function App() {
    
   useEffect(() => {
     // Restore authentication state from localStorage
-    const restoreAuthState = () => {
-      try {
-        const storedToken = localStorage.getItem('token');
-        const storedRole = localStorage.getItem('role');
-        const storedUser = localStorage.getItem('user');
-        const storedIsLogin = localStorage.getItem('isLogin');
+    const storedToken = localStorage.getItem('token');
+    const storedRole = localStorage.getItem('role');
+    const storedUser = localStorage.getItem('user');
+    const storedIsLogin = localStorage.getItem('isLogin');
 
-        if (storedToken && storedRole && storedUser && storedIsLogin === 'true') {
-          setToken(storedToken);
-          setRole(storedRole);
-          setUser(JSON.parse(storedUser));
-          setIsLogin(true);
-        }
-      } catch (error) {
-        console.error('Error restoring auth state:', error);
-        // Clear invalid data
-        localStorage.clear();
-      } finally {
-        setIsAuthLoading(false); // Mark loading as complete
-      }
-    };
-
-    restoreAuthState();
-  }, []); // Only run once on mount
+    if (storedToken && storedRole && storedUser && storedIsLogin === 'true') {
+      setToken(storedToken);
+      setRole(storedRole);
+      setUser(JSON.parse(storedUser));
+      setIsLogin(true);
+    }
+  }, []);
 
   useEffect(() => {
     document.title = "OLSHCOnnect";
@@ -145,8 +101,6 @@ function App() {
   };
 
   const logout = () => {
-    console.log('🔒 [LOGOUT] Starting logout process...');
-    
     // Clear all authentication data
     localStorage.clear();
     setToken(null);
@@ -154,9 +108,7 @@ function App() {
     setUser(null);
     setIsLogin(false);
     
-    console.log('🔒 [LOGOUT] Authentication state cleared');
-    
-    // Simple redirect without complex state management
+    // Redirect to homepage
     window.location.href = '/homepage';
   };
 
@@ -172,166 +124,34 @@ function App() {
     isOpenNav,
     setIsOpenNav,
     user,
-    setUser,  // To set user data
-    token,     // To store the token
+    setUser,
+    token,
     setToken,
     role,
     setRole,
-    isAuthLoading, // Add loading state to context
-    useAuth, // Add the hook to context
-    logout, // Add logout function
+    useAuth,
+    logout,
   };
 
-  useEffect(() => {
-    console.log('App State Update:', { token, role, user, isAuthLoading });
-  }, [token, role, user, isAuthLoading]);
-
-  // Remove the backward navigation prevention - it's interfering with logout flow
-  // useEffect(() => {
-  //   if (token && role) {
-  //     console.log('🔒 [BACK BUTTON] Setting up history listener for role:', role);
-  //     
-  //     // Determine the appropriate dashboard path for this role
-  //     let dashboardPath = '/homepage';
-  //     if (role === 'student') {
-  //       dashboardPath = '/student-dashboard';
-  //     } else if (role === 'admin') {
-  //       dashboardPath = '/dashboard';
-  //     } else if (role === 'registrar') {
-  //       dashboardPath = '/registrar-dashboard';
-  //     } else if (role === 'finance') {
-  //       dashboardPath = '/finance-dashboard';
-  //     } else if (role === 'program head') {
-  //       dashboardPath = '/programhead-dashboard';
-  //     } else if (role === 'instructor') {
-  //       dashboardPath = '/instructor-dashboard';
-  //     }
-  //     
-  //     console.log('🔒 [BACK BUTTON] Dashboard path set to:', dashboardPath);
-  //     console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
-  //     
-  //     // Set initial history state to prevent going back further
-  //     window.history.pushState({ role, dashboardPath }, '', dashboardPath);
-  //     console.log('🔒 [BACK BUTTON] Initial history state set');
-  //     
-  //     const handlePopState = (event) => {
-  //       console.log('🔒 [BACK BUTTON] Back navigation detected!');
-  //       console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
-  //       console.log('🔒 [BACK BUTTON] Current URL:', dashboardPath);
-  //       
-  //       // Immediately redirect back to the dashboard
-  //       window.location.href = dashboardPath;
-  //     };
-  //     
-  //     // Listen for browser back/forward button clicks
-  //       window.addEventListener('popstate', handlePopState);
-  //       console.log('🔒 [BACK BUTTON] Added popstate listener');
-  //       
-  //       // Also prevent going back with keyboard shortcuts
-  //       const handleKeyDown = (event) => {
-  //         if ((event.altKey && event.key === 'ArrowLeft') || 
-  //             (event.metaKey && event.key === '[') ||
-  //             (event.ctrlKey && event.key === '[')) {
-  //           console.log('🔒 [BACK BUTTON] Blocked keyboard shortcut:', event.key);
-  //           event.preventDefault();
-  //           event.stopPropagation();
-  //           
-  //           // Redirect to dashboard
-  //           window.location.href = dashboardPath;
-  //           return false;
-  //         }
-  //       };
-  //       
-  //       document.addEventListener('keydown', handleKeyDown);
-  //       console.log('🔒 [BACK BUTTON] Added keyboard listener');
-  //       
-  //       return () => {
-  //         console.log('🔒 [BACK BUTTON] Cleaning up event listeners');
-  //         window.removeEventListener('popstate', handlePopState);
-  //         document.removeEventListener('keydown', handleKeyDown);
-  //       };
-  //     } else {
-  //       console.log('🔒 [BACK BUTTON] User not authenticated or no role, skipping back button prevention');
-  //       console.log('🔒 [BACK BUTTON] Token:', !!token, 'Role:', role);
-  //     }
-  //   }, [token, role]);
-
-  // Remove route transition guards that might be interfering
-  // useEffect(() => {
-  //   const handleBeforeUnload = () => {
-  //     if (isAuthLoading) {
-  //       console.log('🔒 [ROUTE GUARD] Preventing navigation during auth loading');
-  //       return 'Please wait for authentication to complete...';
-  //     }
-  //   };
-
-  //   window.addEventListener('beforeunload', handleBeforeUnload);
-    
-  //   return () => {
-  //     window.removeEventListener('beforeunload', handleBeforeUnload);
-  //   };
-  // }, [isAuthLoading]);
-
-  // Remove cleanup effect that might be interfering
-  // useEffect(() => {
-  //   const currentPath = window.location.pathname;
-  //   if (['/login', '/stafflogin', '/logIn'].includes(currentPath)) {
-  //     // Reset loading state when on login pages
-  //     if (isAuthLoading) {
-  //       console.log('🔒 [CLEANUP] Resetting loading state on login page');
-  //       setIsAuthLoading(false);
-  //     }
-  //   }
-  // }, [window.location.pathname, isAuthLoading]);
-
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
-    // Show loading while authentication state is being restored
-    if (isAuthLoading) {
-      return (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          flexDirection: 'column',
-          gap: '20px'
-        }}>
-          <div style={{ fontSize: '24px', color: '#666' }}>Loading...</div>
-          <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        </div>
-      );
-    }
-
     // Check if user is authenticated
     if (!token) {
-      console.log('🔒 [PROTECTED ROUTE] No token, redirecting to:', redirectTo);
       return <Navigate to={redirectTo} replace />;
     }
 
     // Check if user has required role
     if (requiredRole) {
-      console.log('🔒 [PROTECTED ROUTE] Checking role access:');
-      console.log('  - User role:', role);
-      console.log('  - Required role:', requiredRole);
-      console.log('  - Required role type:', typeof requiredRole);
-      console.log('  - Is array?', Array.isArray(requiredRole));
-      
       let hasAccess = false;
       
       if (Array.isArray(requiredRole)) {
         hasAccess = requiredRole.includes(role);
-        console.log('  - Array check result:', hasAccess);
       } else {
         hasAccess = requiredRole === role;
-        console.log('  - String check result:', hasAccess);
       }
       
       if (!hasAccess) {
-        console.log('🔒 [PROTECTED ROUTE] Access denied, redirecting to:', redirectTo);
         return <Navigate to={redirectTo} replace />;
       }
-      
-      console.log('🔒 [PROTECTED ROUTE] Access granted!');
     }
 
     return element;
@@ -381,7 +201,7 @@ function App() {
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
-        <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
+              <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={
                 token && role === 'student' ? (
                   <Navigate to="/student-dashboard" replace />
