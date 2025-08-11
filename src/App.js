@@ -176,21 +176,22 @@ function App() {
             <>
               <div className={`sidebarOverlay d-none ${isOpenNav === true && 'show'}`} onClick={() => setIsOpenNav(false)}></div>
               <div className={`sidebarWrapper ${isToggleSidebar === true ? 'toggle' : ''} ${isOpenNav === true ? 'open' : ''}`}>
-              {role === 'student' ? (
+              {token && role === 'student' ? (
                   <StudentSidebar />
-                ) : role === 'registrar' ? (
+                ) : token && role === 'registrar' ? (
                   <RegistrarSidebar />
-                ) : role === 'finance' ? (
+                ) : token && role === 'finance' ? (
                   <FinanceSidebar />
-                ) : role === 'program head' ? (
+                ) : token && role === 'program head' ? (
                   <ProgramHeadSidebar />
-                ) : role === 'instructor' ? (
+                ) : token && role === 'instructor' ? (
                   <InstructorSidebar />
-                ) : role === 'admin' ? (
+                ) : token && role === 'admin' ? (
                   <Sidebar />
-                ) : (
+                ) : token ? (
+                  // Fallback for authenticated users with unknown role
                   <Sidebar />
-                )}
+                ) : null}
               </div>
             </>
           )}
