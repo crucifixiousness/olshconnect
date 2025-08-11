@@ -9,22 +9,45 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
+import axios from 'axios';
 import { MyContext } from "../../App";
 
 const StudentCourses = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [courses, setCourses] = useState([]);
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
-  const { user } = useContext(MyContext);
   /* eslint-disable no-unused-vars */
   const context = useContext(MyContext);
 
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    // Simulate loading time
-    setTimeout(() => setLoading(false), 1000);
+
+    const fetchCourses = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Please login to view your courses.');
+          setCourses([]);
+          return;
+        }
+        const { data } = await axios.get('/api/student-courses', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCourses(Array.isArray(data.courses) ? data.courses : []);
+      } catch (err) {
+        const message = err.response?.data?.error || 'Failed to load courses.';
+        setError(message);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
   }, [context]);
 
   return (
@@ -55,51 +78,27 @@ const StudentCourses = () => {
                         <CircularProgress style={{ color: '#c70202' }} />
                       </TableCell>
                     </TableRow>
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan="4" style={{ textAlign: "center", padding: "24px 0", color: '#b00020' }}>
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : courses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="4" style={{ textAlign: "center", padding: "24px 0", color: '#666' }}>
+                        No courses found for your current enrollment.
+                      </TableCell>
+                    </TableRow>
                   ) : (
-                    <>
-                      <TableRow hover>
-                        <TableCell>Application Development and Emerging Technologies</TableCell>
-                        <TableCell align="center">CC106</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">*</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Cybersecuirity Principles 1</TableCell>
-                        <TableCell align="center">SPT1-CYBER1</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">*</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Information Assurance and Security</TableCell>
-                        <TableCell align="center">IAS102</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">*</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Web Systems Technology 2</TableCell>
-                        <TableCell align="center">WS102</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">*</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Project Management for IT</TableCell>
-                        <TableCell align="center">SPT3</TableCell>
-                        <TableCell align="center">3</TableCell>
+                    courses.map((course, idx) => (
+                      <TableRow hover key={`${course.course_code}-${idx}`}>
+                        <TableCell>{course.course_name}</TableCell>
+                        <TableCell align="center">{course.course_code}</TableCell>
+                        <TableCell align="center">{course.units}</TableCell>
                         <TableCell align="center">--</TableCell>
                       </TableRow>
-                      <TableRow hover>
-                        <TableCell>Internet of Things</TableCell>
-                        <TableCell align="center">SPT4</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">--</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Capstone Project and Research 1</TableCell>
-                        <TableCell align="center">CAP101</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">*</TableCell>
-                      </TableRow>
-                    </>
+                    ))
                   )}
                 </TableBody>
               </Table>
