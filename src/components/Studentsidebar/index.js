@@ -39,17 +39,9 @@ const StudentSidebar = () => {
 
     // Logout function to remove user data and redirect
   const handleLogout = () => {
-    // Clear all localStorage data
-    localStorage.clear();
-    
-    // Reset context states
-    context.setIsLogin(false);
-    context.setUser(null);
-    context.setToken(null);
-    context.setRole(null);
-    
-    // Redirect to homepage
-    navigate('/homepage');
+    console.log('🔒 [STUDENT SIDEBAR] Logging out...');
+    // Use the context logout function for consistent behavior
+    context.logout();
   };
 
   const renderLink = (to, button, requiresEnrollment = true, requiresPayment = false) => {
