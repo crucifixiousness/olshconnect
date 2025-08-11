@@ -82,6 +82,22 @@ function App() {
   const [role, setRole] = useState(localStorage.getItem('role') || null);
   const [isAuthLoading, setIsAuthLoading] = useState(true); // Add loading state
 
+  // Add CSS animation for spinner
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -129,6 +145,11 @@ function App() {
   };
 
   const logout = () => {
+    console.log('🔒 [LOGOUT] Starting logout process...');
+    
+    // Set loading state to prevent route conflicts
+    setIsAuthLoading(true);
+    
     // Clear all authentication data
     localStorage.clear();
     setToken(null);
@@ -136,8 +157,14 @@ function App() {
     setUser(null);
     setIsLogin(false);
     
-    // Redirect to homepage
-    window.location.href = '/homepage';
+    console.log('🔒 [LOGOUT] Authentication state cleared');
+    
+    // Use a small delay to ensure state updates complete before redirect
+    setTimeout(() => {
+      console.log('🔒 [LOGOUT] Redirecting to homepage...');
+      // Force full page reload to clear any React Router state issues
+      window.location.href = '/homepage';
+    }, 100);
   };
 
   const values = {
@@ -235,6 +262,34 @@ function App() {
       console.log('🔒 [BACK BUTTON] Token:', !!token, 'Role:', role);
     }
   }, [token, role]);
+
+  // Add route transition guard to prevent navigation issues during logout
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isAuthLoading) {
+        console.log('🔒 [ROUTE GUARD] Preventing navigation during auth loading');
+        return 'Please wait for authentication to complete...';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isAuthLoading]);
+
+  // Add cleanup effect to reset loading state when navigating to login pages
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (['/login', '/stafflogin', '/logIn'].includes(currentPath)) {
+      // Reset loading state when on login pages
+      if (isAuthLoading) {
+        console.log('🔒 [CLEANUP] Resetting loading state on login page');
+        setIsAuthLoading(false);
+      }
+    }
+  }, [window.location.pathname, isAuthLoading]);
 
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
     // Show loading while authentication state is being restored
@@ -335,7 +390,19 @@ function App() {
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
         <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={
-                token && role === 'student' ? (
+                isAuthLoading ? (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: '100vh',
+                    flexDirection: 'column',
+                    gap: '20px'
+                  }}>
+                    <div style={{ fontSize: '24px', color: '#666' }}>Loading...</div>
+                    <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  </div>
+                ) : token && role === 'student' ? (
                   <Navigate to="/student-dashboard" replace />
                 ) : (
                   <Login />
@@ -343,7 +410,19 @@ function App() {
               } />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
               <Route path="/stafflogin" exact={true} element={
-                token && role && role !== 'student' ? (
+                isAuthLoading ? (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: '100vh',
+                    flexDirection: 'column',
+                    gap: '20px'
+                  }}>
+                    <div style={{ fontSize: '24px', color: '#666' }}>Loading...</div>
+                    <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  </div>
+                ) : token && role && role !== 'student' ? (
                   (() => {
                     // Redirect staff to their specific dashboard based on role
                     if (role === 'admin') {
