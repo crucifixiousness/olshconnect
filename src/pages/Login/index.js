@@ -185,7 +185,7 @@ const Login = () => {
   
   const context = useContext(MyContext);
   const navigate = useNavigate();
-  const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
+  const { isLogin, setIsLogin, setUser, setRole, setToken, token, role, user } = useContext(MyContext);
 
   // Remove excessive debugging that might interfere with rendering
   // console.log('🔒 [LOGIN] Component rendering, isLogin:', isLogin, 'context.isLogin:', context.isLogin);
