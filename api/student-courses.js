@@ -82,10 +82,10 @@ module.exports = async (req, res) => {
          AND pc.semester = $3
          AND (
            pc.major_id IS NULL
-           OR ($4::int IS NOT NULL AND pc.major_id = $4::int)
+           OR pc.major_id = $4
          )
        ORDER BY c.course_name`,
-      [program_id, year_id, semester, major_id || null]
+      [program_id, year_id, semester, major_id]
     );
 
     return res.status(200).json({
