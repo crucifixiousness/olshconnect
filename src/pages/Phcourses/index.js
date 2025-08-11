@@ -36,7 +36,8 @@ const AssignCourses = () => {
       course_code: "",
       course_name: "",
       units: "",
-      semester: ""
+      semester: "",
+      major_id: ""
     });
   };
   const [loading, setLoading] = useState(false);
@@ -66,6 +67,7 @@ const AssignCourses = () => {
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewCourse, setSelectedViewCourse] = useState(null);
+  const [majors, setMajors] = useState([]); // Add majors state
 
   const formatTime = (time) => {
     if (!time || time === 'Not assigned') return time;
@@ -202,7 +204,8 @@ const AssignCourses = () => {
     course_code: "",
     course_name: "",
     units: "",
-    semester: ""
+    semester: "",
+    major_id: ""
   });
   
   // Fetch logged-in user details (assuming it's stored in localStorage)
@@ -312,6 +315,7 @@ const AssignCourses = () => {
     if (program_id) {
       fetchAssignedCourses();
       fetchCourses();
+      fetchMajors(); // Add fetchMajors call
     }
   }, [program_id, fetchAssignedCourses]);
   
@@ -327,6 +331,19 @@ const AssignCourses = () => {
       setCourses(response.data);
     } catch (error) {
       console.error("Error fetching courses:", error);
+    }
+  };
+
+  // Fetch majors for the current program
+  const fetchMajors = async () => {
+    if (!program_id) return;
+    try {
+      const response = await axios.get(`/api/major-management`);
+      // Filter majors for the current program
+      const programMajors = response.data.filter(major => major.program_id == program_id);
+      setMajors(programMajors);
+    } catch (error) {
+      console.error("Error fetching majors:", error);
     }
   };
   
@@ -345,25 +362,45 @@ const AssignCourses = () => {
     event.preventDefault();
     console.log("Form submitted");
   
-    if (!program_id || !newAssignment.year_level || !newAssignment.course_code || 
-        !newAssignment.course_name || !newAssignment.units || !newAssignment.semester) {
+    // Check if major is required (when program has majors)
+    const isMajorRequired = majors.length > 0;
+    const requiredFields = ['program_id', 'year_level', 'course_code', 'course_name', 'units', 'semester'];
+    
+    if (isMajorRequired) {
+      requiredFields.push('major_id');
+    }
+    
+    const missingFields = requiredFields.filter(field => {
+      if (field === 'program_id') return !program_id;
+      if (field === 'major_id') return isMajorRequired && (!newAssignment.major_id || newAssignment.major_id === '');
+      return !newAssignment[field];
+    });
+  
+    if (missingFields.length > 0) {
       setSnackbar({
         open: true,
-        message: "Please fill in all required fields",
+        message: `Please fill in all required fields: ${missingFields.join(', ')}`,
         severity: 'error'
       });
       return;
     }
   
     try {
-      const response = await axios.post("/api/program-course", {
+      const requestBody = {
         program_id: program_id,
         course_code: newAssignment.course_code,
         course_name: newAssignment.course_name,
         units: newAssignment.units,
         semester: newAssignment.semester,
         year_level: newAssignment.year_level
-      });
+      };
+
+      // Add major_id if majors are available
+      if (majors.length > 0 && newAssignment.major_id) {
+        requestBody.major_id = newAssignment.major_id;
+      }
+
+      const response = await axios.post("/api/program-course", requestBody);
   
       console.log("Response:", response.data);
       setSnackbar({
@@ -524,13 +561,14 @@ const AssignCourses = () => {
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course Name</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Units</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Major</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan="7" style={{ textAlign: "center", padding: "40px 0" }}>
+                  <TableCell colSpan="8" style={{ textAlign: "center", padding: "40px 0" }}>
                     <CircularProgress style={{ color: '#c70202' }} />
                   </TableCell>
                 </TableRow>
@@ -547,6 +585,7 @@ const AssignCourses = () => {
                     <TableCell>{assignment.course_name}</TableCell>
                     <TableCell>{assignment.units}</TableCell>
                     <TableCell>{assignment.semester}</TableCell>
+                    <TableCell>{assignment.major_name || 'N/A'}</TableCell>
                     <TableCell>
                       <div className="actions d-flex align-items-center gap-1">
                         <Button 
@@ -626,7 +665,7 @@ const AssignCourses = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan="7" style={{ textAlign: "center" }}>
+                  <TableCell colSpan="8" style={{ textAlign: "center" }}>
                     No course assignments available{yearLevel ? ` for Year ${yearLevel}` : ''}.
                   </TableCell>
                 </TableRow>
@@ -808,6 +847,31 @@ const AssignCourses = () => {
                 </Select>
               </FormControl>
             </div>
+
+            {/* Major Selection - Only show if program has majors */}
+            {majors.length > 0 && (
+              <div className="registration-section">
+                <Typography variant="h6" className="section-title">
+                  Major Selection
+                </Typography>
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Select Major</InputLabel>
+                  <Select
+                    name="major_id"
+                    value={newAssignment.major_id}
+                    onChange={handleInputChange}
+                    data-testid="input-major"
+                  >
+                    <MenuItem value="">Select a major</MenuItem>
+                    {majors.map((major) => (
+                      <MenuItem key={major.major_id} value={major.major_id}>
+                        {major.major_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+            )}
 
             <div className="registration-section">
               <Typography variant="h6" className="section-title">
