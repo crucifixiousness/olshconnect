@@ -100,6 +100,18 @@ module.exports = async (req, res) => {
     let coursesQuery;
     let queryParams;
     
+    // Normalize semester from JSON format to plain text
+    let normalizedSemester = semester;
+    if (typeof semester === 'string' && semester.startsWith('{') && semester.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(semester);
+        normalizedSemester = Array.isArray(parsed) ? parsed[0] : parsed;
+        console.log('🔍 DEBUG: Normalized semester from JSON:', { original: semester, normalized: normalizedSemester });
+      } catch (parseErr) {
+        console.log('🔍 DEBUG: Failed to parse semester JSON:', parseErr.message);
+      }
+    }
+    
     if (hasProgramCourseMajorId) {
       coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
                              pc.major_id, m.major_name
@@ -115,7 +127,7 @@ module.exports = async (req, res) => {
                           OR pc.major_id = $4
                         )
                       ORDER BY c.course_name`;
-      queryParams = [program_id, year_id, semester, major_id];
+      queryParams = [program_id, year_id, normalizedSemester, major_id];
     } else {
       coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level
                       FROM program_course pc
@@ -125,7 +137,7 @@ module.exports = async (req, res) => {
                         AND pc.year_id = $2
                         AND pc.semester = $3
                       ORDER BY c.course_name`;
-      queryParams = [program_id, year_id, semester];
+      queryParams = [program_id, year_id, normalizedSemester];
     }
 
     console.log('🔍 DEBUG: Courses query:', coursesQuery);
