@@ -147,9 +147,6 @@ function App() {
   const logout = () => {
     console.log('🔒 [LOGOUT] Starting logout process...');
     
-    // Set loading state to prevent route conflicts
-    setIsAuthLoading(true);
-    
     // Clear all authentication data
     localStorage.clear();
     setToken(null);
@@ -159,12 +156,8 @@ function App() {
     
     console.log('🔒 [LOGOUT] Authentication state cleared');
     
-    // Use a small delay to ensure state updates complete before redirect
-    setTimeout(() => {
-      console.log('🔒 [LOGOUT] Redirecting to homepage...');
-      // Force full page reload to clear any React Router state issues
-      window.location.href = '/homepage';
-    }, 100);
+    // Simple redirect without complex state management
+    window.location.href = '/homepage';
   };
 
   const values = {
@@ -193,103 +186,103 @@ function App() {
     console.log('App State Update:', { token, role, user, isAuthLoading });
   }, [token, role, user, isAuthLoading]);
 
-  // Prevent backward navigation for authenticated users using React Router history
-  useEffect(() => {
-    if (token && role) {
-      console.log('🔒 [BACK BUTTON] Setting up history listener for role:', role);
-      
-      // Determine the appropriate dashboard path for this role
-      let dashboardPath = '/homepage';
-      if (role === 'student') {
-        dashboardPath = '/student-dashboard';
-      } else if (role === 'admin') {
-        dashboardPath = '/dashboard';
-      } else if (role === 'registrar') {
-        dashboardPath = '/registrar-dashboard';
-      } else if (role === 'finance') {
-        dashboardPath = '/finance-dashboard';
-      } else if (role === 'program head') {
-        dashboardPath = '/programhead-dashboard';
-      } else if (role === 'instructor') {
-        dashboardPath = '/instructor-dashboard';
-      }
-      
-      console.log('🔒 [BACK BUTTON] Dashboard path set to:', dashboardPath);
-      console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
-      
-      // Set initial history state to prevent going back further
-      window.history.pushState({ role, dashboardPath }, '', dashboardPath);
-      console.log('🔒 [BACK BUTTON] Initial history state set');
-      
-      const handlePopState = (event) => {
-        console.log('🔒 [BACK BUTTON] Back navigation detected!');
-        console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
-        console.log('🔒 [BACK BUTTON] Target dashboard:', dashboardPath);
-        
-        // Immediately redirect back to the dashboard
-        window.location.href = dashboardPath;
-      };
-      
-      // Listen for browser back/forward button clicks
-      window.addEventListener('popstate', handlePopState);
-      console.log('🔒 [BACK BUTTON] Added popstate listener');
-      
-      // Also prevent going back with keyboard shortcuts
-      const handleKeyDown = (event) => {
-        if ((event.altKey && event.key === 'ArrowLeft') || 
-            (event.metaKey && event.key === '[') ||
-            (event.ctrlKey && event.key === '[')) {
-          console.log('🔒 [BACK BUTTON] Blocked keyboard shortcut:', event.key);
-          event.preventDefault();
-          event.stopPropagation();
-          
-          // Redirect to dashboard
-          window.location.href = dashboardPath;
-          return false;
-        }
-      };
-      
-      document.addEventListener('keydown', handleKeyDown);
-      console.log('🔒 [BACK BUTTON] Added keyboard listener');
-      
-      return () => {
-        console.log('🔒 [BACK BUTTON] Cleaning up event listeners');
-        window.removeEventListener('popstate', handlePopState);
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    } else {
-      console.log('🔒 [BACK BUTTON] User not authenticated or no role, skipping back button prevention');
-      console.log('🔒 [BACK BUTTON] Token:', !!token, 'Role:', role);
-    }
-  }, [token, role]);
+  // Remove the backward navigation prevention - it's interfering with logout flow
+  // useEffect(() => {
+  //   if (token && role) {
+  //     console.log('🔒 [BACK BUTTON] Setting up history listener for role:', role);
+  //     
+  //     // Determine the appropriate dashboard path for this role
+  //     let dashboardPath = '/homepage';
+  //     if (role === 'student') {
+  //       dashboardPath = '/student-dashboard';
+  //     } else if (role === 'admin') {
+  //       dashboardPath = '/dashboard';
+  //     } else if (role === 'registrar') {
+  //       dashboardPath = '/registrar-dashboard';
+  //     } else if (role === 'finance') {
+  //       dashboardPath = '/finance-dashboard';
+  //     } else if (role === 'program head') {
+  //       dashboardPath = '/programhead-dashboard';
+  //     } else if (role === 'instructor') {
+  //       dashboardPath = '/instructor-dashboard';
+  //     }
+  //     
+  //     console.log('🔒 [BACK BUTTON] Dashboard path set to:', dashboardPath);
+  //     console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
+  //     
+  //     // Set initial history state to prevent going back further
+  //     window.history.pushState({ role, dashboardPath }, '', dashboardPath);
+  //     console.log('🔒 [BACK BUTTON] Initial history state set');
+  //     
+  //     const handlePopState = (event) => {
+  //       console.log('🔒 [BACK BUTTON] Back navigation detected!');
+  //       console.log('🔒 [BACK BUTTON] Current URL:', window.location.pathname);
+  //       console.log('🔒 [BACK BUTTON] Current URL:', dashboardPath);
+  //       
+  //       // Immediately redirect back to the dashboard
+  //       window.location.href = dashboardPath;
+  //     };
+  //     
+  //     // Listen for browser back/forward button clicks
+  //       window.addEventListener('popstate', handlePopState);
+  //       console.log('🔒 [BACK BUTTON] Added popstate listener');
+  //       
+  //       // Also prevent going back with keyboard shortcuts
+  //       const handleKeyDown = (event) => {
+  //         if ((event.altKey && event.key === 'ArrowLeft') || 
+  //             (event.metaKey && event.key === '[') ||
+  //             (event.ctrlKey && event.key === '[')) {
+  //           console.log('🔒 [BACK BUTTON] Blocked keyboard shortcut:', event.key);
+  //           event.preventDefault();
+  //           event.stopPropagation();
+  //           
+  //           // Redirect to dashboard
+  //           window.location.href = dashboardPath;
+  //           return false;
+  //         }
+  //       };
+  //       
+  //       document.addEventListener('keydown', handleKeyDown);
+  //       console.log('🔒 [BACK BUTTON] Added keyboard listener');
+  //       
+  //       return () => {
+  //         console.log('🔒 [BACK BUTTON] Cleaning up event listeners');
+  //         window.removeEventListener('popstate', handlePopState);
+  //         document.removeEventListener('keydown', handleKeyDown);
+  //       };
+  //     } else {
+  //       console.log('🔒 [BACK BUTTON] User not authenticated or no role, skipping back button prevention');
+  //       console.log('🔒 [BACK BUTTON] Token:', !!token, 'Role:', role);
+  //     }
+  //   }, [token, role]);
 
-  // Add route transition guard to prevent navigation issues during logout
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (isAuthLoading) {
-        console.log('🔒 [ROUTE GUARD] Preventing navigation during auth loading');
-        return 'Please wait for authentication to complete...';
-      }
-    };
+  // Remove route transition guards that might be interfering
+  // useEffect(() => {
+  //   const handleBeforeUnload = () => {
+  //     if (isAuthLoading) {
+  //       console.log('🔒 [ROUTE GUARD] Preventing navigation during auth loading');
+  //       return 'Please wait for authentication to complete...';
+  //     }
+  //   };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
     
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isAuthLoading]);
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //   };
+  // }, [isAuthLoading]);
 
-  // Add cleanup effect to reset loading state when navigating to login pages
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    if (['/login', '/stafflogin', '/logIn'].includes(currentPath)) {
-      // Reset loading state when on login pages
-      if (isAuthLoading) {
-        console.log('🔒 [CLEANUP] Resetting loading state on login page');
-        setIsAuthLoading(false);
-      }
-    }
-  }, [window.location.pathname, isAuthLoading]);
+  // Remove cleanup effect that might be interfering
+  // useEffect(() => {
+  //   const currentPath = window.location.pathname;
+  //   if (['/login', '/stafflogin', '/logIn'].includes(currentPath)) {
+  //     // Reset loading state when on login pages
+  //     if (isAuthLoading) {
+  //       console.log('🔒 [CLEANUP] Resetting loading state on login page');
+  //       setIsAuthLoading(false);
+  //     }
+  //   }
+  // }, [window.location.pathname, isAuthLoading]);
 
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
     // Show loading while authentication state is being restored
@@ -390,19 +383,7 @@ function App() {
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
         <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={
-                isAuthLoading ? (
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    height: '100vh',
-                    flexDirection: 'column',
-                    gap: '20px'
-                  }}>
-                    <div style={{ fontSize: '24px', color: '#666' }}>Loading...</div>
-                    <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  </div>
-                ) : token && role === 'student' ? (
+                token && role === 'student' ? (
                   <Navigate to="/student-dashboard" replace />
                 ) : (
                   <Login />
@@ -410,19 +391,7 @@ function App() {
               } />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
               <Route path="/stafflogin" exact={true} element={
-                isAuthLoading ? (
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    height: '100vh',
-                    flexDirection: 'column',
-                    gap: '20px'
-                  }}>
-                    <div style={{ fontSize: '24px', color: '#666' }}>Loading...</div>
-                    <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  </div>
-                ) : token && role && role !== 'student' ? (
+                token && role && role !== 'student' ? (
                   (() => {
                     // Redirect staff to their specific dashboard based on role
                     if (role === 'admin') {
