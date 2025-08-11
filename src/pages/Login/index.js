@@ -187,35 +187,28 @@ const Login = () => {
   const navigate = useNavigate();
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
-  // Add debugging
-  console.log('🔒 [LOGIN] Component rendering, isLogin:', isLogin, 'context.isLogin:', context.isLogin);
+  // Remove excessive debugging that might interfere with rendering
+  // console.log('🔒 [LOGIN] Component rendering, isLogin:', isLogin, 'context.isLogin:', context.isLogin);
 
-  // Check if user is already logged in and redirect if necessary
+  // Simplified useEffect - only check if user is already logged in
   useEffect(() => {
-    console.log('🔒 [LOGIN] useEffect running, checking stored data...');
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    const storedIsLogin = localStorage.getItem('isLogin');
-    
-    console.log('🔒 [LOGIN] Stored data:', { storedToken: !!storedToken, storedUser: !!storedUser, storedIsLogin });
-    
-    if (storedToken && storedUser && storedIsLogin === 'true') {
+    // Only redirect if user is already logged in and has valid data
+    if (isLogin && token && role === 'student') {
       try {
-        const userData = JSON.parse(storedUser);
+        const userData = user || JSON.parse(localStorage.getItem('user') || '{}');
         const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
           ? '/student-dashboard' 
           : '/student-profile';
         
-        console.log('🔒 [LOGIN] Redirecting to:', redirectPath);
-        // Use navigate instead of window.location.href for better routing
+        console.log('🔒 [LOGIN] User already logged in, redirecting to:', redirectPath);
         navigate(redirectPath, { replace: true });
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        // Clear invalid data
+        console.error('Error parsing user data:', error);
+        // Clear invalid data and continue to login form
         localStorage.clear();
       }
     }
-  }, [navigate]);
+  }, [isLogin, token, role, user, navigate]);
   
   useEffect(() => {
       context.setIsHideComponents(true);
@@ -230,23 +223,23 @@ const Login = () => {
     setCredentials({ ...credentials, [name]: value });
   };
 
-  // Check if already logged in AFTER all hooks
-  if (isLogin) {
-    // Show loading spinner instead of returning null
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        flexDirection: 'column',
-        gap: '20px'
-      }}>
-        <div style={{ fontSize: '24px', color: '#666' }}>Redirecting...</div>
-        <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
+  // Remove the problematic early return that causes stuck loading state
+  // if (isLogin) {
+  //   // Show loading spinner instead of returning null
+  //   return (
+  //     <div style={{ 
+  //       display: 'flex', 
+  //       justifyContent: 'center', 
+  //       alignItems: 'center', 
+  //       height: '100vh',
+  //       flexDirection: 'column',
+  //       gap: '20px'
+  //     }}>
+  //       <div style={{ fontSize: '24px', color: '#666' }}>Redirecting...</div>
+  //       <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+  //     </div>
+  //   );
+  // }
 
     // Then modify your handleLogin function to remove the redirect logic
     const handleLogin = async (e) => {
