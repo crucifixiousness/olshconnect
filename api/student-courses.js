@@ -35,16 +35,32 @@ module.exports = async (req, res) => {
 
     client = await pool.connect();
 
-    // Get the student's latest enrollment details
-    const enrollmentResult = await client.query(
-      `SELECT e.program_id, e.year_id, e.semester, e.major_id, py.year_level
-       FROM enrollments e
-       JOIN program_year py ON e.year_id = py.year_id
-       WHERE e.student_id = $1
-       ORDER BY e.enrollment_date DESC
-       LIMIT 1`,
-      [studentId]
+    // Detect if enrollments.major_id column exists
+    const majorColumnCheck = await client.query(
+      `SELECT 1
+       FROM information_schema.columns
+       WHERE table_name = 'enrollments' AND column_name = 'major_id'
+       LIMIT 1`
     );
+
+    const hasMajorIdColumn = majorColumnCheck.rows.length > 0;
+
+    // Get the student's latest enrollment details
+    const enrollmentQuery = hasMajorIdColumn
+      ? `SELECT e.program_id, e.year_id, e.semester, e.major_id, py.year_level
+         FROM enrollments e
+         JOIN program_year py ON e.year_id = py.year_id
+         WHERE e.student_id = $1
+         ORDER BY e.enrollment_date DESC
+         LIMIT 1`
+      : `SELECT e.program_id, e.year_id, e.semester, NULL AS major_id, py.year_level
+         FROM enrollments e
+         JOIN program_year py ON e.year_id = py.year_id
+         WHERE e.student_id = $1
+         ORDER BY e.enrollment_date DESC
+         LIMIT 1`;
+
+    const enrollmentResult = await client.query(enrollmentQuery, [studentId]);
 
     if (enrollmentResult.rows.length === 0) {
       return res.status(404).json({ error: 'No enrollment found for this student' });
@@ -53,6 +69,7 @@ module.exports = async (req, res) => {
     const { program_id, year_id, semester, major_id } = enrollmentResult.rows[0];
 
     // Fetch the courses for the student's program/year/semester and (optional) major
+    // Two sets: common courses (pc.major_id IS NULL) and major-specific courses (pc.major_id = student's major)
     const coursesResult = await client.query(
       `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
               pc.major_id, m.major_name
@@ -63,7 +80,10 @@ module.exports = async (req, res) => {
        WHERE pc.program_id = $1
          AND pc.year_id = $2
          AND pc.semester = $3
-         AND (pc.major_id IS NULL OR pc.major_id = $4)
+         AND (
+           pc.major_id IS NULL
+           OR ($4::int IS NOT NULL AND pc.major_id = $4::int)
+         )
        ORDER BY c.course_name`,
       [program_id, year_id, semester, major_id || null]
     );
