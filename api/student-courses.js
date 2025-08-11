@@ -154,6 +154,21 @@ module.exports = async (req, res) => {
       console.log('🔍 DEBUG: Could not run debug query:', debugErr.message);
     }
 
+    // NEW: Let's see what semester values actually exist in program_course for this program/year
+    const semesterDebugQuery = `
+      SELECT DISTINCT semester, COUNT(*) as course_count
+      FROM program_course 
+      WHERE program_id = $1 AND year_id = $2
+      GROUP BY semester
+      ORDER BY semester`;
+    
+    try {
+      const semesterDebugResult = await client.query(semesterDebugQuery, [program_id, year_id]);
+      console.log('🔍 DEBUG: Available semesters in program_course for this program/year:', JSON.stringify(semesterDebugResult.rows, null, 2));
+    } catch (semesterDebugErr) {
+      console.log('🔍 DEBUG: Could not run semester debug query:', semesterDebugErr.message);
+    }
+
     const response = {
       program_id,
       year_id,
