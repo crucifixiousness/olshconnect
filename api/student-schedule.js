@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
       FROM program_course pc
       JOIN course c ON pc.course_id = c.course_id
       JOIN program_year py ON pc.year_id = py.year_id
-      LEFT JOIN course_assignment ca ON pc.pc_id = ca.course_id
+      LEFT JOIN course_assignments ca ON pc.pc_id = ca.course_id
       LEFT JOIN staff s ON ca.staff_id = s.staff_id
       WHERE pc.program_id = $1
         AND pc.year_id = $2
