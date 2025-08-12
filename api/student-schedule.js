@@ -103,22 +103,21 @@ module.exports = async (req, res) => {
         c.units,
         pc.semester,
         py.year_level,
-        ca.section,
-        ca.day,
+        COALESCE(ca.section, 'TBA') as section,
+        COALESCE(ca.day, 'TBA') as day,
         ca.start_time,
         ca.end_time,
-        a.full_name
+        COALESCE(a.full_name, 'TBA') as full_name
       FROM program_course pc
       JOIN course c ON pc.course_id = c.course_id
       JOIN program_year py ON pc.year_id = py.year_id
-      JOIN course_assignments ca ON pc.pc_id = ca.pc_id
+      LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id AND ca.section = $4
       LEFT JOIN admins a ON ca.staff_id = a.staff_id
       WHERE pc.program_id = $1
         AND pc.year_id = $2
         AND pc.semester = $3
-        AND ca.section = $4
       ORDER BY 
-        CASE ca.day 
+        CASE COALESCE(ca.day, 'TBA')
           WHEN 'Monday' THEN 1
           WHEN 'Tuesday' THEN 2
           WHEN 'Wednesday' THEN 3
@@ -127,7 +126,7 @@ module.exports = async (req, res) => {
           WHEN 'Saturday' THEN 6
           ELSE 7
         END,
-        ca.start_time,
+        COALESCE(ca.start_time, '00:00:00'),
         c.course_name
     `;
 
