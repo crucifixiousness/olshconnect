@@ -85,7 +85,7 @@ const InstructorGrades = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:4000/course-students/${courseId}`,
+        `/api/course-students?courseId=${courseId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -126,7 +126,7 @@ const InstructorGrades = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:4000/save-grades',
+        '/api/save-grades',
         {
           courseId: selectedCourse,
           grades: grades
