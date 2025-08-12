@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
 
     // Get the student's latest enrollment details
     const enrollmentQuery = `
-      SELECT e.program_id, e.year_id, e.semester, py.year_level
+      SELECT e.program_id, e.year_id, e.semester, e.block_id, py.year_level
       FROM enrollments e
       JOIN program_year py ON e.year_id = py.year_id
       WHERE e.student_id = $1
@@ -60,12 +60,28 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'No enrollment found for this student' });
     }
 
-    const { program_id, year_id, semester } = enrollmentResult.rows[0];
+    const { program_id, year_id, semester, block_id } = enrollmentResult.rows[0];
     console.log('🔍 DEBUG: Extracted enrollment data:', {
       program_id,
       year_id,
-      semester
+      semester,
+      block_id
     });
+
+    // Get the block name for the student
+    let blockName = null;
+    if (block_id) {
+      const blockQuery = `
+        SELECT block_name 
+        FROM student_blocks 
+        WHERE block_id = $1
+      `;
+      const blockResult = await client.query(blockQuery, [block_id]);
+      if (blockResult.rows.length > 0) {
+        blockName = blockResult.rows[0].block_name;
+        console.log('🔍 DEBUG: Student block name:', blockName);
+      }
+    }
 
     // Normalize semester from JSON format to plain text
     let normalizedSemester = semester;
@@ -100,6 +116,7 @@ module.exports = async (req, res) => {
       WHERE pc.program_id = $1
         AND pc.year_id = $2
         AND pc.semester = $3
+        AND (ca.section = $4 OR ca.section IS NULL)
       ORDER BY 
         CASE ca.day 
           WHEN 'Monday' THEN 1
@@ -115,9 +132,9 @@ module.exports = async (req, res) => {
     `;
 
     console.log('🔍 DEBUG: Schedule query:', scheduleQuery);
-    console.log('🔍 DEBUG: Schedule query parameters:', [program_id, year_id, normalizedSemester]);
+    console.log('🔍 DEBUG: Schedule query parameters:', [program_id, year_id, normalizedSemester, blockName]);
 
-    const scheduleResult = await client.query(scheduleQuery, [program_id, year_id, normalizedSemester]);
+    const scheduleResult = await client.query(scheduleQuery, [program_id, year_id, normalizedSemester, blockName]);
     console.log('🔍 DEBUG: Schedule query result rows:', scheduleResult.rows.length);
     console.log('🔍 DEBUG: Schedule query result:', JSON.stringify(scheduleResult.rows, null, 2));
 
@@ -125,6 +142,8 @@ module.exports = async (req, res) => {
       program_id,
       year_id,
       semester: normalizedSemester,
+      block_id,
+      block_name: blockName,
       schedule: scheduleResult.rows,
       total_courses: scheduleResult.rows.length
     };
