@@ -83,6 +83,11 @@ module.exports = async (req, res) => {
         AND e.semester = $4
         AND e.enrollment_status = 'Officially Enrolled'
         AND sb.block_name = $5
+        AND EXISTS (
+          SELECT 1 FROM course_assignments ca2
+          WHERE ca2.pc_id = $1 
+          AND ca2.section = sb.block_name
+        )
       ORDER BY 2
     `;
 
@@ -124,6 +129,8 @@ module.exports = async (req, res) => {
 
     const studentsResult = await client.query(studentsQuery, queryParams);
     console.log('🔍 DEBUG: Students found:', studentsResult.rows.length);
+    console.log('🔍 DEBUG: Course section being filtered:', course.section);
+    console.log('🔍 DEBUG: First few students:', studentsResult.rows.slice(0, 3));
 
     const response = {
       course: {
