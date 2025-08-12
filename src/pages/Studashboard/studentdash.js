@@ -87,6 +87,7 @@ const StuDashboard = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Time</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Day</TableCell>
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course Name</TableCell>
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Units</TableCell>
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
@@ -96,7 +97,7 @@ const StuDashboard = () => {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan="5" style={{ textAlign: "center", padding: "40px 0" }}>
+                      <TableCell colSpan="6" style={{ textAlign: "center", padding: "40px 0" }}>
                         <CircularProgress style={{ color: '#c70202' }} />
                       </TableCell>
                     </TableRow>
@@ -109,6 +110,7 @@ const StuDashboard = () => {
                             : 'TBA'
                           }
                         </TableCell>
+                        <TableCell>{course.day || 'TBA'}</TableCell>
                         <TableCell><strong>{course.course_name}</strong></TableCell>
                         <TableCell>{course.units}</TableCell>
                         <TableCell>{course.semester}</TableCell>
@@ -119,7 +121,7 @@ const StuDashboard = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan="5" style={{ textAlign: "center", padding: "40px 0" }}>
+                      <TableCell colSpan="6" style={{ textAlign: "center", padding: "40px 0" }}>
                         <Typography variant="body1" color="textSecondary">
                           No schedule found. Please check your enrollment status or contact your program head.
                         </Typography>
