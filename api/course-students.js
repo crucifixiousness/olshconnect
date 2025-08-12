@@ -76,13 +76,13 @@ module.exports = async (req, res) => {
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
-
+      JOIN student_blocks sb ON e.block_id = sb.block_id
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
-
         AND e.enrollment_status = 'Officially Enrolled'
+        AND sb.block_name = $5
       ORDER BY 2
     `;
 
@@ -90,8 +90,8 @@ module.exports = async (req, res) => {
       courseId,
       course.program_id,
       course.year_id,
-      course.semester
-
+      course.semester,
+      course.section  // This is the block name (A, B, etc.)
     ];
 
     console.log('🔍 DEBUG: Students query:', studentsQuery);
