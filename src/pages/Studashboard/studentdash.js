@@ -13,9 +13,11 @@ import {
   Box
 } from '@mui/material';
 import { MyContext } from "../../App";
+import axios from 'axios';
 
 const StuDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState([]);
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
@@ -23,11 +25,44 @@ const StuDashboard = () => {
   /* eslint-disable no-unused-vars */
   const context = useContext(MyContext);
 
+  // Format time function for displaying schedule times
+  const formatTime = (time) => {
+    if (!time || time === 'Not assigned') return time;
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes.slice(0, 2)} ${ampm}`;
+  };
+
+  // Fetch student's enrolled courses for schedule
+  const fetchStudentCourses = async () => {
+    try {
+      setLoading(true);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get('/api/student-courses', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('Student courses response:', response.data);
+      setCourses(response.data.courses || []);
+    } catch (error) {
+      console.error('Error fetching student courses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    // Simulate loading time
-    setTimeout(() => setLoading(false), 1000);
+    fetchStudentCourses();
   }, [context]);
 
   return (
@@ -48,55 +83,51 @@ const StuDashboard = () => {
         <div className="mt-3">
           <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
             <TableContainer>
-              <Table aria-label="schedule table">
+              <Table aria-label="schedule table" sx={{ minWidth: 800 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Time</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Instructor Name</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Subject</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Building</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course Name</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Units</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Instructor</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan="4" style={{ textAlign: "center", padding: "40px 0" }}>
+                      <TableCell colSpan="5" style={{ textAlign: "center", padding: "40px 0" }}>
                         <CircularProgress style={{ color: '#c70202' }} />
                       </TableCell>
                     </TableRow>
+                  ) : courses.length > 0 ? (
+                    courses.map((course, index) => (
+                      <TableRow hover key={index}>
+                        <TableCell>
+                          {course.start_time && course.end_time 
+                            ? `${formatTime(course.start_time)} - ${formatTime(course.end_time)}`
+                            : 'TBA'
+                          }
+                        </TableCell>
+                        <TableCell><strong>{course.course_name}</strong></TableCell>
+                        <TableCell>{course.units}</TableCell>
+                        <TableCell>{course.semester}</TableCell>
+                        <TableCell>
+                          {course.first_name && course.last_name 
+                            ? `${course.first_name} ${course.last_name}`
+                            : 'TBA'
+                          }
+                        </TableCell>
+                      </TableRow>
+                    ))
                   ) : (
-                    <>
-                      <TableRow hover>
-                        <TableCell>7:00 - 9:00</TableCell>
-                        <TableCell>Mr. Vladimir Figueroa</TableCell>
-                        <TableCell>SIA102</TableCell>
-                        <TableCell>Computer Laboratory</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>9:00 - 11:00</TableCell>
-                        <TableCell>Mr. Elizor Villanueva</TableCell>
-                        <TableCell>IAS102</TableCell>
-                        <TableCell>Computer Laboratory</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>11:00 - 1:00</TableCell>
-                        <TableCell>Mr. Jonathan Alberto</TableCell>
-                        <TableCell>NET102</TableCell>
-                        <TableCell>Computer Laboratory</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>1:00 - 3:00</TableCell>
-                        <TableCell>Mr. Jerick Barnatia</TableCell>
-                        <TableCell>SPT2</TableCell>
-                        <TableCell>Computer Laboratory</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>3:00 - 5:00</TableCell>
-                        <TableCell>Mr. Joel Altura</TableCell>
-                        <TableCell>WS101</TableCell>
-                        <TableCell>Computer Laboratory</TableCell>
-                      </TableRow>
-                    </>
+                    <TableRow>
+                      <TableCell colSpan="5" style={{ textAlign: "center", padding: "40px 0" }}>
+                        <Typography variant="body1" color="textSecondary">
+                          No courses found. Please check your enrollment status.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>
