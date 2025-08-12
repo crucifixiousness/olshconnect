@@ -78,19 +78,10 @@ function App() {
   }, []);
    
   useEffect(() => {
-    // Restore authentication state from localStorage
-        const storedToken = localStorage.getItem('token');
-        const storedRole = localStorage.getItem('role');
-        const storedUser = localStorage.getItem('user');
-        const storedIsLogin = localStorage.getItem('isLogin');
-
-        if (storedToken && storedRole && storedUser && storedIsLogin === 'true') {
-          setToken(storedToken);
-          setRole(storedRole);
-          setUser(JSON.parse(storedUser));
-          setIsLogin(true);
-        }
-  }, []);
+    // Restore authentication state from localStorage - use the working logic from backup
+    setRole(localStorage.getItem('role'));
+    setUser(JSON.parse(localStorage.getItem('user')));
+  }, [token]);
 
   useEffect(() => {
     document.title = "OLSHCOnnect";
@@ -176,22 +167,21 @@ function App() {
             <>
               <div className={`sidebarOverlay d-none ${isOpenNav === true && 'show'}`} onClick={() => setIsOpenNav(false)}></div>
               <div className={`sidebarWrapper ${isToggleSidebar === true ? 'toggle' : ''} ${isOpenNav === true ? 'open' : ''}`}>
-              {token && role === 'student' ? (
+              {role === 'student' ? (
                   <StudentSidebar />
-                ) : token && role === 'registrar' ? (
+                ) : role === 'registrar' ? (
                   <RegistrarSidebar />
-                ) : token && role === 'finance' ? (
+                ) : role === 'finance' ? (
                   <FinanceSidebar />
-                ) : token && role === 'program head' ? (
+                ) : role === 'program head' ? (
                   <ProgramHeadSidebar />
-                ) : token && role === 'instructor' ? (
+                ) : role === 'instructor' ? (
                   <InstructorSidebar />
-                ) : token && role === 'admin' ? (
+                ) : role === 'admin' ? (
                   <Sidebar />
-                ) : token ? (
-                  // Fallback for authenticated users with unknown role
+                ) : (
                   <Sidebar />
-                ) : null}
+                )}
               </div>
             </>
           )}
