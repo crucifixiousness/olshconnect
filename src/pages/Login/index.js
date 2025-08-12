@@ -17,7 +17,7 @@ const LoginHoneypotMonitor = {
   sessionStartTime: Date.now(),
   commandCount: 0,
   loginAttempts: 0,
-  
+
   logActivity: async (type, details) => {
     const activity = {
       timestamp: new Date().toISOString(),
@@ -26,13 +26,13 @@ const LoginHoneypotMonitor = {
       userAgent: navigator.userAgent,
       url: window.location.href
     };
-    
+
     LoginHoneypotMonitor.suspiciousActivities.push(activity);
     LoginHoneypotMonitor.commandCount++;
-    
+
     // Calculate session duration
     const sessionDuration = Math.floor((Date.now() - LoginHoneypotMonitor.sessionStartTime) / 1000);
-    
+
     // Format timestamp for log file
     const timestamp = new Date().toLocaleString('en-US', {
       year: 'numeric',
@@ -43,7 +43,7 @@ const LoginHoneypotMonitor = {
       second: '2-digit',
       hour12: false
     }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2');
-    
+
     // Create detailed log entry
     const logEntry = `
 === LOGIN HONEYPOT LOG ENTRY ===
@@ -94,7 +94,7 @@ Additional Data: ${JSON.stringify(details, null, 2)}
 === END LOG ENTRY ===
 
 `;
-    
+
     // Send to payment log file (same endpoint for all honeypot logs)
     try {
       console.log('📝 Sending login log to payment-log API:', { activityType: type, timestamp });
@@ -111,45 +111,45 @@ Additional Data: ${JSON.stringify(details, null, 2)}
       console.error('❌ Login logging failed:', err);
       console.error('❌ Error details:', err.response?.data || err.message);
     }
-    
+
     console.warn('🚨 LOGIN HONEYPOT TRIGGERED:', activity);
   },
-  
+
   detectMaliciousLogin: (username, password) => {
     const suspiciousUsernames = [
       'admin', 'root', 'administrator', 'test', 'guest', 'user', 'demo',
       'sqlmap', 'hacker', 'attacker', 'malware', 'virus', 'backdoor'
     ];
-    
+
     const suspiciousPasswords = [
       'admin', '123456', 'password', 'root', 'toor', 'test', 'guest',
       '123456789', 'qwerty', 'abc123', 'password123', 'admin123'
     ];
-    
+
     const sqlInjectionPatterns = [
       "' OR '1'='1", "' OR 1=1--", "admin'--", "admin'/*", 
       "' UNION SELECT", "'; DROP TABLE", "'; INSERT INTO",
       "1' OR '1'='1", "1' OR 1=1#", "admin' #"
     ];
-    
+
     const xssPatterns = [
       "<script>", "javascript:", "onload=", "onerror=", "onclick=",
       "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
     ];
-    
+
     const username_lower = username.toLowerCase();
     const password_lower = password.toLowerCase();
-    
+
     // Check for suspicious usernames
     if (suspiciousUsernames.some(susp => username_lower.includes(susp))) {
       return { detected: true, type: 'Suspicious Username', pattern: username };
     }
-    
+
     // Check for suspicious passwords
     if (suspiciousPasswords.some(susp => password_lower.includes(susp))) {
       return { detected: true, type: 'Suspicious Password', pattern: password };
     }
-    
+
     // Check for SQL injection patterns
     if (sqlInjectionPatterns.some(pattern => 
       username_lower.includes(pattern.toLowerCase()) || 
@@ -157,7 +157,7 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     )) {
       return { detected: true, type: 'SQL Injection Attempt', pattern: `${username}:${password}` };
     }
-    
+
     // Check for XSS patterns
     if (xssPatterns.some(pattern => 
       username_lower.includes(pattern.toLowerCase()) || 
@@ -165,13 +165,13 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     )) {
       return { detected: true, type: 'XSS Attempt', pattern: `${username}:${password}` };
     }
-    
+
     // Check for brute force (multiple rapid attempts)
     LoginHoneypotMonitor.loginAttempts++;
     if (LoginHoneypotMonitor.loginAttempts > 5) {
       return { detected: true, type: 'Brute Force Attempt', pattern: `Multiple attempts: ${LoginHoneypotMonitor.loginAttempts}` };
     }
-    
+
     return { detected: false };
   }
 };
@@ -181,93 +181,46 @@ const Login = () => {
   const [isShowPass, setIsShowPass] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Move this up with other useState calls
-  
   const context = useContext(MyContext);
   const navigate = useNavigate();
-  const { isLogin, setIsLogin, setUser, setRole, setToken, token, role, user } = useContext(MyContext);
+  const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
-  // Remove excessive debugging that might interfere with rendering
-  // console.log('🔒 [LOGIN] Component rendering, isLogin:', isLogin, 'context.isLogin:', context.isLogin);
-
-  // Simplified useEffect - only check if user is already logged in
-  useEffect(() => {
-    // Only redirect if user is already logged in and has valid data
-    if (isLogin && token && role === 'student') {
-      try {
-        const userData = user || JSON.parse(localStorage.getItem('user') || '{}');
-        
-        // DEBUG: Log the user data and enrollment status
-        console.log('🔒 [LOGIN] User data from localStorage:', userData);
-        console.log('🔒 [LOGIN] Enrollment status from localStorage:', userData.enrollment_status);
-        console.log('🔒 [LOGIN] Enrollment status type from localStorage:', typeof userData.enrollment_status);
-        
-        const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
-          ? '/student-dashboard' 
-          : '/student-profile';
-        
-        console.log('🔒 [LOGIN] User already logged in, redirecting to:', redirectPath);
-        console.log('🔒 [LOGIN] Redirect condition from localStorage:', userData.enrollment_status === 'Officially Enrolled');
-        window.location.href = redirectPath; // Use window.location.href like backup
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        // Clear invalid data and continue to login form
-        localStorage.clear();
-      }
-    }
-  }, [isLogin, token, role, user]);
-
-  // New useEffect to handle redirect after successful login - use backup logic
-  useEffect(() => {
-    if (isLogin) {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
-        ? '/student-dashboard' 
-        : '/student-profile';
-      window.location.href = redirectPath; // Use window.location.href like backup
-    }
-  }, [isLogin]);
-  
   useEffect(() => {
       context.setIsHideComponents(true);
   }, [context]);
-  
+
   const focusInput = (index) => {
       setInputIndex(index);
   }
 
-  const handleInputChange = (e) => {
+    const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
-  };
+    };
 
-  // Remove the problematic early return that causes stuck loading state
-  // if (isLogin) {
-  //   // Show loading spinner instead of returning null
-  //   return (
-  //     <div style={{ 
-  //       display: 'flex', 
-  //       justifyContent: 'center', 
-  //       alignItems: 'center', 
-  //       height: '100vh',
-  //       flexDirection: 'column',
-  //       gap: '20px'
-  //     }}>
-  //       <div style={{ fontSize: '24px', color: '#666' }}>Redirecting...</div>
-  //       <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #c70202', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-  //     </div>
-  //   );
-  // }
+    // Add loading state
+    const [isLoading, setIsLoading] = useState(false);
 
+    // Add this useEffect after your existing useEffect
+    useEffect(() => {
+      if (isLogin) {
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
+          ? '/student-dashboard' 
+          : '/student-profile';
+        window.location.href = redirectPath;
+      }
+    }, [isLogin]);
+    
     // Then modify your handleLogin function to remove the redirect logic
     const handleLogin = async (e) => {
       e.preventDefault();
       setIsLoading(true);
-      
+
       try {
         // 🚨 HONEYPOT: Check for malicious login attempt
         const maliciousCheck = LoginHoneypotMonitor.detectMaliciousLogin(credentials.username, credentials.password);
-        
+
         if (maliciousCheck.detected) {
           // Log the malicious attempt
           await axios.post('/api/login-honeypot-log', {
@@ -297,30 +250,28 @@ const Login = () => {
           window.location.href = '/logIn';
           return;
         }
-        
+
         const response = await axios.post('/api/loginstudent', credentials);
         const { token, user } = response.data;
-    
+
         // Clear any existing data first
         localStorage.clear();
-        
+
         // Store login state
         localStorage.setItem('isLogin', 'true');
-        
+
         // Store other data
         localStorage.setItem('token', token);
         localStorage.setItem('role', user.role);
         localStorage.setItem('student_id', user.student_id);
         localStorage.setItem('user', JSON.stringify(user));
-    
+
         // Update context
         setToken(token);
         setRole(user.role);
         setUser(user);
         setIsLogin(true);
-        
-        // Note: Redirect will happen automatically via useEffect below
-    
+
       } catch (error) {
         let errorMsg = 'Login failed. Please try again.';
         if (error.response?.data?.message) {
@@ -331,7 +282,7 @@ const Login = () => {
         setIsLoading(false);
       }
     };
-    
+
 
   return (
     <>
@@ -391,7 +342,7 @@ const Login = () => {
                 <div className='loginWrap mt-3 card border footer p-3'>
                     <span className='text-center'>
                         Don't have an account?
-                        <Link to={'/homepage'} className='link color'>Register</Link>
+                        <Link to={'/homepage'} className='link'>Register</Link>
                     </span>
                 </div>
             </div>
