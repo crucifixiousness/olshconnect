@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   try {
     const decoded = authenticateToken(req);
     const { courseId } = req.query;
-
+    
     console.log('🔍 DEBUG: Course ID from query:', courseId);
     console.log('🔍 DEBUG: Authenticated user:', decoded);
 
@@ -64,6 +64,14 @@ module.exports = async (req, res) => {
     const course = courseResult.rows[0];
     console.log('🔍 DEBUG: Course details:', course);
 
+    // Add debugging for block filtering
+    console.log('🔍 DEBUG: Block filtering logic:');
+    console.log('🔍 DEBUG: Selected section/block:', course.section);
+    console.log('🔍 DEBUG: Students query with block filtering:');
+    console.log('🔍 DEBUG: - Students with NULL block_id will be included');
+    console.log('🔍 DEBUG: - Students with block_id matching section will be included');
+    console.log('🔍 DEBUG: - Students with different block_id will be EXCLUDED');
+
     // Get students enrolled in this course based on the instructor's assignment
     const studentsQuery = `
       SELECT DISTINCT
@@ -72,17 +80,23 @@ module.exports = async (req, res) => {
         s.email,
         e.enrollment_date,
         e.enrollment_status,
-        COALESCE(g.final_grade::text, '') as final_grade
+        COALESCE(g.final_grade::text, '') as final_grade,
+        e.block_id,
+        sb.block_name
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
-
+      LEFT JOIN student_blocks sb ON e.block_id = sb.block_id
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
-
         AND e.enrollment_status = 'Officially Enrolled'
+        AND (
+          e.block_id IS NULL 
+          OR 
+          (e.block_id IS NOT NULL AND sb.block_name = $5)
+        )
       ORDER BY 2
     `;
 
@@ -90,8 +104,8 @@ module.exports = async (req, res) => {
       courseId,
       course.program_id,
       course.year_id,
-      course.semester
-
+      course.semester,
+      course.section
     ];
 
     console.log('🔍 DEBUG: Students query:', studentsQuery);
@@ -124,6 +138,24 @@ module.exports = async (req, res) => {
 
     const studentsResult = await client.query(studentsQuery, queryParams);
     console.log('🔍 DEBUG: Students found:', studentsResult.rows.length);
+    
+    // Debug each student's block assignment
+    if (studentsResult.rows.length > 0) {
+      console.log('🔍 DEBUG: Student block details:');
+      studentsResult.rows.forEach((student, index) => {
+        console.log(`🔍 DEBUG: Student ${index + 1}: ID=${student.student_id}, Name=${student.name}, block_id=${student.block_id}, block_name=${student.block_name}`);
+      });
+    }
+
+    // Remove debug columns from final response
+    const students = studentsResult.rows.map(student => ({
+      student_id: student.student_id,
+      name: student.name,
+      email: student.email,
+      enrollment_date: student.enrollment_date,
+      enrollment_status: student.enrollment_status,
+      final_grade: student.final_grade
+    }));
 
     const response = {
       course: {
@@ -137,7 +169,7 @@ module.exports = async (req, res) => {
         start_time: course.start_time,
         end_time: course.end_time
       },
-      students: studentsResult.rows,
+      students: students,
       total_students: studentsResult.rows.length
     };
 
