@@ -72,7 +72,7 @@ module.exports = async (req, res) => {
         s.email,
         e.enrollment_date,
         e.enrollment_status,
-        COALESCE(g.final_grade, '') as final_grade
+        COALESCE(g.final_grade::text, '') as final_grade
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
