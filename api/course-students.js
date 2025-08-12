@@ -45,13 +45,13 @@ module.exports = async (req, res) => {
 
     // Get course details first
     const courseQuery = `
-      SELECT pc.pc_id, pc.program_id, pc.year_id, pc.semester, 
+      SELECT ca.assignment_id as pc_id, pc.program_id, pc.year_id, pc.semester, 
              c.course_code, c.course_name, c.units,
              ca.section, ca.day, ca.start_time, ca.end_time
-      FROM program_course pc
+      FROM course_assignments ca
+      JOIN program_course pc ON ca.pc_id = pc.pc_id
       JOIN course c ON pc.course_id = c.course_id
-      LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
-      WHERE pc.pc_id = $1
+      WHERE ca.assignment_id = $1
     `;
 
     const courseResult = await client.query(courseQuery, [courseId]);
@@ -63,14 +63,6 @@ module.exports = async (req, res) => {
 
     const course = courseResult.rows[0];
     console.log('🔍 DEBUG: Course details:', course);
-
-    // Add debugging for block filtering
-    console.log('🔍 DEBUG: Block filtering logic:');
-    console.log('🔍 DEBUG: Selected section/block:', course.section);
-    console.log('🔍 DEBUG: Students query with block filtering:');
-    console.log('🔍 DEBUG: - Students with NULL block_id will be included');
-    console.log('🔍 DEBUG: - Students with block_id matching section will be included');
-    console.log('🔍 DEBUG: - Students with different block_id will be EXCLUDED');
 
     // Get students enrolled in this course based on the instructor's assignment
     const studentsQuery = `
@@ -84,17 +76,13 @@ module.exports = async (req, res) => {
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
-      LEFT JOIN student_blocks sb ON e.block_id = sb.block_id
+
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
+
         AND e.enrollment_status = 'Officially Enrolled'
-        AND (
-          e.block_id IS NULL 
-          OR 
-          (e.block_id IS NOT NULL AND sb.block_name = $5)
-        )
       ORDER BY 2
     `;
 
@@ -102,8 +90,8 @@ module.exports = async (req, res) => {
       courseId,
       course.program_id,
       course.year_id,
-      course.semester,
-      course.section
+      course.semester
+
     ];
 
     console.log('🔍 DEBUG: Students query:', studentsQuery);
@@ -136,31 +124,6 @@ module.exports = async (req, res) => {
 
     const studentsResult = await client.query(studentsQuery, queryParams);
     console.log('🔍 DEBUG: Students found:', studentsResult.rows.length);
-    
-    // Debug each student's block assignment
-    if (studentsResult.rows.length > 0) {
-      console.log('🔍 DEBUG: Student block details:');
-      studentsResult.rows.forEach((student, index) => {
-        console.log(`🔍 DEBUG: Student ${index + 1}: ID=${student.student_id}, Name=${student.name}`);
-      });
-    }
-
-    // Let's also check what blocks these students actually belong to
-    if (studentsResult.rows.length > 0) {
-      const studentIds = studentsResult.rows.map(s => s.student_id);
-      const blockCheckQuery = `
-        SELECT s.id, s.first_name, s.last_name, e.block_id, sb.block_name
-        FROM students s
-        JOIN enrollments e ON s.id = e.student_id
-        LEFT JOIN student_blocks sb ON e.block_id = sb.block_id
-        WHERE s.id = ANY($1)
-      `;
-      const blockCheckResult = await client.query(blockCheckQuery, [studentIds]);
-      console.log('🔍 DEBUG: Actual block assignments for returned students:');
-      blockCheckResult.rows.forEach(row => {
-        console.log(`🔍 DEBUG: Student ${row.id} (${row.first_name} ${row.last_name}): block_id=${row.block_id}, block_name=${row.block_name}`);
-      });
-    }
 
     const response = {
       course: {
