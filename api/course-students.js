@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   try {
     const decoded = authenticateToken(req);
     const { courseId } = req.query;
-    
+
     console.log('🔍 DEBUG: Course ID from query:', courseId);
     console.log('🔍 DEBUG: Authenticated user:', decoded);
 
@@ -80,9 +80,7 @@ module.exports = async (req, res) => {
         s.email,
         e.enrollment_date,
         e.enrollment_status,
-        COALESCE(g.final_grade::text, '') as final_grade,
-        e.block_id,
-        sb.block_name
+        COALESCE(g.final_grade::text, '') as final_grade
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
@@ -143,19 +141,26 @@ module.exports = async (req, res) => {
     if (studentsResult.rows.length > 0) {
       console.log('🔍 DEBUG: Student block details:');
       studentsResult.rows.forEach((student, index) => {
-        console.log(`🔍 DEBUG: Student ${index + 1}: ID=${student.student_id}, Name=${student.name}, block_id=${student.block_id}, block_name=${student.block_name}`);
+        console.log(`🔍 DEBUG: Student ${index + 1}: ID=${student.student_id}, Name=${student.name}`);
       });
     }
 
-    // Remove debug columns from final response
-    const students = studentsResult.rows.map(student => ({
-      student_id: student.student_id,
-      name: student.name,
-      email: student.email,
-      enrollment_date: student.enrollment_date,
-      enrollment_status: student.enrollment_status,
-      final_grade: student.final_grade
-    }));
+    // Let's also check what blocks these students actually belong to
+    if (studentsResult.rows.length > 0) {
+      const studentIds = studentsResult.rows.map(s => s.student_id);
+      const blockCheckQuery = `
+        SELECT s.id, s.first_name, s.last_name, e.block_id, sb.block_name
+        FROM students s
+        JOIN enrollments e ON s.id = e.student_id
+        LEFT JOIN student_blocks sb ON e.block_id = sb.block_id
+        WHERE s.id = ANY($1)
+      `;
+      const blockCheckResult = await client.query(blockCheckQuery, [studentIds]);
+      console.log('🔍 DEBUG: Actual block assignments for returned students:');
+      blockCheckResult.rows.forEach(row => {
+        console.log(`🔍 DEBUG: Student ${row.id} (${row.first_name} ${row.last_name}): block_id=${row.block_id}, block_name=${row.block_name}`);
+      });
+    }
 
     const response = {
       course: {
@@ -169,7 +174,7 @@ module.exports = async (req, res) => {
         start_time: course.start_time,
         end_time: course.end_time
       },
-      students: students,
+      students: studentsResult.rows,
       total_students: studentsResult.rows.length
     };
 
