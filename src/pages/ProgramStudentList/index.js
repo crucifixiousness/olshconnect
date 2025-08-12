@@ -57,10 +57,10 @@ const ProgramStudentList = () => {
   // Add program mapping
   const programMapping = {
     1: 'BSIT',
-    2: 'BSED',
-    3: 'BSHM',
-    4: 'BSOA',
-    5: 'BSCRIM'
+    2: 'BSHM',        // Fixed: BSHM is program_id 2
+    3: 'Education',   // Fixed: Education is program_id 3
+    4: 'BSOAd',       // Fixed: BSOAd is program_id 4
+    5: 'BSCrim'       // Fixed: BSCrim is program_id 5
     // Add more programs as needed
   };
 
