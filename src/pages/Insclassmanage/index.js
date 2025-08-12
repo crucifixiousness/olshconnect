@@ -119,11 +119,11 @@ const ClassManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `/api/course-students?courseId=${course.pc_id}`,
+        `/api/instructor-view-grades?courseId=${course.pc_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      setStudents(response.data);
+      setStudents(response.data.students);
     } catch (error) {
       console.error('Error fetching students:', error);
       setSnackbar({
@@ -310,56 +310,76 @@ const ClassManagement = () => {
               <CircularProgress sx={{ color: '#c70202' }} />
             </Box>
           ) : students.length > 0 ? (
-            <TableContainer component={Paper} elevation={1}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Student ID</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Name</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Final Grade</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {students.map((student, index) => (
-                    <TableRow 
-                      key={student.student_id}
-                      sx={{ 
-                        '&:nth-of-type(odd)': { backgroundColor: '#f8f9fa' },
-                        '&:hover': { backgroundColor: '#e9ecef' }
-                      }}
-                    >
-                      <TableCell sx={{ fontWeight: '500' }}>{student.student_id}</TableCell>
-                      <TableCell sx={{ fontWeight: '500' }}>{student.name}</TableCell>
-                      <TableCell>{student.email}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={student.final_grade || 'Not Graded'} 
-                          size="small"
-                          sx={{ 
-                            backgroundColor: student.final_grade ? '#d4edda' : '#fff3cd',
-                            color: student.final_grade ? '#155724' : '#856404',
-                            fontWeight: 'bold'
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={student.final_grade ? 'Graded' : 'Pending'} 
-                          size="small"
-                          sx={{ 
-                            backgroundColor: student.final_grade ? '#d4edda' : '#fff3cd',
-                            color: student.final_grade ? '#155724' : '#856404',
-                            fontWeight: 'bold'
-                          }}
-                        />
-                      </TableCell>
+            <>
+              {/* Summary Information */}
+              <Box sx={{ mb: 3, p: 2, backgroundColor: '#f8f9fa', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Total Students:</strong> {students.length} • 
+                  <strong> Graded:</strong> {students.filter(s => s.final_grade).length} • 
+                  <strong> Pending:</strong> {students.filter(s => !s.final_grade).length}
+                </Typography>
+              </Box>
+              
+              <TableContainer component={Paper} elevation={1}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                      <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Final Grade</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Status</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {students.map((student, index) => (
+                      <TableRow 
+                        key={student.student_id}
+                        sx={{ 
+                          '&:nth-of-type(odd)': { backgroundColor: '#f8f9fa' },
+                          '&:hover': { backgroundColor: '#e9ecef' }
+                        }}
+                      >
+                        <TableCell sx={{ fontWeight: '500' }}>{student.name}</TableCell>
+                        <TableCell>
+                          {student.final_grade ? (
+                            <Chip 
+                              label={student.final_grade} 
+                              size="small"
+                              sx={{ 
+                                backgroundColor: '#d4edda',
+                                color: '#155724',
+                                fontWeight: 'bold',
+                                fontSize: '0.875rem'
+                              }}
+                            />
+                          ) : (
+                            <Chip 
+                              label="Not Graded" 
+                              size="small"
+                              sx={{ 
+                                backgroundColor: '#fff3cd',
+                                color: '#856404',
+                                fontWeight: 'bold'
+                              }}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={student.grade_status} 
+                            size="small"
+                            sx={{ 
+                              backgroundColor: student.grade_status === 'Graded' ? '#d4edda' : '#fff3cd',
+                              color: student.grade_status === 'Graded' ? '#155724' : '#856404',
+                              fontWeight: 'bold'
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           ) : (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <SchoolIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
