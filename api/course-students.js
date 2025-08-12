@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
     const course = courseResult.rows[0];
     console.log('🔍 DEBUG: Course details:', course);
 
-    // Get students enrolled in this course based on program, year, semester, and section/block
+    // Get students enrolled in this course based on the instructor's assignment
     const studentsQuery = `
       SELECT DISTINCT
         s.id as student_id,
@@ -76,17 +76,21 @@ module.exports = async (req, res) => {
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
+      JOIN course_assignments ca ON ca.pc_id = $1
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
-        AND (e.block_id IS NULL OR EXISTS (
-          SELECT 1 FROM student_blocks sb 
-          WHERE sb.block_id = e.block_id 
-          AND sb.block_name = $5
-        ))
+        AND e.block_id = (
+          SELECT block_id 
+          FROM student_blocks sb 
+          WHERE sb.block_name = $5
+          AND sb.program_id = $2
+          AND sb.year_level = py.year_level
+          AND sb.semester = $4
+        )
         AND e.enrollment_status = 'Officially Enrolled'
-      ORDER BY s.last_name, s.first_name
+      ORDER BY 2
     `;
 
     const queryParams = [
