@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
 
       const result = await client.query(
         `SELECT 
-          ca.pc_id,
+          ca.assignment_id as pc_id,  -- Use assignment_id as unique identifier
           ca.section,
           ca.day,
           TO_CHAR(ca.start_time, 'HH12:MI AM') as start_time,
