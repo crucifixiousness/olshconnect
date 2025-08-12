@@ -81,7 +81,11 @@ module.exports = async (req, res) => {
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
-        AND (sb.block_name = $5 OR e.block_id IS NULL)
+        AND (
+          (e.block_id IS NOT NULL AND sb.block_name = $5) 
+          OR 
+          (e.block_id IS NULL)
+        )
         AND e.enrollment_status = 'Officially Enrolled'
       ORDER BY 2
     `;
