@@ -114,11 +114,15 @@ module.exports = async (req, res) => {
     
     if (hasProgramCourseMajorId) {
       coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                             pc.major_id, m.major_name
+                             pc.major_id, m.major_name,
+                             ca.section, ca.day, ca.start_time, ca.end_time,
+                             s.first_name, s.last_name
                       FROM program_course pc
                       JOIN course c ON pc.course_id = c.course_id
                       JOIN program_year py ON pc.year_id = py.year_id
                       LEFT JOIN majors m ON pc.major_id = m.major_id
+                      LEFT JOIN course_assignment ca ON pc.pc_id = ca.course_id
+                      LEFT JOIN staff s ON ca.staff_id = s.staff_id
                       WHERE pc.program_id = $1
                         AND pc.year_id = $2
                         AND pc.semester = $3
@@ -129,10 +133,14 @@ module.exports = async (req, res) => {
                       ORDER BY c.course_name`;
       queryParams = [program_id, year_id, normalizedSemester, major_id];
     } else {
-      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level
+      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
+                             ca.section, ca.day, ca.start_time, ca.end_time,
+                             s.first_name, s.last_name
                       FROM program_course pc
                       JOIN course c ON pc.course_id = c.course_id
                       JOIN program_year py ON pc.year_id = py.year_id
+                      LEFT JOIN course_assignment ca ON pc.pc_id = ca.course_id
+                      LEFT JOIN staff s ON ca.staff_id = s.staff_id
                       WHERE pc.program_id = $1
                         AND pc.year_id = $2
                         AND pc.semester = $3
