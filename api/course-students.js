@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   try {
     const decoded = authenticateToken(req);
     const { courseId } = req.query;
-    
+
     console.log('🔍 DEBUG: Course ID from query:', courseId);
     console.log('🔍 DEBUG: Authenticated user:', decoded);
 
@@ -76,16 +76,12 @@ module.exports = async (req, res) => {
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
-      LEFT JOIN student_blocks sb ON e.block_id = sb.block_id
+
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
-        AND (
-          (e.block_id IS NOT NULL AND sb.block_name = $5) 
-          OR 
-          (e.block_id IS NULL)
-        )
+
         AND e.enrollment_status = 'Officially Enrolled'
       ORDER BY 2
     `;
@@ -94,8 +90,8 @@ module.exports = async (req, res) => {
       courseId,
       course.program_id,
       course.year_id,
-      course.semester,
-      course.section
+      course.semester
+
     ];
 
     console.log('🔍 DEBUG: Students query:', studentsQuery);
