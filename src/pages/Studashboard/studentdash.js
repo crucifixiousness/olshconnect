@@ -113,10 +113,7 @@ const StuDashboard = () => {
                         <TableCell>{course.units}</TableCell>
                         <TableCell>{course.semester}</TableCell>
                         <TableCell>
-                          {course.first_name && course.last_name 
-                            ? `${course.first_name} ${course.last_name}`
-                            : 'TBA'
-                          }
+                          {course.full_name || 'TBA'}
                         </TableCell>
                       </TableRow>
                     ))
