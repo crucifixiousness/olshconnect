@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import "bootstrap/dist/css/bootstrap.min.css";
-import { createContext, useEffect, useState, useContext } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import Login from './pages/Login';
 import FakeLogin from './pages/FakeLogin';
 import Signup from './pages/Signup';
@@ -46,15 +46,6 @@ import ProgramManagement from './pages/ProgramManagement';
 
 const MyContext = createContext();
 
-// Custom hook for authentication
-const useAuth = () => {
-  const context = useContext(MyContext);
-  if (!context) {
-    throw new Error('useAuth must be used within a MyContext.Provider');
-  }
-  return context;
-};
-
 function App() {
   // eslint-disable-next-line
   const [isToggleSidebar, setIsToggleSidebar] = useState(false);
@@ -76,31 +67,32 @@ function App() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-   
+
   useEffect(() => {
-    // Restore authentication state from localStorage - use the working logic from backup
     setRole(localStorage.getItem('role'));
     setUser(JSON.parse(localStorage.getItem('user')));
   }, [token]);
+
+  // Add this useEffect to ensure authentication state is loaded on mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedRole = localStorage.getItem('role');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedRole && storedUser) {
+      setToken(storedToken);
+      setRole(storedRole);
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   useEffect(() => {
     document.title = "OLSHCOnnect";
   }, []);
 
+
   const openNav = () => {
     setIsOpenNav(true);
-  };
-
-  const logout = () => {
-    // Clear all authentication data
-    localStorage.clear();
-    setToken(null);
-    setRole(null);
-    setUser(null);
-    setIsLogin(false);
-    
-    // Redirect to homepage
-    window.location.href = '/homepage';
   };
 
   const values = {
@@ -115,34 +107,24 @@ function App() {
     isOpenNav,
     setIsOpenNav,
     user,
-    setUser,
-    token,
+    setUser,  // To set user data
+    token,     // To store the token
     setToken,
     role,
     setRole,
-    useAuth,
-    logout,
   };
 
+  useEffect(() => {
+    console.log('App State Update:', { token, role, user });
+  }, [token, role, user]);
+
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
-    // Check if user is authenticated
     if (!token) {
-      return <Navigate to={redirectTo} replace />;
+      return <Navigate to={redirectTo} />;
     }
 
-    // Check if user has required role
-    if (requiredRole) {
-      let hasAccess = false;
-      
-      if (Array.isArray(requiredRole)) {
-        hasAccess = requiredRole.includes(role);
-      } else {
-        hasAccess = requiredRole === role;
-      }
-      
-      if (!hasAccess) {
-        return <Navigate to={redirectTo} replace />;
-      }
+    if (requiredRole && !requiredRole.includes(role)) {
+      return <Navigate to={redirectTo} />;
     }
 
     return element;
@@ -192,50 +174,10 @@ function App() {
               <Route path="/" element={<Navigate to="/homepage" />} />
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
-        <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
-              <Route path="/login" exact={true} element={
-                token && role === 'student' ? (
-                  (() => {
-                    // Check enrollment status to determine redirect
-                    try {
-                      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                      const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
-                        ? '/student-dashboard' 
-                        : '/student-profile';
-                      return <Navigate to={redirectPath} replace />;
-                    } catch (error) {
-                      // If parsing fails, redirect to profile as fallback
-                      return <Navigate to="/student-profile" replace />;
-                    }
-                  })()
-                ) : (
-                  <Login />
-                )
-              } />
+              <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
+              <Route path="/login" exact={true} element={<Login />} />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
-              <Route path="/stafflogin" exact={true} element={
-                token && role && role !== 'student' ? (
-                  (() => {
-                    // Redirect staff to their specific dashboard based on role
-                    if (role === 'admin') {
-                      return <Navigate to="/dashboard" replace />;
-                    } else if (role === 'registrar') {
-                      return <Navigate to="/registrar-dashboard" replace />;
-                    } else if (role === 'finance') {
-                      return <Navigate to="/finance-dashboard" replace />;
-                    } else if (role === 'program head') {
-                      return <Navigate to="/programhead-dashboard" replace />;
-                    } else if (role === 'instructor') {
-                      return <Navigate to="/instructor-dashboard" replace />;
-                    } else {
-                      // Fallback to homepage for unknown roles
-                      return <Navigate to="/homepage" replace />;
-                    }
-                  })()
-                ) : (
-                  <Signup />
-                )
-              } />
+              <Route path="/stafflogin" exact={true} element={<Signup />} />
               <Route path="/studentlist" exact={true} element={<ProtectedRoute element={<StudentList />} requiredRole={['registrar', 'admin', 'finance', 'instructor']} redirectTo="/stafflogin" />} />
               <Route path="/staffs" exact={true} element={<ProtectedRoute element={<Staff />} requiredRole={['registrar', 'admin', 'finance', 'instructor', 'program head']} redirectTo="/stafflogin" />} />
               <Route path="/document-request" exact={true} element={<ProtectedRoute element={<DocumentRequests />} requiredRole={['registrar', 'admin']} redirectTo="/stafflogin" />} />
