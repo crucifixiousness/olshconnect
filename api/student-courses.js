@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   try {
     const decoded = authenticateToken(req);
     const studentId = decoded.id;
-    
+
     console.log('🔍 DEBUG: Student ID from token:', studentId);
 
     client = await pool.connect();
@@ -92,14 +92,14 @@ module.exports = async (req, res) => {
        WHERE table_name = 'program_course' AND column_name = 'major_id'
        LIMIT 1`
     );
-    
+
     const hasProgramCourseMajorId = programCourseMajorCheck.rows.length > 0;
     console.log('🔍 DEBUG: program_course.major_id column exists?', hasProgramCourseMajorId);
 
     // Fetch the courses for the student's program/year/semester and (optional) major
     let coursesQuery;
     let queryParams;
-    
+
     // Normalize semester from JSON format to plain text
     let normalizedSemester = semester;
     if (typeof semester === 'string' && semester.startsWith('{') && semester.endsWith('}')) {
@@ -111,18 +111,18 @@ module.exports = async (req, res) => {
         console.log('🔍 DEBUG: Failed to parse semester JSON:', parseErr.message);
       }
     }
-    
+
     if (hasProgramCourseMajorId) {
       coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                             pc.major_id, m.major_name,
-                             ca.section, ca.day, ca.start_time, ca.end_time,
-                             s.first_name, s.last_name
+                             pc.major_id, m.major_name
+
+
                       FROM program_course pc
                       JOIN course c ON pc.course_id = c.course_id
                       JOIN program_year py ON pc.year_id = py.year_id
                       LEFT JOIN majors m ON pc.major_id = m.major_id
-                      LEFT JOIN course_assignment ca ON pc.pc_id = ca.course_id
-                      LEFT JOIN staff s ON ca.staff_id = s.staff_id
+
+
                       WHERE pc.program_id = $1
                         AND pc.year_id = $2
                         AND pc.semester = $3
@@ -133,14 +133,14 @@ module.exports = async (req, res) => {
                       ORDER BY c.course_name`;
       queryParams = [program_id, year_id, normalizedSemester, major_id];
     } else {
-      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                             ca.section, ca.day, ca.start_time, ca.end_time,
-                             s.first_name, s.last_name
+      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level
+
+
                       FROM program_course pc
                       JOIN course c ON pc.course_id = c.course_id
                       JOIN program_year py ON pc.year_id = py.year_id
-                      LEFT JOIN course_assignment ca ON pc.pc_id = ca.course_id
-                      LEFT JOIN staff s ON ca.staff_id = s.staff_id
+
+
                       WHERE pc.program_id = $1
                         AND pc.year_id = $2
                         AND pc.semester = $3
@@ -166,7 +166,7 @@ module.exports = async (req, res) => {
                         ) col_check
                         WHERE pc.program_id = $1 AND pc.year_id = $2 AND pc.semester = $3
                         LIMIT 5`;
-    
+
     try {
       const debugResult = await client.query(debugQuery, [program_id, year_id, semester]);
       console.log('🔍 DEBUG: Sample program_course data for this program/year/semester:', JSON.stringify(debugResult.rows, null, 2));
@@ -181,7 +181,7 @@ module.exports = async (req, res) => {
       WHERE program_id = $1 AND year_id = $2
       GROUP BY semester
       ORDER BY semester`;
-    
+
     try {
       const semesterDebugResult = await client.query(semesterDebugQuery, [program_id, year_id]);
       console.log('🔍 DEBUG: Available semesters in program_course for this program/year:', JSON.stringify(semesterDebugResult.rows, null, 2));
@@ -214,4 +214,3 @@ module.exports = async (req, res) => {
     console.log('🔍 DEBUG: Database connection released');
   }
 };
-
