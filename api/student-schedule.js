@@ -91,13 +91,12 @@ module.exports = async (req, res) => {
         ca.day,
         ca.start_time,
         ca.end_time,
-        s.first_name,
-        s.last_name
+        a.full_name
       FROM program_course pc
       JOIN course c ON pc.course_id = c.course_id
       JOIN program_year py ON pc.year_id = py.year_id
       LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
-      LEFT JOIN staff s ON ca.staff_id = s.staff_id
+      LEFT JOIN admins a ON ca.staff_id = a.staff_id
       WHERE pc.program_id = $1
         AND pc.year_id = $2
         AND pc.semester = $3
