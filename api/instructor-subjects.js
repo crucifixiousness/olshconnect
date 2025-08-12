@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
       client = await pool.connect();
 
       const result = await client.query(
-        `SELECT 
+        `SELECT DISTINCT ON (c.course_id, ca.section, pc.program_id, pc.year_id, pc.semester)
           ca.assignment_id as pc_id,  -- Use assignment_id as unique identifier
           ca.section,
           ca.day,
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
          JOIN program p ON pc.program_id = p.program_id
          JOIN program_year py ON pc.year_id = py.year_id
          WHERE ca.staff_id = $1
-         ORDER BY ca.day ASC, ca.start_time ASC`,
+         ORDER BY c.course_id, ca.section, pc.program_id, pc.year_id, pc.semester, ca.day ASC, ca.start_time ASC`,
         [staff_id]
       );
 
