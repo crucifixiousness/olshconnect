@@ -26,7 +26,7 @@ const StudentSidebar = () => {
     const isVerified = userData?.enrollment_status === 'Verified';
     const canAccessFeatures = isEnrolled; // Only Officially Enrolled can access all features
     const canPay = isEnrolled || isVerified; // Payment available for both verified and enrolled
-    
+
     setIsOfficiallyEnrolled(canAccessFeatures);
     setCanAccessPayment(canPay);
     // Set initial active tab based on enrollment status
@@ -39,9 +39,17 @@ const StudentSidebar = () => {
 
     // Logout function to remove user data and redirect
   const handleLogout = () => {
-    console.log('🔒 [STUDENT SIDEBAR] Logging out...');
-    // Use the context logout function for consistent behavior
-    context.logout();
+    // Clear all localStorage data
+    localStorage.clear();
+
+    // Reset context states
+    context.setIsLogin(false);
+    context.setUser(null);
+    context.setToken(null);
+    context.setRole(null);
+
+    // Redirect to homepage
+    navigate('/homepage');
   };
 
   const renderLink = (to, button, requiresEnrollment = true, requiresPayment = false) => {
