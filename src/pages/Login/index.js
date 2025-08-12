@@ -208,33 +208,25 @@ const Login = () => {
         
         console.log('🔒 [LOGIN] User already logged in, redirecting to:', redirectPath);
         console.log('🔒 [LOGIN] Redirect condition from localStorage:', userData.enrollment_status === 'Officially Enrolled');
-        navigate(redirectPath, { replace: true });
+        window.location.href = redirectPath; // Use window.location.href like backup
       } catch (error) {
         console.error('Error parsing user data:', error);
         // Clear invalid data and continue to login form
         localStorage.clear();
       }
     }
-  }, [isLogin, token, role, user, navigate]);
+  }, [isLogin, token, role, user]);
 
-  // New useEffect to handle redirect after successful login
+  // New useEffect to handle redirect after successful login - use backup logic
   useEffect(() => {
-    if (isLogin && token && role === 'student' && user) {
-      // DEBUG: Log the user object and enrollment status
-      console.log('🔒 [LOGIN] User object:', user);
-      console.log('🔒 [LOGIN] Enrollment status:', user.enrollment_status);
-      console.log('🔒 [LOGIN] Enrollment status type:', typeof user.enrollment_status);
-      console.log('🔒 [LOGIN] Enrollment status length:', user.enrollment_status?.length);
-      
-      const redirectPath = user.enrollment_status === 'Officially Enrolled' 
+    if (isLogin) {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const redirectPath = userData.enrollment_status === 'Officially Enrolled' 
         ? '/student-dashboard' 
         : '/student-profile';
-      
-      console.log('🔒 [LOGIN] Authentication successful, redirecting to:', redirectPath);
-      console.log('🔒 [LOGIN] Redirect condition:', user.enrollment_status === 'Officially Enrolled');
-      navigate(redirectPath, { replace: true });
+      window.location.href = redirectPath; // Use window.location.href like backup
     }
-  }, [isLogin, token, role, user, navigate]);
+  }, [isLogin]);
   
   useEffect(() => {
       context.setIsHideComponents(true);
