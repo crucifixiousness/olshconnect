@@ -10,11 +10,22 @@ import {
   Chip,
   CircularProgress,
   Grid,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from "@mui/material";
 import { 
   School as SchoolIcon, 
-  Schedule as ScheduleIcon
+  Schedule as ScheduleIcon,
+  Grade as GradeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +39,12 @@ const ClassManagement = () => {
     message: '',
     severity: 'success'
   });
+  
+  // Grades modal state
+  const [gradesModalOpen, setGradesModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [gradesLoading, setGradesLoading] = useState(false);
 
   const formatTime = (time) => {
     if (!time) return '';
@@ -92,6 +109,37 @@ const ClassManagement = () => {
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleCheckGrades = async (course) => {
+    setSelectedCourse(course);
+    setGradesModalOpen(true);
+    setGradesLoading(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `/api/course-students?courseId=${course.pc_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setStudents(response.data);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch students",
+        severity: 'error'
+      });
+    } finally {
+      setGradesLoading(false);
+    }
+  };
+
+  const handleCloseGradesModal = () => {
+    setGradesModalOpen(false);
+    setSelectedCourse(null);
+    setStudents([]);
   };
 
   const handleCourseClick = (course) => {
@@ -184,7 +232,7 @@ const ClassManagement = () => {
                       data-testid={`manage-button-${index}`}
                       variant="contained" 
                       fullWidth
-                      onClick={() => handleCourseClick(course)}
+                      onClick={() => handleCheckGrades(course)}
                       sx={{ 
                         backgroundColor: '#c70202',
                         '&:hover': {
@@ -192,7 +240,7 @@ const ClassManagement = () => {
                         }
                       }}
                     >
-                      Manage Class
+                      Check Grades
                     </Button>
                   </CardContent>
                 </Card>
@@ -226,6 +274,115 @@ const ClassManagement = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Grades Modal */}
+      <Dialog 
+        open={gradesModalOpen} 
+        onClose={handleCloseGradesModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          backgroundColor: '#c70202', 
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2
+        }}>
+          <GradeIcon />
+          Check Grades - {selectedCourse?.course_code} - {selectedCourse?.course_name}
+        </DialogTitle>
+        
+        <DialogContent sx={{ mt: 2 }}>
+          {selectedCourse && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Block:</strong> {selectedCourse.section} • 
+                <strong> Program:</strong> {selectedCourse.program_name} • 
+                <strong> Year Level:</strong> {selectedCourse.year_level} • 
+                <strong> Semester:</strong> {selectedCourse.semester}
+              </Typography>
+            </Box>
+          )}
+          
+          {gradesLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+              <CircularProgress sx={{ color: '#c70202' }} />
+            </Box>
+          ) : students.length > 0 ? (
+            <TableContainer component={Paper} elevation={1}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Student ID</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Name</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Final Grade</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#495057' }}>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {students.map((student, index) => (
+                    <TableRow 
+                      key={student.student_id}
+                      sx={{ 
+                        '&:nth-of-type(odd)': { backgroundColor: '#f8f9fa' },
+                        '&:hover': { backgroundColor: '#e9ecef' }
+                      }}
+                    >
+                      <TableCell sx={{ fontWeight: '500' }}>{student.student_id}</TableCell>
+                      <TableCell sx={{ fontWeight: '500' }}>{student.name}</TableCell>
+                      <TableCell>{student.email}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={student.final_grade || 'Not Graded'} 
+                          size="small"
+                          sx={{ 
+                            backgroundColor: student.final_grade ? '#d4edda' : '#fff3cd',
+                            color: student.final_grade ? '#155724' : '#856404',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={student.final_grade ? 'Graded' : 'Pending'} 
+                          size="small"
+                          sx={{ 
+                            backgroundColor: student.final_grade ? '#d4edda' : '#fff3cd',
+                            color: student.final_grade ? '#155724' : '#856404',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <SchoolIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                No students found
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                No students are enrolled in this course yet.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={handleCloseGradesModal}
+            variant="outlined"
+            sx={{ borderColor: '#c70202', color: '#c70202' }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
