@@ -17,7 +17,7 @@ import axios from 'axios';
 
 const StuDashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
+  const [schedule, setSchedule] = useState([]);
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
@@ -35,8 +35,8 @@ const StuDashboard = () => {
     return `${formattedHour}:${minutes.slice(0, 2)} ${ampm}`;
   };
 
-  // Fetch student's enrolled courses for schedule
-  const fetchStudentCourses = async () => {
+  // Fetch student's schedule data
+  const fetchStudentSchedule = async () => {
     try {
       setLoading(true);
       
@@ -46,14 +46,14 @@ const StuDashboard = () => {
         return;
       }
 
-      const response = await axios.get('/api/student-courses', {
+      const response = await axios.get('/api/student-schedule', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('Student courses response:', response.data);
-      setCourses(response.data.courses || []);
+      console.log('Student schedule response:', response.data);
+      setSchedule(response.data.schedule || []);
     } catch (error) {
-      console.error('Error fetching student courses:', error);
+      console.error('Error fetching student schedule:', error);
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ const StuDashboard = () => {
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    fetchStudentCourses();
+    fetchStudentSchedule();
   }, [context]);
 
   return (
@@ -100,8 +100,8 @@ const StuDashboard = () => {
                         <CircularProgress style={{ color: '#c70202' }} />
                       </TableCell>
                     </TableRow>
-                  ) : courses.length > 0 ? (
-                    courses.map((course, index) => (
+                  ) : schedule.length > 0 ? (
+                    schedule.map((course, index) => (
                       <TableRow hover key={index}>
                         <TableCell>
                           {course.start_time && course.end_time 
@@ -124,7 +124,7 @@ const StuDashboard = () => {
                     <TableRow>
                       <TableCell colSpan="5" style={{ textAlign: "center", padding: "40px 0" }}>
                         <Typography variant="body1" color="textSecondary">
-                          No courses found. Please check your enrollment status.
+                          No schedule found. Please check your enrollment status or contact your program head.
                         </Typography>
                       </TableCell>
                     </TableRow>
