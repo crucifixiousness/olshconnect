@@ -76,19 +76,10 @@ module.exports = async (req, res) => {
       FROM students s
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
-      JOIN course_assignments ca ON ca.pc_id = $1
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
         AND e.semester = $4
-        AND e.block_id = (
-          SELECT block_id 
-          FROM student_blocks sb 
-          WHERE sb.block_name = $5
-          AND sb.program_id = $2
-          AND sb.year_level = py.year_level
-          AND sb.semester = $4
-        )
         AND e.enrollment_status = 'Officially Enrolled'
       ORDER BY 2
     `;
@@ -103,6 +94,31 @@ module.exports = async (req, res) => {
 
     console.log('🔍 DEBUG: Students query:', studentsQuery);
     console.log('🔍 DEBUG: Query parameters:', queryParams);
+
+    // Let's debug what's in the database
+    const debugQuery1 = `
+      SELECT COUNT(*) as total_enrollments
+      FROM enrollments e
+      WHERE e.program_id = $1 AND e.year_id = $2 AND e.semester = $3
+    `;
+    const debugResult1 = await client.query(debugQuery1, [course.program_id, course.year_id, course.semester]);
+    console.log('🔍 DEBUG: Total enrollments for this program/year/semester:', debugResult1.rows[0]);
+
+    const debugQuery2 = `
+      SELECT e.block_id, e.enrollment_status, COUNT(*) as count
+      FROM enrollments e
+      WHERE e.program_id = $1 AND e.year_id = $2 AND e.semester = $3
+      GROUP BY e.block_id, e.enrollment_status
+    `;
+    const debugResult2 = await client.query(debugQuery2, [course.program_id, course.year_id, course.semester]);
+    console.log('🔍 DEBUG: Enrollment breakdown by block and status:', debugResult2.rows);
+
+    const debugQuery3 = `
+      SELECT * FROM student_blocks 
+      WHERE program_id = $1 AND semester = $2
+    `;
+    const debugResult3 = await client.query(debugQuery3, [course.program_id, course.semester]);
+    console.log('🔍 DEBUG: Available student blocks:', debugResult3.rows);
 
     const studentsResult = await client.query(studentsQuery, queryParams);
     console.log('🔍 DEBUG: Students found:', studentsResult.rows.length);
