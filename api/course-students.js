@@ -88,8 +88,7 @@ module.exports = async (req, res) => {
       courseId,
       course.program_id,
       course.year_id,
-      course.semester,
-      course.section || null
+      course.semester
     ];
 
     console.log('🔍 DEBUG: Students query:', studentsQuery);
