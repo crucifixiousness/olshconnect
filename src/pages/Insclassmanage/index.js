@@ -118,9 +118,9 @@ const ClassManagement = () => {
     
     try {
       const token = localStorage.getItem('token');
-      // Include both courseId and section/block to get the correct students for this specific class
+      // Try to get students for this specific course assignment (pc_id) and section
       const response = await axios.get(
-        `/api/course-students?courseId=${course.pc_id}&section=${course.section}`,
+        `/api/course-students?courseId=${course.pc_id}&section=${course.section}&program=${course.program_name}&yearLevel=${course.year_level}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
