@@ -11,11 +11,19 @@ import { MyContext } from '../../App';
 
 const RegistrarSidebar = () => {
   const navigate = useNavigate();
+  const { setUser, setRole, setIsLogin } = useContext(MyContext);
 
   const handleLogout = () => {
+    // Clear all localStorage
     localStorage.clear();
-
-    navigate('/homepage');
+    
+    // Reset context states
+    setUser(null);
+    setRole(null);
+    setIsLogin(false);
+    
+    // Navigate to homepage
+    navigate('/homepage', { replace: true });
   };
   // eslint-disable-next-line
   const [activeTab, setActiveTab] = useState(0);
@@ -78,19 +86,8 @@ const RegistrarSidebar = () => {
               </Link>              
             </li>
             <li>
-              <Link to="/staffs">
-                <Button className={`w-100 ${activeTab===3 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(3)}>
-                  <span className='icon'><IoIosPeople />
-                  </span>
-                    Manage Staffs
-                  <span className='arrow'><FaAnglesRight />
-                  </span>
-                </Button>
-              </Link>              
-            </li>
-            <li>
               <Link to="/document-request">
-                <Button className={`w-100 ${activeTab===4 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(4)}>
+                <Button className={`w-100 ${activeTab===3 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(3)}>
                   <span className='icon'><IoIosPeople />
                   </span>
                     Document Request
@@ -100,15 +97,14 @@ const RegistrarSidebar = () => {
               </Link>              
             </li>
           </ul>
-
           <br/>
-            <div className='logoutWrap'>
-              <div className='logoutBox'>
-                <Button variant="contained" onClick={handleLogout}>
-                  <HiOutlineLogout/>Logout
-                </Button>
-              </div>
-            </div>
+                  <div className='logoutWrap'>
+                    <div className='logoutBox'>
+                      <Button variant="contained" onClick={handleLogout}>
+                        <HiOutlineLogout/>Logout
+                      </Button>
+                    </div>
+                  </div>
         </div>
       </>
     )
