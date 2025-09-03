@@ -172,12 +172,6 @@ const TuitionManagement = () => {
         {/* Filters */}
         <Paper elevation={3} className="p-3 mb-4">
           <div className="d-flex justify-content-between align-items-center">
-            <div style={{ width: '200px' }}>
-              <Typography variant="subtitle2" sx={{ color: '#666', mb: 1 }}>SEARCH</Typography>
-              <div style={{ fontSize: '0.875rem', color: '#666' }}>
-                Search by program, semester, or year level
-              </div>
-            </div>
             <div>
               <Button 
                 variant="contained" 
