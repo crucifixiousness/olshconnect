@@ -170,7 +170,7 @@ const TuitionManagement = () => {
         <Searchbar value={searchTerm} onChange={setSearchTerm} />
 
         {/* Filters */}
-        <Paper elevation={3} className="p-3 mb-4">
+        <Paper elevation={3} className="p-3">
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <Button 
