@@ -337,23 +337,31 @@ const Homepage = () => {
 
     // Verification functions
     const sendVerificationCode = async (type) => {
+        console.log('🚀 Starting verification process for:', type);
         setVerificationLoading(true);
         try {
             // Generate OTP on frontend
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            console.log('🔢 Generated OTP:', otp);
             
             // Store OTP temporarily (in production, use backend storage)
             const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
             sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
+            console.log('💾 OTP stored in sessionStorage');
             
             let result;
             if (type === 'email') {
+                console.log('📧 Sending email verification to:', formData.email);
                 result = await sendVerificationEmail(formData.email, otp);
             } else {
+                console.log('📱 Sending SMS verification to:', formData.number);
                 result = await sendSMS(formData.number, otp);
             }
             
+            console.log('📋 EmailJS result:', result);
+            
             if (result.success) {
+                console.log('✅ Email sent successfully!');
                 setSnackbar({
                     open: true,
                     message: `Verification code sent to your ${type}`,
@@ -372,6 +380,7 @@ const Homepage = () => {
                     });
                 }, 1000);
             } else {
+                console.error('❌ Email sending failed:', result.message);
                 throw new Error(result.message);
             }
         } catch (error) {
