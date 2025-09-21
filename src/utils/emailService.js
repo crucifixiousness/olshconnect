@@ -4,9 +4,9 @@
 import emailjs from '@emailjs/browser';
 
 // Initialize EmailJS with your service ID
-const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || 'your_service_id';
-const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'your_template_id';
-const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_public_key';
+const EMAILJS_SERVICE_ID = process.env.OLSHCONNECT_EMAILJS_SERVICE_ID || 'your_service_id';
+const EMAILJS_TEMPLATE_ID = process.env.OLSHCONNECT_EMAILJS_TEMPLATE_ID || 'your_template_id';
+const EMAILJS_PUBLIC_KEY = process.env.OLSHCONNECT_EMAILJS_PUBLIC_KEY || 'your_public_key';
 
 // Initialize EmailJS
 emailjs.init(EMAILJS_PUBLIC_KEY);
