@@ -16,6 +16,7 @@ import announcement from '../../asset/images/anno.png';
 import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
+import { sendVerificationEmail, sendSMS } from '../../utils/emailService';
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -89,8 +90,26 @@ const Homepage = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [open, setOpen] = useState(false);
+    const [verificationModal, setVerificationModal] = useState(false);
+    const [verificationType, setVerificationType] = useState(''); // 'email' or 'phone'
+    const [verificationCode, setVerificationCode] = useState('');
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+    const [verificationLoading, setVerificationLoading] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const handleVerificationOpen = (type) => {
+        setVerificationType(type);
+        setVerificationModal(true);
+        setVerificationCode('');
+    };
+    const handleVerificationClose = () => {
+        setVerificationModal(false);
+        setVerificationCode('');
+        setVerificationType('');
+    };
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to manage sidebar visibility
 
@@ -316,6 +335,115 @@ const Homepage = () => {
     const [isRegistered, setIsRegistered] = useState(false);
     const [contactNumberError, setContactNumberError] = useState("");
 
+    // Verification functions
+    const sendVerificationCode = async (type) => {
+        setVerificationLoading(true);
+        try {
+            // Generate OTP on frontend
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Store OTP temporarily (in production, use backend storage)
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+            sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
+            
+            let result;
+            if (type === 'email') {
+                result = await sendVerificationEmail(formData.email, otp);
+            } else {
+                result = await sendSMS(formData.number, otp);
+            }
+            
+            if (result.success) {
+                setSnackbar({
+                    open: true,
+                    message: `Verification code sent to your ${type}`,
+                    severity: 'success'
+                });
+                
+                // Start resend cooldown (60 seconds)
+                setResendCooldown(60);
+                const cooldownInterval = setInterval(() => {
+                    setResendCooldown(prev => {
+                        if (prev <= 1) {
+                            clearInterval(cooldownInterval);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error sending verification code:', error);
+            setSnackbar({
+                open: true,
+                message: error.message || 'Failed to send verification code. Please try again.',
+                severity: 'error'
+            });
+        } finally {
+            setVerificationLoading(false);
+        }
+    };
+
+    const verifyCode = async () => {
+        if (!verificationCode || verificationCode.length !== 6) {
+            setSnackbar({
+                open: true,
+                message: 'Please enter a valid 6-digit verification code',
+                severity: 'error'
+            });
+            return;
+        }
+
+        setVerificationLoading(true);
+        try {
+            // Get stored OTP from sessionStorage
+            const storedData = sessionStorage.getItem(`verification_${verificationType}`);
+            
+            if (!storedData) {
+                throw new Error('No verification code found. Please request a new code.');
+            }
+
+            const { otp, expiresAt } = JSON.parse(storedData);
+            
+            if (new Date(expiresAt) < new Date()) {
+                sessionStorage.removeItem(`verification_${verificationType}`);
+                throw new Error('Verification code has expired. Please request a new code.');
+            }
+
+            if (otp !== verificationCode) {
+                throw new Error('Invalid verification code. Please try again.');
+            }
+
+            // Code is valid, remove it from storage
+            sessionStorage.removeItem(`verification_${verificationType}`);
+
+            if (verificationType === 'email') {
+                setIsEmailVerified(true);
+            } else {
+                setIsPhoneVerified(true);
+            }
+
+            setSnackbar({
+                open: true,
+                message: `${verificationType === 'email' ? 'Email' : 'Phone'} verified successfully!`,
+                severity: 'success'
+            });
+
+            handleVerificationClose();
+        } catch (error) {
+            console.error('Error verifying code:', error);
+            setSnackbar({
+                open: true,
+                message: error.message || 'Verification failed. Please try again.',
+                severity: 'error'
+            });
+        } finally {
+            setVerificationLoading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
     
@@ -373,6 +501,23 @@ const Homepage = () => {
             });
             return;
         }
+        // Validate verification status
+        if (!isEmailVerified) {
+            setSnackbar({
+                open: true,
+                message: "Please verify your email address before submitting",
+                severity: 'error'
+            });
+            return;
+        }
+        if (!isPhoneVerified) {
+            setSnackbar({
+                open: true,
+                message: "Please verify your phone number before submitting",
+                severity: 'error'
+            });
+            return;
+        }
 
         try {
             // Clean the form data to ensure no undefined values
@@ -405,7 +550,7 @@ const Homepage = () => {
             setOpen(true);
             setIsRegistered(true);
     
-            // Clear form fields
+            // Clear form fields and verification status
             setFormData({
                 userName: "",
                 password: "",
@@ -424,6 +569,8 @@ const Homepage = () => {
                 guardianName: "",
                 guardianContactNo: "",
             });
+            setIsEmailVerified(false);
+            setIsPhoneVerified(false);
         } catch (error) {
             console.error("Registration error:", error.response?.data || error.message);
             setSnackbar({
@@ -773,6 +920,20 @@ const Homepage = () => {
                                                                 value={formData.email}
                                                                 onChange={handleInputChange}
                                                                 required
+                                                                InputProps={{
+                                                                    endAdornment: (
+                                                                        <Button
+                                                                            size="small"
+                                                                            variant={isEmailVerified ? "contained" : "outlined"}
+                                                                            color={isEmailVerified ? "success" : "primary"}
+                                                                            onClick={() => handleVerificationOpen('email')}
+                                                                            disabled={!formData.email || verificationLoading}
+                                                                            sx={{ ml: 1, minWidth: '100px' }}
+                                                                        >
+                                                                            {isEmailVerified ? '✓ Verified' : 'Verify'}
+                                                                        </Button>
+                                                                    )
+                                                                }}
                                                             />
                                                         </Grid>
                                                         <Grid item xs={6}>
@@ -787,6 +948,20 @@ const Homepage = () => {
                                                                 required
                                                                 error={!!contactNumberError}
                                                                 helperText={contactNumberError}
+                                                                InputProps={{
+                                                                    endAdornment: (
+                                                                        <Button
+                                                                            size="small"
+                                                                            variant={isPhoneVerified ? "contained" : "outlined"}
+                                                                            color={isPhoneVerified ? "success" : "primary"}
+                                                                            onClick={() => handleVerificationOpen('phone')}
+                                                                            disabled={!formData.number || formData.number.length !== 11 || verificationLoading}
+                                                                            sx={{ ml: 1, minWidth: '100px' }}
+                                                                        >
+                                                                            {isPhoneVerified ? '✓ Verified' : 'Verify'}
+                                                                        </Button>
+                                                                    )
+                                                                }}
                                                             />
                                                         </Grid>
                                                     </Grid>
@@ -989,6 +1164,183 @@ const Homepage = () => {
                                     )}
                                 </Box>
                                 </Modal>
+
+                                {/* Verification Modal */}
+                                <Modal 
+                                    open={verificationModal} 
+                                    onClose={handleVerificationClose}
+                                    aria-labelledby="verification-modal-title"
+                                >
+                                    <Box
+                                        sx={{
+                                            position: "absolute",
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            width: "90%",
+                                            maxWidth: "400px",
+                                            margin: "50px auto",
+                                            backgroundColor: "white",
+                                            borderRadius: "10px",
+                                            padding: 4,
+                                            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                                        }}
+                                    >
+                                        <Button
+                                            onClick={handleVerificationClose}
+                                            sx={{
+                                                position: "absolute",
+                                                top: "10px",
+                                                right: "10px",
+                                                minWidth: "30px",
+                                                minHeight: "30px",
+                                                padding: "5px",
+                                                fontSize: "1.2rem",
+                                                color: "#c70202",
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(199, 2, 2, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            &times;
+                                        </Button>
+
+                                        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+                                            <div style={{ 
+                                                background: 'linear-gradient(135deg, #c70202 0%, #a00000 100%)', 
+                                                borderRadius: '50%', 
+                                                width: '60px', 
+                                                height: '60px', 
+                                                margin: '0 auto 20px', 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center' 
+                                            }}>
+                                                <span style={{ color: 'white', fontSize: '24px' }}>
+                                                    {verificationType === 'email' ? '📧' : '📱'}
+                                                </span>
+                                            </div>
+                                            <Typography variant="h5" sx={{ 
+                                                color: '#c70202',
+                                                fontWeight: 'bold',
+                                                marginBottom: '10px'
+                                            }}>
+                                                Verify {verificationType === 'email' ? 'Email Address' : 'Phone Number'}
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ 
+                                                color: '#666',
+                                                fontSize: '16px',
+                                                lineHeight: '1.6'
+                                            }}>
+                                                We've sent a 6-digit verification code to your {verificationType === 'email' ? 'email address' : 'phone number'}.
+                                            </Typography>
+                                        </div>
+
+                                        <div style={{ 
+                                            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', 
+                                            border: '2px solid #c70202', 
+                                            borderRadius: '12px', 
+                                            padding: '20px', 
+                                            margin: '20px 0',
+                                            textAlign: 'center'
+                                        }}>
+                                            <Typography variant="body2" sx={{ 
+                                                color: '#c70202', 
+                                                fontWeight: '600', 
+                                                marginBottom: '15px',
+                                                fontSize: '12px',
+                                                letterSpacing: '1px',
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                Enter Verification Code
+                                            </Typography>
+                                            <TextField
+                                                label=""
+                                                fullWidth
+                                                value={verificationCode}
+                                                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                placeholder="000000"
+                                                inputProps={{ 
+                                                    maxLength: 6, 
+                                                    style: { 
+                                                        textAlign: 'center', 
+                                                        fontSize: '2rem', 
+                                                        letterSpacing: '0.5em',
+                                                        fontWeight: 'bold',
+                                                        color: '#c70202'
+                                                    } 
+                                                }}
+                                                sx={{ 
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': {
+                                                            border: '2px solid #c70202',
+                                                            borderRadius: '8px'
+                                                        },
+                                                        '&:hover fieldset': {
+                                                            border: '2px solid #a00000'
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            border: '2px solid #a00000'
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+
+                                        <Button 
+                                            variant="contained" 
+                                            fullWidth
+                                            onClick={verifyCode}
+                                            disabled={verificationLoading || verificationCode.length !== 6}
+                                            sx={{ 
+                                                mb: 2,
+                                                background: 'linear-gradient(135deg, #c70202 0%, #a00000 100%)',
+                                                '&:hover': {
+                                                    background: 'linear-gradient(135deg, #a00000 0%, #8b0000 100%)',
+                                                },
+                                                height: '50px',
+                                                fontWeight: 'bold',
+                                                fontSize: '16px',
+                                                borderRadius: '8px',
+                                                boxShadow: '0 4px 15px rgba(199, 2, 2, 0.3)',
+                                                '&:disabled': {
+                                                    background: '#ccc',
+                                                    boxShadow: 'none'
+                                                }
+                                            }}
+                                        >
+                                            {verificationLoading ? '⏳ Verifying...' : '✅ Verify Code'}
+                                        </Button>
+
+                                        <Button 
+                                            variant="outlined" 
+                                            fullWidth
+                                            onClick={() => sendVerificationCode(verificationType)}
+                                            disabled={verificationLoading || resendCooldown > 0}
+                                            sx={{ 
+                                                borderColor: '#c70202',
+                                                color: '#c70202',
+                                                height: '45px',
+                                                fontWeight: '600',
+                                                borderRadius: '8px',
+                                                borderWidth: '2px',
+                                                '&:hover': {
+                                                    borderColor: '#a00000',
+                                                    color: '#a00000',
+                                                    borderWidth: '2px',
+                                                    backgroundColor: 'rgba(199, 2, 2, 0.05)'
+                                                },
+                                                '&:disabled': {
+                                                    borderColor: '#ccc',
+                                                    color: '#ccc'
+                                                }
+                                            }}
+                                        >
+                                            {resendCooldown > 0 ? `⏰ Resend in ${resendCooldown}s` : '🔄 Resend Code'}
+                                        </Button>
+                                    </Box>
+                                </Modal>
+
                                 <Snackbar
                                     open={snackbar.open}
                                     autoHideDuration={4000}
