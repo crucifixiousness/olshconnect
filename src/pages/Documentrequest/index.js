@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
+import { sendDocumentApprovalEmail, sendDocumentRejectionEmail } from '../../utils/documentEmailService';
 
 const DocumentRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -64,14 +65,54 @@ const DocumentRequests = () => {
   const handleStatusUpdate = async (reqId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
+      
+      // First, get the request details before updating
+      const request = requests.find(req => req.req_id === reqId);
+      if (!request) {
+        throw new Error('Request not found');
+      }
+
+      // Update the status in the database
       await axios.put(`/api/update-request-status?req_id=${reqId}`, 
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
       
+      // Send email notification based on status
+      if (newStatus === 'Approved') {
+        console.log('📧 Sending approval email to:', request.email);
+        const emailResult = await sendDocumentApprovalEmail(
+          request.email,
+          `${request.first_name} ${request.last_name}`,
+          request.doc_type,
+          request.req_date
+        );
+        
+        if (emailResult.success) {
+          console.log('✅ Approval email sent successfully');
+        } else {
+          console.error('❌ Failed to send approval email:', emailResult.message);
+        }
+      } else if (newStatus === 'Rejected') {
+        console.log('📧 Sending rejection email to:', request.email);
+        const emailResult = await sendDocumentRejectionEmail(
+          request.email,
+          `${request.first_name} ${request.last_name}`,
+          request.doc_type,
+          request.req_date,
+          'Please contact the registrar office for more information.'
+        );
+        
+        if (emailResult.success) {
+          console.log('✅ Rejection email sent successfully');
+        } else {
+          console.error('❌ Failed to send rejection email:', emailResult.message);
+        }
+      }
+      
       setSnackbar({
         open: true,
-        message: `Request ${newStatus.toLowerCase()} successfully`,
+        message: `Request ${newStatus.toLowerCase()} successfully and email notification sent`,
         severity: 'success'
       });
       
