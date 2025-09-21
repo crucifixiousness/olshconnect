@@ -38,6 +38,7 @@ module.exports = async (req, res) => {
         s.middle_name,
         s.last_name,
         s.suffix,
+        s.email,
         s.id as student_id
       FROM 
         documentrequest dr
