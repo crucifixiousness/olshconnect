@@ -9,10 +9,28 @@ const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'your_t
 const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_public_key';
 
 // Initialize EmailJS
+console.log('🔧 Initializing EmailJS with key:', EMAILJS_PUBLIC_KEY);
 emailjs.init(EMAILJS_PUBLIC_KEY);
+console.log('✅ EmailJS initialized');
 
 export const sendVerificationEmail = async (email, otp) => {
   try {
+    // Debug: Check if environment variables are loaded
+    console.log('=== EMAILJS DEBUG INFO ===');
+    console.log('EmailJS Service ID:', process.env.REACT_APP_EMAILJS_SERVICE_ID);
+    console.log('EmailJS Template ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
+    console.log('EmailJS Public Key:', process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
+    console.log('Email to send to:', email);
+    console.log('OTP to send:', otp);
+    console.log('========================');
+    
+    if (!process.env.REACT_APP_EMAILJS_SERVICE_ID || !process.env.REACT_APP_EMAILJS_TEMPLATE_ID || !process.env.REACT_APP_EMAILJS_PUBLIC_KEY) {
+      console.error('❌ Environment variables missing!');
+      throw new Error('EmailJS environment variables are not properly configured');
+    }
+    
+    console.log('✅ Environment variables loaded successfully');
+
     const templateParams = {
       to_email: email,
       to_name: 'Student',
@@ -26,13 +44,18 @@ export const sendVerificationEmail = async (email, otp) => {
       expiry_time: '10 minutes'
     };
 
+    console.log('📧 Attempting to send email with EmailJS...');
+    console.log('Service ID:', EMAILJS_SERVICE_ID);
+    console.log('Template ID:', EMAILJS_TEMPLATE_ID);
+    console.log('Template Params:', templateParams);
+    
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams
     );
 
-    console.log('Email sent successfully:', response);
+    console.log('✅ Email sent successfully:', response);
     return { success: true, message: 'Verification email sent successfully' };
   } catch (error) {
     console.error('Error sending email:', error);
@@ -75,4 +98,3 @@ Our Lady of the Sacred Heart College of Guimba, Inc.
     return { success: false, message: 'Failed to send SMS', error: error.message };
   }
 };
-
