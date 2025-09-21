@@ -13,7 +13,7 @@ console.log('🔧 Initializing EmailJS with key:', EMAILJS_PUBLIC_KEY);
 emailjs.init(EMAILJS_PUBLIC_KEY);
 console.log('✅ EmailJS initialized');
 
-export const sendVerificationEmail = async (email, otp) => {
+export const sendVerificationEmail = async (email, otp, studentName = 'Student') => {
   try {
     // Debug: Check if environment variables are loaded
     console.log('=== EMAILJS DEBUG INFO ===');
@@ -21,6 +21,7 @@ export const sendVerificationEmail = async (email, otp) => {
     console.log('EmailJS Template ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
     console.log('EmailJS Public Key:', process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
     console.log('Email to send to:', email);
+    console.log('Student name:', studentName);
     console.log('OTP to send:', otp);
     console.log('========================');
     
@@ -34,7 +35,7 @@ export const sendVerificationEmail = async (email, otp) => {
     const templateParams = {
       // EmailJS template expects these exact parameter names
       email: email,  // This is what your template uses for "To Email"
-      to_name: 'Student',
+      to_name: studentName,
       from_name: 'OLSHCO Registration',
       message: `Your OLSHCO verification code is: ${otp}. This code expires in 10 minutes.`,
       subject: 'OLSHCO Registration - Email Verification',
