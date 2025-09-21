@@ -81,17 +81,33 @@ const DocumentRequests = () => {
       // Send email notification based on status
       if (newStatus === 'Approved') {
         console.log('📧 Sending approval email to:', request.email);
-        const emailResult = await sendDocumentApprovalEmail(
-          request.email,
-          `${request.first_name} ${request.last_name}`,
-          request.doc_type,
-          request.req_date
-        );
+        console.log('📧 Request data:', {
+          email: request.email,
+          name: `${request.first_name} ${request.last_name}`,
+          docType: request.doc_type,
+          reqDate: request.req_date
+        });
         
-        if (emailResult.success) {
-          console.log('✅ Approval email sent successfully');
+        if (!request.email) {
+          console.error('❌ No email found for student:', request);
+          setSnackbar({
+            open: true,
+            message: 'Request approved but no email found for student',
+            severity: 'warning'
+          });
         } else {
-          console.error('❌ Failed to send approval email:', emailResult.message);
+          const emailResult = await sendDocumentApprovalEmail(
+            request.email,
+            `${request.first_name} ${request.last_name}`,
+            request.doc_type,
+            request.req_date
+          );
+          
+          if (emailResult.success) {
+            console.log('✅ Approval email sent successfully');
+          } else {
+            console.error('❌ Failed to send approval email:', emailResult.message);
+          }
         }
       } else if (newStatus === 'Rejected') {
         console.log('📧 Sending rejection email to:', request.email);
