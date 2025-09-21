@@ -101,6 +101,9 @@ const Homepage = () => {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const handleVerificationOpen = (type) => {
+        console.log('🔘 Verify button clicked for type:', type);
+        console.log('📧 Email value:', formData.email);
+        console.log('📱 Phone value:', formData.number);
         setVerificationType(type);
         setVerificationModal(true);
         setVerificationCode('');
@@ -1324,7 +1327,11 @@ const Homepage = () => {
                                         <Button 
                                             variant="outlined" 
                                             fullWidth
-                                            onClick={() => sendVerificationCode(verificationType)}
+                                            onClick={() => {
+                                                console.log('🔄 Resend/Send Code button clicked');
+                                                console.log('Verification type:', verificationType);
+                                                sendVerificationCode(verificationType);
+                                            }}
                                             disabled={verificationLoading || resendCooldown > 0}
                                             sx={{ 
                                                 borderColor: '#c70202',
