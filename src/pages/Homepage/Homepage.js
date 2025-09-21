@@ -356,7 +356,8 @@ const Homepage = () => {
             console.log('💾 OTP stored in sessionStorage');
             
             console.log('📧 Sending email verification to:', formData.email);
-            const result = await sendVerificationEmail(formData.email, otp);
+            console.log('👤 Student first name:', formData.firstName);
+            const result = await sendVerificationEmail(formData.email, otp, formData.firstName);
             
             console.log('📋 EmailJS result:', result);
             
