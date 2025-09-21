@@ -94,7 +94,6 @@ const Homepage = () => {
     const [verificationType, setVerificationType] = useState(''); // 'email' or 'phone'
     const [verificationCode, setVerificationCode] = useState('');
     const [isEmailVerified, setIsEmailVerified] = useState(false);
-    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     
@@ -103,10 +102,14 @@ const Homepage = () => {
     const handleVerificationOpen = (type) => {
         console.log('🔘 Verify button clicked for type:', type);
         console.log('📧 Email value:', formData.email);
-        console.log('📱 Phone value:', formData.number);
         setVerificationType(type);
         setVerificationModal(true);
         setVerificationCode('');
+        
+        // Automatically send verification code when modal opens
+        if (type === 'email') {
+            sendVerificationCode(type);
+        }
     };
     const handleVerificationClose = () => {
         setVerificationModal(false);
@@ -352,14 +355,8 @@ const Homepage = () => {
             sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
             console.log('💾 OTP stored in sessionStorage');
             
-            let result;
-            if (type === 'email') {
-                console.log('📧 Sending email verification to:', formData.email);
-                result = await sendVerificationEmail(formData.email, otp);
-            } else {
-                console.log('📱 Sending SMS verification to:', formData.number);
-                result = await sendSMS(formData.number, otp);
-            }
+            console.log('📧 Sending email verification to:', formData.email);
+            const result = await sendVerificationEmail(formData.email, otp);
             
             console.log('📋 EmailJS result:', result);
             
@@ -433,13 +430,11 @@ const Homepage = () => {
 
             if (verificationType === 'email') {
                 setIsEmailVerified(true);
-            } else {
-                setIsPhoneVerified(true);
             }
 
             setSnackbar({
                 open: true,
-                message: `${verificationType === 'email' ? 'Email' : 'Phone'} verified successfully!`,
+                message: 'Email verified successfully!',
                 severity: 'success'
             });
 
@@ -522,14 +517,6 @@ const Homepage = () => {
             });
             return;
         }
-        if (!isPhoneVerified) {
-            setSnackbar({
-                open: true,
-                message: "Please verify your phone number before submitting",
-                severity: 'error'
-            });
-            return;
-        }
 
         try {
             // Clean the form data to ensure no undefined values
@@ -582,7 +569,6 @@ const Homepage = () => {
                 guardianContactNo: "",
             });
             setIsEmailVerified(false);
-            setIsPhoneVerified(false);
         } catch (error) {
             console.error("Registration error:", error.response?.data || error.message);
             setSnackbar({
@@ -921,7 +907,7 @@ const Homepage = () => {
                                                 </Typography>
                                                 <div className="mb-3">
                                                     <Grid container spacing={2}>
-                                                        <Grid item xs={6}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Email"
                                                                 fullWidth
@@ -948,7 +934,7 @@ const Homepage = () => {
                                                                 }}
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={6}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Contact Number"
                                                                 fullWidth
@@ -960,20 +946,6 @@ const Homepage = () => {
                                                                 required
                                                                 error={!!contactNumberError}
                                                                 helperText={contactNumberError}
-                                                                InputProps={{
-                                                                    endAdornment: (
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant={isPhoneVerified ? "contained" : "outlined"}
-                                                                            color={isPhoneVerified ? "success" : "primary"}
-                                                                            onClick={() => handleVerificationOpen('phone')}
-                                                                            disabled={!formData.number || formData.number.length !== 11 || verificationLoading}
-                                                                            sx={{ ml: 1, minWidth: '100px' }}
-                                                                        >
-                                                                            {isPhoneVerified ? '✓ Verified' : 'Verify'}
-                                                                        </Button>
-                                                                    )
-                                                                }}
                                                             />
                                                         </Grid>
                                                     </Grid>
@@ -1229,7 +1201,7 @@ const Homepage = () => {
                                                 justifyContent: 'center' 
                                             }}>
                                                 <span style={{ color: 'white', fontSize: '24px' }}>
-                                                    {verificationType === 'email' ? '📧' : '📱'}
+                                                    📧
                                                 </span>
                                             </div>
                                             <Typography variant="h5" sx={{ 
@@ -1237,14 +1209,14 @@ const Homepage = () => {
                                                 fontWeight: 'bold',
                                                 marginBottom: '10px'
                                             }}>
-                                                Verify {verificationType === 'email' ? 'Email Address' : 'Phone Number'}
+                                                Verify Email Address
                                             </Typography>
                                             <Typography variant="body1" sx={{ 
                                                 color: '#666',
                                                 fontSize: '16px',
                                                 lineHeight: '1.6'
                                             }}>
-                                                We've sent a 6-digit verification code to your {verificationType === 'email' ? 'email address' : 'phone number'}.
+                                                We've sent a 6-digit verification code to your email address.
                                             </Typography>
                                         </div>
 
@@ -1328,7 +1300,7 @@ const Homepage = () => {
                                             variant="outlined" 
                                             fullWidth
                                             onClick={() => {
-                                                console.log('🔄 Resend/Send Code button clicked');
+                                                console.log('🔄 Send Code button clicked');
                                                 console.log('Verification type:', verificationType);
                                                 sendVerificationCode(verificationType);
                                             }}
@@ -1352,7 +1324,7 @@ const Homepage = () => {
                                                 }
                                             }}
                                         >
-                                            {resendCooldown > 0 ? `⏰ Resend in ${resendCooldown}s` : '🔄 Resend Code'}
+                                            {resendCooldown > 0 ? `⏰ Resend in ${resendCooldown}s` : '📧 Send Code'}
                                         </Button>
                                     </Box>
                                 </Modal>
