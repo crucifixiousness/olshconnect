@@ -32,7 +32,8 @@ export const sendVerificationEmail = async (email, otp) => {
     console.log('✅ Environment variables loaded successfully');
 
     const templateParams = {
-      to_email: email,
+      // EmailJS template expects these exact parameter names
+      email: email,  // This is what your template uses for "To Email"
       to_name: 'Student',
       from_name: 'OLSHCO Registration',
       message: `Your OLSHCO verification code is: ${otp}. This code expires in 10 minutes.`,
