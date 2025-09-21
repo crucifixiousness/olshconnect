@@ -1,7 +1,7 @@
 import emailjs from '@emailjs/browser';
 
 const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || 'your_service_id';
-const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_DOCUMENT_TEMPLATE_ID || 'your_document_template_id';
+const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_DOCUMENT_TEMPLATE_ID || process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'your_document_template_id';
 const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_public_key';
 
 console.log('🔧 Initializing EmailJS for document notifications with key:', EMAILJS_PUBLIC_KEY);
@@ -31,20 +31,13 @@ export const sendDocumentApprovalEmail = async (studentEmail, studentName, docum
       email: studentEmail,
       to_name: studentName,
       from_name: 'OLSHCO Registrar Office',
-      document_type: documentType,
-      request_date: new Date(requestDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
+      message: `Your document request for "${documentType}" has been approved! You can now claim your document at the Registrar's Office.`,
+      subject: 'OLSHCO Document Request - Approved',
+      verification_code: `APPROVED - ${documentType}`,
       school_name: 'Our Lady of the Sacred Heart College of Guimba, Inc.',
       school_short: 'OLSHCO',
       current_year: new Date().getFullYear(),
-      claim_deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }) // 30 days from now
+      expiry_time: '30 days'
     };
 
     console.log('📧 Attempting to send document approval email with EmailJS...');
@@ -84,16 +77,13 @@ export const sendDocumentRejectionEmail = async (studentEmail, studentName, docu
       email: studentEmail,
       to_name: studentName,
       from_name: 'OLSHCO Registrar Office',
-      document_type: documentType,
-      request_date: new Date(requestDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
-      rejection_reason: reason || 'Please contact the registrar office for more information.',
+      message: `Your document request for "${documentType}" has been rejected. Reason: ${reason || 'Please contact the registrar office for more information.'}`,
+      subject: 'OLSHCO Document Request - Rejected',
+      verification_code: `REJECTED - ${documentType}`,
       school_name: 'Our Lady of the Sacred Heart College of Guimba, Inc.',
       school_short: 'OLSHCO',
-      current_year: new Date().getFullYear()
+      current_year: new Date().getFullYear(),
+      expiry_time: 'N/A'
     };
 
     console.log('📧 Attempting to send document rejection email with EmailJS...');
