@@ -27,18 +27,12 @@ export const sendDocumentApprovalEmail = async (studentEmail, studentName, docum
     
     console.log('✅ Environment variables loaded successfully');
 
+    // Test with minimal variables first
     const templateParams = {
-      // EmailJS template expects these exact parameter names
-      email: studentEmail,  // This is what your template uses for "To Email"
+      email: studentEmail,
       to_name: studentName,
-      from_name: 'OLSHCO Registrar Office',
-      message: `Your document request for "${documentType}" has been approved! You can now claim your document at the Registrar's Office. Please bring a valid ID and this email as proof of approval.`,
-      subject: 'OLSHCO Document Request - Approved',
-      verification_code: `APPROVED`,
-      school_name: 'Our Lady of the Sacred Heart College of Guimba, Inc.',
-      school_short: 'OLSHCO',
-      current_year: new Date().getFullYear(),
-      expiry_time: '30 days'
+      message: `Your document request for "${documentType}" has been approved! You can now claim your document at the Registrar's Office.`,
+      verification_code: `APPROVED`
     };
 
     console.log('📧 Attempting to send document approval email with EmailJS...');
@@ -46,6 +40,10 @@ export const sendDocumentApprovalEmail = async (studentEmail, studentName, docum
     console.log('Template ID:', EMAILJS_TEMPLATE_ID);
     console.log('Template Params:', templateParams);
     console.log('🔍 Using template ID:', process.env.REACT_APP_EMAILJS_DOCUMENT_TEMPLATE_ID || process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
+    console.log('🔍 Environment check:');
+    console.log('- REACT_APP_EMAILJS_DOCUMENT_TEMPLATE_ID:', process.env.REACT_APP_EMAILJS_DOCUMENT_TEMPLATE_ID);
+    console.log('- REACT_APP_EMAILJS_TEMPLATE_ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
+    console.log('- Final template ID being used:', EMAILJS_TEMPLATE_ID);
     
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
@@ -75,18 +73,12 @@ export const sendDocumentRejectionEmail = async (studentEmail, studentName, docu
       throw new Error('EmailJS environment variables are not properly configured');
     }
 
+    // Test with minimal variables first
     const templateParams = {
-      // EmailJS template expects these exact parameter names
-      email: studentEmail,  // This is what your template uses for "To Email"
+      email: studentEmail,
       to_name: studentName,
-      from_name: 'OLSHCO Registrar Office',
       message: `Your document request for "${documentType}" has been rejected. Reason: ${reason || 'Please contact the registrar office for more information.'}`,
-      subject: 'OLSHCO Document Request - Rejected',
-      verification_code: `REJECTED`,
-      school_name: 'Our Lady of the Sacred Heart College of Guimba, Inc.',
-      school_short: 'OLSHCO',
-      current_year: new Date().getFullYear(),
-      expiry_time: 'N/A'
+      verification_code: `REJECTED`
     };
 
     console.log('📧 Attempting to send document rejection email with EmailJS...');
