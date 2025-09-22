@@ -78,21 +78,16 @@ const InstructorGrades = () => {
     fetchCourses();
   }, []);
 
-  const handleCourseChange = async (courseId) => {
-    setSelectedCourse(courseId);
+  const handleCourseChange = async (assignmentId) => {
+    setSelectedCourse(assignmentId);
     setLoading(true);
     
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `/api/course-students?courseId=${courseId}`,
+        `/api/course-students?courseId=${assignmentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      // Update selectedCourse to use the actual pc_id for grade saving
-      if (response.data.course && response.data.course.pc_id) {
-        setSelectedCourse(response.data.course.pc_id);
-      }
       
       setStudents(response.data.students);
       
@@ -130,10 +125,22 @@ const InstructorGrades = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
+      const selectedCourseInfo = getSelectedCourseInfo();
+      
+      if (!selectedCourseInfo) {
+        setSnackbar({
+          open: true,
+          message: "Please select a course first",
+          severity: 'error'
+        });
+        setSaving(false);
+        return;
+      }
+      
       await axios.post(
         '/api/save-grades',
         {
-          courseId: selectedCourse,
+          courseId: selectedCourseInfo.pc_id, // Use pc_id for saving grades
           grades: grades
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -160,7 +167,7 @@ const InstructorGrades = () => {
   };
 
   const getSelectedCourseInfo = () => {
-    return courses.find(course => course.pc_id === selectedCourse);
+    return courses.find(course => course.assignment_id === selectedCourse);
   };
 
   if (loading && !selectedCourse) {
@@ -211,7 +218,7 @@ const InstructorGrades = () => {
                   }}
                 >
                   {courses.map((course) => (
-                    <MenuItem key={course.pc_id} value={course.pc_id}>
+                    <MenuItem key={course.assignment_id} value={course.assignment_id}>
                       <Box>
                         <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                           {course.course_code} - {course.course_name}
