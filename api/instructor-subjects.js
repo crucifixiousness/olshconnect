@@ -31,7 +31,8 @@ module.exports = async (req, res) => {
 
       const result = await client.query(
         `SELECT DISTINCT ON (c.course_id, ca.section, pc.program_id, pc.year_id, pc.semester)
-          ca.assignment_id as pc_id,  -- Use assignment_id as unique identifier
+          ca.pc_id,  -- Use actual pc_id for grades consistency
+          ca.assignment_id,  -- Keep assignment_id for reference
           ca.section,
           ca.day,
           TO_CHAR(ca.start_time, 'HH12:MI AM') as start_time,
