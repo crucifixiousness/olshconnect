@@ -43,9 +43,9 @@ module.exports = async (req, res) => {
     client = await pool.connect();
     console.log('🔍 DEBUG: Database connection established');
 
-    // Get course details first
+    // Get course details first - courseId is actually assignment_id from the frontend
     const courseQuery = `
-      SELECT ca.assignment_id as pc_id, pc.program_id, pc.year_id, pc.semester, 
+      SELECT ca.pc_id, pc.program_id, pc.year_id, pc.semester, 
              c.course_code, c.course_name, c.units,
              ca.section, ca.day, ca.start_time, ca.end_time
       FROM course_assignments ca
@@ -87,7 +87,7 @@ module.exports = async (req, res) => {
     `;
 
     const queryParams = [
-      courseId,
+      course.pc_id,  // Use the actual pc_id from course_assignments, not assignment_id
       course.program_id,
       course.year_id,
       course.semester,
@@ -129,7 +129,7 @@ module.exports = async (req, res) => {
 
     const response = {
       course: {
-        pc_id: course.pc_id,
+        pc_id: course.pc_id,  // This is the actual pc_id that should be used for saving grades
         course_code: course.course_code,
         course_name: course.course_name,
         units: course.units,
@@ -144,7 +144,7 @@ module.exports = async (req, res) => {
     };
 
     console.log('🔍 DEBUG: Final response:', response);
-    return res.status(200).json(response.students);
+    return res.status(200).json(response);
 
   } catch (error) {
     const status = error.status || 500;
