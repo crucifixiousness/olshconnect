@@ -29,10 +29,11 @@ module.exports = async (req, res) => {
       const { staff_id } = req.query;
       client = await pool.connect();
 
-      // Get unique course-block combinations for Class Management
+      // Get course assignments for Class Management - each assignment is separate
       const result = await client.query(
-        `SELECT DISTINCT
+        `SELECT
           ca.pc_id,
+          ca.assignment_id,
           ca.section,
           c.course_code,
           c.course_name,
@@ -40,17 +41,16 @@ module.exports = async (req, res) => {
           pc.semester,
           p.program_name,
           py.year_level,
-          MIN(ca.day) as day,
-          MIN(TO_CHAR(ca.start_time, 'HH12:MI AM')) as start_time,
-          MIN(TO_CHAR(ca.end_time, 'HH12:MI AM')) as end_time
+          ca.day,
+          TO_CHAR(ca.start_time, 'HH12:MI AM') as start_time,
+          TO_CHAR(ca.end_time, 'HH12:MI AM') as end_time
          FROM course_assignments ca
          JOIN program_course pc ON ca.pc_id = pc.pc_id
          JOIN course c ON pc.course_id = c.course_id
          JOIN program p ON pc.program_id = p.program_id
          JOIN program_year py ON pc.year_id = py.year_id
          WHERE ca.staff_id = $1
-         GROUP BY ca.pc_id, ca.section, c.course_code, c.course_name, c.units, pc.semester, p.program_name, py.year_level
-         ORDER BY c.course_code, ca.section`,
+         ORDER BY c.course_code, ca.section, ca.day, ca.start_time`,
         [staff_id]
       );
 
