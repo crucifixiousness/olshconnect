@@ -89,11 +89,16 @@ const InstructorGrades = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      setStudents(response.data);
+      // Update selectedCourse to use the actual pc_id for grade saving
+      if (response.data.course && response.data.course.pc_id) {
+        setSelectedCourse(response.data.course.pc_id);
+      }
+      
+      setStudents(response.data.students);
       
       // Initialize grades object
       const initialGrades = {};
-      response.data.forEach(student => {
+      response.data.students.forEach(student => {
         initialGrades[student.student_id] = student.final_grade || '';
       });
       setGrades(initialGrades);
