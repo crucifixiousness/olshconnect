@@ -119,12 +119,12 @@ const ClassManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `/api/course-students?courseId=${course.pc_id}`,
+        `/api/course-students?courseId=${course.assignment_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Use the same data structure as the grading page
-      setStudents(response.data || []);
+      // Use the students data from the response
+      setStudents(response.data.students || []);
     } catch (error) {
       console.error('Error fetching students:', error);
       setSnackbar({
