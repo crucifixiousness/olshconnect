@@ -37,9 +37,10 @@ module.exports = async (req, res) => {
 
     // Get the student's latest enrollment (program/year/semester)
     const enrollmentQuery = `
-      SELECT e.program_id, e.year_id, e.semester, py.year_level
+      SELECT e.program_id, e.year_id, e.semester, py.year_level, p.program_name
       FROM enrollments e
       JOIN program_year py ON e.year_id = py.year_id
+      JOIN program p ON e.program_id = p.program_id
       WHERE e.student_id = $1
       ORDER BY e.enrollment_date DESC
       LIMIT 1
@@ -49,7 +50,7 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'No enrollment found for this student' });
     }
 
-    const { program_id, year_id, semester, year_level } = enrollmentResult.rows[0];
+    const { program_id, year_id, semester, year_level, program_name } = enrollmentResult.rows[0];
 
     // Return all courses for the student's current program/year/semester
     // LEFT JOIN to grades filtered to final approval so non-final stays null
@@ -77,7 +78,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      enrollment: { program_id, year_id, semester, year_level },
+      enrollment: { program_id, year_id, semester, year_level, program_name },
       courses: coursesResult.rows,
       count: coursesResult.rows.length
     });
