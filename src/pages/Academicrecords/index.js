@@ -13,18 +13,44 @@ import {
   Typography,
   Box
 } from '@mui/material';
+import axios from 'axios';
 
 const AcademicRecords = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useContext(MyContext);
   const context = useContext(MyContext);
 
+  const [courses, setCourses] = useState([]);
+  const [enrollment, setEnrollment] = useState(null);
+  const [error, setError] = useState('');
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    // Simulate loading time
-    setTimeout(() => setLoading(false), 1000);
+    fetchAcademicRecord();
   }, [context]);
+
+  const fetchAcademicRecord = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please login to view your academic records.');
+        setLoading(false);
+        return;
+      }
+      const res = await axios.get('/api/student-academic-record', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCourses(res.data.courses || []);
+      setEnrollment(res.data.enrollment || null);
+      setError('');
+    } catch (e) {
+      setError(e.response?.data?.error || 'Failed to load academic records');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="right-content w-100">
@@ -35,13 +61,13 @@ const AcademicRecords = () => {
         </div>
       )}
 
-      {/* Academic Records Section */}
       <div className="card shadow border-0 p-3 mt-3">
-
         {loading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
             <CircularProgress style={{ color: '#c70202' }} />
           </div>
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
         ) : (
           <>
             {/* Personal Information */}
@@ -50,13 +76,17 @@ const AcademicRecords = () => {
               <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
                 <p><strong>Name:</strong> {user?.lastName}, {user?.firstName} {user?.middleName?.charAt(0)}. </p>
                 <p><strong>Student No:</strong> {user?.id}</p>
-                <p><strong>Program:</strong> BSIT</p>
-                <p><strong>Year Level:</strong> 3rd Year</p>
-                <p><strong>Status:</strong> Active</p>
+                {enrollment && (
+                  <>
+                    <p><strong>Program:</strong> {enrollment.program_name || '—'}</p>
+                    <p><strong>Year Level:</strong> {enrollment.year_level || '—'}</p>
+                    <p><strong>Semester:</strong> {enrollment.semester || '—'}</p>
+                  </>
+                )}
               </Box>
             </div>
 
-            {/* Grades Overview */}
+            {/* Grades Overview (Live) */}
             <div className="mt-3">
               <h4>Grades Overview</h4>
               <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
@@ -72,95 +102,42 @@ const AcademicRecords = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      <TableRow hover>
-                        <TableCell>IT101</TableCell>
-                        <TableCell>Introduction to IT</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">85</TableCell>
-                        <TableCell align="center">
-                          <span className="badge bg-success">Passed</span>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>ENG102</TableCell>
-                        <TableCell>English Communication</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">87</TableCell>
-                        <TableCell align="center">
-                          <span className="badge bg-success">Passed</span>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>MATH101</TableCell>
-                        <TableCell>College Algebra</TableCell>
-                        <TableCell align="center">3</TableCell>
-                        <TableCell align="center">80</TableCell>
-                        <TableCell align="center">
-                          <span className="badge bg-success">Passed</span>
-                        </TableCell>
-                      </TableRow>
+                      {courses.length > 0 ? (
+                        courses.map((row, idx) => {
+                          const grade = row.final_grade ? parseFloat(row.final_grade) : null;
+                          const remarks = grade ? (grade < 3.0 ? 'Passed' : 'Failed') : '';
+                          return (
+                            <TableRow hover key={idx}>
+                              <TableCell>{row.course_code}</TableCell>
+                              <TableCell>{row.course_name}</TableCell>
+                              <TableCell align="center">{row.units}</TableCell>
+                              <TableCell align="center">{grade ? grade.toFixed(2) : ''}</TableCell>
+                              <TableCell align="center">
+                                {remarks && (
+                                  <span className={`badge ${grade < 3.0 ? 'bg-success' : 'bg-danger'}`}>{remarks}</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center">No courses found.</TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
               </Paper>
             </div>
 
-            {/* GPA Overview */}
+            {/* GPA Overview (placeholder) */}
             <div className="mt-3">
               <h4>GPA Overview</h4>
               <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
-                <p><strong>Semester GPA:</strong> 3.5</p>
-                <p><strong>Cumulative GPA:</strong> 3.2</p>
+                <p><strong>Semester GPA:</strong> —</p>
+                <p><strong>Cumulative GPA:</strong> —</p>
               </Box>
-            </div>
-
-            {/* Enrollment History */}
-            <div className="mt-3">
-              <h4>Enrollment History</h4>
-              <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-                <TableContainer>
-                  <Table aria-label="enrollment history table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Academic Year</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Status</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Units Enrolled</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }} align="center">Units Earned</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow hover>
-                        <TableCell>2024-2025</TableCell>
-                        <TableCell>1st Semester</TableCell>
-                        <TableCell align="center">
-                          <span className="badge bg-success">Enrolled</span>
-                        </TableCell>
-                        <TableCell align="center">18</TableCell>
-                        <TableCell align="center">18</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>2023-2024</TableCell>
-                        <TableCell>2nd Semester</TableCell>
-                        <TableCell align="center">
-                          <span className="badge bg-success">Completed</span>
-                        </TableCell>
-                        <TableCell align="center">18</TableCell>
-                        <TableCell align="center">18</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>2023-2024</TableCell>
-                        <TableCell>1st Semester</TableCell>
-                        <TableCell align="center">
-                          <span className="badge bg-success">Completed</span>
-                        </TableCell>
-                        <TableCell align="center">18</TableCell>
-                        <TableCell align="center">18</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
             </div>
 
             {/* Transcript Request Button */}
