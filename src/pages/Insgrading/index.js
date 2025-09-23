@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import {
   Card,
   Typography,
@@ -20,12 +21,19 @@ import {
   Snackbar,
   Chip,
   FormControl,
-  InputLabel
+  InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from '@mui/material';
 import { 
   School as SchoolIcon, 
   Save as SaveIcon,
-  Assignment as AssignmentIcon
+  Assignment as AssignmentIcon,
+  Upload as UploadIcon,
+  FileUpload as FileUploadIcon
 } from '@mui/icons-material';
 
 const InstructorGrades = () => {
@@ -40,6 +48,12 @@ const InstructorGrades = () => {
     message: '',
     severity: 'success'
   });
+  
+  // Excel import states
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importPreview, setImportPreview] = useState([]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -168,6 +182,113 @@ const InstructorGrades = () => {
 
   const getSelectedCourseInfo = () => {
     return courses.find(course => course.assignment_id === selectedCourse);
+  };
+
+  // Excel import functions
+  const handleImportClick = () => {
+    if (!selectedCourse) {
+      setSnackbar({
+        open: true,
+        message: "Please select a course first",
+        severity: 'error'
+      });
+      return;
+    }
+    setImportDialogOpen(true);
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImportFile(file);
+      parseExcelFile(file);
+    }
+  };
+
+  const parseExcelFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // Parse the data - expecting format: Student ID, Name, Final Grade
+        const parsedData = [];
+        for (let i = 1; i < jsonData.length; i++) { // Skip header row
+          const row = jsonData[i];
+          if (row && row.length >= 3 && row[0] && row[1] && row[2]) {
+            parsedData.push({
+              student_id: row[0].toString(),
+              name: row[1].toString(),
+              final_grade: parseFloat(row[2]) || ''
+            });
+          }
+        }
+        
+        setImportPreview(parsedData);
+      } catch (error) {
+        console.error('Error parsing Excel file:', error);
+        setSnackbar({
+          open: true,
+          message: "Error parsing Excel file. Please check the format.",
+          severity: 'error'
+        });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleImportGrades = () => {
+    if (importPreview.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "No valid data found in Excel file",
+        severity: 'error'
+      });
+      return;
+    }
+
+    setImporting(true);
+    
+    // Match Excel data with current students
+    const updatedGrades = { ...grades };
+    let matchedCount = 0;
+    
+    importPreview.forEach(excelRow => {
+      const student = students.find(s => 
+        s.student_id.toString() === excelRow.student_id.toString()
+      );
+      
+      if (student && excelRow.final_grade !== '') {
+        const grade = parseFloat(excelRow.final_grade);
+        if (grade >= 1.0 && grade <= 5.0) {
+          updatedGrades[student.student_id] = grade.toString();
+          matchedCount++;
+        }
+      }
+    });
+    
+    setGrades(updatedGrades);
+    setImportDialogOpen(false);
+    setImportFile(null);
+    setImportPreview([]);
+    
+    setSnackbar({
+      open: true,
+      message: `Successfully imported ${matchedCount} grades from Excel`,
+      severity: 'success'
+    });
+    
+    setImporting(false);
+  };
+
+  const handleCloseImportDialog = () => {
+    setImportDialogOpen(false);
+    setImportFile(null);
+    setImportPreview([]);
   };
 
   if (loading && !selectedCourse) {
@@ -343,23 +464,41 @@ const InstructorGrades = () => {
                     Pending: {Object.values(grades).filter(grade => grade === '').length}
                   </Typography>
                   
-                  <Button 
-                    variant="contained" 
-                    onClick={handleSaveGrades}
-                    disabled={saving}
-                    startIcon={saving ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <SaveIcon />}
-                    sx={{ 
-                      backgroundColor: '#c70202',
-                      '&:hover': {
-                        backgroundColor: '#a00101'
-                      },
-                      '&:disabled': {
-                        backgroundColor: '#6c757d'
-                      }
-                    }}
-                  >
-                    {saving ? 'Saving...' : 'Save Grades'}
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button 
+                      variant="outlined" 
+                      onClick={handleImportClick}
+                      startIcon={<UploadIcon />}
+                      sx={{
+                        borderColor: '#c70202',
+                        color: '#c70202',
+                        '&:hover': {
+                          borderColor: '#a00101',
+                          backgroundColor: '#fff5f5'
+                        }
+                      }}
+                    >
+                      IMPORT FROM EXCEL
+                    </Button>
+                    
+                    <Button 
+                      variant="contained" 
+                      onClick={handleSaveGrades}
+                      disabled={saving}
+                      startIcon={saving ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <SaveIcon />}
+                      sx={{ 
+                        backgroundColor: '#c70202',
+                        '&:hover': {
+                          backgroundColor: '#a00101'
+                        },
+                        '&:disabled': {
+                          backgroundColor: '#6c757d'
+                        }
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save Grades'}
+                    </Button>
+                  </Box>
                 </Box>
               </>
             )}
@@ -379,6 +518,125 @@ const InstructorGrades = () => {
           </Card>
         )}
       </div>
+
+      {/* Excel Import Dialog */}
+      <Dialog 
+        open={importDialogOpen} 
+        onClose={handleCloseImportDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          backgroundColor: '#c70202', 
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2
+        }}>
+          <FileUploadIcon />
+          Import Grades from Excel
+        </DialogTitle>
+        
+        <DialogContent sx={{ mt: 2 }}>
+          <DialogContentText sx={{ mb: 3 }}>
+            Upload an Excel file with student grades. The file should have columns: Student ID, Name, Final Grade
+          </DialogContentText>
+          
+          <Box sx={{ mb: 3 }}>
+            <input
+              accept=".xlsx,.xls"
+              style={{ display: 'none' }}
+              id="excel-file-input"
+              type="file"
+              onChange={handleFileChange}
+            />
+            <label htmlFor="excel-file-input">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<UploadIcon />}
+                sx={{
+                  borderColor: '#c70202',
+                  color: '#c70202',
+                  '&:hover': {
+                    borderColor: '#a00101',
+                    backgroundColor: '#fff5f5'
+                  }
+                }}
+              >
+                Choose Excel File
+              </Button>
+            </label>
+            {importFile && (
+              <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                Selected: {importFile.name}
+              </Typography>
+            )}
+          </Box>
+
+          {importPreview.length > 0 && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Preview ({importPreview.length} records found):
+              </Typography>
+              <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #dee2e6', maxHeight: 300 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Student ID</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Final Grade</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {importPreview.slice(0, 10).map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{row.student_id}</TableCell>
+                        <TableCell>{row.name}</TableCell>
+                        <TableCell>{row.final_grade}</TableCell>
+                      </TableRow>
+                    ))}
+                    {importPreview.length > 10 && (
+                      <TableRow>
+                        <TableCell colSpan={3} sx={{ textAlign: 'center', fontStyle: 'italic' }}>
+                          ... and {importPreview.length - 10} more records
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={handleCloseImportDialog}
+            variant="outlined"
+            sx={{ borderColor: '#6c757d', color: '#6c757d' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleImportGrades}
+            variant="contained"
+            disabled={importPreview.length === 0 || importing}
+            startIcon={importing ? <CircularProgress size={20} /> : <UploadIcon />}
+            sx={{
+              backgroundColor: '#c70202',
+              '&:hover': {
+                backgroundColor: '#a00101'
+              },
+              '&:disabled': {
+                backgroundColor: '#6c757d'
+              }
+            }}
+          >
+            {importing ? 'Importing...' : 'Import Grades'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}
