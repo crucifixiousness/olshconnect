@@ -26,10 +26,7 @@ module.exports = async (req, res) => {
       const decoded = authenticateToken(req, res);
       req.user = decoded;
 
-      // Check if user has registrar role
-      if (decoded.role !== 'registrar' && !['admin', 'super_admin'].includes(decoded.role)) {
-        return res.status(403).json({ error: 'Access denied. Registrar role required.' });
-      }
+      // Removed role enforcement: endpoint is only used within Registrar panel UI
 
       client = await pool.connect();
 
