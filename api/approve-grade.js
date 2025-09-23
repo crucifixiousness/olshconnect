@@ -109,22 +109,31 @@ module.exports = async (req, res) => {
       }
 
       // Update grade status
+      const setClauses = ['approval_status = $1'];
+      const updateValues = [
+        newStatus
+      ];
+      let paramIndex = 2;
+
+      for (const [field, value] of Object.entries(updateFields)) {
+        if (value === 'CURRENT_TIMESTAMP') {
+          setClauses.push(`${field} = CURRENT_TIMESTAMP`);
+        } else {
+          setClauses.push(`${field} = $${paramIndex}`);
+          updateValues.push(value);
+          paramIndex++;
+        }
+      }
+
+      setClauses.push('updated_at = CURRENT_TIMESTAMP');
+
       const updateQuery = `
-        UPDATE grades 
-        SET 
-          approval_status = $1,
-          ${Object.keys(updateFields).map((field, index) => 
-            `${field} = ${updateFields[field] === 'CURRENT_TIMESTAMP' ? 'CURRENT_TIMESTAMP' : `$${index + 2}`}`
-          ).join(', ')},
-          updated_at = CURRENT_TIMESTAMP
-        WHERE grade_id = $${Object.keys(updateFields).length + 2}
+        UPDATE grades
+        SET ${setClauses.join(', ')}
+        WHERE grade_id = $${paramIndex}
       `;
 
-      const updateValues = [
-        newStatus,
-        ...Object.values(updateFields).filter(val => val !== 'CURRENT_TIMESTAMP'),
-        gradeId
-      ];
+      updateValues.push(gradeId);
 
       await client.query(updateQuery, updateValues);
 
