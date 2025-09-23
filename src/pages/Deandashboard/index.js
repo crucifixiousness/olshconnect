@@ -59,10 +59,15 @@ const DeanDashboard = () => {
     finalApproved: 0
   });
 
+  // Class-level approval
+  const [classes, setClasses] = useState([]);
+  const [classLoading, setClassLoading] = useState(false);
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
     fetchDashboardData();
+    fetchClassApprovalData();
   }, [context]);
 
   const fetchDashboardData = async () => {
@@ -97,6 +102,23 @@ const DeanDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchClassApprovalData = async () => {
+    try {
+      setClassLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await axios.get('/api/registrar-class-approval', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Show classes that have registrar_approved > 0 to focus Dean actions
+      setClasses((response.data.classes || []).filter(c => (c.registrar_approved_count || 0) > 0));
+    } catch (e) {
+      console.error('Error fetching class approvals for dean:', e);
+    } finally {
+      setClassLoading(false);
     }
   };
 
@@ -146,6 +168,22 @@ const DeanDashboard = () => {
       });
     } finally {
       setApproving(false);
+    }
+  };
+
+  const handleApproveClass = async (pcId, action) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      await axios.post('/api/approve-class-grades', { pcId, action }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchClassApprovalData();
+      await fetchDashboardData();
+      setSnackbar({ open: true, message: 'Class approval updated', severity: 'success' });
+    } catch (e) {
+      console.error('Error approving class:', e);
+      setSnackbar({ open: true, message: 'Failed to approve class', severity: 'error' });
     }
   };
 
@@ -361,26 +399,7 @@ const DeanDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <div className="d-flex gap-2">
-                          <Tooltip title="View Details">
-                            <IconButton 
-                              size="small" 
-                              color="primary"
-                              onClick={() => handleApproveGrade(grade)}
-                            >
-                              <FaEye />
-                            </IconButton>
-                          </Tooltip>
-                          {grade.approval_status === 'registrar_approved' && (
-                            <Tooltip title="Approve as Dean">
-                              <IconButton 
-                                size="small" 
-                                color="success"
-                                onClick={() => handleApproveGrade(grade)}
-                              >
-                                <FaCheckCircle />
-                              </IconButton>
-                            </Tooltip>
-                          )}
+                          {/* Per-student actions removed */}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -398,6 +417,51 @@ const DeanDashboard = () => {
             </Table>
           </TableContainer>
         </Card>
+      </div>
+
+      {/* Class Approvals Section */}
+      <div className="card shadow border-0 p-3 mt-3">
+        <Typography variant="h6" className="mb-3">Class Approvals (Per Subject/Course)</Typography>
+        {classLoading ? (
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '160px' }}>
+            <CircularProgress style={{ color: '#c70202' }} />
+          </div>
+        ) : (
+          <TableContainer component={Paper} elevation={0}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Pending</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Registrar Approved</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Dean Approved</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {(classes || []).map((cls) => (
+                  <TableRow key={`${cls.pc_id}-${cls.section}`}>
+                    <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
+                    <TableCell>{cls.section}</TableCell>
+                    <TableCell>{cls.pending_count}</TableCell>
+                    <TableCell>{cls.registrar_approved_count}</TableCell>
+                    <TableCell>{cls.dean_approved_count}</TableCell>
+                    <TableCell>{cls.final_count}</TableCell>
+                    <TableCell>
+                      <div className="d-flex gap-2">
+                        <Button size="small" variant="contained" color="success" onClick={() => handleApproveClass(cls.pc_id, 'dean_approve')}>Approve All (Dean)</Button>
+                        <Button size="small" variant="outlined" color="primary" onClick={() => handleApproveClass(cls.pc_id, 'final_approve')}>Finalize All</Button>
+                        <Button size="small" variant="outlined" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>Reject All</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </div>
 
       {/* Approval Dialog */}
@@ -460,26 +524,7 @@ const DeanDashboard = () => {
           >
             Cancel
           </Button>
-          {selectedGrade?.approval_status === 'registrar_approved' && (
-            <Button
-              onClick={() => handleApprovalSubmit('dean_approve')}
-              color="success"
-              variant="contained"
-              disabled={approving}
-              startIcon={approving ? <CircularProgress size={16} /> : <FaCheckCircle />}
-            >
-              {approving ? 'Approving...' : 'Approve as Dean'}
-            </Button>
-          )}
-          <Button
-            onClick={() => handleApprovalSubmit('reject')}
-            color="error"
-            variant="outlined"
-            disabled={approving}
-            startIcon={approving ? <CircularProgress size={16} /> : <FaTimesCircle />}
-          >
-            {approving ? 'Rejecting...' : 'Reject'}
-          </Button>
+          {/* Per-student actions removed */}
         </DialogActions>
       </Dialog>
 
