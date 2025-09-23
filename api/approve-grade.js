@@ -30,11 +30,6 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Grade ID and action are required' });
       }
 
-      // Check if user has appropriate role
-      if (!['registrar', 'dean', 'admin', 'super_admin'].includes(decoded.role)) {
-        return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
-      }
-
       client = await pool.connect();
 
       // Start transaction
@@ -56,17 +51,12 @@ module.exports = async (req, res) => {
       const currentGrade = gradeResult.rows[0];
       const currentStatus = currentGrade.approval_status;
 
-      // Validate action based on current status and user role
+      // Validate action based on current status
       let newStatus;
       let updateFields = {};
-      let performedByField = '';
 
       switch (action) {
         case 'registrar_approve':
-          if (decoded.role !== 'registrar' && !['admin', 'super_admin'].includes(decoded.role)) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({ error: 'Only registrar can approve at registrar level' });
-          }
           if (currentStatus !== 'pending') {
             await client.query('ROLLBACK');
             return res.status(400).json({ error: 'Grade is not in pending status' });
@@ -76,14 +66,9 @@ module.exports = async (req, res) => {
             registrar_approved_by: decoded.staff_id || decoded.user_id,
             registrar_approved_at: 'CURRENT_TIMESTAMP'
           };
-          performedByField = 'registrar_approved_by';
           break;
 
         case 'dean_approve':
-          if (decoded.role !== 'dean' && !['admin', 'super_admin'].includes(decoded.role)) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({ error: 'Only dean can approve at dean level' });
-          }
           if (currentStatus !== 'registrar_approved') {
             await client.query('ROLLBACK');
             return res.status(400).json({ error: 'Grade must be approved by registrar first' });
@@ -93,14 +78,9 @@ module.exports = async (req, res) => {
             dean_approved_by: decoded.staff_id || decoded.user_id,
             dean_approved_at: 'CURRENT_TIMESTAMP'
           };
-          performedByField = 'dean_approved_by';
           break;
 
         case 'final_approve':
-          if (!['admin', 'super_admin'].includes(decoded.role)) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({ error: 'Only admin can give final approval' });
-          }
           if (currentStatus !== 'dean_approved') {
             await client.query('ROLLBACK');
             return res.status(400).json({ error: 'Grade must be approved by dean first' });
