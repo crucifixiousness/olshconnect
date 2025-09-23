@@ -230,6 +230,7 @@ const Staff = () => {
                   <MenuItem value="registrar">Registrar</MenuItem>
                   <MenuItem value="finance">Finance</MenuItem>
                   <MenuItem value="program head">Program Head</MenuItem>
+                  <MenuItem value="dean">Dean</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -457,6 +458,7 @@ const Staff = () => {
                   <MenuItem value="registrar">Registrar</MenuItem>
                   <MenuItem value="finance">Finance</MenuItem>
                   <MenuItem value="program head">Program Head</MenuItem>
+                  <MenuItem value="dean">Dean</MenuItem>
                 </Select>
               </FormControl>
               
