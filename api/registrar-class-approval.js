@@ -43,6 +43,7 @@ module.exports = async (req, res) => {
         p.program_name,
         py.year_level,
         pc.semester,
+        COALESCE(a.full_name, 'Not assigned') AS instructor_name,
         COUNT(g.*) AS total_grades,
         COUNT(CASE WHEN g.approval_status = 'pending' THEN 1 END) AS pending_count,
         COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) AS registrar_approved_count,
@@ -53,8 +54,9 @@ module.exports = async (req, res) => {
       JOIN course c ON c.course_id = pc.course_id
       JOIN program p ON p.program_id = pc.program_id
       JOIN program_year py ON py.year_id = pc.year_id
+      LEFT JOIN admins a ON a.staff_id = ca.staff_id
       LEFT JOIN grades g ON g.pc_id = pc.pc_id
-      GROUP BY ca.assignment_id, ca.pc_id, ca.section, c.course_code, c.course_name, p.program_name, py.year_level, pc.semester
+      GROUP BY ca.assignment_id, ca.pc_id, ca.section, c.course_code, c.course_name, p.program_name, py.year_level, pc.semester, a.full_name
       ORDER BY c.course_code, ca.section
     `;
 
