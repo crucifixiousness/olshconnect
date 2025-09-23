@@ -43,6 +43,9 @@ import CounterPayment from './pages/CounterPayment';
 import PaymentHistory from './pages/PaymentHistory';
 import ProgramStudentList from './pages/ProgramStudentList';
 import ProgramManagement from './pages/ProgramManagement';
+import DeanDashboard from './pages/Deandashboard';
+import StudentGrades from './pages/StudentGrades';
+import DeanSidebar from './components/Deansidebar';
 
 const MyContext = createContext();
 
@@ -159,6 +162,8 @@ function App() {
                   <ProgramHeadSidebar />
                 ) : role === 'instructor' ? (
                   <InstructorSidebar />
+                ) : role === 'dean' ? (
+                  <DeanSidebar />
                 ) : role === 'admin' ? (
                   <Sidebar />
                 ) : (
@@ -187,6 +192,7 @@ function App() {
               <Route path="/student-payment" exact={true} element={<ProtectedRoute element={<StudentPayment/>} requiredRole="student" redirectTo="/login" />} />
               <Route path="/academic-records" exact={true} element={<ProtectedRoute element={<AcademicRecords />} requiredRole="student" redirectTo="/login" />} />
               <Route path="/request-document" exact={true} element={<ProtectedRoute element={<RequestDocument />} requiredRole="student" redirectTo="/login" />} />
+              <Route path="/student-grades" exact={true} element={<ProtectedRoute element={<StudentGrades />} requiredRole="student" redirectTo="/login" />} />
               <Route path="/registrar-dashboard" exact={true} element={<ProtectedRoute element={<RegistrarDashboard />} requiredRole="registrar" redirectTo="/stafflogin" />} />
               <Route path="/registrar-enrollment" exact={true} element={<ProtectedRoute element={<Enrollment />} requiredRole="registrar" redirectTo="/stafflogin" />} />
               <Route path="/registrar-enrollmentt" exact={true} element={<ProtectedRoute element={<RegistrarEnrollment />} requiredRole="registrar" redirectTo="/stafflogin" />} />
@@ -203,6 +209,7 @@ function App() {
               <Route path="/instructor-schedule" exact={true} element={<ProtectedRoute element={<InstructorSchedule />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-classes" exact={true} element={<ProtectedRoute element={<ClassManagement />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-classes/grades" exact={true} element={<ProtectedRoute element={<InstructorGrades />} requiredRole="instructor" redirectTo="/stafflogin" />} />
+              <Route path="/dean-dashboard" exact={true} element={<ProtectedRoute element={<DeanDashboard />} requiredRole="dean" redirectTo="/stafflogin" />} />
               {/* Catch-all route for unmatched paths - should be last */}
               <Route path="*" element={<NotFound />} />
             </Routes>
