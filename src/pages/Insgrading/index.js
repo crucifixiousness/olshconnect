@@ -54,6 +54,8 @@ const InstructorGrades = () => {
   const [importFile, setImportFile] = useState(null);
   const [importing, setImporting] = useState(false);
   const [importPreview, setImportPreview] = useState([]);
+  const [availableSheets, setAvailableSheets] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState('');
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -211,24 +213,16 @@ const InstructorGrades = () => {
       try {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         
-        // Parse the data - expecting format: Student ID, Name, Final Grade
-        const parsedData = [];
-        for (let i = 1; i < jsonData.length; i++) { // Skip header row
-          const row = jsonData[i];
-          if (row && row.length >= 3 && row[0] && row[1] && row[2]) {
-            parsedData.push({
-              student_id: row[0].toString(),
-              name: row[1].toString(),
-              final_grade: parseFloat(row[2]) || ''
-            });
-          }
+        // Get all available sheets
+        const sheets = workbook.SheetNames;
+        setAvailableSheets(sheets);
+        setSelectedSheet(sheets[0] || ''); // Default to first sheet
+        
+        // Parse the first sheet by default
+        if (sheets.length > 0) {
+          parseSheetData(workbook, sheets[0]);
         }
-        
-        setImportPreview(parsedData);
       } catch (error) {
         console.error('Error parsing Excel file:', error);
         setSnackbar({
@@ -239,6 +233,55 @@ const InstructorGrades = () => {
       }
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  const parseSheetData = (workbook, sheetName) => {
+    try {
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      
+      // Parse the data - expecting format: Student ID, Name, Final Grade
+      const parsedData = [];
+      for (let i = 1; i < jsonData.length; i++) { // Skip header row
+        const row = jsonData[i];
+        if (row && row.length >= 3 && row[0] && row[1] && row[2]) {
+          parsedData.push({
+            student_id: row[0].toString(),
+            name: row[1].toString(),
+            final_grade: parseFloat(row[2]) || ''
+          });
+        }
+      }
+      
+      setImportPreview(parsedData);
+    } catch (error) {
+      console.error('Error parsing sheet data:', error);
+      setSnackbar({
+        open: true,
+        message: "Error parsing sheet data. Please check the format.",
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleSheetChange = (event) => {
+    const newSheet = event.target.value;
+    setSelectedSheet(newSheet);
+    
+    // Re-parse the selected sheet
+    if (importFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          parseSheetData(workbook, newSheet);
+        } catch (error) {
+          console.error('Error re-parsing sheet:', error);
+        }
+      };
+      reader.readAsArrayBuffer(importFile);
+    }
   };
 
   const handleImportGrades = () => {
@@ -289,6 +332,8 @@ const InstructorGrades = () => {
     setImportDialogOpen(false);
     setImportFile(null);
     setImportPreview([]);
+    setAvailableSheets([]);
+    setSelectedSheet('');
   };
 
   if (loading && !selectedCourse) {
@@ -574,10 +619,37 @@ const InstructorGrades = () => {
             )}
           </Box>
 
+          {availableSheets.length > 1 && (
+            <Box sx={{ mb: 3 }}>
+              <FormControl fullWidth>
+                <InputLabel>Select Sheet</InputLabel>
+                <Select
+                  value={selectedSheet}
+                  onChange={handleSheetChange}
+                  label="Select Sheet"
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#c70202'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#a00101'
+                    }
+                  }}
+                >
+                  {availableSheets.map((sheet) => (
+                    <MenuItem key={sheet} value={sheet}>
+                      {sheet}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
+
           {importPreview.length > 0 && (
             <Box>
               <Typography variant="h6" sx={{ mb: 2 }}>
-                Preview ({importPreview.length} records found):
+                Preview from "{selectedSheet}" ({importPreview.length} records found):
               </Typography>
               <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #dee2e6', maxHeight: 300 }}>
                 <Table size="small">
