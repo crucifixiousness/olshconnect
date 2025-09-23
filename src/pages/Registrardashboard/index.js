@@ -23,7 +23,7 @@ import { IoIosPeople } from "react-icons/io";
 import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaEye, FaClock, FaGraduationCap } from "react-icons/fa";
 import { MyContext } from "../../App";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const RegistrarDashboard = () => {
   const context = useContext(MyContext);
@@ -415,7 +415,7 @@ const RegistrarDashboard = () => {
                         fontSize={12}
                       />
                       <YAxis fontSize={12} />
-                      <Tooltip 
+                      <RechartsTooltip 
                         formatter={(value, name) => [
                           value, 
                           name === 'enrollment_count' ? 'Total' : 
@@ -452,7 +452,7 @@ const RegistrarDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="year_level" fontSize={12} />
                     <YAxis fontSize={12} />
-                    <Tooltip formatter={(value) => [value, 'Students']} />
+                    <RechartsTooltip formatter={(value) => [value, 'Students']} />
                     <Bar dataKey="total_students" fill="#1976d2" name="Students" />
                   </BarChart>
                 </ResponsiveContainer>
