@@ -62,6 +62,10 @@ const DeanDashboard = () => {
   // Class-level approval
   const [classes, setClasses] = useState([]);
   const [classLoading, setClassLoading] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState('All');
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewStudents, setViewStudents] = useState([]);
+  const [viewClassInfo, setViewClassInfo] = useState(null);
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -113,8 +117,10 @@ const DeanDashboard = () => {
       const response = await axios.get('/api/registrar-class-approval', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Show classes that have registrar_approved > 0 to focus Dean actions
-      setClasses((response.data.classes || []).filter(c => (c.registrar_approved_count || 0) > 0));
+      // Show classes with at least one registrar_approved for Dean to act on
+      const list = (response.data.classes || []).filter(c => (parseInt(c.registrar_approved_count, 10) || 0) > 0);
+      setClasses(list);
+      setSelectedProgram('All');
     } catch (e) {
       console.error('Error fetching class approvals for dean:', e);
     } finally {
@@ -171,11 +177,11 @@ const DeanDashboard = () => {
     }
   };
 
-  const handleApproveClass = async (pcId, action) => {
+  const handleApproveClass = async (pcId, action, assignmentId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      await axios.post('/api/approve-class-grades', { pcId, action }, {
+      await axios.post('/api/approve-class-grades', { pcId, assignmentId, action }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchClassApprovalData();
@@ -184,6 +190,28 @@ const DeanDashboard = () => {
     } catch (e) {
       console.error('Error approving class:', e);
       setSnackbar({ open: true, message: 'Failed to approve class', severity: 'error' });
+    }
+  };
+
+  const handleViewClass = async (cls) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await axios.get(`/api/course-students?courseId=${cls.assignment_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setViewStudents(response.data.students || []);
+      setViewClassInfo({
+        course_code: cls.course_code,
+        course_name: cls.course_name,
+        section: cls.section,
+        program_name: cls.program_name,
+        semester: cls.semester
+      });
+      setViewOpen(true);
+    } catch (e) {
+      console.error('Error fetching class students:', e);
+      setSnackbar({ open: true, message: 'Failed to load class students', severity: 'error' });
     }
   };
 
@@ -417,52 +445,129 @@ const DeanDashboard = () => {
             </Table>
           </TableContainer>
         </Card>
-      </div>
 
-      {/* Class Approvals Section */}
-      <div className="card shadow border-0 p-3 mt-3">
-        <Typography variant="h6" className="mb-3">Class Approvals (Per Subject/Course)</Typography>
-        {classLoading ? (
-          <div className="d-flex justify-content-center align-items-center" style={{ height: '160px' }}>
-            <CircularProgress style={{ color: '#c70202' }} />
-          </div>
-        ) : (
-          <TableContainer component={Paper} elevation={0}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Pending</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Registrar Approved</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Dean Approved</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(classes || []).map((cls) => (
-                  <TableRow key={`${cls.pc_id}-${cls.section}`}>
-                    <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
-                    <TableCell>{cls.section}</TableCell>
-                    <TableCell>{cls.pending_count}</TableCell>
-                    <TableCell>{cls.registrar_approved_count}</TableCell>
-                    <TableCell>{cls.dean_approved_count}</TableCell>
-                    <TableCell>{cls.final_count}</TableCell>
-                    <TableCell>
-                      <div className="d-flex gap-2">
-                        <Button size="small" variant="contained" color="success" onClick={() => handleApproveClass(cls.pc_id, 'dean_approve')}>Approve All (Dean)</Button>
-                        <Button size="small" variant="outlined" color="primary" onClick={() => handleApproveClass(cls.pc_id, 'final_approve')}>Finalize All</Button>
-                        <Button size="small" variant="outlined" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>Reject All</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+        {/* Class Approvals embedded */}
+        <Card className="mt-4 p-3">
+          <Typography variant="h6" className="mb-3">Grade Approval Management - Classes</Typography>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs
+              value={selectedProgram}
+              onChange={(e, val) => setSelectedProgram(val)}
+              variant="scrollable"
+              scrollButtons
+              allowScrollButtonsMobile
+            >
+              <Tab key="All" value="All" label="All Programs" />
+              {[...new Set((classes || []).map(c => c.program_name))]
+                .filter(Boolean)
+                .map(name => (
+                  <Tab key={name} value={name} label={name} />
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </div>
+            </Tabs>
+          </Box>
+
+          {classLoading ? (
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '160px' }}>
+              <CircularProgress style={{ color: '#c70202' }} />
+            </div>
+          ) : (
+            <TableContainer component={Paper} elevation={0}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section / Block</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(classes || [])
+                    .filter(c => selectedProgram === 'All' || c.program_name === selectedProgram)
+                    .map((cls) => (
+                    <TableRow key={`${cls.pc_id}-${cls.section}`}>
+                      <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
+                      <TableCell>{cls.section}</TableCell>
+                      <TableCell>
+                        <div className="d-flex gap-2">
+                          <Tooltip title="Approve (Dean)">
+                            <Button size="small" variant="contained"
+                              onClick={() => handleApproveClass(cls.pc_id, 'dean_approve', cls.assignment_id)}
+                              sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#256628' } }}
+                            >
+                              <FaCheckCircle size={16} color="#fff" />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip title="Finalize">
+                            <Button size="small" variant="contained"
+                              onClick={() => handleApproveClass(cls.pc_id, 'final_approve', cls.assignment_id)}
+                              sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#155fa8' } }}
+                            >
+                              <FaUserGraduate size={16} color="#fff" />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip title="Reject">
+                            <Button size="small" variant="contained"
+                              onClick={() => handleApproveClass(cls.pc_id, 'reject', cls.assignment_id)}
+                              sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#d32f2f', '&:hover': { backgroundColor: '#a72828' } }}
+                            >
+                              <FaTimesCircle size={16} color="#fff" />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip title="View Class">
+                            <Button size="small" variant="contained"
+                              onClick={() => handleViewClass(cls)}
+                              sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#455a64', '&:hover': { backgroundColor: '#37474f' } }}
+                            >
+                              <FaEye size={16} color="#fff" />
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Card>
+
+        </div>
+
+        {/* View Class Dialog */}
+        <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>
+            {viewClassInfo ? `${viewClassInfo.course_code} - ${viewClassInfo.course_name} | Section ${viewClassInfo.section}` : 'Class Details'}
+          </DialogTitle>
+          <DialogContent>
+            <TableContainer component={Paper} elevation={0}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Email</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Grade</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {viewStudents.length > 0 ? viewStudents.map((s) => (
+                    <TableRow key={s.student_id}>
+                      <TableCell>{s.name}</TableCell>
+                      <TableCell>{s.email}</TableCell>
+                      <TableCell>{s.final_grade}</TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">No students found</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setViewOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
 
       {/* Approval Dialog */}
       <Dialog 
