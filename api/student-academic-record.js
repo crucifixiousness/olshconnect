@@ -1,0 +1,90 @@
+const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
+
+function authenticateToken(req) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) {
+    const err = new Error('No token provided');
+    err.status = 401;
+    throw err;
+  }
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    const err = new Error('Invalid token');
+    err.status = 401;
+    throw err;
+  }
+}
+
+module.exports = async (req, res) => {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  let client;
+  try {
+    const decoded = authenticateToken(req);
+    const studentId = decoded.id;
+
+    client = await pool.connect();
+
+    // Get the student's latest enrollment (program/year/semester)
+    const enrollmentQuery = `
+      SELECT e.program_id, e.year_id, e.semester, py.year_level
+      FROM enrollments e
+      JOIN program_year py ON e.year_id = py.year_id
+      WHERE e.student_id = $1
+      ORDER BY e.enrollment_date DESC
+      LIMIT 1
+    `;
+    const enrollmentResult = await client.query(enrollmentQuery, [studentId]);
+    if (enrollmentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No enrollment found for this student' });
+    }
+
+    const { program_id, year_id, semester, year_level } = enrollmentResult.rows[0];
+
+    // Return all courses for the student's current program/year/semester
+    // LEFT JOIN to grades filtered to final approval so non-final stays null
+    const coursesQuery = `
+      SELECT 
+        c.course_code,
+        c.course_name,
+        c.units,
+        pc.semester,
+        COALESCE(g.final_grade::text, '') AS final_grade,
+        g.final_approved_at
+      FROM program_course pc
+      JOIN course c ON pc.course_id = c.course_id
+      LEFT JOIN grades g 
+        ON g.student_id = $1 
+       AND g.pc_id = pc.pc_id 
+       AND g.approval_status = 'final'
+      WHERE pc.program_id = $2
+        AND pc.year_id = $3
+        AND pc.semester = $4
+      ORDER BY c.course_code
+    `;
+
+    const coursesResult = await client.query(coursesQuery, [studentId, program_id, year_id, semester]);
+
+    return res.status(200).json({
+      success: true,
+      enrollment: { program_id, year_id, semester, year_level },
+      courses: coursesResult.rows,
+      count: coursesResult.rows.length
+    });
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ error: error.message || 'Server error' });
+  } finally {
+    if (client) client.release();
+  }
+};
