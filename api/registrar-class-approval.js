@@ -55,7 +55,10 @@ module.exports = async (req, res) => {
       JOIN program p ON p.program_id = pc.program_id
       JOIN program_year py ON py.year_id = pc.year_id
       LEFT JOIN admins a ON a.staff_id = ca.staff_id
-      LEFT JOIN grades g ON g.pc_id = pc.pc_id
+      -- Scope grades to students enrolled in this program/year/semester and in this specific block section
+      LEFT JOIN enrollments e ON e.program_id = pc.program_id AND e.year_id = pc.year_id AND e.semester = pc.semester
+      LEFT JOIN student_blocks sb ON sb.block_id = e.block_id AND sb.block_name = ca.section
+      LEFT JOIN grades g ON g.pc_id = pc.pc_id AND g.student_id = e.student_id
       GROUP BY ca.assignment_id, ca.pc_id, ca.section, c.course_code, c.course_name, p.program_name, py.year_level, pc.semester, a.full_name
       ORDER BY c.course_code, ca.section
     `;
