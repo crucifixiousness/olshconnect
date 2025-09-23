@@ -74,7 +74,8 @@ const InstructorGrades = () => {
           return;
         }
 
-        const response = await axios.get(`/api/instructor-subjects?staff_id=${staff_id}`, {
+        // Use the same source as Class Management to avoid mismatches
+        const response = await axios.get(`/api/instructor-classes?staff_id=${staff_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
