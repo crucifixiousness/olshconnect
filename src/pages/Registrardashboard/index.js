@@ -1,8 +1,26 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { Card, Typography, CircularProgress, Box } from '@mui/material';
+import { 
+  Card, 
+  Typography, 
+  CircularProgress, 
+  Box, 
+  Button,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert,
+  Snackbar,
+  Tabs,
+  Tab,
+  IconButton,
+  Tooltip
+} from '@mui/material';
 import { IoIosPeople } from "react-icons/io";
-import { FaFileAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaEye, FaClock, FaGraduationCap } from "react-icons/fa";
 import { MyContext } from "../../App";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -29,6 +47,22 @@ const RegistrarDashboard = () => {
     documentStats: {}
   });
   const [loading, setLoading] = useState(true);
+
+  // Grade approval states
+  const [gradeApprovalTab, setGradeApprovalTab] = useState(0);
+  const [grades, setGrades] = useState([]);
+  const [selectedGrade, setSelectedGrade] = useState(null);
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [approvalComments, setApprovalComments] = useState('');
+  const [approving, setApproving] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [gradeStats, setGradeStats] = useState({
+    totalGrades: 0,
+    pendingApproval: 0,
+    registrarApproved: 0,
+    deanApproved: 0,
+    finalApproved: 0
+  });
 
   useEffect(() => {
     const fetchRegistrarData = async () => {
@@ -60,6 +94,9 @@ const RegistrarDashboard = () => {
           statusDistribution: response.data.enrollmentStats?.statusDistribution || [],
           documentStats: response.data.enrollmentStats?.documentStats || {}
         });
+
+        // Fetch grade approval data
+        await fetchGradeApprovalData();
         
         setLoading(false);
       } catch (error) {
@@ -70,6 +107,122 @@ const RegistrarDashboard = () => {
 
     fetchRegistrarData();
   }, []);
+
+  const fetchGradeApprovalData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return;
+      }
+
+      // Fetch grade approval data
+      const response = await axios.get('/api/registrar-grade-approval', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setGrades(response.data.grades || []);
+      setGradeStats(response.data.stats || {
+        totalGrades: 0,
+        pendingApproval: 0,
+        registrarApproved: 0,
+        deanApproved: 0,
+        finalApproved: 0
+      });
+    } catch (error) {
+      console.error('Error fetching grade approval data:', error);
+    }
+  };
+
+  const handleGradeApprovalTabChange = (event, newValue) => {
+    setGradeApprovalTab(newValue);
+  };
+
+  const handleApproveGrade = (grade) => {
+    setSelectedGrade(grade);
+    setApprovalComments('');
+    setApprovalDialogOpen(true);
+  };
+
+  const handleApprovalSubmit = async (action) => {
+    if (!selectedGrade) return;
+
+    try {
+      setApproving(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.post('/api/approve-grade', {
+        gradeId: selectedGrade.grade_id,
+        action: action,
+        comments: approvalComments
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSnackbar({
+        open: true,
+        message: response.data.message || 'Grade approval updated successfully',
+        severity: 'success'
+      });
+
+      setApprovalDialogOpen(false);
+      setSelectedGrade(null);
+      setApprovalComments('');
+      
+      // Refresh data
+      fetchGradeApprovalData();
+    } catch (error) {
+      console.error('Error approving grade:', error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || 'Failed to update grade approval',
+        severity: 'error'
+      });
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const getApprovalStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return '#ed6c02';
+      case 'registrar_approved':
+        return '#1976d2';
+      case 'dean_approved':
+        return '#2e7d32';
+      case 'final':
+        return '#388e3c';
+      default:
+        return '#757575';
+    }
+  };
+
+  const getApprovalStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return <FaClock />;
+      case 'registrar_approved':
+        return <FaCheckCircle />;
+      case 'dean_approved':
+        return <FaCheckCircle />;
+      case 'final':
+        return <FaGraduationCap />;
+      default:
+        return <FaClock />;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const statCards = [
     {
@@ -356,7 +509,280 @@ const RegistrarDashboard = () => {
             </Card>
           </div>
         </div>
+
+        {/* Grade Approval Section */}
+        <div className="row mt-4">
+          <div className="col-md-12 mb-4">
+            <Card className="h-100 p-3">
+              <Typography variant="h6" className="mb-3">Grade Approval Management</Typography>
+              
+              {/* Grade Statistics */}
+              <div className="row mb-4">
+                <div className="col-md-2 mb-2">
+                  <Card className="p-2 text-center" sx={{ backgroundColor: '#f8f9fa' }}>
+                    <Typography variant="h6" style={{ color: '#1976d2' }}>{gradeStats.totalGrades}</Typography>
+                    <Typography variant="caption">Total Grades</Typography>
+                  </Card>
+                </div>
+                <div className="col-md-2 mb-2">
+                  <Card className="p-2 text-center" sx={{ backgroundColor: '#fff3e0' }}>
+                    <Typography variant="h6" style={{ color: '#ed6c02' }}>{gradeStats.pendingApproval}</Typography>
+                    <Typography variant="caption">Pending</Typography>
+                  </Card>
+                </div>
+                <div className="col-md-2 mb-2">
+                  <Card className="p-2 text-center" sx={{ backgroundColor: '#e3f2fd' }}>
+                    <Typography variant="h6" style={{ color: '#1976d2' }}>{gradeStats.registrarApproved}</Typography>
+                    <Typography variant="caption">Registrar Approved</Typography>
+                  </Card>
+                </div>
+                <div className="col-md-2 mb-2">
+                  <Card className="p-2 text-center" sx={{ backgroundColor: '#e8f5e8' }}>
+                    <Typography variant="h6" style={{ color: '#2e7d32' }}>{gradeStats.deanApproved}</Typography>
+                    <Typography variant="caption">Dean Approved</Typography>
+                  </Card>
+                </div>
+                <div className="col-md-2 mb-2">
+                  <Card className="p-2 text-center" sx={{ backgroundColor: '#f1f8e9' }}>
+                    <Typography variant="h6" style={{ color: '#388e3c' }}>{gradeStats.finalApproved}</Typography>
+                    <Typography variant="caption">Final</Typography>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Grade Approval Tabs */}
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={gradeApprovalTab} onChange={handleGradeApprovalTabChange} aria-label="grade approval tabs">
+                  <Tab label={`All Grades (${grades.length})`} />
+                  <Tab label={`Pending (${gradeStats.pendingApproval})`} />
+                  <Tab label={`Registrar Approved (${gradeStats.registrarApproved})`} />
+                  <Tab label={`Dean Approved (${gradeStats.deanApproved})`} />
+                  <Tab label={`Final (${gradeStats.finalApproved})`} />
+                </Tabs>
+              </Box>
+
+              <TableContainer component={Paper} elevation={0} className="mt-3">
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Grade</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Instructor</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Submitted</TableCell>
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {grades.filter(grade => {
+                      switch (gradeApprovalTab) {
+                        case 0: return true;
+                        case 1: return grade.approval_status === 'pending';
+                        case 2: return grade.approval_status === 'registrar_approved';
+                        case 3: return grade.approval_status === 'dean_approved';
+                        case 4: return grade.approval_status === 'final';
+                        default: return true;
+                      }
+                    }).length > 0 ? (
+                      grades.filter(grade => {
+                        switch (gradeApprovalTab) {
+                          case 0: return true;
+                          case 1: return grade.approval_status === 'pending';
+                          case 2: return grade.approval_status === 'registrar_approved';
+                          case 3: return grade.approval_status === 'dean_approved';
+                          case 4: return grade.approval_status === 'final';
+                          default: return true;
+                        }
+                      }).map((grade) => (
+                        <TableRow key={grade.grade_id} hover>
+                          <TableCell>
+                            <div>
+                              <Typography variant="body2" style={{ fontWeight: 'bold' }}>
+                                {grade.student_name}
+                              </Typography>
+                              <Typography variant="caption" color="textSecondary">
+                                {grade.student_email}
+                              </Typography>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <Typography variant="body2" style={{ fontWeight: 'bold' }}>
+                                {grade.course_code} - {grade.course_name}
+                              </Typography>
+                              <Typography variant="caption" color="textSecondary">
+                                {grade.program_name} - Year {grade.year_level} - Sem {grade.semester}
+                              </Typography>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="h6" style={{ fontWeight: 'bold', color: '#c70202' }}>
+                              {grade.final_grade}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              icon={getApprovalStatusIcon(grade.approval_status)}
+                              label={grade.approval_status.replace('_', ' ').toUpperCase()}
+                              style={{ 
+                                backgroundColor: getApprovalStatusColor(grade.approval_status),
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {grade.instructor_name}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {formatDate(grade.grade_entered_at)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <div className="d-flex gap-2">
+                              <Tooltip title="View Details">
+                                <IconButton 
+                                  size="small" 
+                                  color="primary"
+                                  onClick={() => handleApproveGrade(grade)}
+                                >
+                                  <FaEye />
+                                </IconButton>
+                              </Tooltip>
+                              {grade.approval_status === 'pending' && (
+                                <Tooltip title="Approve as Registrar">
+                                  <IconButton 
+                                    size="small" 
+                                    color="success"
+                                    onClick={() => handleApproveGrade(grade)}
+                                  >
+                                    <FaCheckCircle />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} align="center">
+                          <Typography variant="body2" color="textSecondary">
+                            No grades found for the selected filter
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Card>
+          </div>
+        </div>
       </div>
+
+      {/* Approval Dialog */}
+      <Dialog 
+        open={approvalDialogOpen} 
+        onClose={() => setApprovalDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Grade Approval - {selectedGrade?.student_name}
+        </DialogTitle>
+        <DialogContent>
+          {selectedGrade && (
+            <Box sx={{ mt: 2 }}>
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <Typography variant="subtitle2" color="textSecondary">Student</Typography>
+                  <Typography variant="body1">{selectedGrade.student_name}</Typography>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <Typography variant="subtitle2" color="textSecondary">Course</Typography>
+                  <Typography variant="body1">{selectedGrade.course_code} - {selectedGrade.course_name}</Typography>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <Typography variant="subtitle2" color="textSecondary">Grade</Typography>
+                  <Typography variant="h6" style={{ color: '#c70202', fontWeight: 'bold' }}>
+                    {selectedGrade.final_grade}
+                  </Typography>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <Typography variant="subtitle2" color="textSecondary">Current Status</Typography>
+                  <Chip
+                    icon={getApprovalStatusIcon(selectedGrade.approval_status)}
+                    label={selectedGrade.approval_status.replace('_', ' ').toUpperCase()}
+                    style={{ 
+                      backgroundColor: getApprovalStatusColor(selectedGrade.approval_status),
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                </div>
+                <div className="col-md-12">
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Comments (Optional)"
+                    value={approvalComments}
+                    onChange={(e) => setApprovalComments(e.target.value)}
+                    placeholder="Add any comments about this grade approval..."
+                  />
+                </div>
+              </div>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setApprovalDialogOpen(false)}
+            disabled={approving}
+          >
+            Cancel
+          </Button>
+          {selectedGrade?.approval_status === 'pending' && (
+            <Button
+              onClick={() => handleApprovalSubmit('registrar_approve')}
+              color="success"
+              variant="contained"
+              disabled={approving}
+              startIcon={approving ? <CircularProgress size={16} /> : <FaCheckCircle />}
+            >
+              {approving ? 'Approving...' : 'Approve as Registrar'}
+            </Button>
+          )}
+          <Button
+            onClick={() => handleApprovalSubmit('reject')}
+            color="error"
+            variant="outlined"
+            disabled={approving}
+            startIcon={approving ? <CircularProgress size={16} /> : <FaTimesCircle />}
+          >
+            {approving ? 'Rejecting...' : 'Reject'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
