@@ -67,6 +67,7 @@ const RegistrarDashboard = () => {
   // Class-level approval states
   const [classes, setClasses] = useState([]);
   const [classLoading, setClassLoading] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState('All');
 
   useEffect(() => {
     const fetchRegistrarData = async () => {
@@ -153,6 +154,7 @@ const RegistrarDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setClasses(response.data.classes || []);
+      setSelectedProgram('All');
     } catch (e) {
       console.error('Error fetching class approvals:', e);
     } finally {
@@ -167,8 +169,7 @@ const RegistrarDashboard = () => {
       await axios.post('/api/approve-class-grades', { pcId, action }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Refresh both grades and classes summary
-      fetchGradeApprovalData();
+      // Refresh class summary
       fetchClassApprovalData();
       setSnackbar({ open: true, message: 'Class approval updated', severity: 'success' });
     } catch (e) {
@@ -554,171 +555,7 @@ const RegistrarDashboard = () => {
           <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Grade Approval Management</Typography>
-              
-              {/* Grade Statistics */}
-              <div className="row mb-4">
-                <div className="col-md-2 mb-2">
-                  <Card className="p-2 text-center" sx={{ backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h6" style={{ color: '#1976d2' }}>{gradeStats.totalGrades}</Typography>
-                    <Typography variant="caption">Total Grades</Typography>
-                  </Card>
-                </div>
-                <div className="col-md-2 mb-2">
-                  <Card className="p-2 text-center" sx={{ backgroundColor: '#fff3e0' }}>
-                    <Typography variant="h6" style={{ color: '#ed6c02' }}>{gradeStats.pendingApproval}</Typography>
-                    <Typography variant="caption">Pending</Typography>
-                  </Card>
-                </div>
-                <div className="col-md-2 mb-2">
-                  <Card className="p-2 text-center" sx={{ backgroundColor: '#e3f2fd' }}>
-                    <Typography variant="h6" style={{ color: '#1976d2' }}>{gradeStats.registrarApproved}</Typography>
-                    <Typography variant="caption">Registrar Approved</Typography>
-                  </Card>
-                </div>
-                <div className="col-md-2 mb-2">
-                  <Card className="p-2 text-center" sx={{ backgroundColor: '#e8f5e8' }}>
-                    <Typography variant="h6" style={{ color: '#2e7d32' }}>{gradeStats.deanApproved}</Typography>
-                    <Typography variant="caption">Dean Approved</Typography>
-                  </Card>
-                </div>
-                <div className="col-md-2 mb-2">
-                  <Card className="p-2 text-center" sx={{ backgroundColor: '#f1f8e9' }}>
-                    <Typography variant="h6" style={{ color: '#388e3c' }}>{gradeStats.finalApproved}</Typography>
-                    <Typography variant="caption">Final</Typography>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Grade Approval Tabs */}
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={gradeApprovalTab} onChange={handleGradeApprovalTabChange} aria-label="grade approval tabs">
-                  <Tab label={`All Grades (${grades.length})`} />
-                  <Tab label={`Pending (${gradeStats.pendingApproval})`} />
-                  <Tab label={`Registrar Approved (${gradeStats.registrarApproved})`} />
-                  <Tab label={`Dean Approved (${gradeStats.deanApproved})`} />
-                  <Tab label={`Final (${gradeStats.finalApproved})`} />
-                </Tabs>
-              </Box>
-
-              <TableContainer component={Paper} elevation={0} className="mt-3">
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Grade</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Instructor</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Submitted</TableCell>
-                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {grades.filter(grade => {
-                      switch (gradeApprovalTab) {
-                        case 0: return true;
-                        case 1: return grade.approval_status === 'pending';
-                        case 2: return grade.approval_status === 'registrar_approved';
-                        case 3: return grade.approval_status === 'dean_approved';
-                        case 4: return grade.approval_status === 'final';
-                        default: return true;
-                      }
-                    }).length > 0 ? (
-                      grades.filter(grade => {
-                        switch (gradeApprovalTab) {
-                          case 0: return true;
-                          case 1: return grade.approval_status === 'pending';
-                          case 2: return grade.approval_status === 'registrar_approved';
-                          case 3: return grade.approval_status === 'dean_approved';
-                          case 4: return grade.approval_status === 'final';
-                          default: return true;
-                        }
-                      }).map((grade) => (
-                        <TableRow key={grade.grade_id} hover>
-                          <TableCell>
-                            <div>
-                              <Typography variant="body2" style={{ fontWeight: 'bold' }}>
-                                {grade.student_name}
-                              </Typography>
-                              <Typography variant="caption" color="textSecondary">
-                                {grade.student_email}
-                              </Typography>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <Typography variant="body2" style={{ fontWeight: 'bold' }}>
-                                {grade.course_code} - {grade.course_name}
-                              </Typography>
-                              <Typography variant="caption" color="textSecondary">
-                                {grade.program_name} - Year {grade.year_level} - Sem {grade.semester}
-                              </Typography>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="h6" style={{ fontWeight: 'bold', color: '#c70202' }}>
-                              {grade.final_grade}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              icon={getApprovalStatusIcon(grade.approval_status)}
-                              label={grade.approval_status.replace('_', ' ').toUpperCase()}
-                              style={{ 
-                                backgroundColor: getApprovalStatusColor(grade.approval_status),
-                                color: 'white',
-                                fontWeight: 'bold'
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {grade.instructor_name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {formatDate(grade.grade_entered_at)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <div className="d-flex gap-2">
-                              <Tooltip title="View Details">
-                                <IconButton 
-                                  size="small" 
-                                  color="primary"
-                                  onClick={() => handleApproveGrade(grade)}
-                                >
-                                  <FaEye />
-                                </IconButton>
-                              </Tooltip>
-                              {grade.approval_status === 'pending' && (
-                                <Tooltip title="Approve as Registrar">
-                                  <IconButton 
-                                    size="small" 
-                                    color="success"
-                                    onClick={() => handleApproveGrade(grade)}
-                                  >
-                                    <FaCheckCircle />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} align="center">
-                          <Typography variant="body2" color="textSecondary">
-                            No grades found for the selected filter
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Alert severity="info">Per-student approval has been retired. Use the Class Approvals section below.</Alert>
             </Card>
           </div>
         </div>
@@ -728,6 +565,25 @@ const RegistrarDashboard = () => {
           <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Class Approvals (Per Subject/Course)</Typography>
+
+              {/* Program Tabs */}
+              <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                <Tabs
+                  value={selectedProgram}
+                  onChange={(e, val) => setSelectedProgram(val)}
+                  variant="scrollable"
+                  scrollButtons
+                  allowScrollButtonsMobile
+                >
+                  <Tab key="All" value="All" label="All Programs" />
+                  {[...new Set((classes || []).map(c => c.program_name))]
+                    .filter(Boolean)
+                    .map(name => (
+                      <Tab key={name} value={name} label={name} />
+                    ))}
+                </Tabs>
+              </Box>
+
               {classLoading ? (
                 <div className="d-flex justify-content-center align-items-center" style={{ height: '160px' }}>
                   <CircularProgress style={{ color: '#c70202' }} />
@@ -738,27 +594,21 @@ const RegistrarDashboard = () => {
                     <TableHead>
                       <TableRow>
                         <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Pending</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Registrar Approved</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Dean Approved</TableCell>
-                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section / Block</TableCell>
                         <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(classes || []).map((cls) => (
+                      {(classes || [])
+                        .filter(c => selectedProgram === 'All' || c.program_name === selectedProgram)
+                        .map((cls) => (
                         <TableRow key={`${cls.pc_id}-${cls.section}`}>
                           <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
                           <TableCell>{cls.section}</TableCell>
-                          <TableCell>{cls.pending_count}</TableCell>
-                          <TableCell>{cls.registrar_approved_count}</TableCell>
-                          <TableCell>{cls.dean_approved_count}</TableCell>
-                          <TableCell>{cls.final_count}</TableCell>
                           <TableCell>
                             <div className="d-flex gap-2">
-                              <Button size="small" variant="contained" color="success" onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}>Approve All (Registrar)</Button>
-                              <Button size="small" variant="outlined" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>Reject All</Button>
+                              <Button size="small" variant="contained" color="success" onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}>Approve</Button>
+                              <Button size="small" variant="outlined" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>Reject</Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -773,89 +623,7 @@ const RegistrarDashboard = () => {
       </div>
 
       {/* Approval Dialog */}
-      <Dialog 
-        open={approvalDialogOpen} 
-        onClose={() => setApprovalDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Grade Approval - {selectedGrade?.student_name}
-        </DialogTitle>
-        <DialogContent>
-          {selectedGrade && (
-            <Box sx={{ mt: 2 }}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <Typography variant="subtitle2" color="textSecondary">Student</Typography>
-                  <Typography variant="body1">{selectedGrade.student_name}</Typography>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <Typography variant="subtitle2" color="textSecondary">Course</Typography>
-                  <Typography variant="body1">{selectedGrade.course_code} - {selectedGrade.course_name}</Typography>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <Typography variant="subtitle2" color="textSecondary">Grade</Typography>
-                  <Typography variant="h6" style={{ color: '#c70202', fontWeight: 'bold' }}>
-                    {selectedGrade.final_grade}
-                  </Typography>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <Typography variant="subtitle2" color="textSecondary">Current Status</Typography>
-                  <Chip
-                    icon={getApprovalStatusIcon(selectedGrade.approval_status)}
-                    label={selectedGrade.approval_status.replace('_', ' ').toUpperCase()}
-                    style={{ 
-                      backgroundColor: getApprovalStatusColor(selectedGrade.approval_status),
-                      color: 'white',
-                      fontWeight: 'bold'
-                    }}
-                  />
-                </div>
-                <div className="col-md-12">
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Comments (Optional)"
-                    value={approvalComments}
-                    onChange={(e) => setApprovalComments(e.target.value)}
-                    placeholder="Add any comments about this grade approval..."
-                  />
-                </div>
-              </div>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={() => setApprovalDialogOpen(false)}
-            disabled={approving}
-          >
-            Cancel
-          </Button>
-          {selectedGrade?.approval_status === 'pending' && (
-            <Button
-              onClick={() => handleApprovalSubmit('registrar_approve')}
-              color="success"
-              variant="contained"
-              disabled={approving}
-              startIcon={approving ? <CircularProgress size={16} /> : <FaCheckCircle />}
-            >
-              {approving ? 'Approving...' : 'Approve as Registrar'}
-            </Button>
-          )}
-          <Button
-            onClick={() => handleApprovalSubmit('reject')}
-            color="error"
-            variant="outlined"
-            disabled={approving}
-            startIcon={approving ? <CircularProgress size={16} /> : <FaTimesCircle />}
-          >
-            {approving ? 'Rejecting...' : 'Reject'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Removed per-student dialog usage */}
 
       {/* Snackbar for notifications */}
       <Snackbar
