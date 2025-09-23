@@ -166,11 +166,11 @@ const RegistrarDashboard = () => {
     }
   };
 
-  const handleApproveClass = async (pcId, action) => {
+  const handleApproveClass = async (pcId, action, assignmentId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      await axios.post('/api/approve-class-grades', { pcId, action }, {
+      await axios.post('/api/approve-class-grades', { pcId, assignmentId, action }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Refresh class summary
@@ -628,7 +628,7 @@ const RegistrarDashboard = () => {
                                 <Button 
                                   size="small" 
                                   variant="contained" 
-                                  onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}
+                                  onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve', cls.assignment_id)}
                                   sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#256628' } }}
                                 >
                                   <FaCheckCircle size={16} color="#fff" />
@@ -638,7 +638,7 @@ const RegistrarDashboard = () => {
                                 <Button 
                                   size="small" 
                                   variant="contained" 
-                                  onClick={() => handleApproveClass(cls.pc_id, 'reject')}
+                                  onClick={() => handleApproveClass(cls.pc_id, 'reject', cls.assignment_id)}
                                   sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#d32f2f', '&:hover': { backgroundColor: '#a72828' } }}
                                 >
                                   <FaTimesCircle size={16} color="#fff" />
