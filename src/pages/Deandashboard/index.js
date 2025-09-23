@@ -59,40 +59,7 @@ const DeanDashboard = () => {
     fetchClassApprovalData();
   }, [context]);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      // Fetch grade approval data
-      const response = await axios.get('/api/dean-dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setGrades(response.data.grades || []);
-      setDashboardStats(response.data.stats || {
-        totalGrades: 0,
-        pendingApproval: 0,
-        registrarApproved: 0,
-        deanApproved: 0,
-        finalApproved: 0
-      });
-    } catch (error) {
-      console.error('Error fetching dean dashboard data:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to load dashboard data',
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Removed per-student dashboard data fetch
 
   const fetchClassApprovalData = async () => {
     try {
@@ -123,7 +90,6 @@ const DeanDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchClassApprovalData();
-      await fetchDashboardData();
       setSnackbar({ open: true, message: 'Class approval updated', severity: 'success' });
     } catch (e) {
       console.error('Error approving class:', e);
