@@ -314,6 +314,23 @@ const InstructorGrades = () => {
       }
     });
     
+    // If nothing matched, show error and keep dialog open
+    if (matchedCount === 0) {
+      // Close dialog and clear temp state, but show error
+      setImportDialogOpen(false);
+      setImportFile(null);
+      setImportPreview([]);
+      setAvailableSheets([]);
+      setSelectedSheet('');
+      setImporting(false);
+      setSnackbar({
+        open: true,
+        message: "Import failed: No matching students or valid grades found.",
+        severity: 'error'
+      });
+      return;
+    }
+
     setGrades(updatedGrades);
     setImportDialogOpen(false);
     setImportFile(null);
@@ -321,7 +338,7 @@ const InstructorGrades = () => {
     
     setSnackbar({
       open: true,
-      message: `Successfully imported ${matchedCount} grades from Excel`,
+      message: `Successfully imported ${matchedCount} grade${matchedCount > 1 ? 's' : ''} from Excel`,
       severity: 'success'
     });
     
