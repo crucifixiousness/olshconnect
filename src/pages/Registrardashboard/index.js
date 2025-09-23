@@ -582,15 +582,6 @@ const RegistrarDashboard = () => {
           <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Grade Approval Management</Typography>
-            </Card>
-          </div>
-        </div>
-
-        {/* Class Approval (Per Subject/Course) */}
-        <div className="row mt-4">
-          <div className="col-md-12 mb-4">
-            <Card className="h-100 p-3">
-              <Typography variant="h6" className="mb-3">Class Approvals (Per Subject/Course)</Typography>
 
               {/* Program Tabs */}
               <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
@@ -634,19 +625,34 @@ const RegistrarDashboard = () => {
                           <TableCell>
                             <div className="d-flex gap-2">
                               <Tooltip title="Approve">
-                                <IconButton size="small" color="success" onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}>
-                                  <FaCheckCircle />
-                                </IconButton>
+                                <Button 
+                                  size="small" 
+                                  variant="contained" 
+                                  onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}
+                                  sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#256628' } }}
+                                >
+                                  <FaCheckCircle size={16} color="#fff" />
+                                </Button>
                               </Tooltip>
                               <Tooltip title="Reject">
-                                <IconButton size="small" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>
-                                  <FaTimesCircle />
-                                </IconButton>
+                                <Button 
+                                  size="small" 
+                                  variant="contained" 
+                                  onClick={() => handleApproveClass(cls.pc_id, 'reject')}
+                                  sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#d32f2f', '&:hover': { backgroundColor: '#a72828' } }}
+                                >
+                                  <FaTimesCircle size={16} color="#fff" />
+                                </Button>
                               </Tooltip>
                               <Tooltip title="View Class">
-                                <IconButton size="small" color="primary" onClick={() => handleViewClass(cls)}>
-                                  <FaEye />
-                                </IconButton>
+                                <Button 
+                                  size="small" 
+                                  variant="contained" 
+                                  onClick={() => handleViewClass(cls)}
+                                  sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#155fa8' } }}
+                                >
+                                  <FaEye size={16} color="#fff" />
+                                </Button>
                               </Tooltip>
                             </div>
                           </TableCell>
@@ -659,12 +665,7 @@ const RegistrarDashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
-
-      {/* Approval Dialog */}
-      {/* Removed per-student dialog usage */}
-
-      {/* Snackbar for notifications */}
+        </div>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
