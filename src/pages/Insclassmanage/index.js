@@ -70,6 +70,25 @@ const ClassManagement = () => {
     return colors[day] || '#757575';
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Final':
+        return '#388e3c';
+      case 'Dean Approved':
+        return '#2e7d32';
+      case 'Registrar Approved':
+        return '#1976d2';
+      case 'Pending':
+        return '#ed6c02';
+      case 'Graded':
+        return '#d4edda';
+      case 'Not Graded':
+        return '#f8d7da';
+      default:
+        return '#6c757d';
+    }
+  };
+
   useEffect(() => {
     const fetchInstructorCourses = async () => {
       const userStr = localStorage.getItem("user");
@@ -373,8 +392,8 @@ const ClassManagement = () => {
                             label={student.grade_status} 
                             size="small"
                             sx={{ 
-                              backgroundColor: student.grade_status === 'Graded' ? '#d4edda' : '#fff3cd',
-                              color: student.grade_status === 'Graded' ? '#155724' : '#856404',
+                              backgroundColor: getStatusColor(student.grade_status),
+                              color: 'white',
                               fontWeight: 'bold'
                             }}
                           />
