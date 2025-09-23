@@ -612,6 +612,7 @@ const RegistrarDashboard = () => {
                       <TableRow>
                         <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
                         <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section / Block</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Instructor</TableCell>
                         <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
                       </TableRow>
                     </TableHead>
@@ -622,6 +623,7 @@ const RegistrarDashboard = () => {
                         <TableRow key={`${cls.pc_id}-${cls.section}`}>
                           <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
                           <TableCell>{cls.section}</TableCell>
+                          <TableCell>{cls.instructor_name || 'Not assigned'}</TableCell>
                           <TableCell>
                             <div className="d-flex gap-2">
                               <Tooltip title="Approve">
