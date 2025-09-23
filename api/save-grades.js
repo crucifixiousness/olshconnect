@@ -92,11 +92,12 @@ module.exports = async (req, res) => {
       try {
         // Try to insert new grade, if conflict then update
         const upsertQuery = `
-          INSERT INTO grades (student_id, pc_id, final_grade, updated_at)
-          VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+          INSERT INTO grades (student_id, pc_id, final_grade, approval_status, updated_at)
+          VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)
           ON CONFLICT (student_id, pc_id)
           DO UPDATE SET 
             final_grade = EXCLUDED.final_grade,
+            approval_status = 'pending',
             updated_at = CURRENT_TIMESTAMP
           RETURNING grade_id, final_grade;
         `;
