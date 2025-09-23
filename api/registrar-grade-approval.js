@@ -73,8 +73,7 @@ module.exports = async (req, res) => {
           py.year_level,
           
           -- Instructor information
-          CONCAT(st.first_name, ' ', COALESCE(st.middle_name, ''), ' ', st.last_name) as instructor_name,
-          st.email as instructor_email,
+          st.full_name as instructor_name,
           
           -- Assignment information
           ca.section,
@@ -83,8 +82,8 @@ module.exports = async (req, res) => {
           TO_CHAR(ca.end_time, 'HH12:MI AM') as end_time,
           
           -- Approval information
-          CONCAT(reg.first_name, ' ', COALESCE(reg.middle_name, ''), ' ', reg.last_name) as registrar_name,
-          CONCAT(dean.first_name, ' ', COALESCE(dean.middle_name, ''), ' ', dean.last_name) as dean_name
+          reg.full_name as registrar_name,
+          dean.full_name as dean_name
           
         FROM grades g
         JOIN students s ON g.student_id = s.id
@@ -93,9 +92,9 @@ module.exports = async (req, res) => {
         JOIN program p ON pc.program_id = p.program_id
         JOIN program_year py ON pc.year_id = py.year_id
         JOIN course_assignments ca ON pc.pc_id = ca.pc_id
-        JOIN staff st ON ca.staff_id = st.id
-        LEFT JOIN staff reg ON g.registrar_approved_by = reg.id
-        LEFT JOIN staff dean ON g.dean_approved_by = dean.id
+        JOIN admins st ON ca.staff_id = st.staff_id
+        LEFT JOIN admins reg ON g.registrar_approved_by = reg.staff_id
+        LEFT JOIN admins dean ON g.dean_approved_by = dean.staff_id
         ORDER BY g.created_at DESC
         LIMIT 100
       `;
