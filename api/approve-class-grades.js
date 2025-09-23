@@ -31,10 +31,10 @@ module.exports = async (req, res) => {
   let client;
   try {
     const decoded = authenticateToken(req);
-    const { pcId, action } = req.body;
+    const { pcId, assignmentId, action } = req.body;
 
-    if (!pcId || !action) {
-      return res.status(400).json({ error: 'pcId and action are required' });
+    if ((!pcId && !assignmentId) || !action) {
+      return res.status(400).json({ error: 'pcId or assignmentId and action are required' });
     }
 
     client = await pool.connect();
@@ -53,23 +53,62 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid action' });
     }
 
-    // Build query
     let params = [];
     let paramIndex = 1;
     if (setClause.includes('$1')) {
       params.push(decoded.staff_id || decoded.user_id || null);
       paramIndex++;
     }
-    params.push(pcId);
 
-    const bulkQuery = `
-      UPDATE grades
-      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-      WHERE pc_id = $${paramIndex}
-      RETURNING grade_id
-    `;
+    let updateQuery = '';
 
-    const result = await client.query(bulkQuery, params);
+    if (assignmentId) {
+      // Narrow update to students belonging to the specific assignment's section and term
+      // Find assignment details
+      const assignRes = await client.query(
+        `SELECT ca.pc_id, ca.section, pc.program_id, pc.year_id, pc.semester
+         FROM course_assignments ca
+         JOIN program_course pc ON pc.pc_id = ca.pc_id
+         WHERE ca.assignment_id = $1`,
+        [assignmentId]
+      );
+      if (assignRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Assignment not found' });
+      }
+      const ca = assignRes.rows[0];
+      // Update only grades for students in the same program/year/semester and block section
+      params.push(ca.pc_id);
+      params.push(ca.program_id);
+      params.push(ca.year_id);
+      params.push(ca.semester);
+      params.push(ca.section);
+
+      updateQuery = `
+        UPDATE grades g
+        SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        WHERE g.pc_id = $${paramIndex}
+          AND g.student_id IN (
+            SELECT e.student_id
+            FROM enrollments e
+            JOIN student_blocks sb ON e.block_id = sb.block_id
+            WHERE e.program_id = $${paramIndex + 1}
+              AND e.year_id = $${paramIndex + 2}
+              AND e.semester = $${paramIndex + 3}
+              AND sb.block_name = $${paramIndex + 4}
+          )
+      `;
+    } else {
+      // Fallback: whole pc
+      params.push(pcId);
+      updateQuery = `
+        UPDATE grades
+        SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        WHERE pc_id = $${paramIndex}
+      `;
+    }
+
+    const result = await client.query(updateQuery, params);
     await client.query('COMMIT');
 
     return res.status(200).json({ success: true, updated: result.rowCount });
