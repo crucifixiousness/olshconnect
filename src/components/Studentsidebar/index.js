@@ -188,6 +188,27 @@ const StudentSidebar = () => {
             </Button>
           , false, true)} {/* false for requiresEnrollment, true for requiresPayment */}
         </li>
+        <li>
+          {renderLink("/student-grades",
+            <Button 
+              className={`w-100 ${activeTab === 6 ? 'active' : ''}`} 
+              onClick={() => handleTabClick(6)}
+              disabled={!isOfficiallyEnrolled}
+              sx={{ 
+                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
+                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
+                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
+                }
+              }}
+            >
+              <span className='icon'><FaBookOpen /></span>
+              My Grades
+            </Button>
+          )}
+        </li>
       </ul>
 
       <div className='logoutWrap'>
