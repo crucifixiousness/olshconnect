@@ -64,6 +64,10 @@ const RegistrarDashboard = () => {
     finalApproved: 0
   });
 
+  // Class-level approval states
+  const [classes, setClasses] = useState([]);
+  const [classLoading, setClassLoading] = useState(false);
+
   useEffect(() => {
     const fetchRegistrarData = async () => {
       try {
@@ -97,6 +101,8 @@ const RegistrarDashboard = () => {
 
         // Fetch grade approval data
         await fetchGradeApprovalData();
+        // Fetch class approval data
+        await fetchClassApprovalData();
         
         setLoading(false);
       } catch (error) {
@@ -136,6 +142,39 @@ const RegistrarDashboard = () => {
 
   const handleGradeApprovalTabChange = (event, newValue) => {
     setGradeApprovalTab(newValue);
+  };
+
+  const fetchClassApprovalData = async () => {
+    try {
+      setClassLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await axios.get('/api/registrar-class-approval', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClasses(response.data.classes || []);
+    } catch (e) {
+      console.error('Error fetching class approvals:', e);
+    } finally {
+      setClassLoading(false);
+    }
+  };
+
+  const handleApproveClass = async (pcId, action) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      await axios.post('/api/approve-class-grades', { pcId, action }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Refresh both grades and classes summary
+      fetchGradeApprovalData();
+      fetchClassApprovalData();
+      setSnackbar({ open: true, message: 'Class approval updated', severity: 'success' });
+    } catch (e) {
+      console.error('Error approving class:', e);
+      setSnackbar({ open: true, message: 'Failed to approve class', severity: 'error' });
+    }
   };
 
   const handleApproveGrade = (grade) => {
@@ -680,6 +719,54 @@ const RegistrarDashboard = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+            </Card>
+          </div>
+        </div>
+
+        {/* Class Approval (Per Subject/Course) */}
+        <div className="row mt-4">
+          <div className="col-md-12 mb-4">
+            <Card className="h-100 p-3">
+              <Typography variant="h6" className="mb-3">Class Approvals (Per Subject/Course)</Typography>
+              {classLoading ? (
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '160px' }}>
+                  <CircularProgress style={{ color: '#c70202' }} />
+                </div>
+              ) : (
+                <TableContainer component={Paper} elevation={0}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Pending</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Registrar Approved</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Dean Approved</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(classes || []).map((cls) => (
+                        <TableRow key={`${cls.pc_id}-${cls.section}`}>
+                          <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
+                          <TableCell>{cls.section}</TableCell>
+                          <TableCell>{cls.pending_count}</TableCell>
+                          <TableCell>{cls.registrar_approved_count}</TableCell>
+                          <TableCell>{cls.dean_approved_count}</TableCell>
+                          <TableCell>{cls.final_count}</TableCell>
+                          <TableCell>
+                            <div className="d-flex gap-2">
+                              <Button size="small" variant="contained" color="success" onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}>Approve All (Registrar)</Button>
+                              <Button size="small" variant="outlined" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>Reject All</Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </Card>
           </div>
         </div>
