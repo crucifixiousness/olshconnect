@@ -187,6 +187,25 @@ const InstructorGrades = () => {
     return courses.find(course => course.assignment_id === selectedCourse);
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Final':
+        return '#388e3c';
+      case 'Dean Approved':
+        return '#2e7d32';
+      case 'Registrar Approved':
+        return '#1976d2';
+      case 'Pending':
+        return '#ed6c02';
+      case 'Graded':
+        return '#d4edda';
+      case 'Not Graded':
+        return '#f8d7da';
+      default:
+        return '#6c757d';
+    }
+  };
+
   // Excel import functions
   const handleImportClick = () => {
     if (!selectedCourse) {
@@ -505,11 +524,11 @@ const InstructorGrades = () => {
                           </TableCell>
                           <TableCell>
                             <Chip 
-                              label={grades[student.student_id] ? 'Graded' : 'Pending'} 
+                              label={student.grade_status || (grades[student.student_id] ? 'Graded' : 'Pending')} 
                               size="small"
                               sx={{ 
-                                backgroundColor: grades[student.student_id] ? '#d4edda' : '#fff3cd',
-                                color: grades[student.student_id] ? '#155724' : '#856404',
+                                backgroundColor: getStatusColor(student.grade_status || (grades[student.student_id] ? 'Graded' : 'Pending')),
+                                color: 'white',
                                 fontWeight: 'bold'
                               }}
                             />
