@@ -148,22 +148,6 @@ module.exports = async (req, res) => {
 
       await client.query(updateQuery, updateValues);
 
-      // Log the approval action
-      const logQuery = `
-        INSERT INTO grade_approval_log (
-          grade_id, action, performed_by, comments, previous_status, new_status
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-      `;
-
-      await client.query(logQuery, [
-        gradeId,
-        action,
-        decoded.staff_id || decoded.user_id,
-        comments || null,
-        currentStatus,
-        newStatus
-      ]);
-
       // Commit transaction
       await client.query('COMMIT');
 
