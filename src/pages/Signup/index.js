@@ -156,7 +156,8 @@ const Signup = () => {
         'instructor': '/instructor-dashboard',
         'registrar': '/registrar-dashboard',
         'finance': '/finance-dashboard',
-        'program head': '/programhead-dashboard'
+        'program head': '/programhead-dashboard',
+        'dean': '/dean-dashboard'
       };
   
       const redirectPath = paths[user.role] || '/dashboard';
