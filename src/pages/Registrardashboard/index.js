@@ -68,6 +68,9 @@ const RegistrarDashboard = () => {
   const [classes, setClasses] = useState([]);
   const [classLoading, setClassLoading] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState('All');
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewStudents, setViewStudents] = useState([]);
+  const [viewClassInfo, setViewClassInfo] = useState(null);
 
   useEffect(() => {
     const fetchRegistrarData = async () => {
@@ -153,7 +156,8 @@ const RegistrarDashboard = () => {
       const response = await axios.get('/api/registrar-class-approval', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setClasses(response.data.classes || []);
+      const list = (response.data.classes || []).filter(c => (parseInt(c.total_grades, 10) || 0) > 0);
+      setClasses(list);
       setSelectedProgram('All');
     } catch (e) {
       console.error('Error fetching class approvals:', e);
@@ -175,6 +179,29 @@ const RegistrarDashboard = () => {
     } catch (e) {
       console.error('Error approving class:', e);
       setSnackbar({ open: true, message: 'Failed to approve class', severity: 'error' });
+    }
+  };
+
+  const handleViewClass = async (cls) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      // use assignment_id to fetch students for the class
+      const response = await axios.get(`/api/course-students?courseId=${cls.assignment_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setViewStudents(response.data.students || []);
+      setViewClassInfo({
+        course_code: cls.course_code,
+        course_name: cls.course_name,
+        section: cls.section,
+        program_name: cls.program_name,
+        semester: cls.semester
+      });
+      setViewOpen(true);
+    } catch (e) {
+      console.error('Error fetching class students:', e);
+      setSnackbar({ open: true, message: 'Failed to load class students', severity: 'error' });
     }
   };
 
@@ -555,7 +582,6 @@ const RegistrarDashboard = () => {
           <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Grade Approval Management</Typography>
-              <Alert severity="info">Per-student approval has been retired. Use the Class Approvals section below.</Alert>
             </Card>
           </div>
         </div>
@@ -607,8 +633,21 @@ const RegistrarDashboard = () => {
                           <TableCell>{cls.section}</TableCell>
                           <TableCell>
                             <div className="d-flex gap-2">
-                              <Button size="small" variant="contained" color="success" onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}>Approve</Button>
-                              <Button size="small" variant="outlined" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>Reject</Button>
+                              <Tooltip title="Approve">
+                                <IconButton size="small" color="success" onClick={() => handleApproveClass(cls.pc_id, 'registrar_approve')}>
+                                  <FaCheckCircle />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject">
+                                <IconButton size="small" color="error" onClick={() => handleApproveClass(cls.pc_id, 'reject')}>
+                                  <FaTimesCircle />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="View Class">
+                                <IconButton size="small" color="primary" onClick={() => handleViewClass(cls)}>
+                                  <FaEye />
+                                </IconButton>
+                              </Tooltip>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -638,6 +677,42 @@ const RegistrarDashboard = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* View Class Dialog */}
+      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {viewClassInfo ? `${viewClassInfo.course_code} - ${viewClassInfo.course_name} | Section ${viewClassInfo.section}` : 'Class Details'}
+        </DialogTitle>
+        <DialogContent>
+          <TableContainer component={Paper} elevation={0}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Email</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Grade</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {viewStudents.length > 0 ? viewStudents.map((s) => (
+                  <TableRow key={s.student_id}>
+                    <TableCell>{s.name}</TableCell>
+                    <TableCell>{s.email}</TableCell>
+                    <TableCell>{s.final_grade}</TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">No students found</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
