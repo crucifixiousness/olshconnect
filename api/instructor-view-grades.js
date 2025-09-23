@@ -56,9 +56,13 @@ module.exports = async (req, res) => {
           e.enrollment_date,
           e.enrollment_status,
           COALESCE(g.final_grade::text, '') as final_grade,
+          g.approval_status,
           CASE 
-            WHEN g.final_grade IS NOT NULL THEN 'Graded'
-            ELSE 'Pending'
+            WHEN g.approval_status = 'final' THEN 'Final'
+            WHEN g.approval_status = 'dean_approved' THEN 'Dean Approved'
+            WHEN g.approval_status = 'registrar_approved' THEN 'Registrar Approved'
+            WHEN g.approval_status = 'pending' THEN 'Pending'
+            ELSE 'Not Graded'
           END as grade_status
         FROM students s
         JOIN enrollments e ON s.id = e.student_id
