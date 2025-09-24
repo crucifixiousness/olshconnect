@@ -34,13 +34,13 @@ module.exports = async (req, res) => {
       const studentId = decoded.id;
       client = await pool.connect();
 
-      // Get student's grades - only show grades with 'final' approval status
+      // Get student's grades - only show grades with 'dean_approved' (terminal) status
       const gradesQuery = `
         SELECT 
           g.grade_id,
           g.final_grade,
           g.approval_status,
-          g.final_approved_at,
+          g.dean_approved_at,
           
           -- Course information
           c.course_code,
@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
           py.year_level,
           
           -- Instructor information
-          CONCAT(st.first_name, ' ', COALESCE(st.middle_name, ''), ' ', st.last_name) as instructor_name,
+          a.full_name as instructor_name,
           
           -- Assignment information
           ca.section,
@@ -67,9 +67,9 @@ module.exports = async (req, res) => {
         JOIN program p ON pc.program_id = p.program_id
         JOIN program_year py ON pc.year_id = py.year_id
         JOIN course_assignments ca ON pc.pc_id = ca.pc_id
-        JOIN staff st ON ca.staff_id = st.id
+        LEFT JOIN admins a ON ca.staff_id = a.staff_id
         WHERE g.student_id = $1
-          AND g.approval_status = 'final'
+          AND g.approval_status = 'dean_approved'
         ORDER BY pc.semester, c.course_code
       `;
 
