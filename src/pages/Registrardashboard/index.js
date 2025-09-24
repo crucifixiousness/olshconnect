@@ -170,11 +170,19 @@ const RegistrarDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      await axios.post('/api/approve-class-grades', { pcId, assignmentId, action }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Refresh class summary
-      fetchClassApprovalData();
+
+      const payload = { pcId, assignmentId };
+      let endpoint = '';
+      if (action === 'registrar_approve') {
+        endpoint = '/api/registrar-approve-class';
+      } else if (action === 'reject') {
+        endpoint = '/api/reject-class';
+      } else {
+        throw new Error('Unsupported action for registrar');
+      }
+
+      await axios.post(endpoint, payload, { headers: { Authorization: `Bearer ${token}` } });
+      await fetchClassApprovalData();
       setSnackbar({ open: true, message: 'Class approval updated', severity: 'success' });
     } catch (e) {
       console.error('Error approving class:', e);
