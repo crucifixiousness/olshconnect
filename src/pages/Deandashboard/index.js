@@ -31,6 +31,8 @@ import {
 import { MyContext } from "../../App";
 
 const DeanDashboard = () => {
+  // Feature flags
+  const HIDE_STUDENT_EMAIL = true; // Toggle to show/hide student email in dialog
   const context = useContext(MyContext);
   const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -240,7 +242,9 @@ const DeanDashboard = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Email</TableCell>
+                    {!HIDE_STUDENT_EMAIL && (
+                      <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Email</TableCell>
+                    )}
                     <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Grade</TableCell>
                   </TableRow>
                 </TableHead>
@@ -248,12 +252,14 @@ const DeanDashboard = () => {
                   {viewStudents.length > 0 ? viewStudents.map((s) => (
                     <TableRow key={s.student_id}>
                       <TableCell>{s.name}</TableCell>
-                      <TableCell>{s.email}</TableCell>
+                      {!HIDE_STUDENT_EMAIL && (
+                        <TableCell>{s.email}</TableCell>
+                      )}
                       <TableCell>{s.final_grade}</TableCell>
                     </TableRow>
                   )) : (
                     <TableRow>
-                      <TableCell colSpan={3} align="center">No students found</TableCell>
+                      <TableCell colSpan={HIDE_STUDENT_EMAIL ? 2 : 3} align="center">No students found</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
