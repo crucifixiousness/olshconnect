@@ -26,8 +26,7 @@ import {
 import { 
   FaCheckCircle, 
   FaTimesCircle, 
-  FaEye, 
-  FaUserGraduate
+  FaEye
 } from "react-icons/fa";
 import { MyContext } from "../../App";
 
@@ -89,8 +88,6 @@ const DeanDashboard = () => {
       let endpoint = '';
       if (action === 'dean_approve') {
         endpoint = '/api/dean-approve-class';
-      } else if (action === 'final_approve') {
-        endpoint = '/api/finalize-class';
       } else if (action === 'reject') {
         endpoint = '/api/reject-class';
       } else {
@@ -203,14 +200,7 @@ const DeanDashboard = () => {
                               <FaCheckCircle size={16} color="#fff" />
                             </Button>
                           </Tooltip>
-                          <Tooltip title="Finalize">
-                            <Button size="small" variant="contained"
-                              onClick={() => handleApproveClass(cls.pc_id, 'final_approve', cls.assignment_id)}
-                              sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#155fa8' } }}
-                            >
-                              <FaUserGraduate size={16} color="#fff" />
-                            </Button>
-                          </Tooltip>
+                          
                           <Tooltip title="Reject">
                             <Button size="small" variant="contained"
                               onClick={() => handleApproveClass(cls.pc_id, 'reject', cls.assignment_id)}
