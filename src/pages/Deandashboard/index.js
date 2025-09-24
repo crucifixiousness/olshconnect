@@ -66,11 +66,10 @@ const DeanDashboard = () => {
       setClassLoading(true);
       const token = localStorage.getItem('token');
       if (!token) return;
-      const response = await axios.get('/api/registrar-class-approval', {
+      const response = await axios.get('/api/dean-class-approval', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Show classes with at least one registrar_approved for Dean to act on
-      const list = (response.data.classes || []).filter(c => (parseInt(c.registrar_approved_count, 10) || 0) > 0);
+      const list = (response.data.classes || []);
       setClasses(list);
       setSelectedProgram('All');
     } catch (e) {
@@ -86,9 +85,18 @@ const DeanDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      await axios.post('/api/approve-class-grades', { pcId, assignmentId, action }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const payload = { pcId, assignmentId };
+      let endpoint = '';
+      if (action === 'dean_approve') {
+        endpoint = '/api/dean-approve-class';
+      } else if (action === 'final_approve') {
+        endpoint = '/api/finalize-class';
+      } else if (action === 'reject') {
+        endpoint = '/api/reject-class';
+      } else {
+        throw new Error('Unsupported action for dean');
+      }
+      await axios.post(endpoint, payload, { headers: { Authorization: `Bearer ${token}` } });
       await fetchClassApprovalData();
       setSnackbar({ open: true, message: 'Class approval updated', severity: 'success' });
     } catch (e) {
