@@ -35,10 +35,10 @@ module.exports = async (req, res) => {
 
     // Resolve program_id: token.program_id -> admins lookup by staff_id -> query param
     let programId = decoded.program_id;
-    if (!programId && decoded.staff_id) {
+    if (!programId && (decoded.staff_id || decoded.id)) {
       const phRes = await client.query(
         `SELECT program_id FROM admins WHERE staff_id = $1 LIMIT 1`,
-        [decoded.staff_id]
+        [decoded.staff_id || decoded.id]
       );
       programId = phRes.rows[0]?.program_id || programId;
     }
