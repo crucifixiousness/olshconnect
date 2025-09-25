@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Card, Typography, CircularProgress } from '@mui/material';
+import { Card, Typography, CircularProgress, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Tooltip, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { GiBookshelf } from "react-icons/gi";
 import { RiPoliceBadgeFill } from "react-icons/ri";
 import { MdTour } from "react-icons/md";
@@ -8,6 +8,7 @@ import { PiComputerTowerFill } from "react-icons/pi";
 import { IoIosPeople } from "react-icons/io";
 import { MyContext } from "../../App";
 import axios from 'axios';
+import { FaCheckCircle, FaTimesCircle, FaEye } from "react-icons/fa";
 import { TbNumber1, TbNumber2, TbNumber3, TbNumber4 } from "react-icons/tb";
 
 // Add this at the top with other imports
@@ -40,6 +41,14 @@ const ProgramHeadDashboard = () => {
       fourth: 0
     }
   });
+
+  // Class approvals state
+  const [classes, setClasses] = useState([]);
+  const [classLoading, setClassLoading] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewStudents, setViewStudents] = useState([]);
+  const [viewClassInfo, setViewClassInfo] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Fetch program_id and set program_name from localStorage
   useEffect(() => {
@@ -106,6 +115,8 @@ const ProgramHeadDashboard = () => {
         
         console.log('API Response:', response.data);
         setProgramData(response.data);
+        // Also fetch classes for approval
+        await fetchClassApprovalData();
       } catch (error) {
         console.error('Error fetching program data:', error);
         console.error('Error response:', error.response?.data);
@@ -118,6 +129,75 @@ const ProgramHeadDashboard = () => {
     window.scrollTo(0,0);
     fetchProgramData();
   }, [context, program_id]);
+
+  const fetchClassApprovalData = async () => {
+    try {
+      setClassLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await axios.get('/api/program-head-class-approval', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const list = (response.data.classes || []).filter(c => (parseInt(c.total_grades, 10) || 0) > 0);
+      setClasses(list);
+    } catch (e) {
+      console.error('Error fetching PH class approvals:', e);
+    } finally {
+      setClassLoading(false);
+    }
+  };
+
+  const handleApproveClass = async (pcId, assignmentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      await axios.post('/api/program-head-approve-class', { pcId, assignmentId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchClassApprovalData();
+      setSnackbar({ open: true, message: 'Class approved by Program Head', severity: 'success' });
+    } catch (e) {
+      console.error('Error approving class:', e);
+      setSnackbar({ open: true, message: 'Failed to approve class', severity: 'error' });
+    }
+  };
+
+  const handleRejectClass = async (pcId, assignmentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      await axios.post('/api/reject-class', { pcId, assignmentId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchClassApprovalData();
+      setSnackbar({ open: true, message: 'Class reset to pending', severity: 'success' });
+    } catch (e) {
+      console.error('Error rejecting class:', e);
+      setSnackbar({ open: true, message: 'Failed to reset class', severity: 'error' });
+    }
+  };
+
+  const handleViewClass = async (cls) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await axios.get(`/api/course-students?courseId=${cls.assignment_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setViewStudents(response.data.students || []);
+      setViewClassInfo({
+        course_code: cls.course_code,
+        course_name: cls.course_name,
+        section: cls.section,
+        program_name: cls.program_name,
+        semester: cls.semester
+      });
+      setViewOpen(true);
+    } catch (e) {
+      console.error('Error fetching class students:', e);
+      setSnackbar({ open: true, message: 'Failed to load class students', severity: 'error' });
+    }
+  };
 
   // Update statCards to use program_name
   // Update statCards array
@@ -229,9 +309,75 @@ const ProgramHeadDashboard = () => {
             </Card>
           </div>
         </div>
+
+        {/* Grade Approval Management - Program Head */}
+        <div className="row mt-2">
+          <div className="col-md-12 mb-4">
+            <Card className="h-100 p-3">
+              <Typography variant="h6" className="mb-3">Grade Approval Management</Typography>
+
+              {classLoading ? (
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '160px' }}>
+                  <CircularProgress style={{ color: '#c70202' }} />
+                </div>
+              ) : (
+                <TableContainer component={Paper} elevation={0}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Course</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Section / Block</TableCell>
+                        <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(classes || []).map((cls) => (
+                        <TableRow key={`${cls.pc_id}-${cls.section}`}>
+                          <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
+                          <TableCell>{cls.section}</TableCell>
+                          <TableCell>
+                            <div className="d-flex gap-2">
+                              <Tooltip title="Approve (Program Head)">
+                                <Button size="small" variant="contained"
+                                  onClick={() => handleApproveClass(cls.pc_id, cls.assignment_id)}
+                                  sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#256628' } }}
+                                >
+                                  <FaCheckCircle size={16} color="#fff" />
+                                </Button>
+                              </Tooltip>
+                              <Tooltip title="Reject">
+                                <Button size="small" variant="contained"
+                                  onClick={() => handleRejectClass(cls.pc_id, cls.assignment_id)}
+                                  sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#d32f2f', '&:hover': { backgroundColor: '#a72828' } }}
+                                >
+                                  <FaTimesCircle size={16} color="#fff" />
+                                </Button>
+                              </Tooltip>
+                              <Tooltip title="View Class">
+                                <Button size="small" variant="contained"
+                                  onClick={() => handleViewClass(cls)}
+                                  sx={{ minWidth: 36, height: 32, p: 0, borderRadius: 1, backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#155fa8' } }}
+                                >
+                                  <FaEye size={16} color="#fff" />
+                                </Button>
+                              </Tooltip>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default ProgramHeadDashboard;
+
+// View Class Dialog
+// Place at end to keep file structure consistent
