@@ -31,13 +31,23 @@ module.exports = async (req, res) => {
   let client;
   try {
     const decoded = authenticateToken(req);
-    // Assume decoded.program_id identifies PH's program
-    const programId = decoded.program_id;
-    if (!programId) {
-      return res.status(400).json({ error: 'Program Head program_id not found in token' });
-    }
-
     client = await pool.connect();
+
+    // Resolve program_id: token.program_id -> admins lookup by staff_id -> query param
+    let programId = decoded.program_id;
+    if (!programId && decoded.staff_id) {
+      const phRes = await client.query(
+        `SELECT program_id FROM admins WHERE staff_id = $1 LIMIT 1`,
+        [decoded.staff_id]
+      );
+      programId = phRes.rows[0]?.program_id || programId;
+    }
+    if (!programId && req.query && req.query.program_id) {
+      programId = parseInt(req.query.program_id, 10);
+    }
+    if (!programId) {
+      return res.status(400).json({ error: 'Program Head program_id not found in token or request' });
+    }
 
     const query = `
       SELECT 
