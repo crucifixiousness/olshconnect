@@ -204,6 +204,7 @@ const RegistrarDashboard = () => {
         course_name: cls.course_name,
         section: cls.section,
         program_name: cls.program_name,
+        year_level: cls.year_level,
         semester: cls.semester
       });
       setViewOpen(true);
@@ -337,10 +338,20 @@ const RegistrarDashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Verified':
+      case 'Final':
+        return '#388e3c';
+      case 'Dean Approved':
         return '#2e7d32';
+      case 'Program Head Approved':
+        return '#1976d2';
       case 'Pending':
         return '#ed6c02';
+      case 'Graded':
+        return '#d4edda';
+      case 'Not Graded':
+        return '#f8d7da';
+      case 'Verified':
+        return '#2e7d32';
       case 'Rejected':
         return '#d32f2f';
       case 'For Payment':
@@ -348,7 +359,7 @@ const RegistrarDashboard = () => {
       case 'Officially Enrolled':
         return '#388e3c';
       default:
-        return '#757575';
+        return '#6c757d';
     }
   };
 
@@ -694,24 +705,47 @@ const RegistrarDashboard = () => {
       {/* View Class Dialog */}
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          {viewClassInfo ? `${viewClassInfo.course_code} - ${viewClassInfo.course_name} | Section ${viewClassInfo.section}` : 'Class Details'}
+          {viewClassInfo?.course_code} {viewClassInfo?.course_name}
         </DialogTitle>
         <DialogContent>
+          {viewClassInfo && (
+            <div className="mb-3">
+              <Typography variant="subtitle1" className="mb-2">
+                <strong>Program-Year-Section:</strong> {viewClassInfo.program_name}-{viewClassInfo.year_level}{viewClassInfo.section}
+              </Typography>
+              <Typography variant="subtitle1" className="mb-2">
+                <strong>Semester:</strong> {viewClassInfo.semester}
+              </Typography>
+            </div>
+          )}
+          
           <TableContainer component={Paper} elevation={0}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Email</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Grade</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final Grade</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {viewStudents.length > 0 ? viewStudents.map((s) => (
                   <TableRow key={s.student_id}>
                     <TableCell>{s.name}</TableCell>
-                    <TableCell>{s.email}</TableCell>
-                    <TableCell>{s.final_grade}</TableCell>
+                    <TableCell>{s.final_grade || '-'}</TableCell>
+                    <TableCell>
+                      <span 
+                        style={{ 
+                          padding: '4px 8px', 
+                          borderRadius: '4px', 
+                          fontSize: '12px',
+                          backgroundColor: getStatusColor(s.grade_status),
+                          color: '#fff'
+                        }}
+                      >
+                        {s.grade_status}
+                      </span>
+                    </TableCell>
                   </TableRow>
                 )) : (
                   <TableRow>
@@ -723,7 +757,7 @@ const RegistrarDashboard = () => {
           </TableContainer>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setViewOpen(false)}>Close</Button>
+          <Button onClick={() => setViewOpen(false)} color="primary">Close</Button>
         </DialogActions>
       </Dialog>
     </div>
