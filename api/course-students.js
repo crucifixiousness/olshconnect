@@ -75,9 +75,9 @@ module.exports = async (req, res) => {
         COALESCE(g.final_grade::text, '') as final_grade,
         g.approval_status,
         CASE 
-          WHEN g.approval_status = 'final' THEN 'Final'
+          WHEN g.approval_status = 'reg_approved' THEN 'Final'
           WHEN g.approval_status = 'dean_approved' THEN 'Dean Approved'
-          WHEN g.approval_status = 'registrar_approved' THEN 'Registrar Approved'
+          WHEN g.approval_status = 'ph_approved' THEN 'Program Head Approved'
           WHEN g.approval_status = 'pending' THEN 'Pending'
           ELSE 'Not Graded'
         END as grade_status
