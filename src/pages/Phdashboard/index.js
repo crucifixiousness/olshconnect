@@ -190,6 +190,7 @@ const ProgramHeadDashboard = () => {
         course_name: cls.course_name,
         section: cls.section,
         program_name: cls.program_name,
+        year_level: cls.year_level,
         semester: cls.semester
       });
       setViewOpen(true);
@@ -402,10 +403,7 @@ const ProgramHeadDashboard = () => {
           {viewClassInfo && (
             <div className="mb-3">
               <Typography variant="subtitle1" className="mb-2">
-                <strong>Section:</strong> {viewClassInfo.section}
-              </Typography>
-              <Typography variant="subtitle1" className="mb-2">
-                <strong>Program:</strong> {viewClassInfo.program_name}
+                <strong>Program-Year-Section:</strong> {viewClassInfo.program_name}-{viewClassInfo.year_level}{viewClassInfo.section}
               </Typography>
               <Typography variant="subtitle1" className="mb-2">
                 <strong>Semester:</strong> {viewClassInfo.semester}
@@ -418,7 +416,6 @@ const ProgramHeadDashboard = () => {
               <TableHead>
                 <TableRow>
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program-Year-Section</TableCell>
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final Grade</TableCell>
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
                 </TableRow>
@@ -427,7 +424,6 @@ const ProgramHeadDashboard = () => {
                 {viewStudents.map((student) => (
                   <TableRow key={student.student_id}>
                     <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.program_name && student.year_level && student.section ? `${student.program_name}-${student.year_level}${student.section}` : '-'}</TableCell>
                     <TableCell>{student.final_grade || '-'}</TableCell>
                     <TableCell>
                       <span 
