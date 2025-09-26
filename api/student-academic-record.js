@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
     const { program_id, year_id, semester, year_level, program_name } = enrollmentResult.rows[0];
 
     // Return all courses for the student's current program/year/semester
-    // LEFT JOIN to grades filtered to dean_approved so non-final stays blank
+    // LEFT JOIN to grades filtered to reg_approved so non-final stays blank
     const coursesQuery = `
       SELECT 
         c.course_code,
@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
       LEFT JOIN grades g 
         ON g.student_id = $1 
        AND g.pc_id = pc.pc_id 
-       AND g.approval_status = 'dean_approved'
+       AND g.approval_status = 'reg_approved'
       WHERE pc.program_id = $2
         AND pc.year_id = $3
         AND pc.semester = $4
