@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
     let params = [];
     let paramIndex = 1;
 
-    const setClause = `approval_status = 'program_head_approved', program_head_approved_at = CURRENT_TIMESTAMP`;
+    const setClause = `approval_status = 'ph_approved', program_head_approved_at = CURRENT_TIMESTAMP`;
 
     let updateQuery = '';
 
