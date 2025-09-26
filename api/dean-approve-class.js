@@ -75,7 +75,7 @@ module.exports = async (req, res) => {
               AND e.semester = $${paramIndex + 3}
               AND sb.block_name = $${paramIndex + 4}
           )
-          AND g.approval_status = 'registrar_approved'
+          AND g.approval_status = 'ph_approved'
       `;
     } else {
       params.push(pcId);
@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
         UPDATE grades
         SET ${setClause}, updated_at = CURRENT_TIMESTAMP
         WHERE pc_id = $${paramIndex}
-          AND approval_status = 'registrar_approved'
+          AND approval_status = 'ph_approved'
       `;
     }
 
