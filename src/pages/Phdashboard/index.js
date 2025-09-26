@@ -135,7 +135,7 @@ const ProgramHeadDashboard = () => {
       setClassLoading(true);
       const token = localStorage.getItem('token');
       if (!token) return;
-      const response = await axios.get('/api/program-head-class-approval', {
+      const response = await axios.get(`/api/program-head-class-approval?program_id=${program_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const list = (response.data.classes || []).filter(c => (parseInt(c.total_grades, 10) || 0) > 0);
@@ -196,6 +196,25 @@ const ProgramHeadDashboard = () => {
     } catch (e) {
       console.error('Error fetching class students:', e);
       setSnackbar({ open: true, message: 'Failed to load class students', severity: 'error' });
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Final':
+        return '#388e3c';
+      case 'Dean Approved':
+        return '#2e7d32';
+      case 'Program Head Approved':
+        return '#1976d2';
+      case 'Pending':
+        return '#ed6c02';
+      case 'Graded':
+        return '#d4edda';
+      case 'Not Graded':
+        return '#f8d7da';
+      default:
+        return '#6c757d';
     }
   };
 
@@ -373,11 +392,84 @@ const ProgramHeadDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* View Class Dialog */}
+      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Class Details - {viewClassInfo?.course_code} {viewClassInfo?.course_name}
+        </DialogTitle>
+        <DialogContent>
+          {viewClassInfo && (
+            <div className="mb-3">
+              <Typography variant="subtitle1" className="mb-2">
+                <strong>Section:</strong> {viewClassInfo.section}
+              </Typography>
+              <Typography variant="subtitle1" className="mb-2">
+                <strong>Program:</strong> {viewClassInfo.program_name}
+              </Typography>
+              <Typography variant="subtitle1" className="mb-2">
+                <strong>Semester:</strong> {viewClassInfo.semester}
+              </Typography>
+            </div>
+          )}
+          
+          <TableContainer component={Paper} elevation={0}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program-Year-Section</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Final Grade</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {viewStudents.map((student) => (
+                  <TableRow key={student.student_id}>
+                    <TableCell>{student.name}</TableCell>
+                    <TableCell>{student.program_name && student.year_level && student.section ? `${student.program_name}-${student.year_level}${student.section}` : '-'}</TableCell>
+                    <TableCell>{student.final_grade || '-'}</TableCell>
+                    <TableCell>
+                      <span 
+                        style={{ 
+                          padding: '4px 8px', 
+                          borderRadius: '4px', 
+                          fontSize: '12px',
+                          backgroundColor: getStatusColor(student.grade_status),
+                          color: '#fff'
+                        }}
+                      >
+                        {student.grade_status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
 
 export default ProgramHeadDashboard;
-
-// View Class Dialog
-// Place at end to keep file structure consistent
