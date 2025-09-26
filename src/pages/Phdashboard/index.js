@@ -397,7 +397,7 @@ const ProgramHeadDashboard = () => {
       {/* View Class Dialog */}
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          Class Details - {viewClassInfo?.course_code} {viewClassInfo?.course_name}
+          {viewClassInfo?.course_code} {viewClassInfo?.course_name}
         </DialogTitle>
         <DialogContent>
           {viewClassInfo && (
