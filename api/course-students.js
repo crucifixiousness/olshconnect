@@ -72,6 +72,9 @@ module.exports = async (req, res) => {
         s.email,
         e.enrollment_date,
         e.enrollment_status,
+        py.year_level,
+        sb.block_name as section,
+        p.program_name,
         COALESCE(g.final_grade::text, '') as final_grade,
         g.approval_status,
         CASE 
@@ -85,6 +88,7 @@ module.exports = async (req, res) => {
       JOIN enrollments e ON s.id = e.student_id
       JOIN program_year py ON e.year_id = py.year_id
       JOIN student_blocks sb ON e.block_id = sb.block_id
+      JOIN program p ON e.program_id = p.program_id
       LEFT JOIN grades g ON s.id = g.student_id AND g.pc_id = $1
       WHERE e.program_id = $2
         AND e.year_id = $3
