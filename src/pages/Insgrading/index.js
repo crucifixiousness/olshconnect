@@ -193,7 +193,7 @@ const InstructorGrades = () => {
         return '#388e3c';
       case 'Dean Approved':
         return '#2e7d32';
-      case 'Registrar Approved':
+      case 'Program Head Approved':
         return '#1976d2';
       case 'Pending':
         return '#ed6c02';
