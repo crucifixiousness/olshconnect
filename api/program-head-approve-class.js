@@ -42,9 +42,7 @@ module.exports = async (req, res) => {
     let params = [];
     let paramIndex = 1;
 
-    const setClause = `approval_status = 'program_head_approved', program_head_approved_by = $1, program_head_approved_at = CURRENT_TIMESTAMP`;
-    params.push(decoded.staff_id || decoded.user_id || null);
-    paramIndex++;
+    const setClause = `approval_status = 'program_head_approved', program_head_approved_at = CURRENT_TIMESTAMP`;
 
     let updateQuery = '';
 
