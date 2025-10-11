@@ -3,6 +3,7 @@ import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { HiOutlineDesktopComputer } from "react-icons/hi";
+import { FaFileAlt } from "react-icons/fa";
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
@@ -81,6 +82,15 @@ const ProgramHeadSidebar = () => {
                 <li><Link to="/course-assignments?year=4">Fourth Year</Link></li>
               </ul>
             </div>
+          </li>
+          <li>
+            <Link to="/program-head-tor-evaluation">
+              <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`} onClick={() => handleTabClick(3)}>
+                <span className='icon'><FaFileAlt /></span>
+                TOR Evaluation
+                <span className='arrow'><FaAnglesRight /></span>
+              </Button>
+            </Link>
           </li>
         </ul>
 
