@@ -4,6 +4,7 @@ import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
+import { FaExchangeAlt } from "react-icons/fa";
 import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
@@ -96,8 +97,21 @@ const RegistrarSidebar = () => {
                 </Button>
               </Link>              
             </li>
+            <li>
+              <Link to="/registrar-credit-transfer">
+                <Button className={`w-100 ${activeTab===4 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(4)}>
+                  <span className='icon'><FaExchangeAlt />
+                  </span>
+                    Credit Transfer
+                  <span className='arrow'><FaAnglesRight />
+                  </span>
+                </Button>
+              </Link>              
+            </li>
           </ul>
+
           <br/>
+          // Update the logout button section
                   <div className='logoutWrap'>
                     <div className='logoutBox'>
                       <Button variant="contained" onClick={handleLogout}>
@@ -105,6 +119,9 @@ const RegistrarSidebar = () => {
                       </Button>
                     </div>
                   </div>
+          
+
+
         </div>
       </>
     )
