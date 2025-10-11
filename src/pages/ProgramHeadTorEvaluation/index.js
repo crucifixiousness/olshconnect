@@ -70,7 +70,7 @@ const ProgramHeadTorEvaluation = () => {
   const fetchAvailableCourses = async (program_id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/courses?program_id=${program_id}`, {
+      const response = await axios.get(`/api/credit-courses?program_id=${program_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAvailableCourses(response.data.courses || []);
@@ -99,8 +99,7 @@ const ProgramHeadTorEvaluation = () => {
       equivalent_course_code: '',
       equivalent_course_name: '',
       source_school: '',
-      source_academic_year: '',
-      program_head_notes: ''
+      source_academic_year: ''
     }]);
   };
 
@@ -329,15 +328,6 @@ const ProgramHeadTorEvaluation = () => {
                             </option>
                           ))}
                         </TextField>
-                        <TextField
-                          label="Notes"
-                          fullWidth
-                          size="small"
-                          multiline
-                          rows={2}
-                          value={equiv.program_head_notes}
-                          onChange={(e) => handleEquivalencyChange(index, 'program_head_notes', e.target.value)}
-                        />
                       </div>
                     </div>
                   </Card>
