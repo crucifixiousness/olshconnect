@@ -166,7 +166,7 @@ const ProgramHeadTorEvaluation = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="mb-4">TOR Evaluation Requests</h3>
+        <h3 className="mb-4" style={{ color: '#c70202', fontWeight: 'bold' }}>TOR Evaluation Requests</h3>
 
         <TableContainer component={Paper} elevation={0}>
           <Table>
@@ -228,31 +228,37 @@ const ProgramHeadTorEvaluation = () => {
 
         {/* TOR Evaluation Dialog */}
         <Dialog open={evaluationOpen} onClose={() => setEvaluationOpen(false)} maxWidth="lg" fullWidth>
-          <DialogTitle>
+          <DialogTitle style={{ color: '#c70202', fontWeight: 'bold', fontSize: '1.5rem' }}>
             TOR Evaluation - {selectedRequest?.first_name} {selectedRequest?.last_name}
           </DialogTitle>
           <DialogContent>
             {selectedRequest && (
               <Box>
-                <Typography variant="h6" className="mb-3">Student Information</Typography>
+                <Typography variant="h6" className="mb-3" style={{ color: '#c70202', fontWeight: 'bold' }}>Student Information</Typography>
                 <Box className="mb-4">
                   <strong>Program:</strong> {selectedRequest.program_name}<br/>
                   <strong>Year Level:</strong> {selectedRequest.year_level}<br/>
                   <strong>Semester:</strong> {selectedRequest.semester}
                 </Box>
 
-                <Typography variant="h6" className="mb-3">Course Equivalencies</Typography>
+                <Typography variant="h6" className="mb-3" style={{ color: '#c70202', fontWeight: 'bold' }}>Course Equivalencies</Typography>
                 <Button 
-                  variant="outlined" 
+                  variant="contained" 
                   onClick={handleAddEquivalency}
                   className="mb-3"
+                  style={{ 
+                    backgroundColor: '#c70202', 
+                    color: 'white',
+                    fontWeight: 'bold',
+                    '&:hover': { backgroundColor: '#a00000' }
+                  }}
                 >
                   Add Course Equivalency
                 </Button>
 
                 {equivalencies.map((equiv, index) => (
-                  <Card key={index} className="p-3 mb-3">
-                    <Typography variant="subtitle1" className="mb-2">Equivalency {index + 1}</Typography>
+                  <Card key={index} className="p-3 mb-3" style={{ border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+                    <Typography variant="subtitle1" className="mb-2" style={{ color: '#c70202', fontWeight: 'bold' }}>Equivalency {index + 1}</Typography>
                     <div className="row">
                       <div className="col-md-6">
                         <TextField
@@ -348,24 +354,25 @@ const ProgramHeadTorEvaluation = () => {
                   </Card>
                 ))}
 
-                <TextField
-                  label="Program Head Comments"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  className="mt-3"
-                />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setEvaluationOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={() => setEvaluationOpen(false)}
+              style={{ color: '#666' }}
+            >
+              Cancel
+            </Button>
             <Button 
               onClick={handleSubmitEvaluation}
               variant="contained"
-              color="primary"
+              style={{ 
+                backgroundColor: '#c70202', 
+                color: 'white',
+                fontWeight: 'bold',
+                '&:hover': { backgroundColor: '#a00000' }
+              }}
             >
               Submit Evaluation
             </Button>
