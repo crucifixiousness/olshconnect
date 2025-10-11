@@ -41,6 +41,7 @@ module.exports = async (req, res) => {
         SELECT 
           ter.id,
           ter.student_id,
+          ter.program_id,
           ter.status,
           ter.program_head_reviewed_at,
           s.first_name,
