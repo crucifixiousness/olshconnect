@@ -1,0 +1,393 @@
+import { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import { 
+  Card, 
+  Typography, 
+  CircularProgress, 
+  Box, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert,
+  Snackbar,
+  Chip
+} from '@mui/material';
+import { FaEye, FaCheck, FaTimes } from "react-icons/fa";
+import { MyContext } from "../../App";
+
+const ProgramHeadTorEvaluation = () => {
+  const context = useContext(MyContext);
+  const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [torRequests, setTorRequests] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [evaluationOpen, setEvaluationOpen] = useState(false);
+  const [equivalencies, setEquivalencies] = useState([]);
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [comments, setComments] = useState('');
+
+  useEffect(() => {
+    context.setIsHideComponents(false);
+    window.scrollTo(0, 0);
+    fetchTorRequests();
+  }, [context]);
+
+  const fetchTorRequests = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+      const program_id = user.program_id;
+
+      if (!token || !program_id) {
+        console.error('No token or program_id found');
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`/api/program-head-tor-evaluation?program_id=${program_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setTorRequests(response.data.requests || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching TOR requests:', error);
+      setSnackbar({ open: true, message: 'Failed to load TOR requests', severity: 'error' });
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailableCourses = async (program_id, year_id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/courses?program_id=${program_id}&year_id=${year_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAvailableCourses(response.data.courses || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    }
+  };
+
+  const handleViewRequest = async (request) => {
+    setSelectedRequest(request);
+    setEquivalencies([]);
+    setComments('');
+    
+    // Fetch available courses for the student's program/year
+    await fetchAvailableCourses(request.program_id, request.year_id);
+    setEvaluationOpen(true);
+  };
+
+  const handleAddEquivalency = () => {
+    setEquivalencies([...equivalencies, {
+      external_course_code: '',
+      external_course_name: '',
+      external_grade: '',
+      external_units: 0,
+      equivalent_course_id: '',
+      equivalent_course_code: '',
+      equivalent_course_name: '',
+      credits_granted: 0,
+      source_school: '',
+      source_academic_year: '',
+      program_head_notes: ''
+    }]);
+  };
+
+  const handleEquivalencyChange = (index, field, value) => {
+    const updated = [...equivalencies];
+    updated[index][field] = value;
+    
+    // Auto-populate course info when course is selected
+    if (field === 'equivalent_course_id') {
+      const course = availableCourses.find(c => c.course_id == value);
+      if (course) {
+        updated[index].equivalent_course_code = course.course_code;
+        updated[index].equivalent_course_name = course.course_name;
+        updated[index].credits_granted = course.units;
+      }
+    }
+    
+    setEquivalencies(updated);
+  };
+
+  const handleSubmitEvaluation = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.post('/api/program-head-tor-evaluation', {
+        tor_request_id: selectedRequest.id,
+        equivalencies: equivalencies,
+        comments: comments
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSnackbar({ open: true, message: 'Course equivalencies submitted successfully', severity: 'success' });
+      setEvaluationOpen(false);
+      fetchTorRequests();
+    } catch (error) {
+      console.error('Error submitting evaluation:', error);
+      setSnackbar({ open: true, message: 'Failed to submit evaluation', severity: 'error' });
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'program_head_reviewed': return 'info';
+      case 'registrar_approved': return 'success';
+      case 'rejected': return 'error';
+      default: return 'default';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="right-content w-100">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <CircularProgress style={{ color: '#c70202' }} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="right-content w-100">
+      <div className="card shadow border-0 p-3 mt-1">
+        <h3 className="mb-4">TOR Evaluation Requests</h3>
+
+        <TableContainer component={Paper} elevation={0}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Program</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Year Level</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Semester</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Submitted</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {torRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell>
+                    <div>
+                      <strong>{request.first_name} {request.last_name}</strong>
+                      <div style={{ fontSize: '0.8em', color: 'gray' }}>{request.email}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{request.program_name}</TableCell>
+                  <TableCell>{request.year_level}</TableCell>
+                  <TableCell>{request.semester}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={request.status.replace('_', ' ').toUpperCase()} 
+                      color={getStatusColor(request.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {new Date(request.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => handleViewRequest(request)}
+                      sx={{ 
+                        minWidth: 36, 
+                        height: 32, 
+                        p: 0, 
+                        borderRadius: 1, 
+                        backgroundColor: '#1976d2',
+                        '&:hover': { backgroundColor: '#155fa8' }
+                      }}
+                    >
+                      <FaEye size={16} color="#fff" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* TOR Evaluation Dialog */}
+        <Dialog open={evaluationOpen} onClose={() => setEvaluationOpen(false)} maxWidth="lg" fullWidth>
+          <DialogTitle>
+            TOR Evaluation - {selectedRequest?.first_name} {selectedRequest?.last_name}
+          </DialogTitle>
+          <DialogContent>
+            {selectedRequest && (
+              <Box>
+                <Typography variant="h6" className="mb-3">Student Information</Typography>
+                <Box className="mb-4">
+                  <strong>Program:</strong> {selectedRequest.program_name}<br/>
+                  <strong>Year Level:</strong> {selectedRequest.year_level}<br/>
+                  <strong>Semester:</strong> {selectedRequest.semester}
+                </Box>
+
+                <Typography variant="h6" className="mb-3">Course Equivalencies</Typography>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleAddEquivalency}
+                  className="mb-3"
+                >
+                  Add Course Equivalency
+                </Button>
+
+                {equivalencies.map((equiv, index) => (
+                  <Card key={index} className="p-3 mb-3">
+                    <Typography variant="subtitle1" className="mb-2">Equivalency {index + 1}</Typography>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <TextField
+                          label="External Course Code"
+                          fullWidth
+                          size="small"
+                          value={equiv.external_course_code}
+                          onChange={(e) => handleEquivalencyChange(index, 'external_course_code', e.target.value)}
+                          className="mb-2"
+                        />
+                        <TextField
+                          label="External Course Name"
+                          fullWidth
+                          size="small"
+                          value={equiv.external_course_name}
+                          onChange={(e) => handleEquivalencyChange(index, 'external_course_name', e.target.value)}
+                          className="mb-2"
+                        />
+                        <TextField
+                          label="Grade (1.0-5.0)"
+                          fullWidth
+                          size="small"
+                          type="number"
+                          step="0.1"
+                          min="1.0"
+                          max="5.0"
+                          value={equiv.external_grade}
+                          onChange={(e) => handleEquivalencyChange(index, 'external_grade', parseFloat(e.target.value))}
+                          className="mb-2"
+                        />
+                        <TextField
+                          label="External Units"
+                          fullWidth
+                          size="small"
+                          type="number"
+                          value={equiv.external_units}
+                          onChange={(e) => handleEquivalencyChange(index, 'external_units', parseFloat(e.target.value))}
+                          className="mb-2"
+                        />
+                        <TextField
+                          label="Source School"
+                          fullWidth
+                          size="small"
+                          value={equiv.source_school}
+                          onChange={(e) => handleEquivalencyChange(index, 'source_school', e.target.value)}
+                          className="mb-2"
+                        />
+                        <TextField
+                          label="Academic Year (e.g., 2022-2023)"
+                          fullWidth
+                          size="small"
+                          value={equiv.source_academic_year}
+                          onChange={(e) => handleEquivalencyChange(index, 'source_academic_year', e.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <TextField
+                          select
+                          label="Equivalent Course"
+                          fullWidth
+                          size="small"
+                          value={equiv.equivalent_course_id}
+                          onChange={(e) => handleEquivalencyChange(index, 'equivalent_course_id', e.target.value)}
+                          className="mb-2"
+                        >
+                          <option value="">Select Course</option>
+                          {availableCourses.map((course) => (
+                            <option key={course.course_id} value={course.course_id}>
+                              {course.course_code} - {course.course_name} ({course.units} units)
+                            </option>
+                          ))}
+                        </TextField>
+                        <TextField
+                          label="Credits Granted"
+                          fullWidth
+                          size="small"
+                          type="number"
+                          value={equiv.credits_granted}
+                          onChange={(e) => handleEquivalencyChange(index, 'credits_granted', parseFloat(e.target.value))}
+                          className="mb-2"
+                        />
+                        <TextField
+                          label="Notes"
+                          fullWidth
+                          size="small"
+                          multiline
+                          rows={2}
+                          value={equiv.program_head_notes}
+                          onChange={(e) => handleEquivalencyChange(index, 'program_head_notes', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                <TextField
+                  label="Program Head Comments"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  className="mt-3"
+                />
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEvaluationOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSubmitEvaluation}
+              variant="contained"
+              color="primary"
+            >
+              Submit Evaluation
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert 
+            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+            severity={snackbar.severity}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
+    </div>
+  );
+};
+
+export default ProgramHeadTorEvaluation;
