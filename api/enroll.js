@@ -213,6 +213,16 @@ module.exports = async (req, res) => {
         ]
       );
 
+      // Create TOR evaluation request for transferees
+      if (normalizedFields.studentType === 'transferee') {
+        const torEvaluationResult = await client.query(
+          `INSERT INTO tor_evaluation_requests 
+           (student_id, program_id, year_id, semester, tor_document_path, status) 
+           VALUES ($1, $2, $3, $4, $5, 'pending')`,
+          [id, programs, year_id, normalizedFields.semester, 'tor_documents/' + id + '_' + Date.now() + '.pdf']
+        );
+      }
+
       await client.query('COMMIT');
 
       // Clean up temp files
@@ -221,7 +231,7 @@ module.exports = async (req, res) => {
       ).flat());
       
       const message = normalizedFields.studentType === 'transferee' 
-        ? "Enrollment submitted successfully. Your transfer credits will be evaluated by the registrar's office."
+        ? "Enrollment submitted successfully. Your TOR will be evaluated by the program head and then approved by the registrar for credit transfer."
         : "Enrollment submitted successfully";
         
       res.json({ 
