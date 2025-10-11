@@ -42,7 +42,6 @@ module.exports = async (req, res) => {
           ter.id,
           ter.student_id,
           ter.status,
-          ter.created_at,
           ter.program_head_reviewed_at,
           ter.program_head_comments,
           s.first_name,
@@ -57,7 +56,7 @@ module.exports = async (req, res) => {
         JOIN program_year py ON ter.year_id = py.year_id
         WHERE ter.program_id = $1 
           AND ter.status IN ('pending', 'program_head_reviewed')
-        ORDER BY ter.created_at DESC
+        ORDER BY ter.id DESC
       `;
 
       const result = await client.query(query, [program_id]);
