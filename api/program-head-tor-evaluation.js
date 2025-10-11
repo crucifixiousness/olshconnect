@@ -96,19 +96,13 @@ module.exports = async (req, res) => {
 
       // Insert course equivalencies
       for (const equiv of equivalencies) {
-        // Get course units for credits_granted
-        const courseQuery = `SELECT units FROM course WHERE course_id = $1`;
-        const courseResult = await client.query(courseQuery, [equiv.equivalent_course_id]);
-        const courseUnits = courseResult.rows[0]?.units || 0;
-
         const insertEquivQuery = `
           INSERT INTO course_equivalencies (
             tor_request_id, external_course_code, external_course_name,
             external_grade, external_units, equivalent_course_id,
             equivalent_course_code, equivalent_course_name,
-            credits_granted, source_school, source_academic_year,
-            program_head_notes
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            source_school, source_academic_year
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         `;
         await client.query(insertEquivQuery, [
           tor_request_id,
@@ -119,10 +113,8 @@ module.exports = async (req, res) => {
           equiv.equivalent_course_id,
           equiv.equivalent_course_code,
           equiv.equivalent_course_name,
-          courseUnits, // Use course units instead of credits_granted
           equiv.source_school,
-          equiv.source_academic_year,
-          equiv.program_head_notes
+          equiv.source_academic_year
         ]);
       }
 
