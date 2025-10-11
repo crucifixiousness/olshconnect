@@ -46,6 +46,8 @@ import ProgramManagement from './pages/ProgramManagement';
 import DeanDashboard from './pages/Deandashboard';
 import StudentGrades from './pages/StudentGrades';
 import DeanSidebar from './components/Deansidebar';
+import ProgramHeadTorEvaluation from './pages/ProgramHeadTorEvaluation';
+import RegistrarCreditTransfer from './pages/RegistrarCreditTransfer';
 
 const MyContext = createContext();
 
@@ -196,6 +198,7 @@ function App() {
               <Route path="/registrar-dashboard" exact={true} element={<ProtectedRoute element={<RegistrarDashboard />} requiredRole="registrar" redirectTo="/stafflogin" />} />
               <Route path="/registrar-enrollment" exact={true} element={<ProtectedRoute element={<Enrollment />} requiredRole="registrar" redirectTo="/stafflogin" />} />
               <Route path="/registrar-enrollmentt" exact={true} element={<ProtectedRoute element={<RegistrarEnrollment />} requiredRole="registrar" redirectTo="/stafflogin" />} />
+              <Route path="/registrar-credit-transfer" exact={true} element={<ProtectedRoute element={<RegistrarCreditTransfer />} requiredRole="registrar" redirectTo="/stafflogin" />} />
               <Route path="/finance-dashboard" exact={true} element={<ProtectedRoute element={<FinanceDashboard />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/student-balance" exact={true} element={<ProtectedRoute element={<StudentBalance />} requiredRole="finance" redirectTo="/stafflogin" />} />
               <Route path="/counter-payment" exact={true} element={<ProtectedRoute element={<CounterPayment />} requiredRole="finance" redirectTo="/stafflogin" />} />
@@ -205,6 +208,7 @@ function App() {
               <Route path="/programhead-dashboard" exact={true} element={<ProtectedRoute element={<ProgramHeadDashboard />} requiredRole="program head" redirectTo="/stafflogin" />} />
               <Route path="/program-studentlist" exact={true} element={<ProtectedRoute element={<ProgramStudentList />} requiredRole="program head" redirectTo="/stafflogin" />} />
               <Route path="/course-assignments" exact={true} element={<ProtectedRoute element={<AssignCourses />} requiredRole="program head" redirectTo="/stafflogin" />} />
+              <Route path="/program-head-tor-evaluation" exact={true} element={<ProtectedRoute element={<ProgramHeadTorEvaluation />} requiredRole="program head" redirectTo="/stafflogin" />} />
               <Route path="/instructor-dashboard" exact={true} element={<ProtectedRoute element={<InstructorDashboard />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-schedule" exact={true} element={<ProtectedRoute element={<InstructorSchedule />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-classes" exact={true} element={<ProtectedRoute element={<ClassManagement />} requiredRole="instructor" redirectTo="/stafflogin" />} />
