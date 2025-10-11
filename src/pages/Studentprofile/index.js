@@ -280,6 +280,10 @@ const StudentProfile = () => {
         setFormDataa({ ...formDataa, [name]: value });
       }
      }
+     // Handle text inputs for transferee information
+     else if (['previousSchool', 'previousProgram'].includes(name)) {
+       setFormDataa({ ...formDataa, [name]: value });
+     }
     // Handle file uploads separately
     else if (['idpic', 'birthCertificateDoc', 'form137Doc'].includes(name)) {
         const file = e.target.files[0] || null; // Get selected file
