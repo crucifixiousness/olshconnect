@@ -67,10 +67,10 @@ const ProgramHeadTorEvaluation = () => {
     }
   };
 
-  const fetchAvailableCourses = async (program_id, year_id) => {
+  const fetchAvailableCourses = async (program_id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/courses?program_id=${program_id}&year_id=${year_id}`, {
+      const response = await axios.get(`/api/courses?program_id=${program_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAvailableCourses(response.data.courses || []);
@@ -84,8 +84,8 @@ const ProgramHeadTorEvaluation = () => {
     setEquivalencies([]);
     setComments('');
     
-    // Fetch available courses for the student's program/year
-    await fetchAvailableCourses(request.program_id, request.year_id);
+    // Fetch available courses for the student's program
+    await fetchAvailableCourses(request.program_id);
     setEvaluationOpen(true);
   };
 
@@ -98,7 +98,6 @@ const ProgramHeadTorEvaluation = () => {
       equivalent_course_id: '',
       equivalent_course_code: '',
       equivalent_course_name: '',
-      credits_granted: 0,
       source_school: '',
       source_academic_year: '',
       program_head_notes: ''
@@ -115,7 +114,6 @@ const ProgramHeadTorEvaluation = () => {
       if (course) {
         updated[index].equivalent_course_code = course.course_code;
         updated[index].equivalent_course_name = course.course_name;
-        updated[index].credits_granted = course.units;
       }
     }
     
@@ -331,15 +329,6 @@ const ProgramHeadTorEvaluation = () => {
                             </option>
                           ))}
                         </TextField>
-                        <TextField
-                          label="Credits Granted"
-                          fullWidth
-                          size="small"
-                          type="number"
-                          value={equiv.credits_granted}
-                          onChange={(e) => handleEquivalencyChange(index, 'credits_granted', parseFloat(e.target.value))}
-                          className="mb-2"
-                        />
                         <TextField
                           label="Notes"
                           fullWidth
