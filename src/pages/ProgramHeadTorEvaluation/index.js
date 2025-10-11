@@ -320,6 +320,9 @@ const ProgramHeadTorEvaluation = () => {
                           value={equiv.equivalent_course_id}
                           onChange={(e) => handleEquivalencyChange(index, 'equivalent_course_id', e.target.value)}
                           className="mb-2"
+                          SelectProps={{
+                            native: true,
+                          }}
                         >
                           <option value="">Select Course</option>
                           {availableCourses.map((course) => (
