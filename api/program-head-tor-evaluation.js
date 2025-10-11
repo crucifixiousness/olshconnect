@@ -43,10 +43,8 @@ module.exports = async (req, res) => {
           ter.student_id,
           ter.status,
           ter.program_head_reviewed_at,
-          ter.program_head_comments,
           s.first_name,
           s.last_name,
-          s.email,
           p.program_name,
           py.year_level,
           ter.semester
@@ -91,11 +89,10 @@ module.exports = async (req, res) => {
         SET status = 'program_head_reviewed',
             program_head_id = $1,
             program_head_reviewed_at = CURRENT_TIMESTAMP,
-            program_head_comments = $2,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $3
+        WHERE id = $2
       `;
-      await client.query(updateRequestQuery, [decoded.staff_id, comments, tor_request_id]);
+      await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
 
       // Insert course equivalencies
       for (const equiv of equivalencies) {
