@@ -36,7 +36,6 @@ module.exports = async (req, res) => {
           ter.id,
           ter.student_id,
           ter.status,
-          ter.created_at,
           ter.program_head_reviewed_at,
           ter.program_head_comments,
           s.first_name,
@@ -166,12 +165,12 @@ module.exports = async (req, res) => {
             INSERT INTO grades (
               student_id, pc_id, final_grade, approval_status,
               is_transfer_credit, transfer_source_id,
-              created_at, updated_at
+              updated_at
             ) 
             SELECT 
               $1, pc.pc_id, $2, 'final',
               true, sct.sct_id,
-              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              CURRENT_TIMESTAMP
             FROM program_course pc
             JOIN student_credit_transfers sct ON sct.course_id = pc.course_id
             WHERE pc.program_id = $3 
