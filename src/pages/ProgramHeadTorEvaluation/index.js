@@ -79,13 +79,45 @@ const ProgramHeadTorEvaluation = () => {
     }
   };
 
+  const fetchExistingEquivalencies = async (tor_request_id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/registrar-credit-transfer?tor_request_id=${tor_request_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success && response.data.equivalencies) {
+        // Convert the database format to form format
+        const formattedEquivalencies = response.data.equivalencies.map(equiv => ({
+          external_course_code: equiv.external_course_code || '',
+          external_course_name: equiv.external_course_name || '',
+          external_grade: equiv.external_grade || '',
+          external_units: equiv.external_units || 0,
+          equivalent_course_id: equiv.equivalent_course_id || '',
+          equivalent_course_code: equiv.equivalent_course_code || '',
+          equivalent_course_name: equiv.equivalent_course_name || '',
+          source_school: equiv.source_school || '',
+          source_academic_year: equiv.source_academic_year || ''
+        }));
+        setEquivalencies(formattedEquivalencies);
+      }
+    } catch (error) {
+      console.error('Error fetching existing equivalencies:', error);
+      // If no equivalencies exist yet, start with empty array
+      setEquivalencies([]);
+    }
+  };
+
   const handleViewRequest = async (request) => {
     setSelectedRequest(request);
-    setEquivalencies([]);
     setComments('');
     
     // Fetch available courses for the student's program
     await fetchAvailableCourses(request.program_id);
+    
+    // Fetch existing equivalencies if any
+    await fetchExistingEquivalencies(request.id);
+    
     setEvaluationOpen(true);
   };
 
