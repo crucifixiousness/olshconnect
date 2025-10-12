@@ -103,6 +103,11 @@ const ProgramHeadTorEvaluation = () => {
     }]);
   };
 
+  const handleRemoveEquivalency = (index) => {
+    const updated = equivalencies.filter((_, i) => i !== index);
+    setEquivalencies(updated);
+  };
+
   const handleEquivalencyChange = (index, field, value) => {
     const updated = [...equivalencies];
     updated[index][field] = value;
@@ -120,6 +125,27 @@ const ProgramHeadTorEvaluation = () => {
   };
 
   const handleSubmitEvaluation = async () => {
+    // Validate that at least one equivalency is added
+    if (equivalencies.length === 0) {
+      setSnackbar({ open: true, message: 'Please add at least one course equivalency before submitting.', severity: 'error' });
+      return;
+    }
+
+    // Validate that all equivalencies have required fields
+    const hasEmptyFields = equivalencies.some(equiv => 
+      !equiv.external_course_code || 
+      !equiv.external_course_name || 
+      !equiv.external_grade || 
+      !equiv.equivalent_course_id ||
+      !equiv.source_school ||
+      !equiv.source_academic_year
+    );
+
+    if (hasEmptyFields) {
+      setSnackbar({ open: true, message: 'Please fill in all required fields for all course equivalencies.', severity: 'error' });
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       
@@ -238,24 +264,49 @@ const ProgramHeadTorEvaluation = () => {
                   <strong>Semester:</strong> {selectedRequest.semester}
                 </Box>
 
-                <Typography variant="h6" className="mb-3" style={{ color: '#c70202', fontWeight: 'bold' }}>Course Equivalencies</Typography>
-                <Button 
-                  variant="contained" 
-                  onClick={handleAddEquivalency}
-                  className="mb-3"
-                  style={{ 
-                    backgroundColor: '#c70202', 
-                    color: 'white',
-                    fontWeight: 'bold',
-                    '&:hover': { backgroundColor: '#a00000' }
-                  }}
-                >
-                  Add Course Equivalency
-                </Button>
+                <Box display="flex" justifyContent="space-between" alignItems="center" className="mb-3">
+                  <Typography variant="h6" style={{ color: '#c70202', fontWeight: 'bold' }}>
+                    Course Equivalencies ({equivalencies.length})
+                  </Typography>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleAddEquivalency}
+                    style={{ 
+                      backgroundColor: '#c70202', 
+                      color: 'white',
+                      fontWeight: 'bold',
+                      '&:hover': { backgroundColor: '#a00000' }
+                    }}
+                  >
+                    Add Course Equivalency
+                  </Button>
+                </Box>
 
-                {equivalencies.map((equiv, index) => (
+                {equivalencies.length === 0 ? (
+                  <Card className="p-4 text-center" style={{ border: '2px dashed #e0e0e0', borderRadius: '8px' }}>
+                    <Typography variant="body1" style={{ color: '#666' }}>
+                      No course equivalencies added yet. Click "Add Course Equivalency" to start.
+                    </Typography>
+                  </Card>
+                ) : (
+                  equivalencies.map((equiv, index) => (
                   <Card key={index} className="p-3 mb-3" style={{ border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-                    <Typography variant="subtitle1" className="mb-2" style={{ color: '#c70202', fontWeight: 'bold' }}>Equivalency {index + 1}</Typography>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" className="mb-2">
+                      <Typography variant="subtitle1" style={{ color: '#c70202', fontWeight: 'bold' }}>
+                        Equivalency {index + 1}
+                      </Typography>
+                      {equivalencies.length > 1 && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleRemoveEquivalency(index)}
+                          style={{ minWidth: 'auto', padding: '4px 8px' }}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </Box>
                     <div className="row">
                       <div className="col-md-6">
                         <TextField
@@ -334,7 +385,8 @@ const ProgramHeadTorEvaluation = () => {
                       </div>
                     </div>
                   </Card>
-                ))}
+                  ))
+                )}
 
               </Box>
             )}
