@@ -115,6 +115,19 @@ const ProgramHeadTorEvaluation = () => {
     }
   };
 
+  const handleViewRequest = async (request) => {
+    setSelectedRequest(request);
+    setComments('');
+    
+    // Fetch available courses for the student's program
+    await fetchAvailableCourses(request.program_id);
+    
+    // Fetch existing equivalencies if any
+    await fetchExistingEquivalencies(request.id);
+    
+    setEvaluationOpen(true);
+  };
+
   const handleDownloadTor = async (tor_request_id) => {
     try {
       const token = localStorage.getItem('token');
