@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
         JOIN program p ON ter.program_id = p.program_id
         JOIN program_year py ON ter.year_id = py.year_id
         LEFT JOIN admins ph ON ter.program_head_id = ph.staff_id
-        WHERE ter.status = 'program_head_reviewed'
+        WHERE ter.status = 'ph_reviewed'
         ORDER BY ter.program_head_reviewed_at ASC
       `;
 
