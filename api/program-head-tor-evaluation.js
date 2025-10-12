@@ -72,6 +72,7 @@ module.exports = async (req, res) => {
   // POST - Program head submits course equivalencies
   else if (req.method === 'POST') {
     let client;
+    const debugInfo = [];
     try {
       const decoded = authenticateToken(req);
       const { tor_request_id, equivalencies, comments } = req.body;
@@ -79,6 +80,12 @@ module.exports = async (req, res) => {
       if (!tor_request_id || !equivalencies || !Array.isArray(equivalencies)) {
         return res.status(400).json({ error: 'Invalid request data' });
       }
+
+      // DEBUG: Log request data
+      debugInfo.push('🔍 DEBUG: Request received');
+      debugInfo.push(`🔍 DEBUG: tor_request_id: ${tor_request_id}`);
+      debugInfo.push(`🔍 DEBUG: equivalencies count: ${equivalencies.length}`);
+      debugInfo.push(`🔍 DEBUG: equivalencies: ${JSON.stringify(equivalencies, null, 2)}`);
 
       client = await pool.connect();
 
@@ -93,18 +100,18 @@ module.exports = async (req, res) => {
         WHERE id = $2
       `;
       await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
+      debugInfo.push('✅ TOR request status updated successfully');
 
       // Insert course equivalencies
-      for (const equiv of equivalencies) {
-        // DEBUG: Log each field and its length
-        console.log('🔍 DEBUG: Processing equivalency:', equiv);
-        console.log('🔍 DEBUG: Field lengths:');
-        console.log('  - external_course_code:', equiv.external_course_code, `(${equiv.external_course_code?.length || 0} chars)`);
-        console.log('  - external_course_name:', equiv.external_course_name, `(${equiv.external_course_name?.length || 0} chars)`);
-        console.log('  - equivalent_course_code:', equiv.equivalent_course_code, `(${equiv.equivalent_course_code?.length || 0} chars)`);
-        console.log('  - equivalent_course_name:', equiv.equivalent_course_name, `(${equiv.equivalent_course_name?.length || 0} chars)`);
-        console.log('  - source_school:', equiv.source_school, `(${equiv.source_school?.length || 0} chars)`);
-        console.log('  - source_academic_year:', equiv.source_academic_year, `(${equiv.source_academic_year?.length || 0} chars)`);
+      for (let i = 0; i < equivalencies.length; i++) {
+        const equiv = equivalencies[i];
+        debugInfo.push(`🔍 DEBUG: Processing equivalency ${i + 1}:`);
+        debugInfo.push(`  - external_course_code: "${equiv.external_course_code}" (${equiv.external_course_code?.length || 0} chars)`);
+        debugInfo.push(`  - external_course_name: "${equiv.external_course_name}" (${equiv.external_course_name?.length || 0} chars)`);
+        debugInfo.push(`  - equivalent_course_code: "${equiv.equivalent_course_code}" (${equiv.equivalent_course_code?.length || 0} chars)`);
+        debugInfo.push(`  - equivalent_course_name: "${equiv.equivalent_course_name}" (${equiv.equivalent_course_name?.length || 0} chars)`);
+        debugInfo.push(`  - source_school: "${equiv.source_school}" (${equiv.source_school?.length || 0} chars)`);
+        debugInfo.push(`  - source_academic_year: "${equiv.source_academic_year}" (${equiv.source_academic_year?.length || 0} chars)`);
         
         // Check for fields that exceed VARCHAR limits
         const fieldLimits = {
@@ -116,10 +123,20 @@ module.exports = async (req, res) => {
           source_academic_year: 20
         };
         
+        let hasFieldTooLong = false;
         for (const [field, limit] of Object.entries(fieldLimits)) {
           if (equiv[field] && equiv[field].length > limit) {
-            console.error(`❌ FIELD TOO LONG: ${field} = "${equiv[field]}" (${equiv[field].length} chars) exceeds limit of ${limit}`);
+            debugInfo.push(`❌ FIELD TOO LONG: ${field} = "${equiv[field]}" (${equiv[field].length} chars) exceeds limit of ${limit}`);
+            hasFieldTooLong = true;
           }
+        }
+        
+        if (hasFieldTooLong) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ 
+            error: 'Field length exceeds database limit', 
+            debugInfo: debugInfo 
+          });
         }
         
         const insertEquivQuery = `
@@ -144,21 +161,36 @@ module.exports = async (req, res) => {
             equiv.source_school,
             equiv.source_academic_year
           ]);
-          console.log('✅ Successfully inserted equivalency');
+          debugInfo.push(`✅ Successfully inserted equivalency ${i + 1}`);
         } catch (insertError) {
-          console.error('❌ INSERT ERROR:', insertError.message);
-          console.error('❌ INSERT ERROR DETAILS:', insertError);
-          throw insertError; // Re-throw to trigger rollback
+          debugInfo.push(`❌ INSERT ERROR for equivalency ${i + 1}: ${insertError.message}`);
+          debugInfo.push(`❌ INSERT ERROR DETAILS: ${JSON.stringify(insertError, null, 2)}`);
+          await client.query('ROLLBACK');
+          return res.status(500).json({ 
+            error: 'Database insert failed', 
+            details: insertError.message,
+            debugInfo: debugInfo 
+          });
         }
       }
 
       await client.query('COMMIT');
-      return res.status(200).json({ success: true, message: 'Course equivalencies submitted successfully' });
+      debugInfo.push('✅ All equivalencies processed successfully');
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Course equivalencies submitted successfully',
+        debugInfo: debugInfo 
+      });
 
     } catch (error) {
       await client.query('ROLLBACK');
+      debugInfo.push(`❌ GENERAL ERROR: ${error.message}`);
+      debugInfo.push(`❌ ERROR STACK: ${error.stack}`);
       const status = error.status || 500;
-      return res.status(status).json({ error: error.message || 'Server error' });
+      return res.status(status).json({ 
+        error: error.message || 'Server error',
+        debugInfo: debugInfo 
+      });
     } finally {
       if (client) client.release();
     }
