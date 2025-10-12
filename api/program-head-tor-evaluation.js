@@ -96,6 +96,32 @@ module.exports = async (req, res) => {
 
       // Insert course equivalencies
       for (const equiv of equivalencies) {
+        // DEBUG: Log each field and its length
+        console.log('🔍 DEBUG: Processing equivalency:', equiv);
+        console.log('🔍 DEBUG: Field lengths:');
+        console.log('  - external_course_code:', equiv.external_course_code, `(${equiv.external_course_code?.length || 0} chars)`);
+        console.log('  - external_course_name:', equiv.external_course_name, `(${equiv.external_course_name?.length || 0} chars)`);
+        console.log('  - equivalent_course_code:', equiv.equivalent_course_code, `(${equiv.equivalent_course_code?.length || 0} chars)`);
+        console.log('  - equivalent_course_name:', equiv.equivalent_course_name, `(${equiv.equivalent_course_name?.length || 0} chars)`);
+        console.log('  - source_school:', equiv.source_school, `(${equiv.source_school?.length || 0} chars)`);
+        console.log('  - source_academic_year:', equiv.source_academic_year, `(${equiv.source_academic_year?.length || 0} chars)`);
+        
+        // Check for fields that exceed VARCHAR limits
+        const fieldLimits = {
+          external_course_code: 50,
+          external_course_name: 200,
+          equivalent_course_code: 50,
+          equivalent_course_name: 200,
+          source_school: 200,
+          source_academic_year: 20
+        };
+        
+        for (const [field, limit] of Object.entries(fieldLimits)) {
+          if (equiv[field] && equiv[field].length > limit) {
+            console.error(`❌ FIELD TOO LONG: ${field} = "${equiv[field]}" (${equiv[field].length} chars) exceeds limit of ${limit}`);
+          }
+        }
+        
         const insertEquivQuery = `
           INSERT INTO course_equivalencies (
             tor_request_id, external_course_code, external_course_name,
@@ -104,18 +130,26 @@ module.exports = async (req, res) => {
             source_school, source_academic_year
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         `;
-        await client.query(insertEquivQuery, [
-          tor_request_id,
-          equiv.external_course_code,
-          equiv.external_course_name,
-          equiv.external_grade,
-          equiv.external_units,
-          equiv.equivalent_course_id,
-          equiv.equivalent_course_code,
-          equiv.equivalent_course_name,
-          equiv.source_school,
-          equiv.source_academic_year
-        ]);
+        
+        try {
+          await client.query(insertEquivQuery, [
+            tor_request_id,
+            equiv.external_course_code,
+            equiv.external_course_name,
+            equiv.external_grade,
+            equiv.external_units,
+            equiv.equivalent_course_id,
+            equiv.equivalent_course_code,
+            equiv.equivalent_course_name,
+            equiv.source_school,
+            equiv.source_academic_year
+          ]);
+          console.log('✅ Successfully inserted equivalency');
+        } catch (insertError) {
+          console.error('❌ INSERT ERROR:', insertError.message);
+          console.error('❌ INSERT ERROR DETAILS:', insertError);
+          throw insertError; // Re-throw to trigger rollback
+        }
       }
 
       await client.query('COMMIT');
