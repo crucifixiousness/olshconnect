@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
         JOIN program p ON ter.program_id = p.program_id
         JOIN program_year py ON ter.year_id = py.year_id
         WHERE ter.program_id = $1 
-          AND ter.status IN ('pending', 'program_head_reviewed')
+          AND ter.status IN ('pending', 'ph_reviewed')
         ORDER BY ter.id DESC
       `;
 
@@ -92,15 +92,29 @@ module.exports = async (req, res) => {
       await client.query('BEGIN');
 
       // Update TOR request status
+      debugInfo.push(`🔍 DEBUG: Updating TOR request ${tor_request_id} with program_head_id: ${decoded.staff_id}`);
+      
       const updateRequestQuery = `
         UPDATE tor_evaluation_requests 
-        SET status = 'program_head_reviewed',
+        SET status = 'ph_reviewed',
             program_head_id = $1,
             program_head_reviewed_at = CURRENT_TIMESTAMP
         WHERE id = $2
       `;
-      await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
-      debugInfo.push('✅ TOR request status updated successfully');
+      
+      try {
+        await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
+        debugInfo.push('✅ TOR request status updated successfully');
+      } catch (updateError) {
+        debugInfo.push(`❌ TOR UPDATE ERROR: ${updateError.message}`);
+        debugInfo.push(`❌ TOR UPDATE DETAILS: ${JSON.stringify(updateError, null, 2)}`);
+        await client.query('ROLLBACK');
+        return res.status(500).json({ 
+          error: 'TOR request update failed', 
+          details: updateError.message,
+          debugInfo: debugInfo 
+        });
+      }
 
       // Insert course equivalencies
       for (let i = 0; i < equivalencies.length; i++) {
