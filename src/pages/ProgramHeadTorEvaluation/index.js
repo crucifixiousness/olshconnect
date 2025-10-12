@@ -82,9 +82,12 @@ const ProgramHeadTorEvaluation = () => {
   const fetchExistingEquivalencies = async (tor_request_id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/registrar-credit-transfer?tor_request_id=${tor_request_id}`, {
+      const response = await axios.get(`/api/program-head-tor-evaluation?tor_request_id=${tor_request_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('🔍 DEBUG: Fetching equivalencies for tor_request_id:', tor_request_id);
+      console.log('🔍 DEBUG: Response:', response.data);
       
       if (response.data.success && response.data.equivalencies) {
         // Convert the database format to form format
@@ -99,7 +102,11 @@ const ProgramHeadTorEvaluation = () => {
           source_school: equiv.source_school || '',
           source_academic_year: equiv.source_academic_year || ''
         }));
+        console.log('🔍 DEBUG: Formatted equivalencies:', formattedEquivalencies);
         setEquivalencies(formattedEquivalencies);
+      } else {
+        console.log('🔍 DEBUG: No equivalencies found or success=false');
+        setEquivalencies([]);
       }
     } catch (error) {
       console.error('Error fetching existing equivalencies:', error);
