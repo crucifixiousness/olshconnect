@@ -74,6 +74,7 @@ module.exports = async (req, res) => {
           ter.program_id,
           ter.status,
           ter.program_head_reviewed_at,
+          ter.tor_document_path,
           s.first_name,
           s.last_name,
           p.program_name,
