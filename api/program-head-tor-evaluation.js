@@ -23,10 +23,40 @@ function authenticateToken(req) {
   }
 }
 
-// GET - List pending TOR evaluations for program head
+// GET - List pending TOR evaluations for program head OR get existing equivalencies
 module.exports = async (req, res) => {
   if (req.method === 'GET') {
-    let client;
+    // Check if requesting specific equivalencies
+    if (req.query.tor_request_id) {
+      let client;
+      try {
+        const decoded = authenticateToken(req);
+        const { tor_request_id } = req.query;
+        client = await pool.connect();
+
+        const query = `
+          SELECT 
+            ce.*,
+            c.course_name as equivalent_course_name,
+            c.units as equivalent_units
+          FROM course_equivalencies ce
+          LEFT JOIN course c ON ce.equivalent_course_id = c.course_id
+          WHERE ce.tor_request_id = $1
+          ORDER BY ce.external_course_code
+        `;
+
+        const result = await client.query(query, [tor_request_id]);
+        return res.status(200).json({ success: true, equivalencies: result.rows });
+
+      } catch (error) {
+        const status = error.status || 500;
+        return res.status(status).json({ error: error.message || 'Server error' });
+      } finally {
+        if (client) client.release();
+      }
+    } else {
+      // Original GET logic for listing requests
+      let client;
     try {
       const decoded = authenticateToken(req);
       const { program_id } = req.query;
@@ -66,6 +96,7 @@ module.exports = async (req, res) => {
       return res.status(status).json({ error: error.message || 'Server error' });
     } finally {
       if (client) client.release();
+    }
     }
   }
 
