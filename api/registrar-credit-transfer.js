@@ -37,10 +37,8 @@ module.exports = async (req, res) => {
           ter.student_id,
           ter.status,
           ter.program_head_reviewed_at,
-          ter.program_head_comments,
           s.first_name,
           s.last_name,
-          s.email,
           p.program_name,
           py.year_level,
           ter.semester,
@@ -115,12 +113,10 @@ module.exports = async (req, res) => {
           UPDATE tor_evaluation_requests 
           SET status = 'registrar_approved',
               registrar_id = $1,
-              registrar_approved_at = CURRENT_TIMESTAMP,
-              registrar_comments = $2,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = $3
+              registrar_approved_at = CURRENT_TIMESTAMP
+          WHERE id = $2
         `;
-        await client.query(updateRequestQuery, [decoded.staff_id, comments, tor_request_id]);
+        await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
 
         // Get the student and program info
         const studentQuery = `
@@ -164,13 +160,11 @@ module.exports = async (req, res) => {
           const insertGradeQuery = `
             INSERT INTO grades (
               student_id, pc_id, final_grade, approval_status,
-              is_transfer_credit, transfer_source_id,
-              updated_at
+              is_transfer_credit, transfer_source_id
             ) 
             SELECT 
               $1, pc.pc_id, $2, 'final',
-              true, sct.sct_id,
-              CURRENT_TIMESTAMP
+              true, sct.sct_id
             FROM program_course pc
             JOIN student_credit_transfers sct ON sct.course_id = pc.course_id
             WHERE pc.program_id = $3 
@@ -194,12 +188,10 @@ module.exports = async (req, res) => {
           UPDATE tor_evaluation_requests 
           SET status = 'rejected',
               registrar_id = $1,
-              registrar_approved_at = CURRENT_TIMESTAMP,
-              registrar_comments = $2,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = $3
+              registrar_approved_at = CURRENT_TIMESTAMP
+          WHERE id = $2
         `;
-        await client.query(updateRequestQuery, [decoded.staff_id, comments, tor_request_id]);
+        await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
       }
 
       await client.query('COMMIT');
