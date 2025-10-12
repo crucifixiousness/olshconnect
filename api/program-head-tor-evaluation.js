@@ -125,28 +125,44 @@ module.exports = async (req, res) => {
       `;
       await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
 
-      // Insert course equivalencies
+      // Insert only NEW course equivalencies (avoid duplicates)
       for (const equiv of equivalencies) {
-        const insertEquivQuery = `
-          INSERT INTO course_equivalencies (
-            tor_request_id, external_course_code, external_course_name,
-            external_grade, external_units, equivalent_course_id,
-            equivalent_course_code, equivalent_course_name,
-            source_school, source_academic_year
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        // Check if this equivalency already exists
+        const checkQuery = `
+          SELECT id FROM course_equivalencies 
+          WHERE tor_request_id = $1 
+            AND external_course_code = $2 
+            AND equivalent_course_id = $3
         `;
-        await client.query(insertEquivQuery, [
+        const existingResult = await client.query(checkQuery, [
           tor_request_id,
           equiv.external_course_code,
-          equiv.external_course_name,
-          equiv.external_grade,
-          equiv.external_units,
-          equiv.equivalent_course_id,
-          equiv.equivalent_course_code,
-          equiv.equivalent_course_name,
-          equiv.source_school,
-          equiv.source_academic_year
+          equiv.equivalent_course_id
         ]);
+
+        // Only insert if it doesn't already exist
+        if (existingResult.rows.length === 0) {
+          const insertEquivQuery = `
+            INSERT INTO course_equivalencies (
+              tor_request_id, external_course_code, external_course_name,
+              external_grade, external_units, equivalent_course_id,
+              equivalent_course_code, equivalent_course_name,
+              source_school, source_academic_year
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `;
+          await client.query(insertEquivQuery, [
+            tor_request_id,
+            equiv.external_course_code,
+            equiv.external_course_name,
+            equiv.external_grade,
+            equiv.external_units,
+            equiv.equivalent_course_id,
+            equiv.equivalent_course_code,
+            equiv.equivalent_course_name,
+            equiv.source_school,
+            equiv.source_academic_year
+          ]);
+        }
       }
 
       await client.query('COMMIT');
