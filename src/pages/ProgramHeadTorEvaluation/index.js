@@ -22,7 +22,7 @@ import {
   Snackbar,
   Chip
 } from '@mui/material';
-import { FaEye, FaCheck, FaTimes } from "react-icons/fa";
+import { FaEye, FaCheck, FaTimes, FaDownload } from "react-icons/fa";
 import { MyContext } from "../../App";
 
 const ProgramHeadTorEvaluation = () => {
@@ -115,17 +115,40 @@ const ProgramHeadTorEvaluation = () => {
     }
   };
 
-  const handleViewRequest = async (request) => {
-    setSelectedRequest(request);
-    setComments('');
-    
-    // Fetch available courses for the student's program
-    await fetchAvailableCourses(request.program_id);
-    
-    // Fetch existing equivalencies if any
-    await fetchExistingEquivalencies(request.id);
-    
-    setEvaluationOpen(true);
+  const handleDownloadTor = async (tor_request_id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/download-tor?tor_request_id=${tor_request_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob' // Important for file downloads
+      });
+
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from response headers or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'TOR_Document.pdf';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSnackbar({ open: true, message: 'TOR document downloaded successfully', severity: 'success' });
+    } catch (error) {
+      console.error('Error downloading TOR:', error);
+      setSnackbar({ open: true, message: 'Failed to download TOR document', severity: 'error' });
+    }
   };
 
   const handleAddEquivalency = () => {
@@ -266,21 +289,40 @@ const ProgramHeadTorEvaluation = () => {
                     {new Date(request.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => handleViewRequest(request)}
-                      sx={{ 
-                        minWidth: 36, 
-                        height: 32, 
-                        p: 0, 
-                        borderRadius: 1, 
-                        backgroundColor: '#1976d2',
-                        '&:hover': { backgroundColor: '#155fa8' }
-                      }}
-                    >
-                      <FaEye size={16} color="#fff" />
-                    </Button>
+                    <Box display="flex" gap={1}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => handleViewRequest(request)}
+                        sx={{ 
+                          minWidth: 36, 
+                          height: 32, 
+                          p: 0, 
+                          borderRadius: 1, 
+                          backgroundColor: '#1976d2',
+                          '&:hover': { backgroundColor: '#155fa8' }
+                        }}
+                      >
+                        <FaEye size={16} color="#fff" />
+                      </Button>
+                      {request.tor_document_path && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => handleDownloadTor(request.id)}
+                          sx={{ 
+                            minWidth: 36, 
+                            height: 32, 
+                            p: 0, 
+                            borderRadius: 1, 
+                            backgroundColor: '#c70202',
+                            '&:hover': { backgroundColor: '#a00000' }
+                          }}
+                        >
+                          <FaDownload size={16} color="#fff" />
+                        </Button>
+                      )}
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
