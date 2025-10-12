@@ -89,8 +89,7 @@ module.exports = async (req, res) => {
         UPDATE tor_evaluation_requests 
         SET status = 'program_head_reviewed',
             program_head_id = $1,
-            program_head_reviewed_at = CURRENT_TIMESTAMP,
-            updated_at = CURRENT_TIMESTAMP
+            program_head_reviewed_at = CURRENT_TIMESTAMP
         WHERE id = $2
       `;
       await client.query(updateRequestQuery, [decoded.staff_id, tor_request_id]);
