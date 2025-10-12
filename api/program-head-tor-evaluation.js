@@ -129,7 +129,7 @@ module.exports = async (req, res) => {
       for (const equiv of equivalencies) {
         // Check if this equivalency already exists
         const checkQuery = `
-          SELECT id FROM course_equivalencies 
+          SELECT ce_id FROM course_equivalencies 
           WHERE tor_request_id = $1 
             AND external_course_code = $2 
             AND equivalent_course_id = $3
