@@ -111,17 +111,13 @@ const RegistrarSidebar = () => {
           </ul>
 
           <br/>
-          // Update the logout button section
-                  <div className='logoutWrap'>
-                    <div className='logoutBox'>
-                      <Button variant="contained" onClick={handleLogout}>
-                        <HiOutlineLogout/>Logout
-                      </Button>
-                    </div>
-                  </div>
-          
-
-
+            <div className='logoutWrap'>
+              <div className='logoutBox'>
+                <Button variant="contained" onClick={handleLogout}>
+                  <HiOutlineLogout/>Logout
+                </Button>
+              </div>
+            </div>
         </div>
       </>
     )
