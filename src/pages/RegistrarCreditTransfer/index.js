@@ -203,8 +203,7 @@ const RegistrarCreditTransfer = () => {
                 <Box className="mb-4">
                   <strong>Program:</strong> {selectedRequest.program_name}<br/>
                   <strong>Year Level:</strong> {selectedRequest.year_level}<br/>
-                  <strong>Semester:</strong> {selectedRequest.semester}<br/>
-                  <strong>Program Head Comments:</strong> {selectedRequest.program_head_comments || 'None'}
+                  <strong>Semester:</strong> {selectedRequest.semester}
                 </Box>
 
                 <Typography variant="h6" className="mb-3">Course Equivalencies</Typography>
@@ -213,13 +212,12 @@ const RegistrarCreditTransfer = () => {
                     <TableHead>
                       <TableRow>
                         <TableCell>External Course</TableCell>
-        <TableCell>Grade</TableCell>
-        <TableCell>External Units</TableCell>
-        <TableCell>Source School</TableCell>
-        <TableCell>Academic Year</TableCell>
-        <TableCell>Equivalent Course</TableCell>
-        <TableCell>Credits Granted</TableCell>
-        <TableCell>Notes</TableCell>
+                        <TableCell>Grade</TableCell>
+                        <TableCell>External Units</TableCell>
+                        <TableCell>Source School</TableCell>
+                        <TableCell>Academic Year</TableCell>
+                        <TableCell>Equivalent Course</TableCell>
+                        <TableCell>Credits Granted</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -246,23 +244,12 @@ const RegistrarCreditTransfer = () => {
                             </div>
                           </TableCell>
                           <TableCell><strong style={{ color: '#1976d2' }}>{equiv.external_grade}</strong></TableCell>
-                          <TableCell>{equiv.credits_granted}</TableCell>
-                          <TableCell>{equiv.program_head_notes || 'None'}</TableCell>
+                          <TableCell>{equiv.credits_granted ?? equiv.equivalent_units ?? '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
-
-                <TextField
-                  label="Registrar Comments"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  className="mt-3"
-                />
               </Box>
             )}
           </DialogContent>
