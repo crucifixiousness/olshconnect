@@ -96,15 +96,58 @@ module.exports = async (req, res) => {
 
       const torDocBinary = enrollmentResult.rows[0].tor_doc;
       console.log('✅ SUCCESS: TOR document found, size:', torDocBinary.length, 'bytes');
+      console.log('🔍 DEBUG: Binary data type:', typeof torDocBinary);
+      console.log('🔍 DEBUG: Is Buffer?', Buffer.isBuffer(torDocBinary));
+      console.log('🔍 DEBUG: First few bytes:', torDocBinary.slice(0, 10));
 
-      // Set headers for file download
-      const fileName = `TOR_${first_name}_${last_name}.pdf`;
+      // Ensure we have a proper Buffer
+      let fileBuffer;
+      if (Buffer.isBuffer(torDocBinary)) {
+        fileBuffer = torDocBinary;
+      } else if (torDocBinary instanceof Uint8Array) {
+        fileBuffer = Buffer.from(torDocBinary);
+      } else {
+        // Convert to Buffer if it's not already
+        fileBuffer = Buffer.from(torDocBinary);
+      }
+
+      console.log('🔍 DEBUG: Final buffer size:', fileBuffer.length);
+
+      // Detect file type from binary data
+      const detectFileType = (buffer) => {
+        const firstBytes = buffer.slice(0, 10);
+        
+        // PDF files start with %PDF
+        if (firstBytes.toString('ascii', 0, 4) === '%PDF') {
+          return { type: 'pdf', mimeType: 'application/pdf', extension: 'pdf' };
+        }
+        
+        // JPEG files start with FF D8 FF
+        if (firstBytes[0] === 0xFF && firstBytes[1] === 0xD8 && firstBytes[2] === 0xFF) {
+          return { type: 'jpeg', mimeType: 'image/jpeg', extension: 'jpg' };
+        }
+        
+        // PNG files start with 89 50 4E 47
+        if (firstBytes[0] === 0x89 && firstBytes[1] === 0x50 && firstBytes[2] === 0x4E && firstBytes[3] === 0x47) {
+          return { type: 'png', mimeType: 'image/png', extension: 'png' };
+        }
+        
+        // Default to PDF if we can't detect
+        console.log('⚠️ WARNING: Could not detect file type, defaulting to PDF');
+        return { type: 'pdf', mimeType: 'application/pdf', extension: 'pdf' };
+      };
+
+      const fileInfo = detectFileType(fileBuffer);
+      console.log('🔍 DEBUG: Detected file type:', fileInfo);
+
+      // Set headers for file download with correct file type
+      const fileName = `TOR_${first_name}_${last_name}.${fileInfo.extension}`;
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Length', torDocBinary.length);
+      res.setHeader('Content-Type', fileInfo.mimeType);
+      res.setHeader('Content-Length', fileBuffer.length);
 
-      // Send the binary data directly
-      res.send(torDocBinary);
+      // Send the binary data as Buffer
+      res.end(fileBuffer);
 
     } catch (error) {
       console.error('❌ ERROR in download-tor API:', error);
