@@ -41,9 +41,17 @@ module.exports = async (req, res) => {
 
       client = await pool.connect();
 
-      // Get the TOR document path
+      // Get the TOR request details and student info
       const query = `
-        SELECT tor_document_path, s.first_name, s.last_name, ter.status
+        SELECT 
+          ter.student_id,
+          ter.program_id,
+          ter.year_id,
+          ter.semester,
+          ter.status,
+          s.first_name,
+          s.last_name,
+          s.email
         FROM tor_evaluation_requests ter
         JOIN students s ON ter.student_id = s.id
         WHERE ter.id = $1
@@ -57,60 +65,46 @@ module.exports = async (req, res) => {
         return res.status(404).json({ error: 'TOR request not found' });
       }
 
-      const { tor_document_path, first_name, last_name, status } = result.rows[0];
+      const { student_id, first_name, last_name, status } = result.rows[0];
 
       console.log('🔍 DEBUG: TOR request details:', {
-        tor_document_path,
+        student_id,
         first_name,
         last_name,
         status
       });
 
-      if (!tor_document_path) {
-        console.log('❌ ERROR: No TOR document path found for request');
-        return res.status(404).json({ error: 'TOR document not uploaded yet' });
+      // Get the TOR document from the enrollments table
+      const enrollmentQuery = `
+        SELECT tor_doc, enrollment_date, academic_year, semester
+        FROM enrollments 
+        WHERE student_id = $1 AND tor_doc IS NOT NULL
+        ORDER BY enrollment_date DESC
+        LIMIT 1
+      `;
+      const enrollmentResult = await client.query(enrollmentQuery, [student_id]);
+
+      console.log('🔍 DEBUG: Enrollment query result:', {
+        found: enrollmentResult.rows.length > 0,
+        has_tor_doc: enrollmentResult.rows.length > 0 ? !!enrollmentResult.rows[0].tor_doc : false
+      });
+
+      if (enrollmentResult.rows.length === 0 || !enrollmentResult.rows[0].tor_doc) {
+        console.log('❌ ERROR: No TOR document found in enrollments table');
+        return res.status(404).json({ error: 'TOR document not found in enrollment records' });
       }
 
-      // Construct the full file path
-      // The tor_document_path already includes the subdirectory (e.g., "tor_documents/filename.pdf")
-      // So we just need to join it with the uploads directory
-      const filePath = path.join(process.cwd(), 'uploads', tor_document_path);
-      
-      console.log('🔍 DEBUG: Looking for file at path:', filePath);
-      console.log('🔍 DEBUG: Current working directory:', process.cwd());
-      console.log('🔍 DEBUG: Uploads directory exists:', fs.existsSync(path.join(process.cwd(), 'uploads')));
-      console.log('🔍 DEBUG: Tor documents directory exists:', fs.existsSync(path.join(process.cwd(), 'uploads', 'tor_documents')));
-      
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
-        console.log('❌ ERROR: File does not exist at path:', filePath);
-        
-        // Let's also check if there are any files in the tor_documents directory
-        try {
-          const torDocsDir = path.join(process.cwd(), 'uploads', 'tor_documents');
-          if (fs.existsSync(torDocsDir)) {
-            const files = fs.readdirSync(torDocsDir);
-            console.log('🔍 DEBUG: Files in tor_documents directory:', files);
-          } else {
-            console.log('❌ ERROR: tor_documents directory does not exist');
-          }
-        } catch (dirError) {
-          console.log('❌ ERROR: Could not read tor_documents directory:', dirError);
-        }
-        
-        return res.status(404).json({ error: 'TOR file not found on server' });
-      }
-
-      console.log('✅ SUCCESS: File found, proceeding with download');
+      const torDocBinary = enrollmentResult.rows[0].tor_doc;
+      console.log('✅ SUCCESS: TOR document found, size:', torDocBinary.length, 'bytes');
 
       // Set headers for file download
       const fileName = `TOR_${first_name}_${last_name}.pdf`;
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', torDocBinary.length);
 
-      // Stream the file
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
+      // Send the binary data directly
+      res.send(torDocBinary);
 
     } catch (error) {
       console.error('❌ ERROR in download-tor API:', error);
