@@ -72,13 +72,32 @@ module.exports = async (req, res) => {
       }
 
       // Construct the full file path
+      // The tor_document_path already includes the subdirectory (e.g., "tor_documents/filename.pdf")
+      // So we just need to join it with the uploads directory
       const filePath = path.join(process.cwd(), 'uploads', tor_document_path);
       
       console.log('🔍 DEBUG: Looking for file at path:', filePath);
+      console.log('🔍 DEBUG: Current working directory:', process.cwd());
+      console.log('🔍 DEBUG: Uploads directory exists:', fs.existsSync(path.join(process.cwd(), 'uploads')));
+      console.log('🔍 DEBUG: Tor documents directory exists:', fs.existsSync(path.join(process.cwd(), 'uploads', 'tor_documents')));
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
         console.log('❌ ERROR: File does not exist at path:', filePath);
+        
+        // Let's also check if there are any files in the tor_documents directory
+        try {
+          const torDocsDir = path.join(process.cwd(), 'uploads', 'tor_documents');
+          if (fs.existsSync(torDocsDir)) {
+            const files = fs.readdirSync(torDocsDir);
+            console.log('🔍 DEBUG: Files in tor_documents directory:', files);
+          } else {
+            console.log('❌ ERROR: tor_documents directory does not exist');
+          }
+        } catch (dirError) {
+          console.log('❌ ERROR: Could not read tor_documents directory:', dirError);
+        }
+        
         return res.status(404).json({ error: 'TOR file not found on server' });
       }
 
