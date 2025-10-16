@@ -34,6 +34,8 @@ const ProgramHeadTorEvaluation = () => {
   const [evaluationOpen, setEvaluationOpen] = useState(false);
   const [equivalencies, setEquivalencies] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [remainingCourses, setRemainingCourses] = useState([]);
+  const [requiredCourses, setRequiredCourses] = useState([]);
   const [comments, setComments] = useState('');
 
   useEffect(() => {
@@ -124,6 +126,25 @@ const ProgramHeadTorEvaluation = () => {
     
     // Fetch existing equivalencies if any
     await fetchExistingEquivalencies(request.id);
+
+    // Fetch remaining (current semester) and required courses
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams({
+        student_id: String(request.student_id),
+        program_id: String(request.program_id),
+        year_id: String(request.year_id),
+        semester: String(request.semester),
+        tor_request_id: String(request.id)
+      }).toString();
+      const res = await axios.get(`/api/student-remaining-courses?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRemainingCourses(res.data.remainingCourses || []);
+      setRequiredCourses(res.data.requiredCourses || []);
+    } catch (e) {
+      console.error('Error fetching remaining/required courses:', e);
+    }
     
     setEvaluationOpen(true);
   };
@@ -518,6 +539,76 @@ const ProgramHeadTorEvaluation = () => {
                   </Card>
                   ))
                 )}
+
+                {/* Remaining Required Courses (current semester only) */}
+                <Box className="mt-4">
+                  <Typography variant="h6" className="mb-2" style={{ color: '#c70202', fontWeight: 'bold' }}>
+                    Assign Additional Course (Current Semester)
+                  </Typography>
+                  <div className="row">
+                    <div className="col-md-8">
+                      <TextField
+                        select
+                        label="Remaining Course"
+                        fullWidth
+                        size="small"
+                        className="mb-2"
+                        SelectProps={{ native: true }}
+                        onChange={async (e) => {
+                          const pcId = Number(e.target.value || 0);
+                          if (!pcId) return;
+                          try {
+                            const token = localStorage.getItem('token');
+                            await axios.post('/api/student-required-courses', {
+                              student_id: selectedRequest.student_id,
+                              pc_id: pcId,
+                              reason: 'not_taken'
+                            }, { headers: { Authorization: `Bearer ${token}` } });
+                            // Move from remaining to required list locally
+                            const picked = remainingCourses.find(rc => Number(rc.pc_id) === pcId);
+                            if (picked) {
+                              setRequiredCourses([...requiredCourses, picked]);
+                              setRemainingCourses(remainingCourses.filter(rc => Number(rc.pc_id) !== pcId));
+                              setSnackbar({ open: true, message: 'Course added to required list', severity: 'success' });
+                            }
+                          } catch (err) {
+                            console.error('Error adding required course:', err);
+                            setSnackbar({ open: true, message: 'Failed to add required course', severity: 'error' });
+                          }
+                          e.target.value = '';
+                        }}
+                      >
+                        <option value="">Select a remaining course</option>
+                        {remainingCourses.map(rc => (
+                          <option key={rc.pc_id} value={rc.pc_id}>
+                            {rc.course_code} - {rc.course_name} ({rc.units} units)
+                          </option>
+                        ))}
+                      </TextField>
+                    </div>
+                  </div>
+
+                  {requiredCourses.length > 0 && (
+                    <TableContainer component={Paper} elevation={0} className="mt-2">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Required Course</TableCell>
+                            <TableCell align="right">Units</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {requiredCourses.map(rc => (
+                            <TableRow key={rc.pc_id}>
+                              <TableCell>{rc.course_code} - {rc.course_name}</TableCell>
+                              <TableCell align="right">{rc.units}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </Box>
 
               </Box>
             )}
