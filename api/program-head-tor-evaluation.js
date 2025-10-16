@@ -72,6 +72,7 @@ module.exports = async (req, res) => {
           ter.id,
           ter.student_id,
           ter.program_id,
+          ter.year_id,
           ter.status,
           ter.program_head_reviewed_at,
           ter.tor_document_path,
