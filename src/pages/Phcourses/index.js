@@ -64,6 +64,8 @@ const AssignCourses = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [instructors, setInstructors] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState('');
+  // Blocks that already have assigned students for this program
+  const [existingBlocks, setExistingBlocks] = useState([]);
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewCourse, setSelectedViewCourse] = useState(null);
@@ -333,6 +335,24 @@ const AssignCourses = () => {
       console.error("Error fetching courses:", error);
     }
   };
+
+  // Fetch existing blocks (those that already have assigned students) for this program
+  useEffect(() => {
+    const fetchExistingBlocks = async () => {
+      if (!program_id) return;
+      try {
+        const response = await axios.get(`/api/get-program-blocks?program_id=${program_id}`);
+        let blocks = Array.isArray(response.data) ? response.data : [];
+        // sanitize values
+        blocks = blocks.filter(b => !!b && b !== '');
+        setExistingBlocks(blocks);
+      } catch (error) {
+        console.error('Error fetching existing blocks:', error);
+        setExistingBlocks([]);
+      }
+    };
+    fetchExistingBlocks();
+  }, [program_id]);
 
   // Fetch majors for the current program
   const fetchMajors = async () => {
@@ -1017,10 +1037,17 @@ const AssignCourses = () => {
                 <Select
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
+                  displayEmpty
                 >
-                  <MenuItem value="A">Block A</MenuItem>
-                  <MenuItem value="B">Block B</MenuItem>
-                  <MenuItem value="C">Block C</MenuItem>
+                  {existingBlocks.length > 0 ? (
+                    existingBlocks.map(block => (
+                      <MenuItem key={block} value={block}>Block {block}</MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="" disabled>
+                      <em>No blocks with assigned students</em>
+                    </MenuItem>
+                  )}
                 </Select>
               </FormControl>
             </div>
