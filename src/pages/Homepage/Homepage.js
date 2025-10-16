@@ -97,8 +97,22 @@ const Homepage = () => {
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    const handleOpen = () => {
+        // Reset modal state so it always opens with a fresh form
+        setIsRegistered(false);
+        setIsEmailVerified(false);
+        setVerificationType('');
+        setVerificationCode('');
+        setOpen(true);
+    };
+    const handleClose = () => {
+        setOpen(false);
+        // Also reset when closing to avoid stale success screen next open
+        setIsRegistered(false);
+        setIsEmailVerified(false);
+        setVerificationType('');
+        setVerificationCode('');
+    };
     const handleVerificationOpen = (type) => {
         console.log('🔘 Verify button clicked for type:', type);
         console.log('📧 Email value:', formData.email);
