@@ -104,7 +104,7 @@ const AcademicRecords = () => {
                     <TableBody>
                       {courses.length > 0 ? (
                         courses.map((row, idx) => {
-                          const isApproved = row.approval_status === 'final';
+                          const isApproved = ['final', 'reg_approved', 'registrar_approved'].includes(row.approval_status);
                           const grade = isApproved && row.final_grade ? parseFloat(row.final_grade) : null;
                           const remarks = grade ? (grade < 3.0 ? 'Passed' : 'Failed') : '';
                           return (
