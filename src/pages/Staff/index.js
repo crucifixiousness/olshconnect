@@ -16,8 +16,16 @@ const Staff = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   
-  const handleOpen = () => setShowAddStaffModal(true);
-  const handleClose = () => setShowAddStaffModal(false);
+  const handleOpen = () => {
+    setIsCreated(false);
+    setStatusMessage({ message: "", type: "" });
+    setShowAddStaffModal(true);
+  };
+  const handleClose = () => {
+    setIsCreated(false);
+    setStatusMessage({ message: "", type: "" });
+    setShowAddStaffModal(false);
+  };
   const [newStaff, setNewStaff] = useState({
     full_name: "",
     staff_username: "",
@@ -373,8 +381,7 @@ const Staff = () => {
             Create Staff Account
           </Typography>
           
-          {!isCreated ? (
-            <form onSubmit={handleAddStaff}>
+          <form onSubmit={handleAddStaff}>
               <TextField 
                 label="Full Name" 
                 name="full_name" 
@@ -526,15 +533,6 @@ const Staff = () => {
                 </Button>
               </div>
             </form>
-          ) : (
-            <Typography
-              variant="h6"
-              align="center"
-              sx={{ color: "green", fontWeight: "bold", mt: 4 }}
-            >
-              {statusMessage.message}
-            </Typography>
-          )}
         </Box>
       </Modal>
 
