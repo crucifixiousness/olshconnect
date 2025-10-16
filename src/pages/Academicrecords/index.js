@@ -104,7 +104,8 @@ const AcademicRecords = () => {
                     <TableBody>
                       {courses.length > 0 ? (
                         courses.map((row, idx) => {
-                          const grade = row.final_grade ? parseFloat(row.final_grade) : null;
+                          const isApproved = row.approval_status === 'final';
+                          const grade = isApproved && row.final_grade ? parseFloat(row.final_grade) : null;
                           const remarks = grade ? (grade < 3.0 ? 'Passed' : 'Failed') : '';
                           return (
                             <TableRow hover key={idx}>
