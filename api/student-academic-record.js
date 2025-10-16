@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
     const { program_id, year_id, semester, year_level, program_name } = enrollmentResult.rows[0];
 
     // Return all courses for the student's current program/year/semester
-    // LEFT JOIN to grades filtered to reg_approved so non-final stays blank
+    // Include both regular grades and transfer credits
     const coursesQuery = `
       SELECT 
         c.course_code,
@@ -61,13 +61,36 @@ module.exports = async (req, res) => {
         c.units,
         pc.semester,
         COALESCE(g.final_grade::text, '') AS final_grade,
-        g.dean_approved_at
+        g.approval_status,
+        g.dean_approved_at,
+        CASE 
+          WHEN g.is_transfer_credit = true THEN 'Transfer Credit'
+          ELSE 'Regular Course'
+        END AS course_type,
+        CASE 
+          WHEN g.is_transfer_credit = true THEN sct.external_course_code
+          ELSE NULL
+        END AS external_course_code,
+        CASE 
+          WHEN g.is_transfer_credit = true THEN sct.source_school
+          ELSE NULL
+        END AS source_school,
+        CASE 
+          WHEN g.is_transfer_credit = true THEN sct.source_academic_year
+          ELSE NULL
+        END AS source_academic_year,
+        CASE 
+          WHEN g.is_transfer_credit = true THEN sct.external_grade
+          ELSE NULL
+        END AS external_grade
       FROM program_course pc
       JOIN course c ON pc.course_id = c.course_id
       LEFT JOIN grades g 
         ON g.student_id = $1 
        AND g.pc_id = pc.pc_id 
-       AND g.approval_status = 'reg_approved'
+       AND ((g.approval_status IN ('reg_approved','registrar_approved','final')) OR g.is_transfer_credit = true)
+      LEFT JOIN student_credit_transfers sct 
+        ON g.transfer_source_id = sct.sct_id
       WHERE pc.program_id = $2
         AND pc.year_id = $3
         AND pc.semester = $4
