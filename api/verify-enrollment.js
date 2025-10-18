@@ -74,12 +74,59 @@ module.exports = async (req, res) => {
         return res.status(404).json({ error: "Tuition fees not configured" });
       }
 
-      // Calculate total fees
-      const fees = feesResult.rows[0];
-      const totalFee = parseFloat(fees.tuition_amount) +
-                      parseFloat(fees.misc_fees) +
-                      parseFloat(fees.lab_fees) +
-                      parseFloat(fees.other_fees);
+      // Calculate total fees based on student type
+      let totalFee;
+      
+      if (enrollment.student_type === 'transferee') {
+        // For transferees, calculate based on assigned courses
+        const assignedCoursesResult = await pool.query(
+          `SELECT src.pc_id, pc.course_id, c.course_code, c.course_name, c.units
+           FROM student_required_courses src
+           JOIN program_course pc ON pc.pc_id = src.pc_id
+           JOIN course c ON c.course_id = pc.course_id
+           WHERE src.student_id = $1`,
+          [enrollment.student_id]
+        );
+
+        const assignedCourses = assignedCoursesResult.rows;
+        const totalUnits = assignedCourses.reduce((sum, course) => sum + parseFloat(course.units), 0);
+        
+        // Calculate tuition based on units (₱440 per unit)
+        const tuitionAmount = totalUnits * 440;
+        
+        // Get miscellaneous fees from tuition_fees table
+        const fees = feesResult.rows[0];
+        const miscFees = parseFloat(fees.misc_fees || 0);
+        const labFees = parseFloat(fees.lab_fees || 0);
+        const otherFees = parseFloat(fees.other_fees || 0);
+        
+        totalFee = tuitionAmount + miscFees + labFees + otherFees;
+        
+        console.log('Transferee fee calculation:', {
+          totalUnits,
+          tuitionAmount,
+          miscFees,
+          labFees,
+          otherFees,
+          totalFee,
+          assignedCourses: assignedCourses.length
+        });
+      } else {
+        // For regular students, use standard fee structure
+        const fees = feesResult.rows[0];
+        totalFee = parseFloat(fees.tuition_amount) +
+                  parseFloat(fees.misc_fees) +
+                  parseFloat(fees.lab_fees) +
+                  parseFloat(fees.other_fees);
+        
+        console.log('Regular student fee calculation:', {
+          tuition_amount: fees.tuition_amount,
+          misc_fees: fees.misc_fees,
+          lab_fees: fees.lab_fees,
+          other_fees: fees.other_fees,
+          totalFee
+        });
+      }
 
       // Update enrollment with fees and status
       const result = await pool.query(
