@@ -54,7 +54,7 @@ const ProgramHeadSidebar = () => {
         <ul>
           <li>
             <Link to="/programhead-dashboard">
-              <Button className={`w-100 ${activeTab === 0 ? 'active' : ''}`} onClick={() => handleTabClick(0)}>
+              <Button className={`w-100 ${activeTab === 0 ? 'active' : ''}`}>
                 <span className='icon'><RiDashboardHorizontalLine /></span>
                 Dashboard
                 <span className='arrow'><FaAnglesRight /></span>
@@ -98,7 +98,7 @@ const ProgramHeadSidebar = () => {
           </li>
           <li>
             <Link to="/program-head-tor-evaluation">
-              <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`} onClick={() => handleTabClick(3)}>
+              <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`}>
                 <span className='icon'><FaFileAlt /></span>
                 TOR Evaluation
                 <span className='arrow'><FaAnglesRight /></span>
