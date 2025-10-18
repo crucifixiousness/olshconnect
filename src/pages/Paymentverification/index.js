@@ -255,7 +255,7 @@ const PaymentVerification = () => {
                         >
                           <FaEye/>
                         </Button>
-                        {payment.enrollmentStatus === 'Verified' && (
+                        {payment.proofOfPayment && (
                           <>
                             <Button 
                               variant="contained"
