@@ -3,7 +3,7 @@ import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaBookOpen } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useContext, useEffect } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
@@ -12,13 +12,34 @@ import { FaMoneyBillWave } from "react-icons/fa";
 
 
 const StudentSidebar = () => {
-  // Remove the initial 0 value since we'll set it in useEffect
-  const [activeTab, setActiveTab] = useState(null);
   const [isOfficiallyEnrolled, setIsOfficiallyEnrolled] = useState(false);
   const [canAccessPayment, setCanAccessPayment] = useState(false);
-  // eslint-disable-next-line
   const context = useContext(MyContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Function to get active tab based on current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    switch (path) {
+      case '/student-dashboard':
+        return 0;
+      case '/student-courses':
+        return 1;
+      case '/student-payment':
+        return 2;
+      case '/student-profile':
+        return 3;
+      case '/academic-records':
+        return 4;
+      case '/document-request':
+        return 5;
+      default:
+        return 3; // Default to My Profile
+    }
+  };
+
+  const activeTab = getActiveTab();
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
@@ -29,13 +50,7 @@ const StudentSidebar = () => {
 
     setIsOfficiallyEnrolled(canAccessFeatures);
     setCanAccessPayment(canPay);
-    // Set initial active tab based on enrollment status
-    setActiveTab(canAccessFeatures ? 0 : 3); // 0 for Dashboard, 3 for My Profile
   }, []);
-
-  const handleTabClick = (index) => {
-    setActiveTab(index);
-  };
 
     // Logout function to remove user data and redirect
   const handleLogout = () => {
