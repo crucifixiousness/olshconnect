@@ -45,8 +45,9 @@ const StudentSidebar = () => {
     const userData = JSON.parse(localStorage.getItem('user'));
     const isEnrolled = userData?.enrollment_status === 'Officially Enrolled';
     const isVerified = userData?.enrollment_status === 'Verified';
+    const isForPayment = userData?.enrollment_status === 'For Payment';
     const canAccessFeatures = isEnrolled; // Only Officially Enrolled can access all features
-    const canPay = isEnrolled || isVerified; // Payment available for both verified and enrolled
+    const canPay = isEnrolled || isVerified || isForPayment; // Payment available for verified, for payment, and enrolled
 
     setIsOfficiallyEnrolled(canAccessFeatures);
     setCanAccessPayment(canPay);
