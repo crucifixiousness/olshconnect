@@ -27,25 +27,42 @@ module.exports = async (req, res) => {
     // Check availability endpoint
     if (req.url.includes('/check-availability')) {
       try {
+        console.log('🔍 Checking initial admin availability...');
         const client = await pool.connect();
         
         // Check admins table for admin accounts
+        console.log('📊 Querying admins table for admin role...');
         const result = await client.query(`
           SELECT COUNT(*) as admin_count 
           FROM admins 
           WHERE role = 'admin'
         `);
         
+        console.log('📋 Query result:', result.rows);
         const adminCount = parseInt(result.rows[0].admin_count);
+        console.log('🔢 Admin count:', adminCount);
+        
+        // Also check what's actually in the admins table
+        const allAdmins = await client.query(`
+          SELECT staff_id, staff_username, role 
+          FROM admins 
+          ORDER BY staff_id
+        `);
+        console.log('👥 All admins in table:', allAdmins.rows);
         
         client.release();
         
         const isAvailable = adminCount === 0;
+        console.log('✅ Is available:', isAvailable);
         
         res.json({
           success: true,
           isAvailable,
           adminCount,
+          debug: {
+            queryResult: result.rows,
+            allAdmins: allAdmins.rows
+          },
           message: isAvailable 
             ? 'Initial admin creation is available' 
             : 'Admin accounts already exist'
