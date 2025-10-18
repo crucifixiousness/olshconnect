@@ -112,40 +112,55 @@ module.exports = async (req, res) => {
       }
     }
 
-    if (hasProgramCourseMajorId) {
+    // For transferees, get courses from student_required_courses
+    // For regular students, get courses from program_course
+    const studentTypeQuery = `SELECT student_type FROM enrollments WHERE student_id = $1 ORDER BY enrollment_date DESC LIMIT 1`;
+    const studentTypeResult = await client.query(studentTypeQuery, [studentId]);
+    const studentType = studentTypeResult.rows[0]?.student_type || 'new';
+
+    console.log('🔍 DEBUG: Student type:', studentType);
+
+    if (studentType === 'transferee') {
+      // For transferees: show only courses assigned by Program Head
       coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                             pc.major_id, m.major_name
-
-
-                      FROM program_course pc
+                             'Assigned' as course_status
+                      FROM student_required_courses src
+                      JOIN program_course pc ON src.pc_id = pc.pc_id
                       JOIN course c ON pc.course_id = c.course_id
                       JOIN program_year py ON pc.year_id = py.year_id
-                      LEFT JOIN majors m ON pc.major_id = m.major_id
-
-
-                      WHERE pc.program_id = $1
-                        AND pc.year_id = $2
-                        AND pc.semester = $3
-                        AND (
-                          pc.major_id IS NULL
-                          OR pc.major_id = $4
-                        )
+                      WHERE src.student_id = $1
                       ORDER BY c.course_name`;
-      queryParams = [program_id, year_id, normalizedSemester, major_id];
+      queryParams = [studentId];
     } else {
-      coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level
-
-
-                      FROM program_course pc
-                      JOIN course c ON pc.course_id = c.course_id
-                      JOIN program_year py ON pc.year_id = py.year_id
-
-
-                      WHERE pc.program_id = $1
-                        AND pc.year_id = $2
-                        AND pc.semester = $3
-                      ORDER BY c.course_name`;
-      queryParams = [program_id, year_id, normalizedSemester];
+      // For regular students: show all program courses (existing logic)
+      if (hasProgramCourseMajorId) {
+        coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
+                               pc.major_id, m.major_name, 'Regular' as course_status
+                        FROM program_course pc
+                        JOIN course c ON pc.course_id = c.course_id
+                        JOIN program_year py ON pc.year_id = py.year_id
+                        LEFT JOIN majors m ON pc.major_id = m.major_id
+                        WHERE pc.program_id = $1
+                          AND pc.year_id = $2
+                          AND pc.semester = $3
+                          AND (
+                            pc.major_id IS NULL
+                            OR pc.major_id = $4
+                          )
+                        ORDER BY c.course_name`;
+        queryParams = [program_id, year_id, normalizedSemester, major_id];
+      } else {
+        coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
+                               'Regular' as course_status
+                        FROM program_course pc
+                        JOIN course c ON pc.course_id = c.course_id
+                        JOIN program_year py ON pc.year_id = py.year_id
+                        WHERE pc.program_id = $1
+                          AND pc.year_id = $2
+                          AND pc.semester = $3
+                        ORDER BY c.course_name`;
+        queryParams = [program_id, year_id, normalizedSemester];
+      }
     }
 
     console.log('🔍 DEBUG: Courses query:', coursesQuery);
