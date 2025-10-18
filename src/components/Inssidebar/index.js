@@ -4,21 +4,37 @@ import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { BsCalendar3 } from "react-icons/bs";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 
 const InstructorSidebar = () => {
-  const [activeTab, setActiveTab] = useState(0);
-  const [isClassMenuOpen, setIsClassMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isClassMenuOpen, setIsClassMenuOpen] = useState(false);
 
-  const handleTabClick = (index) => {
-    setActiveTab(index);
+  // Function to get active tab based on current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    switch (path) {
+      case '/instructor-dashboard':
+        return 0;
+      case '/instructor-classes':
+      case '/instructor-classes/grades':
+      case '/instructor-classes/reports':
+        return 1;
+      case '/instructor-schedule':
+        return 2;
+      case '/instructor-students':
+        return 3;
+      default:
+        return 0;
+    }
   };
 
+  const activeTab = getActiveTab();
+
   const toggleClassMenu = (index) => {
-    setActiveTab(index);
     setIsClassMenuOpen(!isClassMenuOpen);
   };
 
