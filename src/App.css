@@ -1301,6 +1301,38 @@ table.v-align td{vertical-align: middle !important;}
   color: #c70202;
 }
 
+/* Debug Section Styles */
+.debug-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.debug-section h3 {
+  margin: 0 0 10px 0;
+  color: #c70202;
+  font-size: 16px;
+}
+
+.debug-content p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.debug-content pre {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 12px;
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 /* Responsive Design for Initial Admin Creation */
 @media (max-width: 600px) {
   .initial-admin-container {
