@@ -233,7 +233,6 @@ const Staff = () => {
                   <MenuItem value="">
                     <em>All Roles</em>
                   </MenuItem>
-                  <MenuItem value="admin">Admin</MenuItem>
                   <MenuItem value="instructor">Instructor</MenuItem>
                   <MenuItem value="registrar">Registrar</MenuItem>
                   <MenuItem value="finance">Finance</MenuItem>
@@ -460,7 +459,6 @@ const Staff = () => {
                     },
                   }}
                 >
-                  <MenuItem value="admin">Admin</MenuItem>
                   <MenuItem value="instructor">Instructor</MenuItem>
                   <MenuItem value="registrar">Registrar</MenuItem>
                   <MenuItem value="finance">Finance</MenuItem>
