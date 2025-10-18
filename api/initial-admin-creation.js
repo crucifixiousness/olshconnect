@@ -29,15 +29,17 @@ module.exports = async (req, res) => {
       try {
         const client = await pool.connect();
         
+        // Check admins table for admin accounts
         const result = await client.query(`
           SELECT COUNT(*) as admin_count 
           FROM admins 
-          WHERE role IN ('admin', 'super_admin')
+          WHERE role = 'admin'
         `);
+        
+        const adminCount = parseInt(result.rows[0].admin_count);
         
         client.release();
         
-        const adminCount = parseInt(result.rows[0].admin_count);
         const isAvailable = adminCount === 0;
         
         res.json({
@@ -64,8 +66,7 @@ module.exports = async (req, res) => {
         success: true,
         formData: {
           roles: [
-            { value: 'admin', label: 'Admin' },
-            { value: 'super_admin', label: 'Super Admin' }
+            { value: 'admin', label: 'Admin' }
           ]
         }
       });
