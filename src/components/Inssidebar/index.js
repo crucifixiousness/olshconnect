@@ -51,7 +51,7 @@ const InstructorSidebar = () => {
         <ul>
           <li>
             <Link to="/instructor-dashboard">
-              <Button className={`w-100 ${activeTab === 0 ? 'active' : ''}`} onClick={() => handleTabClick(0)}>
+              <Button className={`w-100 ${activeTab === 0 ? 'active' : ''}`} >
                 <span className='icon'><RiDashboardHorizontalLine /></span>
                 Dashboard
                 <span className='arrow'><FaAnglesRight /></span>
@@ -75,7 +75,7 @@ const InstructorSidebar = () => {
           </li>
           <li>
             <Link to="/instructor-schedule">
-              <Button className={`w-100 ${activeTab === 2 ? 'active' : ''}`} onClick={() => handleTabClick(2)}>
+              <Button className={`w-100 ${activeTab === 2 ? 'active' : ''}`} >
                 <span className='icon'><BsCalendar3 /></span>
                 Schedule
                 <span className='arrow'><FaAnglesRight /></span>
@@ -84,7 +84,7 @@ const InstructorSidebar = () => {
           </li>
           <li>
             <Link to="/instructor-students">
-              <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`} onClick={() => handleTabClick(3)}>
+              <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`} >
                 <span className='icon'><PiStudentBold /></span>
                 Student Records
                 <span className='arrow'><FaAnglesRight /></span>
