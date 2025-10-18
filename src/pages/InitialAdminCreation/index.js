@@ -26,9 +26,25 @@ const InitialAdminCreation = () => {
   const checkAvailability = async () => {
     try {
       console.log('🔍 Frontend: Checking availability...');
-      const response = await fetch('/api/initial-admin-creation/check-availability');
-      const data = await response.json();
+      console.log('🌐 Frontend: Making request to:', '/api/initial-admin-creation/check-availability');
       
+      const response = await fetch('/api/initial-admin-creation/check-availability');
+      
+      console.log('📡 Frontend: Response status:', response.status);
+      console.log('📡 Frontend: Response headers:', response.headers);
+      
+      // Check if response is HTML (error page)
+      const contentType = response.headers.get('content-type');
+      console.log('📡 Frontend: Content-Type:', contentType);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        console.log('📄 Frontend: Non-JSON response:', textResponse.substring(0, 200) + '...');
+        setError(`API returned non-JSON response. Status: ${response.status}. Content-Type: ${contentType}`);
+        return;
+      }
+      
+      const data = await response.json();
       console.log('📊 Frontend: API Response:', data);
       
       if (data.success) {
@@ -43,7 +59,7 @@ const InitialAdminCreation = () => {
       }
     } catch (error) {
       console.error('❌ Frontend: Network error:', error);
-      setError('Network error checking availability');
+      setError(`Network error checking availability: ${error.message}`);
     } finally {
       setCheckingAvailability(false);
     }
