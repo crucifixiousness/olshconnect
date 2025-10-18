@@ -11,27 +11,37 @@ const pool = new Pool({
   },
 });
 
-// Middleware to verify admin token
-const verifyAdminToken = async (req, res, next) => {
+// Function to verify admin token
+const verifyAdminToken = async (req, res) => {
   try {
+    console.log('🔍 DEBUG: Verifying admin token');
     const token = req.headers.authorization?.split(' ')[1];
+    console.log('🔍 DEBUG: Token extracted:', token ? 'Present' : 'Missing');
+    
     if (!token) {
+      console.log('🔍 DEBUG: No token provided');
       return res.status(401).json({ message: "No token provided" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('🔍 DEBUG: Token decoded:', decoded);
+    
     const admin = await pool.query(
       'SELECT * FROM admins WHERE staff_id = $1 AND role = $2',
       [decoded.id, 'admin']
     );
+    
+    console.log('🔍 DEBUG: Admin query result:', admin.rows);
 
     if (admin.rows.length === 0) {
+      console.log('🔍 DEBUG: No admin found with this ID and role');
       return res.status(403).json({ message: "Admin access required" });
     }
 
-    req.admin = admin.rows[0];
-    next();
+    console.log('🔍 DEBUG: Admin verified successfully');
+    return admin.rows[0];
   } catch (error) {
+    console.error('🔍 DEBUG: Token verification error:', error);
     return res.status(401).json({ message: "Invalid token" });
   }
 };
@@ -41,7 +51,8 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     try {
       // Verify admin token
-      await verifyAdminToken(req, res, () => {});
+      const admin = await verifyAdminToken(req, res);
+      if (!admin) return; // Error response already sent
 
       const { full_name, staff_username, staff_password } = req.body;
 
@@ -93,7 +104,8 @@ module.exports = async (req, res) => {
   else if (req.method === 'DELETE') {
     try {
       // Verify admin token
-      await verifyAdminToken(req, res, () => {});
+      const admin = await verifyAdminToken(req, res);
+      if (!admin) return; // Error response already sent
 
       const client = await pool.connect();
 
@@ -104,7 +116,7 @@ module.exports = async (req, res) => {
         RETURNING staff_id, full_name, staff_username
       `;
       
-      const result = await client.query(deleteQuery, [req.admin.staff_id]);
+      const result = await client.query(deleteQuery, [admin.staff_id]);
 
       if (result.rows.length === 0) {
         return res.status(404).json({ error: "Admin account not found" });
@@ -124,20 +136,27 @@ module.exports = async (req, res) => {
   // Get admin accounts list
   else if (req.method === 'GET') {
     try {
+      console.log('🔍 DEBUG: GET request received for admin accounts');
+      
       // Verify admin token
-      await verifyAdminToken(req, res, () => {});
+      const admin = await verifyAdminToken(req, res);
+      if (!admin) return; // Error response already sent
+      
+      console.log('🔍 DEBUG: Admin verified:', admin.staff_username);
 
       const client = await pool.connect();
+      console.log('🔍 DEBUG: Database connection established');
 
       // Get all admin accounts
       const query = `
-        SELECT staff_id, full_name, staff_username, role, created_at
+        SELECT staff_id, full_name, staff_username, role
         FROM admins 
         WHERE role = 'admin'
-        ORDER BY created_at DESC
+        ORDER BY staff_id DESC
       `;
       
       const result = await client.query(query);
+      console.log('🔍 DEBUG: Query result:', result.rows);
 
       res.status(200).json({ 
         admins: result.rows
