@@ -14,6 +14,7 @@ const InitialAdminCreation = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [checkingAvailability, setCheckingAvailability] = useState(true);
+  const [debugInfo, setDebugInfo] = useState(null);
   
   const navigate = useNavigate();
 
@@ -24,18 +25,24 @@ const InitialAdminCreation = () => {
 
   const checkAvailability = async () => {
     try {
+      console.log('🔍 Frontend: Checking availability...');
       const response = await fetch('/api/initial-admin-creation/check-availability');
       const data = await response.json();
       
+      console.log('📊 Frontend: API Response:', data);
+      
       if (data.success) {
         setIsAvailable(data.isAvailable);
+        setDebugInfo(data.debug); // Store debug info
+        
         if (!data.isAvailable) {
-          setError('Admin accounts already exist. Initial admin creation is not available.');
+          setError(`Admin accounts already exist. Initial admin creation is not available. (Count: ${data.adminCount})`);
         }
       } else {
         setError('Error checking initial admin availability');
       }
     } catch (error) {
+      console.error('❌ Frontend: Network error:', error);
       setError('Network error checking availability');
     } finally {
       setCheckingAvailability(false);
@@ -139,6 +146,19 @@ const InitialAdminCreation = () => {
             <h2>Initial Admin Creation Not Available</h2>
             <p>Admin accounts already exist in the system.</p>
             <p>Please contact an existing administrator for access.</p>
+            
+            {/* Debug Information */}
+            {debugInfo && (
+              <div className="debug-section">
+                <h3>🔍 Debug Information:</h3>
+                <div className="debug-content">
+                  <p><strong>Admin Count:</strong> {debugInfo.queryResult?.[0]?.admin_count || 'N/A'}</p>
+                  <p><strong>All Admins in Database:</strong></p>
+                  <pre>{JSON.stringify(debugInfo.allAdmins, null, 2)}</pre>
+                </div>
+              </div>
+            )}
+            
             <button 
               onClick={() => navigate('/login')}
               className="btn-primary"
