@@ -115,46 +115,15 @@ module.exports = async (req, res) => {
         });
       }
       
-      if (!['admin', 'super_admin'].includes(role)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Role must be either admin or super_admin',
-          error: 'INVALID_ROLE'
-        });
-      }
-      
       try {
         const client = await pool.connect();
         
-        await client.query('BEGIN');
-        
-        // Check if any admin accounts exist
-        const adminCheckResult = await client.query(`
-          SELECT COUNT(*) as admin_count 
-          FROM admins 
-          WHERE role IN ('admin', 'super_admin')
-        `);
-        
-        const adminCount = parseInt(adminCheckResult.rows[0].admin_count);
-        
-        if (adminCount > 0) {
-          await client.query('ROLLBACK');
-          client.release();
-          return res.status(403).json({
-            success: false,
-            message: 'Admin accounts already exist. Initial admin creation is not available.',
-            error: 'ADMINS_EXIST'
-          });
-        }
-        
         // Check if username already exists
-        const existingUser = await client.query(
-          'SELECT staff_id FROM admins WHERE staff_username = $1',
-          [staff_username]
-        );
+        const existingUser = await client.query(`
+          SELECT staff_id FROM admins WHERE staff_username = $1
+        `, [staff_username]);
         
         if (existingUser.rows.length > 0) {
-          await client.query('ROLLBACK');
           client.release();
           return res.status(400).json({
             success: false,
@@ -167,7 +136,7 @@ module.exports = async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(staff_password, saltRounds);
         
-        // Create initial admin account
+        // Create admin account
         const result = await client.query(`
           INSERT INTO admins (
             staff_username, 
@@ -180,21 +149,20 @@ module.exports = async (req, res) => {
         
         const newAdmin = result.rows[0];
         
-        await client.query('COMMIT');
         client.release();
         
-        // Generate JWT token for immediate login
+        // Generate JWT token
         const token = jwt.sign(
           { 
-            staff_id: newAdmin.staff_id,
-            staff_username: newAdmin.staff_username,
-            role: newAdmin.role
+            adminId: newAdmin.staff_id, 
+            username: newAdmin.staff_username,
+            role: newAdmin.role 
           },
           process.env.JWT_SECRET || 'your-secret-key',
           { expiresIn: '24h' }
         );
         
-        res.status(201).json({
+        res.json({
           success: true,
           message: 'Initial admin account created successfully',
           admin: {
@@ -203,20 +171,11 @@ module.exports = async (req, res) => {
             full_name: newAdmin.full_name,
             role: newAdmin.role
           },
-          token,
-          loginMessage: 'You can now log in with your credentials'
+          token
         });
         
       } catch (error) {
         console.error('Error creating initial admin:', error);
-        
-        try {
-          await client.query('ROLLBACK');
-          client.release();
-        } catch (rollbackError) {
-          console.error('Error during rollback:', rollbackError);
-        }
-        
         res.status(500).json({
           success: false,
           message: 'Error creating initial admin account',
