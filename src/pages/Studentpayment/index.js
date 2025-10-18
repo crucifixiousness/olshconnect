@@ -517,10 +517,28 @@ const StudentPayment = () => {
                         <h5>Breakdown:</h5>
                         {payments[0]?.breakdown && (
                           <div className="ms-3">
-                            <p>Tuition Fee: ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
-                            <p>Miscellaneous: ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
-                            <p>Laboratory: ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
-                            <p>Other Fees: ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
+                            {payments[0]?.student_type === 'transferee' ? (
+                              <>
+                                <p><strong>Tuition Fee:</strong> ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
+                                <p className="text-muted small">
+                                  ({payments[0].breakdown.units} units × ₱{payments[0].breakdown.unit_rate} = ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)})
+                                </p>
+                                <p><strong>Miscellaneous:</strong> ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
+                                <p><strong>Laboratory:</strong> ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
+                                <p><strong>Other Fees:</strong> ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
+                                <hr className="my-2" />
+                                <p className="text-info small">
+                                  <strong>Assigned Courses:</strong> {payments[0].breakdown.assigned_courses} courses
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p>Tuition Fee: ₱{parseFloat(payments[0].breakdown.tuition).toFixed(2)}</p>
+                                <p>Miscellaneous: ₱{parseFloat(payments[0].breakdown.misc).toFixed(2)}</p>
+                                <p>Laboratory: ₱{parseFloat(payments[0].breakdown.lab).toFixed(2)}</p>
+                                <p>Other Fees: ₱{parseFloat(payments[0].breakdown.other).toFixed(2)}</p>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
