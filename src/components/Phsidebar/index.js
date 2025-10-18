@@ -4,27 +4,40 @@ import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { HiOutlineDesktopComputer } from "react-icons/hi";
 import { FaFileAlt } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 
 const ProgramHeadSidebar = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isStudentMenuOpen, setIsStudentMenuOpen] = useState(false);
   const [isCourseMenuOpen, setIsCourseMenuOpen] = useState(false);
-  const navigate = useNavigate();  // Add this
 
-  const handleTabClick = (index) => {
-    setActiveTab(index);
+  // Function to get active tab based on current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    switch (path) {
+      case '/program-head-dashboard':
+        return 0;
+      case '/program-student-list':
+        return 1;
+      case '/course-assignments':
+        return 2;
+      case '/program-head-tor-evaluation':
+        return 3;
+      default:
+        return 0;
+    }
   };
 
+  const activeTab = getActiveTab();
+
   const toggleStudentMenu = (index) => {
-    setActiveTab(index);
     setIsStudentMenuOpen(!isStudentMenuOpen);
   };
 
   const toggleCourseMenu = (index) => {
-    setActiveTab(index);
     setIsCourseMenuOpen(!isCourseMenuOpen);
   };
 
