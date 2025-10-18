@@ -95,45 +95,93 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Fetch schedule data for the student's courses
-    const scheduleQuery = `
-      SELECT 
-        c.course_code,
-        c.course_name,
-        c.units,
-        pc.semester,
-        py.year_level,
-        COALESCE(ca.section, 'TBA') as section,
-        COALESCE(ca.day, 'TBA') as day,
-        ca.start_time,
-        ca.end_time,
-        COALESCE(a.full_name, 'TBA') as full_name
-      FROM program_course pc
-      JOIN course c ON pc.course_id = c.course_id
-      JOIN program_year py ON pc.year_id = py.year_id
-      LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id AND ca.section = $4
-      LEFT JOIN admins a ON ca.staff_id = a.staff_id
-      WHERE pc.program_id = $1
-        AND pc.year_id = $2
-        AND pc.semester = $3
-      ORDER BY 
-        CASE COALESCE(ca.day, 'TBA')
-          WHEN 'Monday' THEN 1
-          WHEN 'Tuesday' THEN 2
-          WHEN 'Wednesday' THEN 3
-          WHEN 'Thursday' THEN 4
-          WHEN 'Friday' THEN 5
-          WHEN 'Saturday' THEN 6
-          ELSE 7
-        END,
-        COALESCE(ca.start_time, '00:00:00'),
-        c.course_name
-    `;
+    // Check if student is transferee
+    const studentTypeQuery = `SELECT student_type FROM enrollments WHERE student_id = $1 ORDER BY enrollment_date DESC LIMIT 1`;
+    const studentTypeResult = await client.query(studentTypeQuery, [studentId]);
+    const studentType = studentTypeResult.rows[0]?.student_type || 'new';
+
+    console.log('🔍 DEBUG: Student type for schedule:', studentType);
+
+    let scheduleQuery;
+    let scheduleParams;
+
+    if (studentType === 'transferee') {
+      // For transferees: show only courses assigned by Program Head
+      scheduleQuery = `
+        SELECT 
+          c.course_code,
+          c.course_name,
+          c.units,
+          pc.semester,
+          py.year_level,
+          COALESCE(ca.section, 'TBA') as section,
+          COALESCE(ca.day, 'TBA') as day,
+          ca.start_time,
+          ca.end_time,
+          COALESCE(a.full_name, 'TBA') as full_name
+        FROM student_required_courses src
+        JOIN program_course pc ON src.pc_id = pc.pc_id
+        JOIN course c ON pc.course_id = c.course_id
+        JOIN program_year py ON pc.year_id = py.year_id
+        LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id AND ca.section = $2
+        LEFT JOIN admins a ON ca.staff_id = a.staff_id
+        WHERE src.student_id = $1
+        ORDER BY 
+          CASE COALESCE(ca.day, 'TBA')
+            WHEN 'Monday' THEN 1
+            WHEN 'Tuesday' THEN 2
+            WHEN 'Wednesday' THEN 3
+            WHEN 'Thursday' THEN 4
+            WHEN 'Friday' THEN 5
+            WHEN 'Saturday' THEN 6
+            ELSE 7
+          END,
+          COALESCE(ca.start_time, '00:00:00'),
+          c.course_name
+      `;
+      scheduleParams = [studentId, blockName];
+    } else {
+      // For regular students: show all program courses (existing logic)
+      scheduleQuery = `
+        SELECT 
+          c.course_code,
+          c.course_name,
+          c.units,
+          pc.semester,
+          py.year_level,
+          COALESCE(ca.section, 'TBA') as section,
+          COALESCE(ca.day, 'TBA') as day,
+          ca.start_time,
+          ca.end_time,
+          COALESCE(a.full_name, 'TBA') as full_name
+        FROM program_course pc
+        JOIN course c ON pc.course_id = c.course_id
+        JOIN program_year py ON pc.year_id = py.year_id
+        LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id AND ca.section = $4
+        LEFT JOIN admins a ON ca.staff_id = a.staff_id
+        WHERE pc.program_id = $1
+          AND pc.year_id = $2
+          AND pc.semester = $3
+        ORDER BY 
+          CASE COALESCE(ca.day, 'TBA')
+            WHEN 'Monday' THEN 1
+            WHEN 'Tuesday' THEN 2
+            WHEN 'Wednesday' THEN 3
+            WHEN 'Thursday' THEN 4
+            WHEN 'Friday' THEN 5
+            WHEN 'Saturday' THEN 6
+            ELSE 7
+          END,
+          COALESCE(ca.start_time, '00:00:00'),
+          c.course_name
+      `;
+      scheduleParams = [program_id, year_id, normalizedSemester, blockName];
+    }
 
     console.log('🔍 DEBUG: Schedule query:', scheduleQuery);
-    console.log('🔍 DEBUG: Schedule query parameters:', [program_id, year_id, normalizedSemester, blockName]);
+    console.log('🔍 DEBUG: Schedule query parameters:', scheduleParams);
 
-    const scheduleResult = await client.query(scheduleQuery, [program_id, year_id, normalizedSemester, blockName]);
+    const scheduleResult = await client.query(scheduleQuery, scheduleParams);
     console.log('🔍 DEBUG: Schedule query result rows:', scheduleResult.rows.length);
     console.log('🔍 DEBUG: Schedule query result:', JSON.stringify(scheduleResult.rows, null, 2));
 
