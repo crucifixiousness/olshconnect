@@ -527,7 +527,7 @@ const ProgramHeadTorEvaluation = () => {
                             native: true,
                           }}
                         >
-                          <option value="">Select course...</option>
+                          <option value=""></option>
                           {availableCourses.map((course) => (
                             <option key={course.course_id} value={course.course_id}>
                               {course.course_code} - {course.course_name} ({course.units} units)
@@ -578,7 +578,7 @@ const ProgramHeadTorEvaluation = () => {
                           e.target.value = '';
                         }}
                       >
-                        <option value="">Select course...</option>
+                        <option value=""></option>
                         {remainingCourses.map(rc => (
                           <option key={rc.pc_id} value={rc.pc_id}>
                             {rc.course_code} - {rc.course_name} ({rc.units} units) - Year {rc.year_level}
