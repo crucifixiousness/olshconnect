@@ -49,6 +49,7 @@ import DeanSidebar from './components/Deansidebar';
 import ProgramHeadTorEvaluation from './pages/ProgramHeadTorEvaluation';
 import RegistrarCreditTransfer from './pages/RegistrarCreditTransfer';
 import AdminAccountManagement from './pages/AdminAccountManagement';
+import InitialAdminCreation from './pages/InitialAdminCreation';
 
 const MyContext = createContext();
 
@@ -216,6 +217,8 @@ function App() {
               <Route path="/instructor-classes" exact={true} element={<ProtectedRoute element={<ClassManagement />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/instructor-classes/grades" exact={true} element={<ProtectedRoute element={<InstructorGrades />} requiredRole="instructor" redirectTo="/stafflogin" />} />
               <Route path="/dean-dashboard" exact={true} element={<ProtectedRoute element={<DeanDashboard />} requiredRole="dean" redirectTo="/stafflogin" />} />
+              {/* Initial Admin Creation - No authentication required, only available when no admins exist */}
+              <Route path="/initial-admin-creation" exact={true} element={<InitialAdminCreation />} />
               {/* Catch-all route for unmatched paths - should be last */}
               <Route path="*" element={<NotFound />} />
             </Routes>
