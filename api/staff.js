@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
       const client = await pool.connect();
       
       const result = await client.query(
-        "SELECT staff_id, full_name, role FROM admins ORDER BY full_name ASC"
+        "SELECT staff_id, full_name, role FROM admins WHERE role != 'admin' ORDER BY full_name ASC"
       );
       
       res.json(result.rows);
