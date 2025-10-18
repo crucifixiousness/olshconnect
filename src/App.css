@@ -1066,12 +1066,17 @@ table.v-align td{vertical-align: middle !important;}
 
 /* Initial Admin Creation Container */
 .initial-admin-container {
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #c70202 0%, #a00000 100%);
   padding: 20px;
+  z-index: 9999;
 }
 
 .initial-admin-card {
