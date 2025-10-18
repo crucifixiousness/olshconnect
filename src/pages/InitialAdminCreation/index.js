@@ -14,7 +14,6 @@ const InitialAdminCreation = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [checkingAvailability, setCheckingAvailability] = useState(true);
-  const [debugInfo, setDebugInfo] = useState(null);
   
   const navigate = useNavigate();
 
@@ -25,41 +24,19 @@ const InitialAdminCreation = () => {
 
   const checkAvailability = async () => {
     try {
-      console.log('🔍 Frontend: Checking availability...');
-      console.log('🌐 Frontend: Making request to:', '/api/initial-admin-check');
-      
       const response = await fetch('/api/initial-admin-check');
-      
-      console.log('📡 Frontend: Response status:', response.status);
-      console.log('📡 Frontend: Response headers:', response.headers);
-      
-      // Check if response is HTML (error page)
-      const contentType = response.headers.get('content-type');
-      console.log('📡 Frontend: Content-Type:', contentType);
-      
-      if (!contentType || !contentType.includes('application/json')) {
-        const textResponse = await response.text();
-        console.log('📄 Frontend: Non-JSON response:', textResponse.substring(0, 200) + '...');
-        setError(`API returned non-JSON response. Status: ${response.status}. Content-Type: ${contentType}`);
-        return;
-      }
-      
       const data = await response.json();
-      console.log('📊 Frontend: API Response:', data);
       
       if (data.success) {
         setIsAvailable(data.isAvailable);
-        setDebugInfo(data.debug); // Store debug info
-        
         if (!data.isAvailable) {
-          setError(`Admin accounts already exist. Initial admin creation is not available. (Count: ${data.adminCount})`);
+          setError('Admin accounts already exist. Initial admin creation is not available.');
         }
       } else {
         setError('Error checking initial admin availability');
       }
     } catch (error) {
-      console.error('❌ Frontend: Network error:', error);
-      setError(`Network error checking availability: ${error.message}`);
+      setError('Network error checking availability');
     } finally {
       setCheckingAvailability(false);
     }
@@ -124,10 +101,11 @@ const InitialAdminCreation = () => {
         // Store token and redirect to admin dashboard
         if (data.token) {
           localStorage.setItem('token', data.token);
+          localStorage.setItem('role', data.admin.role);
           localStorage.setItem('user', JSON.stringify(data.admin));
           
           setTimeout(() => {
-            navigate('/admin/dashboard');
+            window.location.href = '/dashboard';
           }, 2000);
         }
       } else {
@@ -162,18 +140,6 @@ const InitialAdminCreation = () => {
             <h2>Initial Admin Creation Not Available</h2>
             <p>Admin accounts already exist in the system.</p>
             <p>Please contact an existing administrator for access.</p>
-            
-            {/* Debug Information */}
-            {debugInfo && (
-              <div className="debug-section">
-                <h3>🔍 Debug Information:</h3>
-                <div className="debug-content">
-                  <p><strong>Admin Count:</strong> {debugInfo.queryResult?.[0]?.admin_count || 'N/A'}</p>
-                  <p><strong>All Admins in Database:</strong></p>
-                  <pre>{JSON.stringify(debugInfo.allAdmins, null, 2)}</pre>
-                </div>
-              </div>
-            )}
             
             <button 
               onClick={() => navigate('/login')}
