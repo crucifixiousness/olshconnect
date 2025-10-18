@@ -26,9 +26,9 @@ const InitialAdminCreation = () => {
   const checkAvailability = async () => {
     try {
       console.log('🔍 Frontend: Checking availability...');
-      console.log('🌐 Frontend: Making request to:', '/api/initial-admin-creation/check-availability');
+      console.log('🌐 Frontend: Making request to:', '/api/initial-admin-check');
       
-      const response = await fetch('/api/initial-admin-creation/check-availability');
+      const response = await fetch('/api/initial-admin-check');
       
       console.log('📡 Frontend: Response status:', response.status);
       console.log('📡 Frontend: Response headers:', response.headers);
@@ -103,7 +103,7 @@ const InitialAdminCreation = () => {
     setSuccess('');
     
     try {
-      const response = await fetch('/api/initial-admin-creation/create-initial-admin', {
+      const response = await fetch('/api/initial-admin-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
