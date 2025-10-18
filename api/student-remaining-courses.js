@@ -82,14 +82,15 @@ module.exports = async (req, res) => {
     );
     const requiredCourses = reqRes.rows;
 
-    // Remaining courses for the current term: exclude credited + graded
+    // Remaining courses for the current semester: ALL courses from this semester regardless of year level
     const remainingRes = await client.query(
-      `SELECT pc.pc_id, c.course_id, c.course_code, c.course_name, c.units
+      `SELECT pc.pc_id, c.course_id, c.course_code, c.course_name, c.units, py.year_level
        FROM program_course pc
        JOIN course c ON c.course_id = pc.course_id
-       WHERE pc.program_id = $1 AND pc.year_id = $2 AND pc.semester = $3
-       ORDER BY c.course_code`,
-      [program_id, year_id, semester]
+       JOIN program_year py ON py.year_id = pc.year_id
+       WHERE pc.program_id = $1 AND pc.semester = $2
+       ORDER BY py.year_level, c.course_code`,
+      [program_id, semester]
     );
 
     const creditedSet = new Set(creditedCourseIds);
