@@ -3,7 +3,7 @@ import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaAnglesRight } from "react-icons/fa6";
 import { PiStudentBold } from "react-icons/pi";
 import { FaCashRegister } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { IoDocuments } from "react-icons/io5";
@@ -12,18 +12,35 @@ import { FaHistory } from 'react-icons/fa';
 
 
 const FinanceSidebar = () =>{
-  // eslint-disable-next-line
-  const [activeTab, setActiveTab] = useState(0);
-  const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
 
-  const isOpenStudentMenu = (index) => {
-    setActiveTab(index);
-    setIsToggleStudentMenu(!isToggleStudentMenu);
+  // Function to get active tab based on current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    switch (path) {
+      case '/finance-dashboard':
+        return 0;
+      case '/counter-payment':
+        return 1;
+      case '/student-balance':
+        return 2;
+      case '/tuition-management':
+        return 3;
+      case '/payment-verification':
+        return 4;
+      case '/payment-history':
+        return 5;
+      default:
+        return 0;
+    }
   };
 
-  const handleTabClick = (index) => {
-    setActiveTab(index);
+  const activeTab = getActiveTab();
+
+  const isOpenStudentMenu = (index) => {
+    setIsToggleStudentMenu(!isToggleStudentMenu);
   };
 
   const handleLogout = () => {
