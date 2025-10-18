@@ -212,10 +212,21 @@ const Dashboard = () => {
                 />
                 <Chip 
                   label="User Management" 
+                  onClick={() => navigate('/staffs')}
                   sx={{ 
                     backgroundColor: '#17a2b8', 
                     color: 'white',
                     '&:hover': { backgroundColor: '#138496' },
+                    cursor: 'pointer'
+                  }}
+                />
+                <Chip 
+                  label="Admin Account Management" 
+                  onClick={() => navigate('/admin-account-management')}
+                  sx={{ 
+                    backgroundColor: '#6f42c1', 
+                    color: 'white',
+                    '&:hover': { backgroundColor: '#5a32a3' },
                     cursor: 'pointer'
                   }}
                 />
