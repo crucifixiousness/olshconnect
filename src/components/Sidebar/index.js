@@ -5,29 +5,47 @@ import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
 import { FaGraduationCap } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { FaUserCog } from "react-icons/fa";
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useContext, useState, useEffect } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
 
 
 const Sidebar = () =>{
-// eslint-disable-next-line
-  const [activeTab, setActiveTab] = useState(0);
   const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
-  // eslint-disable-next-line
   const context = useContext(MyContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Function to get active tab based on current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    switch (path) {
+      case '/dashboard':
+        return 0;
+      case '/studentlist':
+        return 1;
+      case '/':
+        return 2;
+      case '/staffs':
+        return 3;
+      case '/program-management':
+        return 4;
+      case '/document-request':
+        return 5;
+      case '/admin-account-management':
+        return 6; // Add admin account management
+      default:
+        return 0;
+    }
+  };
+
+  const activeTab = getActiveTab();
 
   const isOpenStudentMenu = (index) => {
-    setActiveTab(index);
     setIsToggleStudentMenu(!isToggleStudentMenu);
   };
-  // eslint-disable-next-line
-  const handleTabClick = (index) => {
-    setActiveTab(index);
-  };
-  // eslint-disable-next-line
 
   const handleLogout = () => {
     // Clear all local storage data
@@ -113,8 +131,18 @@ const Sidebar = () =>{
                 </Button>
               </Link>              
             </li>
+            <li>
+              <Link to="/admin-account-management">
+                <Button className={`w-100 ${activeTab===6 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(6)}>
+                  <span className='icon'><FaUserCog />
+                  </span>
+                    Admin Account Management
+                  <span className='arrow'><FaAnglesRight />
+                  </span>
+                </Button>
+              </Link>              
+            </li>
           </ul>
-
           <br/>
           <div className='logoutWrap'>
             <div className='logoutBox'>
@@ -123,9 +151,6 @@ const Sidebar = () =>{
               </Button>
             </div>
           </div>
-          
-
-
         </div>
       </>
     )
