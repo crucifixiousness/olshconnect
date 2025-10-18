@@ -525,6 +525,17 @@ const ProgramHeadTorEvaluation = () => {
                           className="mb-2"
                           SelectProps={{
                             native: true,
+                            MenuProps: {
+                              anchorOrigin: {
+                                vertical: "bottom",
+                                horizontal: "left"
+                              },
+                              transformOrigin: {
+                                vertical: "top",
+                                horizontal: "left"
+                              },
+                              getContentAnchorEl: null
+                            }
                           }}
                         >
                           <option value=""></option>
@@ -553,7 +564,20 @@ const ProgramHeadTorEvaluation = () => {
                         fullWidth
                         size="small"
                         className="mb-2"
-                        SelectProps={{ native: true }}
+                        SelectProps={{ 
+                          native: true,
+                          MenuProps: {
+                            anchorOrigin: {
+                              vertical: "bottom",
+                              horizontal: "left"
+                            },
+                            transformOrigin: {
+                              vertical: "top",
+                              horizontal: "left"
+                            },
+                            getContentAnchorEl: null
+                          }
+                        }}
                         onChange={async (e) => {
                           const pcId = Number(e.target.value || 0);
                           if (!pcId) return;
