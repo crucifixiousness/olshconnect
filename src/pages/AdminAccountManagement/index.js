@@ -58,6 +58,9 @@ const AdminAccountManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      console.log('🔍 DEBUG: Token from localStorage:', token ? 'Present' : 'Missing');
+      console.log('🔍 DEBUG: User from localStorage:', JSON.parse(localStorage.getItem('user')));
+      
       const response = await fetch('/api/admin-account-management', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -65,17 +68,23 @@ const AdminAccountManagement = () => {
         }
       });
 
+      console.log('🔍 DEBUG: Response status:', response.status);
+      console.log('🔍 DEBUG: Response ok:', response.ok);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 DEBUG: Response data:', data);
         setAdmins(data.admins);
       } else {
-        throw new Error('Failed to fetch admin accounts');
+        const errorData = await response.json();
+        console.log('🔍 DEBUG: Error response:', errorData);
+        throw new Error(errorData.message || 'Failed to fetch admin accounts');
       }
     } catch (error) {
       console.error('Error fetching admins:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to fetch admin accounts',
+        message: 'Failed to fetch admin accounts: ' + error.message,
         severity: 'error'
       });
     } finally {
@@ -189,6 +198,7 @@ const AdminAccountManagement = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -232,7 +242,7 @@ const AdminAccountManagement = () => {
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Full Name</TableCell>
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Username</TableCell>
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Role</TableCell>
-                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Created At</TableCell>
+                  <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Account ID</TableCell>
                   <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -256,7 +266,7 @@ const AdminAccountManagement = () => {
                           sx={{ bgcolor: '#c70202', color: 'white' }}
                         />
                       </TableCell>
-                      <TableCell>{formatDate(admin.created_at)}</TableCell>
+                      <TableCell>{admin.staff_id}</TableCell>
                       <TableCell>
                         {admin.staff_id === JSON.parse(localStorage.getItem('user'))?.id && (
                           <Button
