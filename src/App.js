@@ -152,7 +152,7 @@ function App() {
         </Routes>
 
         <div className='main d-flex'>
-          {!["/stafflogin", "/login"].includes(window.location.pathname) && isHideComponents !== true && (
+          {!["/stafflogin", "/login", "/initial-admin-creation"].includes(window.location.pathname) && isHideComponents !== true && (
             <>
               <div className={`sidebarOverlay d-none ${isOpenNav === true && 'show'}`} onClick={() => setIsOpenNav(false)}></div>
               <div className={`sidebarWrapper ${isToggleSidebar === true ? 'toggle' : ''} ${isOpenNav === true ? 'open' : ''}`}>
