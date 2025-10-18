@@ -23,19 +23,21 @@ const StudentSidebar = () => {
     const path = location.pathname;
     switch (path) {
       case '/student-dashboard':
-        return 0;
-      case '/student-courses':
-        return 1;
-      case '/student-payment':
-        return 2;
+        return 0; // Dashboard
       case '/student-profile':
-        return 3;
+        return 1; // My Profile
+      case '/student-courses':
+        return 2; // My Courses
       case '/academic-records':
-        return 4;
-      case '/document-request':
-        return 5;
+        return 3; // Academic Records
+      case '/request-document':
+        return 4; // Request Document
+      case '/student-payment':
+        return 5; // Payment
+      case '/student-grades':
+        return 6; // My Grades
       default:
-        return 3; // Default to My Profile
+        return 1; // Default to My Profile
     }
   };
 
@@ -109,7 +111,7 @@ const StudentSidebar = () => {
         <li>
           {renderLink("/student-profile",
             <Button 
-              className={`w-100 ${activeTab === 3 ? 'active' : ''}`} 
+              className={`w-100 ${activeTab === 1 ? 'active' : ''}`} 
             >
               <span className='icon'><PiStudentBold /></span>
               My Profile
@@ -119,7 +121,7 @@ const StudentSidebar = () => {
         <li>
           {renderLink("/student-courses",
             <Button 
-              className={`w-100 ${activeTab === 1 ? 'active' : ''}`} 
+              className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
@@ -141,7 +143,7 @@ const StudentSidebar = () => {
         <li>
           {renderLink("/academic-records",
             <Button 
-              className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
+              className={`w-100 ${activeTab === 3 ? 'active' : ''}`} 
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
