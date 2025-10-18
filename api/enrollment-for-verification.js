@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
     `);
     console.log('Debug - Total Verified enrollments with receipts:', debugResult7.rows[0].total_count);
 
-    // Main query - start with basic data and add conditions
+    // Main query - show only students who have uploaded payment receipts
     const result = await pool.query(`
       SELECT DISTINCT
         e.enrollment_id AS "_id",
@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
       JOIN program p ON e.program_id = p.program_id
       JOIN program_year py ON e.year_id = py.year_id
       JOIN enrollment_payment_receipts epr ON e.enrollment_id = epr.enrollment_id
-      WHERE e.enrollment_status = 'Verified'
+      WHERE e.enrollment_status IN ('For Payment', 'Verified')
       ORDER BY "studentName" ASC
     `);
 
