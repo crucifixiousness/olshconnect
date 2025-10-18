@@ -100,9 +100,24 @@ const InitialAdminCreation = () => {
         
         // Store token and redirect to admin dashboard
         if (data.token) {
+          // Clear existing data
+          localStorage.clear();
+          
+          // Store new data (same format as staff login)
+          localStorage.setItem('isLogin', 'true');
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.admin.role);
-          localStorage.setItem('user', JSON.stringify(data.admin));
+          localStorage.setItem('user', JSON.stringify({
+            ...data.admin,
+            staff_username: data.admin.staff_username,
+            fullName: data.admin.full_name,
+            staff_name: data.admin.full_name
+          }));
+          
+          // Store staff_id separately for easy access
+          if (data.admin.staff_id) {
+            localStorage.setItem('staff_id', data.admin.staff_id.toString());
+          }
           
           setTimeout(() => {
             window.location.href = '/dashboard';
