@@ -527,7 +527,7 @@ const ProgramHeadTorEvaluation = () => {
                             native: true,
                           }}
                         >
-                          <option value="">Select Course</option>
+                          <option value="">Select course...</option>
                           {availableCourses.map((course) => (
                             <option key={course.course_id} value={course.course_id}>
                               {course.course_code} - {course.course_name} ({course.units} units)
@@ -551,15 +551,9 @@ const ProgramHeadTorEvaluation = () => {
                         select
                         label="Remaining Course"
                         fullWidth
-                        size="medium"
+                        size="small"
                         className="mb-2"
-                        SelectProps={{ 
-                          native: true,
-                          style: { minWidth: '100%', whiteSpace: 'nowrap' }
-                        }}
-                        inputProps={{
-                          style: { fontSize: '14px', padding: '12px' }
-                        }}
+                        SelectProps={{ native: true }}
                         onChange={async (e) => {
                           const pcId = Number(e.target.value || 0);
                           if (!pcId) return;
@@ -584,9 +578,9 @@ const ProgramHeadTorEvaluation = () => {
                           e.target.value = '';
                         }}
                       >
-                        <option value="" style={{ padding: '8px', fontSize: '14px' }}>Select a remaining course</option>
+                        <option value="">Select course...</option>
                         {remainingCourses.map(rc => (
-                          <option key={rc.pc_id} value={rc.pc_id} style={{ padding: '8px', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                          <option key={rc.pc_id} value={rc.pc_id}>
                             {rc.course_code} - {rc.course_name} ({rc.units} units) - Year {rc.year_level}
                           </option>
                         ))}
