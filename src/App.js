@@ -48,6 +48,7 @@ import StudentGrades from './pages/StudentGrades';
 import DeanSidebar from './components/Deansidebar';
 import ProgramHeadTorEvaluation from './pages/ProgramHeadTorEvaluation';
 import RegistrarCreditTransfer from './pages/RegistrarCreditTransfer';
+import AdminAccountManagement from './pages/AdminAccountManagement';
 
 const MyContext = createContext();
 
@@ -182,6 +183,7 @@ function App() {
               <Route path="/homepage" exact={true} element={<Homepage />} />
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
+              <Route path="/admin-account-management" exact={true} element={<ProtectedRoute element={<AdminAccountManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={<Login />} />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
               <Route path="/stafflogin" exact={true} element={<Signup />} />
