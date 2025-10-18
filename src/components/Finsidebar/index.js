@@ -57,7 +57,7 @@ const FinanceSidebar = () =>{
           <ul>
             <li>
               <Link to="/finance-dashboard">
-                <Button className={`w-100 ${activeTab===0 ? 'active' : ''}`} onClick={()=>handleTabClick(0)}>
+                <Button className={`w-100 ${activeTab===0 ? 'active' : ''}`} >
                   <span className='icon'><RiDashboardHorizontalLine /></span>
                     Finance Dashboard 
                   <span className='arrow'><FaAnglesRight />
@@ -69,7 +69,7 @@ const FinanceSidebar = () =>{
             {/* Add new Counter Payment menu item */}
             <li>
               <Link to="/counter-payment">
-                <Button className={`w-100 ${activeTab===1 ? 'active' : ''}`} onClick={()=>handleTabClick(1)}>
+                <Button className={`w-100 ${activeTab===1 ? 'active' : ''}`} >
                   <span className='icon'><FaMoneyBillTransfer /></span>
                     Counter Payment
                   <span className='arrow'><FaAnglesRight /></span>
@@ -100,7 +100,7 @@ const FinanceSidebar = () =>{
             {/* Adjust other menu indices */}
             <li>
               <Link to="/tuition-management">
-                <Button className={`w-100 ${activeTab===3 ? 'active' : ''}`} onClick={()=>handleTabClick(3)}>
+                <Button className={`w-100 ${activeTab===3 ? 'active' : ''}`} >
                   <span className='icon'><FaCashRegister /></span>
                     Tuition Management
                   <span className='arrow'><FaAnglesRight /></span>
@@ -110,7 +110,7 @@ const FinanceSidebar = () =>{
 
             <li>
               <Link to="/payment-verification">
-                <Button className={`w-100 ${activeTab===4 ? 'active' : ''}`} onClick={()=>handleTabClick(4)}>
+                <Button className={`w-100 ${activeTab===4 ? 'active' : ''}`} >
                   <span className='icon'><IoDocuments /></span>
                     Payment Verification
                   <span className='arrow'><FaAnglesRight /></span>
@@ -121,7 +121,7 @@ const FinanceSidebar = () =>{
             {/* Add Payment History menu item */}
             <li>
               <Link to="/payment-history">
-                <Button className={`w-100 ${activeTab===5 ? 'active' : ''}`} onClick={()=>handleTabClick(5)}>
+                <Button className={`w-100 ${activeTab===5 ? 'active' : ''}`} >
                   <span className='icon'><FaHistory /></span>
                     Payment History
                   <span className='arrow'><FaAnglesRight /></span>
