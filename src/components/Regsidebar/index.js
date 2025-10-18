@@ -5,13 +5,14 @@ import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
 import { FaExchangeAlt } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
 import { MyContext } from '../../App';
 
 const RegistrarSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUser, setRole, setIsLogin } = useContext(MyContext);
 
   const handleLogout = () => {
@@ -26,19 +27,31 @@ const RegistrarSidebar = () => {
     // Navigate to homepage
     navigate('/homepage', { replace: true });
   };
-  // eslint-disable-next-line
-  const [activeTab, setActiveTab] = useState(0);
+
+  // Function to get active tab based on current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    switch (path) {
+      case '/registrar-dashboard':
+        return 0;
+      case '/studentlist':
+        return 1;
+      case '/registrar-enrollmentt':
+        return 2;
+      case '/document-request':
+        return 3;
+      case '/registrar-credit-transfer':
+        return 4;
+      default:
+        return 0;
+    }
+  };
+
+  const activeTab = getActiveTab();
   const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
-  // eslint-disable-next-line
-  const context = useContext(MyContext);
 
   const isOpenStudentMenu = (index) => {
-    setActiveTab(index);
     setIsToggleStudentMenu(!isToggleStudentMenu);
-  };
-// eslint-disable-next-line
-  const handleTabClick = (index) => {
-    setActiveTab(index);
   };
 
 
