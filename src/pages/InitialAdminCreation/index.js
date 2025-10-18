@@ -24,7 +24,7 @@ const InitialAdminCreation = () => {
 
   const checkAvailability = async () => {
     try {
-      const response = await fetch('/api/initial-admin/check-availability');
+      const response = await fetch('/api/initial-admin-creation/check-availability');
       const data = await response.json();
       
       if (data.success) {
@@ -80,7 +80,7 @@ const InitialAdminCreation = () => {
     setSuccess('');
     
     try {
-      const response = await fetch('/api/initial-admin/create-initial-admin', {
+      const response = await fetch('/api/initial-admin-creation/create-initial-admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
