@@ -89,7 +89,6 @@ const StudentSidebar = () => {
           {renderLink("/student-dashboard",
             <Button 
               className={`w-100 ${activeTab === 0 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(0)}
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
@@ -110,7 +109,6 @@ const StudentSidebar = () => {
           {renderLink("/student-profile",
             <Button 
               className={`w-100 ${activeTab === 3 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(3)}
             >
               <span className='icon'><PiStudentBold /></span>
               My Profile
@@ -121,7 +119,6 @@ const StudentSidebar = () => {
           {renderLink("/student-courses",
             <Button 
               className={`w-100 ${activeTab === 1 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(1)}
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
@@ -144,7 +141,6 @@ const StudentSidebar = () => {
           {renderLink("/academic-records",
             <Button 
               className={`w-100 ${activeTab === 2 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(2)}
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
@@ -165,7 +161,6 @@ const StudentSidebar = () => {
           {renderLink("/request-document",
             <Button 
               className={`w-100 ${activeTab === 4 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(4)}
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
@@ -186,7 +181,6 @@ const StudentSidebar = () => {
           {renderLink("/student-payment",
             <Button 
               className={`w-100 ${activeTab === 5 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(5)}
               disabled={!canAccessPayment}
               sx={{ 
                 opacity: !canAccessPayment ? 0.6 : 1,
@@ -207,7 +201,6 @@ const StudentSidebar = () => {
           {renderLink("/student-grades",
             <Button 
               className={`w-100 ${activeTab === 6 ? 'active' : ''}`} 
-              onClick={() => handleTabClick(6)}
               disabled={!isOfficiallyEnrolled}
               sx={{ 
                 opacity: !isOfficiallyEnrolled ? 0.6 : 1,
