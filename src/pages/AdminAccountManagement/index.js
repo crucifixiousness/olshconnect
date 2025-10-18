@@ -58,8 +58,6 @@ const AdminAccountManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      console.log('🔍 DEBUG: Token from localStorage:', token ? 'Present' : 'Missing');
-      console.log('🔍 DEBUG: User from localStorage:', JSON.parse(localStorage.getItem('user')));
       
       const response = await fetch('/api/admin-account-management', {
         headers: {
@@ -68,16 +66,11 @@ const AdminAccountManagement = () => {
         }
       });
 
-      console.log('🔍 DEBUG: Response status:', response.status);
-      console.log('🔍 DEBUG: Response ok:', response.ok);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('🔍 DEBUG: Response data:', data);
         setAdmins(data.admins);
       } else {
         const errorData = await response.json();
-        console.log('🔍 DEBUG: Error response:', errorData);
         throw new Error(errorData.message || 'Failed to fetch admin accounts');
       }
     } catch (error) {
