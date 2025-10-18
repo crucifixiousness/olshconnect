@@ -147,7 +147,7 @@ function App() {
           />
           <Route
             path="*"
-            element={isHideComponents !== true && <Header />}
+            element={isHideComponents !== true && !window.location.pathname.includes('/initial-admin-creation') && <Header />}
           />
         </Routes>
 
@@ -177,7 +177,7 @@ function App() {
             </>
           )}
 
-          <div className={`content ${isHideComponents === true && 'full'} ${isToggleSidebar === true ? 'toggle' : ''}`} onClick={() => { if (isOpenNav) { setIsOpenNav(false); } }}>
+          <div className={`content ${isHideComponents === true && 'full'} ${isToggleSidebar === true && !window.location.pathname.includes('/initial-admin-creation') ? 'toggle' : ''}`} onClick={() => { if (isOpenNav) { setIsOpenNav(false); } }}>
             <Routes>
               <Route path="/notfound" element={<NotFound />} />
               <Route path="/" element={<Navigate to="/homepage" />} />
