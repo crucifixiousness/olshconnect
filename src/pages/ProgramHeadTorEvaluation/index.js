@@ -133,7 +133,7 @@ const ProgramHeadTorEvaluation = () => {
       const params = new URLSearchParams({
         student_id: String(request.student_id),
         program_id: String(request.program_id),
-        year_id: String(request.year_id),
+        year_id: String(request.year_id || request.year_id === 0 ? request.year_id : request.year_id),
         semester: String(request.semester),
         tor_request_id: String(request.id)
       }).toString();
@@ -551,9 +551,15 @@ const ProgramHeadTorEvaluation = () => {
                         select
                         label="Remaining Course"
                         fullWidth
-                        size="small"
+                        size="medium"
                         className="mb-2"
-                        SelectProps={{ native: true }}
+                        SelectProps={{ 
+                          native: true,
+                          style: { minWidth: '100%', whiteSpace: 'nowrap' }
+                        }}
+                        inputProps={{
+                          style: { fontSize: '14px', padding: '12px' }
+                        }}
                         onChange={async (e) => {
                           const pcId = Number(e.target.value || 0);
                           if (!pcId) return;
@@ -578,10 +584,10 @@ const ProgramHeadTorEvaluation = () => {
                           e.target.value = '';
                         }}
                       >
-                        <option value="">Select a remaining course</option>
+                        <option value="" style={{ padding: '8px', fontSize: '14px' }}>Select a remaining course</option>
                         {remainingCourses.map(rc => (
-                          <option key={rc.pc_id} value={rc.pc_id}>
-                            {rc.course_code} - {rc.course_name} ({rc.units} units)
+                          <option key={rc.pc_id} value={rc.pc_id} style={{ padding: '8px', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                            {rc.course_code} - {rc.course_name} ({rc.units} units) - Year {rc.year_level}
                           </option>
                         ))}
                       </TextField>
