@@ -46,7 +46,21 @@ module.exports = async (req, res) => {
       const admin = await verifyAdminToken(req, res);
       if (!admin) return; // Error response already sent
 
-      const { full_name, staff_username, staff_password } = req.body;
+      const { full_name, staff_username, staff_password, verification_password } = req.body;
+
+      // Check verification password
+      const expectedVerificationPassword = process.env.ADMIN_ACCOUNT_VERIFICATION;
+      if (!expectedVerificationPassword) {
+        return res.status(500).json({ 
+          error: "Verification system not configured. Please contact system administrator." 
+        });
+      }
+
+      if (!verification_password || verification_password !== expectedVerificationPassword) {
+        return res.status(403).json({ 
+          error: "Invalid verification password. Admin account creation requires verification." 
+        });
+      }
 
       if (!full_name || !staff_username || !staff_password) {
         return res.status(400).json({ error: "Please fill in all fields." });
