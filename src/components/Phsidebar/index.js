@@ -109,13 +109,11 @@ const ProgramHeadSidebar = () => {
 
         <br />
         <div className='logoutWrap'>
-          <Link to={"/homepage"}>
-            <div className='logoutBox'>
-              <Button variant="contained" onClick={handleLogout}>
-                <HiOutlineLogout />Logout
-              </Button>
-            </div>
-          </Link>
+          <div className='logoutBox'>
+            <Button variant="contained" onClick={handleLogout}>
+              <HiOutlineLogout />Logout
+            </Button>
+          </div>
         </div>
       </div>
     </>
