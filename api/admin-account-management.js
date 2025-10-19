@@ -15,29 +15,26 @@ const pool = new Pool({
 const verifyAdminToken = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    
+
     if (!token) {
-      res.status(401).json({ message: "No token provided" });
-      return null;
+      return res.status(401).json({ message: "No token provided" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     const admin = await pool.query(
       'SELECT * FROM admins WHERE staff_id = $1 AND role = $2',
       [decoded.id, 'admin']
     );
 
     if (admin.rows.length === 0) {
-      res.status(403).json({ message: "Admin access required" });
-      return null;
+      return res.status(403).json({ message: "Admin access required" });
     }
 
     return admin.rows[0];
   } catch (error) {
     console.error('Token verification error:', error);
-    res.status(401).json({ message: "Invalid token" });
-    return null;
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
 
@@ -49,22 +46,7 @@ module.exports = async (req, res) => {
       const admin = await verifyAdminToken(req, res);
       if (!admin) return; // Error response already sent
 
-      const { full_name, staff_username, staff_password, verification_password } = req.body;
-
-      // Check verification password
-      const expectedVerificationPassword = process.env.ADMIN_ACCOUNT_VERIFICATION;
-      if (!expectedVerificationPassword) {
-        return res.status(500).json({ 
-          error: "Verification system not configured. Please contact system administrator." 
-        });
-      }
-
-      if (!verification_password || verification_password !== expectedVerificationPassword) {
-        return res.status(403).json({ 
-          error: "Invalid verification password. Admin account creation requires verification." 
-        });
-      }
-
+      const { full_name, staff_username, staff_password } = req.body;
       if (!full_name || !staff_username || !staff_password) {
         return res.status(400).json({ error: "Please fill in all fields." });
       }
@@ -90,7 +72,7 @@ module.exports = async (req, res) => {
         VALUES ($1, $2, $3, $4)
         RETURNING staff_id, full_name, staff_username, role
       `;
-      
+
       const result = await client.query(insertQuery, [
         full_name, 
         staff_username, 
@@ -102,7 +84,7 @@ module.exports = async (req, res) => {
         message: "Admin account created successfully!",
         admin: result.rows[0]
       });
-      
+
       client.release();
     } catch (error) {
       console.error("Error creating admin account:", error);
@@ -124,7 +106,7 @@ module.exports = async (req, res) => {
         WHERE staff_id = $1 AND role = 'admin'
         RETURNING staff_id, full_name, staff_username
       `;
-      
+
       const result = await client.query(deleteQuery, [admin.staff_id]);
 
       if (result.rows.length === 0) {
@@ -135,7 +117,7 @@ module.exports = async (req, res) => {
         message: "Admin account deleted successfully. You will be logged out.",
         deletedAdmin: result.rows[0]
       });
-      
+
       client.release();
     } catch (error) {
       console.error("Error deleting admin account:", error);
@@ -158,13 +140,13 @@ module.exports = async (req, res) => {
         WHERE role = 'admin'
         ORDER BY staff_id DESC
       `;
-      
+
       const result = await client.query(query);
 
       res.status(200).json({ 
         admins: result.rows
       });
-      
+
       client.release();
     } catch (error) {
       console.error("Error fetching admin accounts:", error);
