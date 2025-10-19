@@ -17,7 +17,8 @@ const verifyAdminToken = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     
     if (!token) {
-      return res.status(401).json({ message: "No token provided" });
+      res.status(401).json({ message: "No token provided" });
+      return null;
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -28,13 +29,15 @@ const verifyAdminToken = async (req, res) => {
     );
 
     if (admin.rows.length === 0) {
-      return res.status(403).json({ message: "Admin access required" });
+      res.status(403).json({ message: "Admin access required" });
+      return null;
     }
 
     return admin.rows[0];
   } catch (error) {
     console.error('Token verification error:', error);
-    return res.status(401).json({ message: "Invalid token" });
+    res.status(401).json({ message: "Invalid token" });
+    return null;
   }
 };
 
