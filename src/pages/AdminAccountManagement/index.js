@@ -41,8 +41,8 @@ const AdminAccountManagement = () => {
   const [newAdmin, setNewAdmin] = useState({
     full_name: '',
     staff_username: '',
-    staff_password: '',
-    verification_password: ''
+    staff_password: ''
+
   });
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -59,7 +59,7 @@ const AdminAccountManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await fetch('/api/admin-account-management', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -108,7 +108,7 @@ const AdminAccountManagement = () => {
           severity: 'success'
         });
         setShowCreateModal(false);
-        setNewAdmin({ full_name: '', staff_username: '', staff_password: '', verification_password: '' });
+        setNewAdmin({ full_name: '', staff_username: '', staff_password: '' });
         fetchAdmins();
       } else {
         const errorData = await response.json();
@@ -145,7 +145,7 @@ const AdminAccountManagement = () => {
           message: 'Your account has been deleted. You will be logged out.',
           severity: 'success'
         });
-        
+
         // Auto logout after account deletion
         setTimeout(() => {
           handleLogout();
@@ -170,12 +170,12 @@ const AdminAccountManagement = () => {
   const handleLogout = () => {
     // Clear all localStorage
     localStorage.clear();
-    
+
     // Reset context states
     context.setUser(null);
     context.setRole(null);
     context.setIsLogin(false);
-    
+
     // Navigate to homepage
     navigate('/homepage', { replace: true });
   };
@@ -343,7 +343,7 @@ const AdminAccountManagement = () => {
           }}>
             Create New Admin Account
           </Typography>
-          
+
           <form onSubmit={handleCreateAdmin}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -395,28 +395,6 @@ const AdminAccountManagement = () => {
                   onChange={handleInputChange} 
                   fullWidth 
                   required
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#c70202',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#c70202',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField 
-                  label="Verification Password" 
-                  name="verification_password" 
-                  type="password" 
-                  value={newAdmin.verification_password} 
-                  onChange={handleInputChange} 
-                  fullWidth 
-                  required
-                  helperText="Enter the admin verification password to complete account creation"
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': {
