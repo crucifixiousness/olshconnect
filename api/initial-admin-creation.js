@@ -96,7 +96,25 @@ module.exports = async (req, res) => {
   else if (req.method === 'POST') {
     // Create initial admin endpoint
     if (req.url.includes('/create-initial-admin')) {
-      const { staff_username, staff_password, full_name, role = 'admin' } = req.body;
+      const { staff_username, staff_password, full_name, role = 'admin', verification_password } = req.body;
+      
+      // Check verification password
+      const expectedVerificationPassword = process.env.ADMIN_ACCOUNT_VERIFICATION;
+      if (!expectedVerificationPassword) {
+        return res.status(500).json({
+          success: false,
+          message: 'Verification system not configured. Please contact system administrator.',
+          error: 'VERIFICATION_NOT_CONFIGURED'
+        });
+      }
+
+      if (!verification_password || verification_password !== expectedVerificationPassword) {
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid verification password. Admin account creation requires verification.',
+          error: 'INVALID_VERIFICATION_PASSWORD'
+        });
+      }
       
       // Validation
       if (!staff_username || !staff_password || !full_name) {
@@ -115,15 +133,46 @@ module.exports = async (req, res) => {
         });
       }
       
+      if (!['admin', 'super_admin'].includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Role must be either admin or super_admin',
+          error: 'INVALID_ROLE'
+        });
+      }
+      
       try {
         const client = await pool.connect();
         
+        await client.query('BEGIN');
+        
+        // Check if any admin accounts exist
+        const adminCheckResult = await client.query(`
+          SELECT COUNT(*) as admin_count 
+          FROM admins 
+          WHERE role IN ('admin', 'super_admin')
+        `);
+        
+        const adminCount = parseInt(adminCheckResult.rows[0].admin_count);
+        
+        if (adminCount > 0) {
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(403).json({
+            success: false,
+            message: 'Admin accounts already exist. Initial admin creation is not available.',
+            error: 'ADMINS_EXIST'
+          });
+        }
+        
         // Check if username already exists
-        const existingUser = await client.query(`
-          SELECT staff_id FROM admins WHERE staff_username = $1
-        `, [staff_username]);
+        const existingUser = await client.query(
+          'SELECT staff_id FROM admins WHERE staff_username = $1',
+          [staff_username]
+        );
         
         if (existingUser.rows.length > 0) {
+          await client.query('ROLLBACK');
           client.release();
           return res.status(400).json({
             success: false,
@@ -136,7 +185,7 @@ module.exports = async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(staff_password, saltRounds);
         
-        // Create admin account
+        // Create initial admin account
         const result = await client.query(`
           INSERT INTO admins (
             staff_username, 
@@ -149,20 +198,21 @@ module.exports = async (req, res) => {
         
         const newAdmin = result.rows[0];
         
+        await client.query('COMMIT');
         client.release();
         
-        // Generate JWT token
+        // Generate JWT token for immediate login
         const token = jwt.sign(
           { 
-            adminId: newAdmin.staff_id, 
-            username: newAdmin.staff_username,
-            role: newAdmin.role 
+            staff_id: newAdmin.staff_id,
+            staff_username: newAdmin.staff_username,
+            role: newAdmin.role
           },
           process.env.JWT_SECRET || 'your-secret-key',
           { expiresIn: '24h' }
         );
         
-        res.json({
+        res.status(201).json({
           success: true,
           message: 'Initial admin account created successfully',
           admin: {
@@ -171,11 +221,20 @@ module.exports = async (req, res) => {
             full_name: newAdmin.full_name,
             role: newAdmin.role
           },
-          token
+          token,
+          loginMessage: 'You can now log in with your credentials'
         });
         
       } catch (error) {
         console.error('Error creating initial admin:', error);
+        
+        try {
+          await client.query('ROLLBACK');
+          client.release();
+        } catch (rollbackError) {
+          console.error('Error during rollback:', rollbackError);
+        }
+        
         res.status(500).json({
           success: false,
           message: 'Error creating initial admin account',
