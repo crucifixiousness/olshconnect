@@ -24,7 +24,35 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
-    const { staff_username, staff_password, full_name, role = 'admin' } = req.body;
+    const { staff_username, staff_password, full_name, role = 'admin', verification_password } = req.body;
+    
+    // Check verification password
+    const expectedVerificationPassword = process.env.ADMIN_ACCOUNT_VERIFICATION;
+    console.log('🔐 Verification Debug:');
+    console.log('  Expected password from env:', expectedVerificationPassword ? '***configured***' : 'NOT CONFIGURED');
+    console.log('  Provided password:', verification_password ? '***provided***' : 'missing');
+    
+    if (!expectedVerificationPassword) {
+      console.log('❌ Verification system not configured');
+      return res.status(500).json({
+        success: false,
+        message: 'Verification system not configured. Please contact system administrator.',
+        error: 'VERIFICATION_NOT_CONFIGURED'
+      });
+    }
+
+    if (!verification_password || verification_password !== expectedVerificationPassword) {
+      console.log('❌ Verification password check failed');
+      console.log('  Expected:', expectedVerificationPassword);
+      console.log('  Received:', verification_password);
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid verification password. Admin account creation requires verification.',
+        error: 'INVALID_VERIFICATION_PASSWORD'
+      });
+    }
+    
+    console.log('✅ Verification password check passed');
     
     // Validation
     if (!staff_username || !staff_password || !full_name) {
