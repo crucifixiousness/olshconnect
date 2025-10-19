@@ -41,7 +41,8 @@ const AdminAccountManagement = () => {
   const [newAdmin, setNewAdmin] = useState({
     full_name: '',
     staff_username: '',
-    staff_password: ''
+    staff_password: '',
+    verification_password: ''
   });
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -107,7 +108,7 @@ const AdminAccountManagement = () => {
           severity: 'success'
         });
         setShowCreateModal(false);
-        setNewAdmin({ full_name: '', staff_username: '', staff_password: '' });
+        setNewAdmin({ full_name: '', staff_username: '', staff_password: '', verification_password: '' });
         fetchAdmins();
       } else {
         const errorData = await response.json();
@@ -394,6 +395,28 @@ const AdminAccountManagement = () => {
                   onChange={handleInputChange} 
                   fullWidth 
                   required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#c70202',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#c70202',
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField 
+                  label="Verification Password" 
+                  name="verification_password" 
+                  type="password" 
+                  value={newAdmin.verification_password} 
+                  onChange={handleInputChange} 
+                  fullWidth 
+                  required
+                  helperText="Enter the admin verification password to complete account creation"
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': {
