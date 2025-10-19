@@ -7,7 +7,8 @@ const InitialAdminCreation = () => {
     staff_password: '',
     confirm_password: '',
     full_name: '',
-    role: 'admin'
+    role: 'admin',
+    verification_password: ''
   });
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,7 @@ const InitialAdminCreation = () => {
   };
 
   const validateForm = () => {
-    if (!formData.staff_username || !formData.staff_password || !formData.full_name) {
+    if (!formData.staff_username || !formData.staff_password || !formData.full_name || !formData.verification_password) {
       setError('All fields are required');
       return false;
     }
@@ -89,7 +90,8 @@ const InitialAdminCreation = () => {
           staff_username: formData.staff_username,
           staff_password: formData.staff_password,
           full_name: formData.full_name,
-          role: formData.role
+          role: formData.role,
+          verification_password: formData.verification_password
         })
       });
       
@@ -258,6 +260,20 @@ const InitialAdminCreation = () => {
               placeholder="Confirm password"
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="verification_password">Verification Password *</label>
+            <input
+              type="password"
+              id="verification_password"
+              name="verification_password"
+              value={formData.verification_password}
+              onChange={handleInputChange}
+              placeholder="Enter verification password"
+              required
+            />
+            <small className="form-help">Enter the admin verification password to complete account creation</small>
           </div>
 
           <div className="form-actions">
