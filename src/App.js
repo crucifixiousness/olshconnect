@@ -122,27 +122,21 @@ function App() {
   };
 
   useEffect(() => {
-    console.log('App State Update:', { token, role, user });
+    // App state updated
   }, [token, role, user]);
 
   const ProtectedRoute = ({ element, requiredRole, redirectTo }) => {
-    console.log('ProtectedRoute check:', { token: !!token, role, requiredRole, redirectTo });
-    
     if (!token) {
-      console.log('No token, redirecting to:', redirectTo);
       return <Navigate to={redirectTo} />;
     }
 
     // Handle both string and array roles
     const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    console.log('Allowed roles:', allowedRoles, 'Current role:', role);
     
     if (requiredRole && !allowedRoles.includes(role)) {
-      console.log('Role not allowed, redirecting to:', redirectTo);
       return <Navigate to={redirectTo} />;
     }
 
-    console.log('Access granted');
     return element;
   };
 
