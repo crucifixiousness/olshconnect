@@ -143,12 +143,7 @@ const ProgramStudentList = () => {
       if (!programId) return;
       
       try {
-        console.log('🔍 [MAIN] Fetching existing blocks for program_id:', programId);
         const response = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
-        console.log('✅ [MAIN] API response for existing blocks:', response.data);
-        console.log('📊 [MAIN] Response data type:', typeof response.data);
-        console.log('📊 [MAIN] Response data length:', response.data?.length);
-        console.log('📊 [MAIN] Full response data structure:', JSON.stringify(response.data, null, 2));
         
         // Filter out null/undefined values and ensure we have valid block names
         let blocks = [];
@@ -159,13 +154,11 @@ const ProgramStudentList = () => {
         // If no valid blocks from API, use default blocks
         if (blocks.length === 0) {
           blocks = ['A', 'B', 'C'];
-          console.log('⚠️ [MAIN] No valid blocks from API, using default blocks:', blocks);
         }
         
         setExistingBlocks(blocks);
-        console.log('✅ [MAIN] existingBlocks state set to:', blocks);
       } catch (error) {
-        console.error('❌ [MAIN] Error fetching existing blocks:', error);
+        console.error('Error fetching existing blocks:', error);
         // Set default blocks if API fails
         setExistingBlocks(['A', 'B', 'C']);
       }
@@ -289,12 +282,10 @@ const ProgramStudentList = () => {
         
         // Refresh the existing blocks from the database
         try {
-          console.log('🔄 [REFRESH] Refreshing blocks after assignment for program_id:', programId);
           const blocksResponse = await axios.get(`/api/get-program-blocks?program_id=${programId}`);
-          console.log('✅ [REFRESH] Blocks refresh response:', blocksResponse.data);
           setExistingBlocks(blocksResponse.data);
         } catch (error) {
-          console.error('❌ [REFRESH] Error refreshing blocks:', error);
+          console.error('Error refreshing blocks:', error);
         }
       }
     } catch (error) {
