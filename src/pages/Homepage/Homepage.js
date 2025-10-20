@@ -357,26 +357,18 @@ const Homepage = () => {
 
     // Verification functions
     const sendVerificationCode = async (type) => {
-        console.log('🚀 Starting verification process for:', type);
         setVerificationLoading(true);
         try {
             // Generate OTP on frontend
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            console.log('🔢 Generated OTP:', otp);
             
             // Store OTP temporarily (in production, use backend storage)
             const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
             sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
-            console.log('💾 OTP stored in sessionStorage');
             
-            console.log('📧 Sending email verification to:', formData.email);
-            console.log('👤 Student first name:', formData.firstName);
             const result = await sendVerificationEmail(formData.email, otp, formData.firstName);
             
-            console.log('📋 EmailJS result:', result);
-            
             if (result.success) {
-                console.log('✅ Email sent successfully!');
                 setSnackbar({
                     open: true,
                     message: `Verification code sent to your ${type}`,
