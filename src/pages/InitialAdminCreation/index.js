@@ -81,13 +81,6 @@ const InitialAdminCreation = () => {
     setSuccess('');
     
     try {
-      console.log('📤 Sending admin creation request with data:', {
-        staff_username: formData.staff_username,
-        full_name: formData.full_name,
-        role: formData.role,
-        verification_password: formData.verification_password ? '***provided***' : 'missing'
-      });
-      
       const response = await fetch('/api/initial-admin-create', {
         method: 'POST',
         headers: {
@@ -103,13 +96,6 @@ const InitialAdminCreation = () => {
       });
       
       const data = await response.json();
-      
-      console.log('📥 Response received:', {
-        status: response.status,
-        success: data.success,
-        message: data.message,
-        error: data.error
-      });
       
       if (data.success) {
         setSuccess('Initial admin account created successfully!');
