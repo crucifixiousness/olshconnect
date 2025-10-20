@@ -104,13 +104,12 @@ const DocumentRequests = () => {
           );
           
           if (emailResult.success) {
-            console.log('✅ Approval email sent successfully');
+            // Email sent successfully
           } else {
-            console.error('❌ Failed to send approval email:', emailResult.message);
+            console.error('Failed to send approval email:', emailResult.message);
           }
         }
       } else if (newStatus === 'Rejected') {
-        console.log('📧 Sending rejection email to:', request.email);
         const emailResult = await sendDocumentRejectionEmail(
           request.email,
           `${request.first_name} ${request.last_name}`,
@@ -120,9 +119,9 @@ const DocumentRequests = () => {
         );
         
         if (emailResult.success) {
-          console.log('✅ Rejection email sent successfully');
+          // Email sent successfully
         } else {
-          console.error('❌ Failed to send rejection email:', emailResult.message);
+          console.error('Failed to send rejection email:', emailResult.message);
         }
       }
       
