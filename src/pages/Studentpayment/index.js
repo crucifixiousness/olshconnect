@@ -122,10 +122,8 @@ Additional Data: ${JSON.stringify(details, null, 2)}
       }, {
         headers: { 'Content-Type': 'application/json' }
       });
-      console.log('✅ Payment log API response:', response.data);
     } catch (err) {
-      console.error('❌ Payment logging failed:', err);
-      console.error('❌ Error details:', err.response?.data || err.message);
+      console.error('Payment logging failed:', err);
     }
     
     console.warn('🚨 PAYMENT HONEYPOT TRIGGERED:', activity);
