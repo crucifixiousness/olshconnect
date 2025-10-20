@@ -88,9 +88,6 @@ const ProgramHeadTorEvaluation = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('🔍 DEBUG: Fetching equivalencies for tor_request_id:', tor_request_id);
-      console.log('🔍 DEBUG: Response:', response.data);
-      
       if (response.data.success && response.data.equivalencies) {
         // Convert the database format to form format
         const formattedEquivalencies = response.data.equivalencies.map(equiv => ({
@@ -104,10 +101,8 @@ const ProgramHeadTorEvaluation = () => {
           source_school: equiv.source_school || '',
           source_academic_year: equiv.source_academic_year || ''
         }));
-        console.log('🔍 DEBUG: Formatted equivalencies:', formattedEquivalencies);
         setEquivalencies(formattedEquivalencies);
       } else {
-        console.log('🔍 DEBUG: No equivalencies found or success=false');
         setEquivalencies([]);
       }
     } catch (error) {
@@ -151,15 +146,11 @@ const ProgramHeadTorEvaluation = () => {
 
   const handleDownloadTor = async (tor_request_id) => {
     try {
-      console.log('🔍 DEBUG: Attempting to download TOR for request ID:', tor_request_id);
-      
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/download-tor?tor_request_id=${tor_request_id}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob' // Important for file downloads
       });
-
-      console.log('✅ DEBUG: Download response received:', response);
 
       // Create blob link to download
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -193,8 +184,6 @@ const ProgramHeadTorEvaluation = () => {
         const status = error.response.status;
         const errorData = error.response.data;
         
-        console.log('❌ ERROR: Server response:', { status, errorData });
-        
         if (status === 404) {
           if (errorData && errorData.error) {
             errorMessage = errorData.error;
@@ -210,11 +199,9 @@ const ProgramHeadTorEvaluation = () => {
         }
       } else if (error.request) {
         // Request was made but no response received
-        console.log('❌ ERROR: No response received:', error.request);
         errorMessage = 'Network error. Please check your connection and try again.';
       } else {
         // Something else happened
-        console.log('❌ ERROR: Request setup error:', error.message);
         errorMessage = 'Failed to prepare download request.';
       }
       
