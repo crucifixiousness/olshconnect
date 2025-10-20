@@ -34,16 +34,12 @@ const PaymentVerification = () => {
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
-      console.log('🔍 Fetching enrollment payments...');
       const response = await axios.get('/api/enrollment-for-verification', {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      console.log('✅ Fetched payments response:', response);
-      console.log('📊 Fetched payments data:', response.data);
-      console.log('📊 Number of payments:', response.data?.length || 0);
       setPayments(response.data || []);
     } catch (error) {
       console.error('❌ Error fetching payments:', error);
