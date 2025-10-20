@@ -9,28 +9,13 @@ const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'your_t
 const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_public_key';
 
 // Initialize EmailJS
-console.log('🔧 Initializing EmailJS with key:', EMAILJS_PUBLIC_KEY);
 emailjs.init(EMAILJS_PUBLIC_KEY);
-console.log('✅ EmailJS initialized');
 
 export const sendVerificationEmail = async (email, otp, studentName = 'Student') => {
   try {
-    // Debug: Check if environment variables are loaded
-    console.log('=== EMAILJS DEBUG INFO ===');
-    console.log('EmailJS Service ID:', process.env.REACT_APP_EMAILJS_SERVICE_ID);
-    console.log('EmailJS Template ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
-    console.log('EmailJS Public Key:', process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
-    console.log('Email to send to:', email);
-    console.log('Student name:', studentName);
-    console.log('OTP to send:', otp);
-    console.log('========================');
-    
     if (!process.env.REACT_APP_EMAILJS_SERVICE_ID || !process.env.REACT_APP_EMAILJS_TEMPLATE_ID || !process.env.REACT_APP_EMAILJS_PUBLIC_KEY) {
-      console.error('❌ Environment variables missing!');
       throw new Error('EmailJS environment variables are not properly configured');
     }
-    
-    console.log('✅ Environment variables loaded successfully');
 
     const templateParams = {
       // EmailJS template expects these exact parameter names
@@ -57,7 +42,6 @@ export const sendVerificationEmail = async (email, otp, studentName = 'Student')
       templateParams
     );
 
-    console.log('✅ Email sent successfully:', response);
     return { success: true, message: 'Verification email sent successfully' };
   } catch (error) {
     console.error('Error sending email:', error);
