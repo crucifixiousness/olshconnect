@@ -34,9 +34,11 @@ const StudentCourses = () => {
           setCourses([]);
           return;
         }
+        
         const { data } = await axios.get('/api/student-courses', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        
         setCourses(Array.isArray(data.courses) ? data.courses : []);
       } catch (err) {
         const message = err.response?.data?.error || 'Failed to load courses.';
@@ -49,6 +51,11 @@ const StudentCourses = () => {
 
     fetchCourses();
   }, [context]);
+
+  // Debug logging for state changes
+  useEffect(() => {
+    // State changes logged
+  }, [courses, loading, error]);
 
   return (
     <div className="right-content w-100" data-testid="student-courses">
