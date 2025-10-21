@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import olshcoLogo from '../../asset/images/olshco-logo1.png';
 
 const InitialAdminCreation = () => {
   const [formData, setFormData] = useState({
@@ -175,7 +176,7 @@ const InitialAdminCreation = () => {
       <div className="initial-admin-card">
         <div className="initial-header">
           <div className="initial-logo">
-            <img src="/src/asset/images/olshco-logo1.png" alt="OLSHCO Logo" />
+            <img src={olshcoLogo} alt="OLSHCO Logo" />
           </div>
           <h1>Initial Admin Setup</h1>
           <p className="initial-subtitle">
