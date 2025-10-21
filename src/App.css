@@ -1254,9 +1254,6 @@ table.v-align td{vertical-align: middle !important;}
 .form-group select:focus {
   outline: none;
   border-color: #c70202;
-  box-shadow: 
-    0 0 0 4px rgba(199, 2, 2, 0.1),
-    0 4px 12px rgba(199, 2, 2, 0.15);
   background: rgba(255, 255, 255, 0.95);
 }
 
@@ -1298,14 +1295,10 @@ table.v-align td{vertical-align: middle !important;}
 
 .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #a00000, #800000);
-  transform: translateY(-2px);
-  box-shadow: 
-    0 8px 20px rgba(199, 2, 2, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #800000, #600000);
 }
 
 .btn-primary:disabled {
