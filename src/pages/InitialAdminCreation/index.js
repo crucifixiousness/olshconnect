@@ -174,7 +174,9 @@ const InitialAdminCreation = () => {
     <div className="initial-admin-container">
       <div className="initial-admin-card">
         <div className="initial-header">
-          <div className="initial-icon">🚀</div>
+          <div className="initial-logo">
+            <img src="/src/asset/images/olshco-logo1.png" alt="OLSHCO Logo" />
+          </div>
           <h1>Initial Admin Setup</h1>
           <p className="initial-subtitle">
             Welcome to OLSHCO Portal! Create your first admin account to get started.
