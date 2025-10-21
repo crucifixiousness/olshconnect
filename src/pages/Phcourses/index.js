@@ -732,6 +732,7 @@ const AssignCourses = () => {
           borderRadius: "10px",
           padding: "30px",
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          border: '3px solid #c70202',
         }}>
           <Typography variant="h5" sx={{ mb: 3, color: '#c70202', fontWeight: 'bold' }}>
             Course Details
@@ -811,6 +812,7 @@ const AssignCourses = () => {
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           maxHeight: "90vh",
           overflowY: "auto",
+          border: '3px solid #c70202',
         }}>
           <Button
             onClick={handleClose}
@@ -985,6 +987,7 @@ const AssignCourses = () => {
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           maxHeight: "90vh",
           overflowY: "auto",
+          border: '3px solid #c70202',
         }}>
           <Button
             onClick={handleEditClose}
