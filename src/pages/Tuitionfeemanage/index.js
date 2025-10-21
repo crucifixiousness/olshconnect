@@ -62,7 +62,23 @@ const TuitionManagement = () => {
 
   const fetchPrograms = async () => {
     try {
+      // Check cache first
+      const cachedData = localStorage.getItem('programsData');
+      const cacheTimestamp = localStorage.getItem('programsTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 10 minutes old (programs don't change often)
+      if (cachedData && cacheAge && cacheAge < 600000) {
+        setPrograms(JSON.parse(cachedData));
+        return;
+      }
+
       const response = await axios.get('/api/programs');
+      
+      // Cache the data
+      localStorage.setItem('programsData', JSON.stringify(response.data));
+      localStorage.setItem('programsTimestamp', Date.now().toString());
+      
       setPrograms(response.data);
     } catch (error) {
       console.error('Error fetching programs:', error);
@@ -74,9 +90,36 @@ const TuitionManagement = () => {
     fetchPrograms();
   }, []);
 
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('tuitionFeesData');
+      localStorage.removeItem('tuitionFeesTimestamp');
+      localStorage.removeItem('programsData');
+      localStorage.removeItem('programsTimestamp');
+    };
+  }, []);
+
   const fetchTuitionFees = async () => {
     try {
+      // Check cache first
+      const cachedData = localStorage.getItem('tuitionFeesData');
+      const cacheTimestamp = localStorage.getItem('tuitionFeesTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        setTuitionFees(JSON.parse(cachedData));
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get('/api/tuition-fees');
+      
+      // Cache the data
+      localStorage.setItem('tuitionFeesData', JSON.stringify(response.data));
+      localStorage.setItem('tuitionFeesTimestamp', Date.now().toString());
+      
       setTuitionFees(response.data);
       setLoading(false);
     } catch (error) {
@@ -331,7 +374,8 @@ const TuitionManagement = () => {
           boxShadow: 24,
           p: 4,
           maxHeight: "90vh",
-          overflowY: "auto"
+          overflowY: "auto",
+          border: '3px solid #c70202'
         }}>
           <Typography variant="h5" sx={{ 
             textAlign: "center", 
