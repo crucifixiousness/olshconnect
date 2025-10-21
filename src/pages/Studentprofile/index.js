@@ -165,7 +165,23 @@ const StudentProfile = () => {
 
   const fetchPrograms = async () => {
     try {
+      // Check cache first
+      const cachedData = localStorage.getItem('programManagementData');
+      const cacheTimestamp = localStorage.getItem('programManagementTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 10 minutes old (programs don't change often)
+      if (cachedData && cacheAge && cacheAge < 600000) {
+        setPrograms(JSON.parse(cachedData));
+        return;
+      }
+
       const response = await axios.get("/api/program-management");
+      
+      // Cache the data
+      localStorage.setItem('programManagementData', JSON.stringify(response.data));
+      localStorage.setItem('programManagementTimestamp', Date.now().toString());
+      
       setPrograms(response.data);
     } catch (error) {
       console.error("Error fetching programs:", error);
@@ -707,6 +723,7 @@ const StudentProfile = () => {
             boxShadow: 24,
             maxHeight: "90vh",
             overflowY: "auto",
+            border: '3px solid #c70202'
           }}
         >
           <Button
@@ -919,6 +936,7 @@ const StudentProfile = () => {
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           maxHeight: "90vh",
           overflowY: "auto",
+          border: '3px solid #c70202'
         }}>
           <Button
             onClick={handleCloseEnrollment}
