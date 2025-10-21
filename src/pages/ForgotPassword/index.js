@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MyContext } from '../../App';
-import { useContext, useEffect } from 'react';
 import olshcoLogo from '../../asset/images/olshco-logo1.png';
 import loginbackground from '../../asset/images/login-background.jpg';
 import { FaRegUserCircle, FaRegEnvelope, FaPhone } from "react-icons/fa";
@@ -10,42 +9,37 @@ import CircularProgress from '@mui/material/CircularProgress';
 import axios from 'axios';
 
 const ForgotPassword = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    contactNumber: '',
-    email: ''
-  });
+  const context = useContext(MyContext);
+  const [username, setUsername] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [studentId, setStudentId] = useState(null);
   const [studentName, setStudentName] = useState('');
-  const context = useContext(MyContext);
 
   useEffect(() => {
-    context.setIsHideComponents(true);
+    if (context && context.setIsHideComponents) {
+      context.setIsHideComponents(true);
+    }
   }, [context]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Format contact number (ensure it starts with 09 and is 11 digits)
-    if (name === 'contactNumber') {
-      let formattedValue = value.replace(/[^0-9]/g, '');
-      if (formattedValue.length > 11) {
-        formattedValue = formattedValue.slice(0, 11);
-      }
-      if (formattedValue.length === 1 && formattedValue !== '0') {
-        formattedValue = '';
-      }
-      if (formattedValue.length === 2 && formattedValue !== '09') {
-        formattedValue = '09';
-      }
-      setFormData(prev => ({ ...prev, [name]: formattedValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+  const handleContactNumberChange = (e) => {
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    if (value.length > 11) {
+      value = value.slice(0, 11);
     }
+    if (value.length === 1 && value !== '0') {
+      value = '';
+    }
+    if (value.length === 2 && value !== '09') {
+      value = '09';
+    }
+    setContactNumber(value);
     setError('');
   };
 
@@ -55,24 +49,27 @@ const ForgotPassword = () => {
     setError('');
     setMessage('');
 
-    // Validate inputs
-    if (!formData.username || !formData.contactNumber || !formData.email) {
+    if (!username || !contactNumber || !email) {
       setError('Please fill in all fields');
       setIsLoading(false);
       return;
     }
 
-    if (formData.contactNumber.length !== 11) {
+    if (contactNumber.length !== 11) {
       setError('Contact number must be exactly 11 digits');
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await axios.post('/api/verify-forgot-password', formData);
+      const response = await axios.post('/api/verify-forgot-password', {
+        username,
+        contactNumber,
+        email
+      });
       
-      if (response.data && response.data.success) {
-        setMessage(response.data.message || 'Account verified successfully');
+      if (response && response.data && response.data.success) {
+        setMessage('Account verified successfully. You can now reset your password.');
         setIsVerified(true);
         setStudentId(response.data.studentId);
         setStudentName(response.data.studentName || 'Student');
@@ -81,22 +78,14 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       console.error('Verification error:', error);
-      const errorMsg = error.response?.data?.error || 'Failed to verify account. Please try again.';
-      setError(errorMsg);
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError('Failed to verify account. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const [passwordData, setPasswordData] = useState({
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({ ...prev, [name]: value }));
-    setError('');
   };
 
   const handleResetPassword = async (e) => {
@@ -105,19 +94,19 @@ const ForgotPassword = () => {
     setError('');
     setMessage('');
 
-    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       setError('Please fill in both password fields');
       setIsLoading(false);
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
+    if (newPassword.length < 6) {
       setError('Password must be at least 6 characters long');
       setIsLoading(false);
       return;
     }
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
@@ -126,11 +115,11 @@ const ForgotPassword = () => {
     try {
       const response = await axios.post('/api/reset-password', {
         studentId: studentId,
-        newPassword: passwordData.newPassword
+        newPassword: newPassword
       });
       
-      if (response.data && response.data.success) {
-        setMessage(response.data.message || 'Password reset successfully');
+      if (response && response.data && response.data.success) {
+        setMessage('Password reset successfully. Redirecting to login...');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
@@ -139,8 +128,11 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       console.error('Password reset error:', error);
-      const errorMsg = error.response?.data?.error || 'Failed to reset password. Please try again.';
-      setError(errorMsg);
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError('Failed to reset password. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -163,23 +155,31 @@ const ForgotPassword = () => {
               </p>
             </div>
 
+            {error && (
+              <div className='alert alert-danger'>
+                {error}
+              </div>
+            )}
+            
+            {message && (
+              <div className='alert alert-success'>
+                {message}
+              </div>
+            )}
+
             {!isVerified ? (
               <form onSubmit={handleVerify}>
-                {error && (
-                  <div className='alert alert-danger'>
-                    {error}
-                  </div>
-                )}
-                
                 <div className='form-group position-relative mt-4'>
                   <span className='icon'><FaRegUserCircle /></span>
                   <input 
                     type='text' 
                     className='form-control' 
                     placeholder='Username' 
-                    name='username'
-                    value={formData.username}
-                    onChange={handleInputChange}
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      setError('');
+                    }}
                     required
                     autoFocus
                   />
@@ -191,9 +191,8 @@ const ForgotPassword = () => {
                     type='tel' 
                     className='form-control' 
                     placeholder='Contact Number (09xxxxxxxxx)' 
-                    name='contactNumber'
-                    value={formData.contactNumber}
-                    onChange={handleInputChange}
+                    value={contactNumber}
+                    onChange={handleContactNumberChange}
                     required
                   />
                 </div>
@@ -204,9 +203,11 @@ const ForgotPassword = () => {
                     type='email' 
                     className='form-control' 
                     placeholder='Email Address' 
-                    name='email'
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError('');
+                    }}
                     required
                   />
                 </div>
@@ -230,44 +231,36 @@ const ForgotPassword = () => {
               </form>
             ) : (
               <form onSubmit={handleResetPassword}>
-                {error && (
-                  <div className='alert alert-danger'>
-                    {error}
-                  </div>
-                )}
-                
-                {message && (
-                  <div className='alert alert-success'>
-                    {message}
-                  </div>
-                )}
+                <div className='form-group position-relative mt-4'>
+                  <span className='icon'><FaRegUserCircle /></span>
+                  <input 
+                    type='password' 
+                    className='form-control' 
+                    placeholder='New Password' 
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setError('');
+                    }}
+                    required
+                    autoFocus
+                  />
+                </div>
 
-                 <div className='form-group position-relative mt-4'>
-                   <span className='icon'><FaRegUserCircle /></span>
-                   <input 
-                     type='password' 
-                     className='form-control' 
-                     placeholder='New Password' 
-                     name='newPassword'
-                     value={passwordData.newPassword}
-                     onChange={handlePasswordChange}
-                     required
-                     autoFocus
-                   />
-                 </div>
-
-                 <div className='form-group position-relative mt-3'>
-                   <span className='icon'><FaRegUserCircle /></span>
-                   <input 
-                     type='password' 
-                     className='form-control' 
-                     placeholder='Confirm New Password' 
-                     name='confirmPassword'
-                     value={passwordData.confirmPassword}
-                     onChange={handlePasswordChange}
-                     required
-                   />
-                 </div>
+                <div className='form-group position-relative mt-3'>
+                  <span className='icon'><FaRegUserCircle /></span>
+                  <input 
+                    type='password' 
+                    className='form-control' 
+                    placeholder='Confirm New Password' 
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setError('');
+                    }}
+                    required
+                  />
+                </div>
 
                 <div className='form-group mt-4'>
                   <Button 
