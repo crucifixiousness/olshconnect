@@ -71,18 +71,32 @@ const ForgotPassword = () => {
     try {
       const response = await axios.post('/api/verify-forgot-password', formData);
       
-      if (response.data.success) {
-        setMessage(response.data.message);
+      if (response.data && response.data.success) {
+        setMessage(response.data.message || 'Account verified successfully');
         setIsVerified(true);
         setStudentId(response.data.studentId);
-        setStudentName(response.data.studentName);
+        setStudentName(response.data.studentName || 'Student');
+      } else {
+        setError('Invalid response from server');
       }
     } catch (error) {
+      console.error('Verification error:', error);
       const errorMsg = error.response?.data?.error || 'Failed to verify account. Please try again.';
       setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    setError('');
   };
 
   const handleResetPassword = async (e) => {
@@ -91,22 +105,19 @@ const ForgotPassword = () => {
     setError('');
     setMessage('');
 
-    const newPassword = e.target.newPassword.value;
-    const confirmPassword = e.target.confirmPassword.value;
-
-    if (!newPassword || !confirmPassword) {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
       setError('Please fill in both password fields');
       setIsLoading(false);
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (passwordData.newPassword.length < 6) {
       setError('Password must be at least 6 characters long');
       setIsLoading(false);
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
@@ -115,16 +126,19 @@ const ForgotPassword = () => {
     try {
       const response = await axios.post('/api/reset-password', {
         studentId: studentId,
-        newPassword: newPassword
+        newPassword: passwordData.newPassword
       });
       
-      if (response.data.success) {
-        setMessage(response.data.message);
+      if (response.data && response.data.success) {
+        setMessage(response.data.message || 'Password reset successfully');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
+      } else {
+        setError('Invalid response from server');
       }
     } catch (error) {
+      console.error('Password reset error:', error);
       const errorMsg = error.response?.data?.error || 'Failed to reset password. Please try again.';
       setError(errorMsg);
     } finally {
@@ -228,28 +242,32 @@ const ForgotPassword = () => {
                   </div>
                 )}
 
-                <div className='form-group position-relative mt-4'>
-                  <span className='icon'><FaRegUserCircle /></span>
-                  <input 
-                    type='password' 
-                    className='form-control' 
-                    placeholder='New Password' 
-                    name='newPassword'
-                    required
-                    autoFocus
-                  />
-                </div>
+                 <div className='form-group position-relative mt-4'>
+                   <span className='icon'><FaRegUserCircle /></span>
+                   <input 
+                     type='password' 
+                     className='form-control' 
+                     placeholder='New Password' 
+                     name='newPassword'
+                     value={passwordData.newPassword}
+                     onChange={handlePasswordChange}
+                     required
+                     autoFocus
+                   />
+                 </div>
 
-                <div className='form-group position-relative mt-3'>
-                  <span className='icon'><FaRegUserCircle /></span>
-                  <input 
-                    type='password' 
-                    className='form-control' 
-                    placeholder='Confirm New Password' 
-                    name='confirmPassword'
-                    required
-                  />
-                </div>
+                 <div className='form-group position-relative mt-3'>
+                   <span className='icon'><FaRegUserCircle /></span>
+                   <input 
+                     type='password' 
+                     className='form-control' 
+                     placeholder='Confirm New Password' 
+                     name='confirmPassword'
+                     value={passwordData.confirmPassword}
+                     onChange={handlePasswordChange}
+                     required
+                   />
+                 </div>
 
                 <div className='form-group mt-4'>
                   <Button 
