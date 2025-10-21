@@ -1107,7 +1107,6 @@ table.v-align td{vertical-align: middle !important;}
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
-  animation: slideUp 0.6s ease-out;
   position: relative;
   z-index: 1;
   overflow-y: auto;
@@ -1126,17 +1125,6 @@ table.v-align td{vertical-align: middle !important;}
   pointer-events: none;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Header Section */
 .initial-header {
   text-align: center;
@@ -1144,15 +1132,19 @@ table.v-align td{vertical-align: middle !important;}
   position: relative;
 }
 
-.initial-icon {
-  font-size: 56px;
-  margin-bottom: 15px;
-  display: inline-block;
-  background: linear-gradient(135deg, #c70202, #a00000);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 2px 4px rgba(199, 2, 2, 0.3));
+.initial-logo {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.initial-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .initial-header h1 {
@@ -1266,7 +1258,6 @@ table.v-align td{vertical-align: middle !important;}
     0 0 0 4px rgba(199, 2, 2, 0.1),
     0 4px 12px rgba(199, 2, 2, 0.15);
   background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
 }
 
 .form-group input::placeholder {
@@ -1305,27 +1296,12 @@ table.v-align td{vertical-align: middle !important;}
   letter-spacing: 0.3px;
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
 .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #a00000, #800000);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 
-    0 12px 25px rgba(199, 2, 2, 0.4),
+    0 8px 20px rgba(199, 2, 2, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-.btn-primary:hover:not(:disabled)::before {
-  left: 100%;
 }
 
 .btn-primary:active:not(:disabled) {
@@ -1404,9 +1380,9 @@ table.v-align td{vertical-align: middle !important;}
     margin-bottom: 25px;
   }
   
-  .initial-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
+  .initial-logo img {
+    width: 70px;
+    height: 70px;
   }
   
   .initial-header h1 {
@@ -1447,9 +1423,9 @@ table.v-align td{vertical-align: middle !important;}
     margin-bottom: 20px;
   }
   
-  .initial-icon {
-    font-size: 40px;
-    margin-bottom: 10px;
+  .initial-logo img {
+    width: 60px;
+    height: 60px;
   }
   
   .initial-header h1 {
