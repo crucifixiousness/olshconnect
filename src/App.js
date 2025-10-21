@@ -8,6 +8,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { createContext, useEffect, useState } from 'react';
 import Login from './pages/Login';
 import FakeLogin from './pages/FakeLogin';
+import ForgotPassword from './pages/ForgotPassword';
 import Signup from './pages/Signup';
 import StudentList from './pages/StudentList';
 import Homepage from './pages/Homepage/Homepage';
@@ -155,7 +156,7 @@ function App() {
         </Routes>
 
         <div className='main d-flex'>
-          {!["/stafflogin", "/login", "/initial-admin-creation"].includes(window.location.pathname) && isHideComponents !== true && (
+          {!["/stafflogin", "/login", "/forgot-password", "/initial-admin-creation"].includes(window.location.pathname) && isHideComponents !== true && (
             <>
               <div className={`sidebarOverlay d-none ${isOpenNav === true && 'show'}`} onClick={() => setIsOpenNav(false)}></div>
               <div className={`sidebarWrapper ${isToggleSidebar === true ? 'toggle' : ''} ${isOpenNav === true ? 'open' : ''}`}>
@@ -189,6 +190,7 @@ function App() {
               <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/admin-account-management" exact={true} element={<ProtectedRoute element={<AdminAccountManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={<Login />} />
+              <Route path="/forgot-password" exact={true} element={<ForgotPassword />} />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
               <Route path="/stafflogin" exact={true} element={<Signup />} />
               <Route path="/studentlist" exact={true} element={<ProtectedRoute element={<StudentList />} requiredRole={['registrar', 'admin', 'finance', 'instructor']} redirectTo="/stafflogin" />} />
