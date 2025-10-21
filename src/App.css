@@ -1078,7 +1078,8 @@ table.v-align td{vertical-align: middle !important;}
   background-attachment: fixed;
   padding: 20px;
   z-index: 9999;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .initial-admin-container::before {
@@ -1102,12 +1103,15 @@ table.v-align td{vertical-align: middle !important;}
   box-shadow: 
     0 25px 50px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.2);
-  padding: 50px;
+  padding: 40px;
   width: 100%;
-  max-width: 550px;
+  max-width: 520px;
+  max-height: 90vh;
   animation: slideUp 0.6s ease-out;
   position: relative;
   z-index: 1;
+  overflow-y: auto;
+  margin: 20px 0;
 }
 
 .initial-admin-card::before {
@@ -1136,13 +1140,13 @@ table.v-align td{vertical-align: middle !important;}
 /* Header Section */
 .initial-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   position: relative;
 }
 
 .initial-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
+  font-size: 56px;
+  margin-bottom: 15px;
   display: inline-block;
   background: linear-gradient(135deg, #c70202, #a00000);
   -webkit-background-clip: text;
@@ -1153,16 +1157,16 @@ table.v-align td{vertical-align: middle !important;}
 
 .initial-header h1 {
   color: #2c3e50;
-  margin: 0 0 15px 0;
-  font-size: 32px;
+  margin: 0 0 12px 0;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .initial-subtitle {
   color: #6c757d;
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.5;
   margin: 0;
   font-weight: 400;
 }
@@ -1224,17 +1228,17 @@ table.v-align td{vertical-align: middle !important;}
 
 /* Form Styles */
 .initial-form {
-  margin-bottom: 35px;
+  margin-bottom: 25px;
 }
 
 .form-group {
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   position: relative;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: #2c3e50;
   font-weight: 600;
   font-size: 14px;
@@ -1244,7 +1248,7 @@ table.v-align td{vertical-align: middle !important;}
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border: 2px solid #e8f0fe;
   border-radius: 12px;
   font-size: 16px;
@@ -1279,14 +1283,14 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .form-actions {
-  margin-top: 35px;
+  margin-top: 25px;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, #c70202, #a00000);
   color: white;
   border: none;
-  padding: 18px 32px;
+  padding: 16px 28px;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
@@ -1341,9 +1345,9 @@ table.v-align td{vertical-align: middle !important;}
 
 /* Alert Styles */
 .alert {
-  padding: 18px 24px;
+  padding: 15px 20px;
   border-radius: 12px;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   font-size: 14px;
@@ -1372,7 +1376,7 @@ table.v-align td{vertical-align: middle !important;}
 /* Footer */
 .initial-footer {
   text-align: center;
-  padding-top: 25px;
+  padding-top: 20px;
   border-top: 1px solid rgba(226, 232, 240, 0.5);
 }
 
@@ -1387,6 +1391,81 @@ table.v-align td{vertical-align: middle !important;}
 .setup-notice strong {
   color: #c70202;
   font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-height: 800px) {
+  .initial-admin-card {
+    max-height: 95vh;
+    padding: 30px;
+  }
+  
+  .initial-header {
+    margin-bottom: 25px;
+  }
+  
+  .initial-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  
+  .initial-header h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .initial-subtitle {
+    font-size: 14px;
+  }
+  
+  .form-group {
+    margin-bottom: 18px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 12px 16px;
+  }
+  
+  .form-actions {
+    margin-top: 20px;
+  }
+  
+  .btn-primary {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+}
+
+@media (max-height: 700px) {
+  .initial-admin-card {
+    max-height: 98vh;
+    padding: 25px;
+  }
+  
+  .initial-header {
+    margin-bottom: 20px;
+  }
+  
+  .initial-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .initial-header h1 {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
 }
 
 /* Debug Section Styles */
