@@ -548,29 +548,35 @@ const StudentProfile = () => {
     <div className="right-content w-100" data-testid="student-profile">
       <ThemeProvider theme={theme}>
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <div style={{
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            '&::-webkit-scrollbar': {
-              display: 'none'
-            }
-          }}>
-            <div style={{
-              minWidth: 'max-content',
-              padding: '0 16px'
-            }}>
-              <Stepper activeStep={activeStep} alternativeLabel data-testid="enrollment-stepper">
-                {steps.map((label) => (
-                  <Step key={label}>
-                    <StepLabel>{label}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
+          {loading ? (
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '80px' }}>
+              <CircularProgress style={{ color: '#c70202' }} size={30} />
             </div>
-          </div>
+          ) : (
+            <div style={{
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              '&::-webkit-scrollbar': {
+                display: 'none'
+              }
+            }}>
+              <div style={{
+                minWidth: 'max-content',
+                padding: '0 16px'
+              }}>
+                <Stepper activeStep={activeStep} alternativeLabel data-testid="enrollment-stepper">
+                  {steps.map((label) => (
+                    <Step key={label}>
+                      <StepLabel>{label}</StepLabel>
+                    </Step>
+                  ))}
+                </Stepper>
+              </div>
+            </div>
+          )}
         </Paper>
       </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
