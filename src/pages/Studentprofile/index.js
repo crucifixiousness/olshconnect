@@ -833,6 +833,7 @@ const StudentProfile = () => {
                 value={formData.birthdate ? formData.birthdate.split('-').reverse().join('-') : ''}
                 onChange={handleInputChange}
                 disabled
+                sx={textFieldStyles}
               />
               <TextField
                 label="Age"
@@ -842,6 +843,7 @@ const StudentProfile = () => {
                 value={formData.age || ''}
                 onChange={handleInputChange}
                 disabled
+                sx={textFieldStyles}
               />
               <TextField
                 label="Place of Birth"
@@ -851,6 +853,7 @@ const StudentProfile = () => {
                 value={formData.placeOfBirth || ''}
                 onChange={handleInputChange}
                 disabled
+                sx={textFieldStyles}
               />
               <TextField
                 label="Religion"
@@ -860,6 +863,7 @@ const StudentProfile = () => {
                 value={formData.religion || ''}
                 onChange={handleInputChange}
                 data-testid="religion-input"
+                sx={textFieldStyles}
               />
             </div>
             <div className="mb-3">
@@ -872,6 +876,7 @@ const StudentProfile = () => {
                 value={formData.email || ''}
                 onChange={handleInputChange}
                 inputProps={{ 'aria-label': 'Email' }}
+                sx={textFieldStyles}
               />
               <TextField
                 label="Contact Number"
@@ -880,6 +885,7 @@ const StudentProfile = () => {
                 name="number"
                 value={formData.number || ''}
                 onChange={handleInputChange}
+                sx={textFieldStyles}
               />
             </div>
             <h4>Address</h4>
@@ -892,6 +898,7 @@ const StudentProfile = () => {
                 value={formData.street_text || ''}
                 onChange={handleInputChange}
                 placeholder="Example: Purok 2, Narvacan II, Guimba, Nueva Ecija"
+                sx={textFieldStyles}
               />
             </div>
             <h4>Guardian Information</h4>
@@ -903,6 +910,7 @@ const StudentProfile = () => {
                 name="guardianName"
                 value={formData.guardianName || ''}
                 onChange={handleInputChange}
+                sx={textFieldStyles}
               />
               <TextField
                 label="Guardian Contact"
@@ -911,6 +919,7 @@ const StudentProfile = () => {
                 name="guardianContactNo"
                 value={formData.guardianContactNo || ''}
                 onChange={handleInputChange}
+                sx={textFieldStyles}
               />
             </div>                    
             <div style={{ textAlign: "center", marginTop: "20px" }}>
