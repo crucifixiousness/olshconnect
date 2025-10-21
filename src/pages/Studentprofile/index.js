@@ -208,6 +208,42 @@ const StudentProfile = () => {
   };
 
   const handleOpenEnrollment = () => {
+    // Pre-populate form with existing enrollment data if available
+    if (studentData?.enrollment) {
+      const enrollment = studentData.enrollment;
+      setFormDataa({
+        idpic: '',
+        birthCertificateDoc: '',
+        form137Doc: '',
+        programs: enrollment.program_id || '',
+        major_id: enrollment.major_id || '',
+        yearLevel: enrollment.year_level || 1,
+        semester: enrollment.semester || '',
+        academic_year: enrollment.academic_year || '',
+        studentType: enrollment.student_type || 'new',
+        previousSchool: enrollment.previous_school || '',
+        previousProgram: enrollment.previous_program || '',
+        transferCertificateDoc: '',
+        torDoc: ''
+      });
+    } else {
+      // Reset form for new enrollment
+      setFormDataa({
+        idpic: '',
+        birthCertificateDoc: '',
+        form137Doc: '',
+        programs: '',
+        major_id: '',
+        yearLevel: 1,
+        semester: '',
+        academic_year: '',
+        studentType: 'new',
+        previousSchool: '',
+        previousProgram: '',
+        transferCertificateDoc: '',
+        torDoc: ''
+      });
+    }
     setOpenEnrollment(true);    
   };
 
@@ -508,16 +544,6 @@ const StudentProfile = () => {
     }
   };
   
-  if (loading) {
-    return (
-      <div className="right-content w-100">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-          <CircularProgress style={{ color: '#c70202' }} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="right-content w-100" data-testid="student-profile">
       <ThemeProvider theme={theme}>
@@ -549,15 +575,17 @@ const StudentProfile = () => {
       </ThemeProvider>
       <div className="card shadow border-0 p-3 mt-1" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
         <h3 className="hd mt-2 pb-0" style={{ margin: 0 }}>Student Profile</h3>
-        <Button 
-          variant="contained" 
-          className='enrollbut' 
-          color="primary" 
-          onClick={handleOpenEnrollment}
-          data-testid="enroll-button"
-        >
-          <FaSchool/>Enroll Now!
-        </Button>
+        {studentData?.enrollment?.status !== 'Officially Enrolled' && (
+          <Button 
+            variant="contained" 
+            className='enrollbut' 
+            color="primary" 
+            onClick={handleOpenEnrollment}
+            data-testid="enroll-button"
+          >
+            <FaSchool/>Enroll Now!
+          </Button>
+        )}
       </div>
       <div className="d-flex justify-content-end mb-3">
         <Button 
@@ -574,130 +602,136 @@ const StudentProfile = () => {
       </div>
 
       <div className="card shadow border-0 p-3 mt-1">
-        <div className="profile-container">
-          <div className="profile-card">
-            <div className="row">
-              {/* Profile Picture Section */}
-              <div className="col-md-4 text-center">
-                <div className="profile-picture-container mb-4" style={{
-                  width: '200px',
-                  height: '200px',
-                  border: '3px solid #c70202',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  margin: '0 auto',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.3s ease',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'scale(1.05)'
-                  }
-                }}>
-                  {studentData?.enrollment?.idpic ? (
-                    <img
-                      src={`data:image/jpeg;base64,${studentData.enrollment.idpic}`}
-                      alt="Student ID"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: '#f8f9fa',
-                      color: '#6c757d'
-                    }}>
-                      <span>No Photo</span>
-                    </div>
-                  )}
-                </div>
-                <h4 className="mt-3" style={{ color: '#c70202' }}>
-                  {formatFullName(studentData)}
-                </h4>
-                <p className="text-muted">Student</p>
-              </div>
-
-              {/* Student Details Section */}
-              <div className="col-md-8">
-                <div className="profile-details p-3">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="info-group mb-4" style={{
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        transition: 'transform 0.2s',
-                        cursor: 'pointer'
-                      }}>
-                        <h5 style={{ color: '#c70202' }} className="mb-3">Personal Information</h5>
-                        <div className="info-item mb-2">
-                          <strong>Birthdate:</strong><br/>
-                          {studentData?.birthdate ? new Date(studentData.birthdate).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          }) : "N/A"}
-                        </div>
-                        <div className="info-item mb-2">
-                          <strong>Age:</strong><br/>
-                          {studentData?.age}
-                        </div>
-                        <div className="info-item mb-2">
-                          <strong>Religion:</strong><br/>
-                          {studentData?.religion}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col-md-6">
-                      <div className="info-group mb-4" style={{
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        transition: 'transform 0.2s',
-                        cursor: 'pointer'
-                      }}>
-                        <h5 style={{ color: '#c70202' }} className="mb-3">Contact Information</h5>
-                        <div className="info-item mb-2">
-                          <strong>Email:</strong><br/>
-                          {studentData?.email}
-                        </div>
-                        <div className="info-item mb-2">
-                          <strong>Phone:</strong><br/>
-                          {studentData?.number}
-                        </div>
-                        <div className="info-item mb-2">
-                          <strong>Address:</strong><br/>
-                          {studentData?.street_text}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="info-group mb-4" style={{
-                    padding: '15px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    transition: 'transform 0.2s',
-                    cursor: 'pointer'
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+            <CircularProgress style={{ color: '#c70202' }} />
+          </div>
+        ) : (
+          <div className="profile-container">
+            <div className="profile-card">
+              <div className="row">
+                {/* Profile Picture Section */}
+                <div className="col-md-4 text-center">
+                  <div className="profile-picture-container mb-4" style={{
+                    width: '200px',
+                    height: '200px',
+                    border: '3px solid #c70202',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    margin: '0 auto',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    transition: 'transform 0.3s ease',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'scale(1.05)'
+                    }
                   }}>
-                    <h5 style={{ color: '#c70202' }} className="mb-3">Guardian Information</h5>
+                    {studentData?.enrollment?.idpic ? (
+                      <img
+                        src={`data:image/jpeg;base64,${studentData.enrollment.idpic}`}
+                        alt="Student ID"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f8f9fa',
+                        color: '#6c757d'
+                      }}>
+                        <span>No Photo</span>
+                      </div>
+                    )}
+                  </div>
+                  <h4 className="mt-3" style={{ color: '#c70202' }}>
+                    {formatFullName(studentData)}
+                  </h4>
+                  <p className="text-muted">Student</p>
+                </div>
+
+                {/* Student Details Section */}
+                <div className="col-md-8">
+                  <div className="profile-details p-3">
                     <div className="row">
                       <div className="col-md-6">
-                        <div className="info-item mb-2">
-                          <strong>Guardian Name:</strong><br/>
-                          {studentData?.guardianName}
+                        <div className="info-group mb-4" style={{
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '8px',
+                          transition: 'transform 0.2s',
+                          cursor: 'pointer'
+                        }}>
+                          <h5 style={{ color: '#c70202' }} className="mb-3">Personal Information</h5>
+                          <div className="info-item mb-2">
+                            <strong>Birthdate:</strong><br/>
+                            {studentData?.birthdate ? new Date(studentData.birthdate).toLocaleDateString("en-US", {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            }) : "N/A"}
+                          </div>
+                          <div className="info-item mb-2">
+                            <strong>Age:</strong><br/>
+                            {studentData?.age}
+                          </div>
+                          <div className="info-item mb-2">
+                            <strong>Religion:</strong><br/>
+                            {studentData?.religion}
+                          </div>
                         </div>
                       </div>
+
                       <div className="col-md-6">
-                        <div className="info-item mb-2">
-                          <strong>Guardian Contact:</strong><br/>
-                          {studentData?.guardianContactNo}
+                        <div className="info-group mb-4" style={{
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '8px',
+                          transition: 'transform 0.2s',
+                          cursor: 'pointer'
+                        }}>
+                          <h5 style={{ color: '#c70202' }} className="mb-3">Contact Information</h5>
+                          <div className="info-item mb-2">
+                            <strong>Email:</strong><br/>
+                            {studentData?.email}
+                          </div>
+                          <div className="info-item mb-2">
+                            <strong>Phone:</strong><br/>
+                            {studentData?.number}
+                          </div>
+                          <div className="info-item mb-2">
+                            <strong>Address:</strong><br/>
+                            {studentData?.street_text}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="info-group mb-4" style={{
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      transition: 'transform 0.2s',
+                      cursor: 'pointer'
+                    }}>
+                      <h5 style={{ color: '#c70202' }} className="mb-3">Guardian Information</h5>
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="info-item mb-2">
+                            <strong>Guardian Name:</strong><br/>
+                            {studentData?.guardianName}
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="info-item mb-2">
+                            <strong>Guardian Contact:</strong><br/>
+                            {studentData?.guardianContactNo}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -706,7 +740,7 @@ const StudentProfile = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Modal for Editing Profile */}
@@ -963,7 +997,7 @@ const StudentProfile = () => {
             color: '#c70202',
             fontWeight: 'bold'
           }}>
-            Enrollment Form
+            {studentData?.enrollment ? 'Modify Enrollment' : 'Enrollment Form'}
           </Typography>
             <form onSubmit={handleEnroll} data-testid="enrollment-form">
               <div className="registration-section">
@@ -1221,7 +1255,7 @@ const StudentProfile = () => {
                 }}
                 data-testid="submit-enrollment-button"
               >
-                Submit Enrollment
+                {studentData?.enrollment ? 'Update Enrollment' : 'Submit Enrollment'}
               </Button>
             </form>      
         </Box>
