@@ -8,9 +8,10 @@ const InitialAdminCreation = () => {
     staff_password: '',
     confirm_password: '',
     full_name: '',
-    role: 'admin',
-    verification_password: ''
+    role: 'admin'
   });
+  const [verificationPassword, setVerificationPassword] = useState('');
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,7 +55,7 @@ const InitialAdminCreation = () => {
   };
 
   const validateForm = () => {
-    if (!formData.staff_username || !formData.staff_password || !formData.full_name || !formData.verification_password) {
+    if (!formData.staff_username || !formData.staff_password || !formData.full_name) {
       setError('All fields are required');
       return false;
     }
@@ -77,6 +78,17 @@ const InitialAdminCreation = () => {
     
     if (!validateForm()) return;
     
+    // Show verification modal instead of submitting directly
+    setShowVerificationModal(true);
+    setError('');
+  };
+
+  const handleVerificationSubmit = async () => {
+    if (!verificationPassword) {
+      setError('Verification password is required');
+      return;
+    }
+    
     setLoading(true);
     setError('');
     setSuccess('');
@@ -92,7 +104,7 @@ const InitialAdminCreation = () => {
           staff_password: formData.staff_password,
           full_name: formData.full_name,
           role: formData.role,
-          verification_password: formData.verification_password
+          verification_password: verificationPassword
         })
       });
       
@@ -100,6 +112,7 @@ const InitialAdminCreation = () => {
       
       if (data.success) {
         setSuccess('Initial admin account created successfully!');
+        setShowVerificationModal(false);
         
         // Store token and redirect to admin dashboard
         if (data.token) {
@@ -134,6 +147,12 @@ const InitialAdminCreation = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseVerificationModal = () => {
+    setShowVerificationModal(false);
+    setVerificationPassword('');
+    setError('');
   };
 
   if (checkingAvailability) {
@@ -265,20 +284,6 @@ const InitialAdminCreation = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="verification_password">Verification Password *</label>
-            <input
-              type="password"
-              id="verification_password"
-              name="verification_password"
-              value={formData.verification_password}
-              onChange={handleInputChange}
-              placeholder="Enter verification password"
-              required
-            />
-            <small className="form-help">Enter the admin verification password to complete account creation</small>
-          </div>
-
           <div className="form-actions">
             <button
               type="submit"
@@ -304,6 +309,65 @@ const InitialAdminCreation = () => {
           </p>
         </div>
       </div>
+
+      {/* Verification Password Modal */}
+      {showVerificationModal && (
+        <div className="verification-modal-overlay">
+          <div className="verification-modal">
+            <div className="verification-header">
+              <h3>Admin Verification Required</h3>
+              <p>Enter the admin verification password to complete account creation</p>
+            </div>
+
+            {error && (
+              <div className="alert alert-error">
+                <span className="alert-icon">❌</span>
+                {error}
+              </div>
+            )}
+
+            <div className="verification-form">
+              <div className="form-group">
+                <label htmlFor="verification_password">Verification Password *</label>
+                <input
+                  type="password"
+                  id="verification_password"
+                  value={verificationPassword}
+                  onChange={(e) => setVerificationPassword(e.target.value)}
+                  placeholder="Enter verification password"
+                  autoFocus
+                />
+              </div>
+
+              <div className="verification-actions">
+                <button
+                  type="button"
+                  onClick={handleCloseVerificationModal}
+                  className="btn-secondary"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleVerificationSubmit}
+                  disabled={loading}
+                  className="btn-primary"
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-small"></span>
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify & Create Account'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
