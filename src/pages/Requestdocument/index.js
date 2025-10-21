@@ -28,6 +28,7 @@ const RequestDocument = () => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const pdfCache = useRef(new Map());
 
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
@@ -260,7 +261,7 @@ const RequestDocument = () => {
     if (pdfUrl) {
       const link = document.createElement('a');
       link.href = pdfUrl;
-      link.download = 'document.pdf';
+      link.download = 'certificate-of-grades.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -395,16 +396,34 @@ const RequestDocument = () => {
                           {request.req_status}
                         </TableCell>
                         <TableCell>
-                          {request.req_status === 'Approved' && (
-                            <IconButton
-                              onClick={() => handleViewDocument(request)}
-                              color="primary"
-                              size="small"
-                              title="View Document"
-                              data-testid={`view-button-${index}`}
-                            >
-                              <FaEye />
-                            </IconButton>
+                          {request.req_status === 'Approved' ? (
+                            request.doc_type === 'Certificate of Grades' ? (
+                              <IconButton
+                                onClick={() => handleViewDocument(request)}
+                                color="primary"
+                                size="small"
+                                title="View Certificate of Grades"
+                                data-testid={`view-button-${index}`}
+                              >
+                                <FaEye />
+                              </IconButton>
+                            ) : (
+                              <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                                Ready for Pickup
+                              </Typography>
+                            )
+                          ) : request.req_status === 'Pending' ? (
+                            <Typography variant="body2" sx={{ color: '#f57c00', fontWeight: 'bold' }}>
+                              Under Review
+                            </Typography>
+                          ) : request.req_status === 'Rejected' ? (
+                            <Typography variant="body2" sx={{ color: '#d32f2f', fontWeight: 'bold' }}>
+                              Request Denied
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2" sx={{ color: '#666' }}>
+                              —
+                            </Typography>
                           )}
                         </TableCell>
                       </TableRow>
