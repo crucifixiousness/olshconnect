@@ -1352,3 +1352,109 @@ table.v-align td{vertical-align: middle !important;}
   }
 }
 
+/* ===========================================
+   GLOBAL MATERIAL-UI TEXTFIELD STYLING
+   =========================================== */
+
+/* Global styling for all Material-UI TextField components */
+.MuiTextField-root .MuiOutlinedInput-root {
+  transition: border-color 0.3s ease !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiTextField-root .MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
+/* Global styling for Material-UI Select components */
+.MuiFormControl-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiFormControl-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiFormControl-root .MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
+/* Global styling for Material-UI Autocomplete components */
+.MuiAutocomplete-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiAutocomplete-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiAutocomplete-root .MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
+/* Global styling for Material-UI DatePicker components */
+.MuiDatePicker-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiDatePicker-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiDatePicker-root .MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
+/* Global styling for Material-UI TimePicker components */
+.MuiTimePicker-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiTimePicker-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiTimePicker-root .MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
+/* Global styling for Material-UI NumberInput components */
+.MuiNumberInput-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiNumberInput-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiNumberInput-root .MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
+/* Ensure consistent styling across all input components */
+.MuiInputBase-root.MuiOutlinedInput-root:hover fieldset {
+  border-color: #c70202 !important;
+}
+
+.MuiInputBase-root.MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c70202 !important;
+  border-width: 2px !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: #c70202 !important;
+}
+
