@@ -30,21 +30,36 @@ const PaymentVerification = () => {
   setOpen(true);
   };
 
-  // Update fetchPayments to fetch enrollment payments
+  // Update fetchPayments to fetch enrollment payments with caching
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
+      // Check cache first
+      const cachedData = localStorage.getItem('paymentVerificationData');
+      const cacheTimestamp = localStorage.getItem('paymentVerificationTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        setPayments(JSON.parse(cachedData));
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get('/api/enrollment-for-verification', {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      
+      // Cache the data
+      localStorage.setItem('paymentVerificationData', JSON.stringify(response.data || []));
+      localStorage.setItem('paymentVerificationTimestamp', Date.now().toString());
+      
       setPayments(response.data || []);
     } catch (error) {
-      console.error('❌ Error fetching payments:', error);
-      console.error('❌ Error response:', error.response);
-      console.error('❌ Error message:', error.message);
+      console.error('Error fetching payments:', error);
       setSnackbar({
         open: true,
         message: error.response?.data?.error || 'Failed to fetch enrollment payments',
@@ -114,6 +129,14 @@ const PaymentVerification = () => {
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('paymentVerificationData');
+      localStorage.removeItem('paymentVerificationTimestamp');
+    };
+  }, []);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -356,7 +379,8 @@ const PaymentVerification = () => {
           borderRadius: 4,
           p: 4,
           maxHeight: '90vh',
-          overflow: 'auto'
+          overflow: 'auto',
+          border: '3px solid #c70202'
         }}>
           {selectedPayment && (
             <div className="enrollment-details">
