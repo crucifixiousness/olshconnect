@@ -1074,19 +1074,52 @@ table.v-align td{vertical-align: middle !important;}
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c70202 0%, #a00000 100%);
+  background: linear-gradient(135deg, #c70202 0%, #a00000 50%, #8b0000 100%);
+  background-attachment: fixed;
   padding: 20px;
   z-index: 9999;
+  overflow: hidden;
+}
+
+.initial-admin-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .initial-admin-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  padding: 50px;
   width: 100%;
-  max-width: 500px;
-  animation: slideUp 0.5s ease-out;
+  max-width: 550px;
+  animation: slideUp 0.6s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+.initial-admin-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 20px;
+  pointer-events: none;
 }
 
 @keyframes slideUp {
@@ -1103,26 +1136,35 @@ table.v-align td{vertical-align: middle !important;}
 /* Header Section */
 .initial-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  position: relative;
 }
 
 .initial-icon {
-  font-size: 48px;
-  margin-bottom: 15px;
+  font-size: 64px;
+  margin-bottom: 20px;
+  display: inline-block;
+  background: linear-gradient(135deg, #c70202, #a00000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 4px rgba(199, 2, 2, 0.3));
 }
 
 .initial-header h1 {
   color: #2c3e50;
-  margin: 0 0 10px 0;
-  font-size: 28px;
-  font-weight: 600;
+  margin: 0 0 15px 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .initial-subtitle {
-  color: #7f8c8d;
+  color: #6c757d;
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
+  font-weight: 400;
 }
 
 /* Loading Spinner */
@@ -1182,67 +1224,108 @@ table.v-align td{vertical-align: middle !important;}
 
 /* Form Styles */
 .initial-form {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  position: relative;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: #2c3e50;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
+  letter-spacing: 0.3px;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e1e8ed;
-  border-radius: 8px;
+  padding: 16px 20px;
+  border: 2px solid #e8f0fe;
+  border-radius: 12px;
   font-size: 16px;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #c70202;
-  box-shadow: 0 0 0 3px rgba(199, 2, 2, 0.1);
+  box-shadow: 
+    0 0 0 4px rgba(199, 2, 2, 0.1),
+    0 4px 12px rgba(199, 2, 2, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
 }
 
 .form-group input::placeholder {
-  color: #bdc3c7;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.form-help {
+  display: block;
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .form-actions {
-  margin-top: 30px;
+  margin-top: 35px;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, #c70202, #a00000);
   color: white;
   border: none;
-  padding: 14px 24px;
-  border-radius: 8px;
+  padding: 18px 32px;
+  border-radius: 12px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #a00000, #800000);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(199, 2, 2, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 25px rgba(199, 2, 2, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
@@ -1252,53 +1335,58 @@ table.v-align td{vertical-align: middle !important;}
 }
 
 .btn-large {
-  padding: 16px 24px;
+  padding: 20px 32px;
   font-size: 18px;
 }
 
 /* Alert Styles */
 .alert {
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 18px 24px;
+  border-radius: 12px;
+  margin-bottom: 25px;
   display: flex;
   align-items: center;
   font-size: 14px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  border: 1px solid;
 }
 
 .alert-error {
-  background: #fdf2f2;
-  border: 1px solid #fecaca;
+  background: rgba(254, 226, 226, 0.8);
+  border-color: rgba(248, 113, 113, 0.3);
   color: #dc2626;
 }
 
 .alert-success {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: rgba(240, 253, 244, 0.8);
+  border-color: rgba(34, 197, 94, 0.3);
   color: #16a34a;
 }
 
 .alert-icon {
-  margin-right: 10px;
-  font-size: 16px;
+  margin-right: 12px;
+  font-size: 18px;
 }
 
 /* Footer */
 .initial-footer {
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #e1e8ed;
+  padding-top: 25px;
+  border-top: 1px solid rgba(226, 232, 240, 0.5);
 }
 
 .setup-notice {
-  color: #7f8c8d;
+  color: #6b7280;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
+  font-weight: 400;
 }
 
 .setup-notice strong {
   color: #c70202;
+  font-weight: 600;
 }
 
 /* Debug Section Styles */
