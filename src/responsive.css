@@ -264,12 +264,14 @@ footer ul li {
     font-size: 23px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
+    left: 10px !important;
   }
 
   .loginSection .loginBox .loginWrap .showPass {
     top: 50% !important;
     right: 12px !important;
     transform: translateY(-50%) !important;
+    position: absolute !important;
   }
 
   .loginSection .loginBox .loginWrap .btn-blue {
@@ -496,12 +498,14 @@ footer ul li {
     font-size: 23px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
+    left: 10px !important;
 }
 
 .loginSection .loginBox .loginWrap .showPass {
     top: 50% !important;
     right: 10px !important;
     transform: translateY(-50%) !important;
+    position: absolute !important;
 }
 
 .loginSection .loginBox .loginWrap .btn-blue {
