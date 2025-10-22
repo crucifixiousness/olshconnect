@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
     // Verify all 3 pieces of information match
     const studentResult = await client.query(
-      'SELECT student_id, first_name, last_name FROM students WHERE user_name = $1 AND number = $2 AND email = $3',
+      'SELECT id, first_name, last_name FROM students WHERE username = $1 AND contact_number = $2 AND email = $3',
       [username, contactNumber, email]
     );
 
@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Account verified successfully. You can now reset your password.',
-      studentId: student.student_id,
+      studentId: student.id,
       studentName: `${student.first_name} ${student.last_name}`
     });
 
