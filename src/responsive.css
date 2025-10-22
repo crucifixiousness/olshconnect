@@ -262,12 +262,14 @@ footer ul li {
 
   .loginSection .loginBox .loginWrap .form-group .icon {
     font-size: 20px !important;
-    top: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
   }
 
   .loginSection .loginBox .loginWrap .showPass {
-    top: 12px !important;
+    top: 50% !important;
     right: 12px !important;
+    transform: translateY(-50%) !important;
   }
 
   .loginSection .loginBox .loginWrap .btn-blue {
@@ -492,12 +494,14 @@ footer ul li {
 
 .loginSection .loginBox .loginWrap .form-group .icon {
     font-size: 18px !important;
-    top: 11px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
 }
 
 .loginSection .loginBox .loginWrap .showPass {
-    top: 11px !important;
+    top: 50% !important;
     right: 10px !important;
+    transform: translateY(-50%) !important;
 }
 
 .loginSection .loginBox .loginWrap .btn-blue {
