@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-const bcrypt = require('bcrypt');
+ const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
 
     // Update password
     const updateResult = await client.query(
-      'UPDATE students SET password = $1 WHERE student_id = $2',
+      'UPDATE students SET password = $1 WHERE id = $2',
       [hashedPassword, studentId]
     );
 
