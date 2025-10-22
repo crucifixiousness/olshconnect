@@ -21,12 +21,17 @@ const ForgotPassword = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [studentId, setStudentId] = useState(null);
   const [studentName, setStudentName] = useState('');
+  const [inputIndex, setInputIndex] = useState(null);
 
   useEffect(() => {
     if (context && context.setIsHideComponents) {
       context.setIsHideComponents(true);
     }
   }, [context]);
+
+  const focusInput = (index) => {
+    setInputIndex(index);
+  };
 
   const handleContactNumberChange = (e) => {
     let value = e.target.value.replace(/[^0-9]/g, '');
@@ -169,7 +174,7 @@ const ForgotPassword = () => {
 
             {!isVerified ? (
               <form onSubmit={handleVerify}>
-                <div className='form-group position-relative mt-4'>
+                <div className={`form-group position-relative mt-4 ${inputIndex === 0 && 'focus'}`}>
                   <span className='icon'><FaRegUserCircle /></span>
                   <input 
                     type='text' 
@@ -180,12 +185,14 @@ const ForgotPassword = () => {
                       setUsername(e.target.value);
                       setError('');
                     }}
+                    onFocus={() => focusInput(0)}
+                    onBlur={() => setInputIndex(null)}
                     required
                     autoFocus
                   />
                 </div>
 
-                <div className='form-group position-relative mt-3'>
+                <div className={`form-group position-relative mt-3 ${inputIndex === 1 && 'focus'}`}>
                   <span className='icon'><FaPhone /></span>
                   <input 
                     type='tel' 
@@ -193,11 +200,13 @@ const ForgotPassword = () => {
                     placeholder='Contact Number (09xxxxxxxxx)' 
                     value={contactNumber}
                     onChange={handleContactNumberChange}
+                    onFocus={() => focusInput(1)}
+                    onBlur={() => setInputIndex(null)}
                     required
                   />
                 </div>
 
-                <div className='form-group position-relative mt-3'>
+                <div className={`form-group position-relative mt-3 ${inputIndex === 2 && 'focus'}`}>
                   <span className='icon'><FaRegEnvelope /></span>
                   <input 
                     type='email' 
@@ -208,6 +217,8 @@ const ForgotPassword = () => {
                       setEmail(e.target.value);
                       setError('');
                     }}
+                    onFocus={() => focusInput(2)}
+                    onBlur={() => setInputIndex(null)}
                     required
                   />
                 </div>
@@ -231,7 +242,7 @@ const ForgotPassword = () => {
               </form>
             ) : (
               <form onSubmit={handleResetPassword}>
-                <div className='form-group position-relative mt-4'>
+                <div className={`form-group position-relative mt-4 ${inputIndex === 3 && 'focus'}`}>
                   <span className='icon'><FaRegUserCircle /></span>
                   <input 
                     type='password' 
@@ -242,12 +253,14 @@ const ForgotPassword = () => {
                       setNewPassword(e.target.value);
                       setError('');
                     }}
+                    onFocus={() => focusInput(3)}
+                    onBlur={() => setInputIndex(null)}
                     required
                     autoFocus
                   />
                 </div>
 
-                <div className='form-group position-relative mt-3'>
+                <div className={`form-group position-relative mt-3 ${inputIndex === 4 && 'focus'}`}>
                   <span className='icon'><FaRegUserCircle /></span>
                   <input 
                     type='password' 
@@ -258,6 +271,8 @@ const ForgotPassword = () => {
                       setConfirmPassword(e.target.value);
                       setError('');
                     }}
+                    onFocus={() => focusInput(4)}
+                    onBlur={() => setInputIndex(null)}
                     required
                   />
                 </div>
