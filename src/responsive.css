@@ -206,11 +206,12 @@ footer ul li {
     padding: 20px 15px !important;
     justify-content: center !important;
     align-items: center !important;
+    min-height: 100vh !important;
   }
 
   .loginSection .loginBox {
     width: 100% !important;
-    max-width: 350px !important;
+    max-width: 400px !important;
     margin: 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
@@ -218,10 +219,27 @@ footer ul li {
   }
 
   .loginSection .loginBox .loginWrap {
-    padding: 25px 20px !important;
+    padding: 30px 25px !important;
     margin-top: 20px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    border-radius: 15px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .logo {
+    text-align: center !important;
+    margin-bottom: 20px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .loginHeader {
+    text-align: center !important;
+    margin-bottom: 25px !important;
+  }
+
+  .loginSection .loginBox .footer {
+    text-align: center !important;
+    padding: 20px !important;
+    margin-top: 20px !important;
   }
 
   .loginSection .loginBox .loginWrap .logo img {
@@ -256,6 +274,13 @@ footer ul li {
     height: 45px !important;
     font-size: 16px !important;
     font-weight: 600 !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+
+  .loginSection .loginBox .loginWrap .form-group {
+    position: relative !important;
+    margin-bottom: 15px !important;
   }
 
   .loginSection .loginBox .footer {
@@ -411,11 +436,12 @@ footer ul li {
     padding: 15px 10px !important;
     justify-content: center !important;
     align-items: center !important;
+    min-height: 100vh !important;
 }
 
 .loginSection .loginBox {
     width: 100% !important;
-    max-width: 320px !important;
+    max-width: 350px !important;
     margin: 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
@@ -423,10 +449,27 @@ footer ul li {
 }
 
 .loginSection .loginBox .loginWrap {
-    padding: 20px 15px !important;
+    padding: 25px 20px !important;
     margin-top: 15px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    border-radius: 15px !important;
+}
+
+.loginSection .loginBox .loginWrap .logo {
+    text-align: center !important;
+    margin-bottom: 20px !important;
+}
+
+.loginSection .loginBox .loginWrap .loginHeader {
+    text-align: center !important;
+    margin-bottom: 25px !important;
+}
+
+.loginSection .loginBox .footer {
+    text-align: center !important;
+    padding: 20px !important;
+    margin-top: 20px !important;
 }
 
 .loginSection .loginBox .loginWrap .logo img {
@@ -461,6 +504,13 @@ footer ul li {
     height: 42px !important;
     font-size: 15px !important;
     font-weight: 600 !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+}
+
+.loginSection .loginBox .loginWrap .form-group {
+    position: relative !important;
+    margin-bottom: 12px !important;
 }
 
 .loginSection .loginBox .footer {
