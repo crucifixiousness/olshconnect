@@ -22,7 +22,7 @@ import {
   Snackbar,
   Chip
 } from '@mui/material';
-import { FaEye, FaCheck, FaTimes, FaDownload } from "react-icons/fa";
+import { FaEye, FaCheck, FaTimes, FaDownload, FaClipboardList } from "react-icons/fa";
 import { MyContext } from "../../App";
 
 const ProgramHeadTorEvaluation = () => {
@@ -435,7 +435,7 @@ const ProgramHeadTorEvaluation = () => {
                         }}
                         title="Evaluate TOR"
                       >
-                        <FaEye size={16} color="#fff" />
+                        <FaClipboardList size={16} color="#fff" />
                       </Button>
                       {request.tor_document_path && (
                         <>
