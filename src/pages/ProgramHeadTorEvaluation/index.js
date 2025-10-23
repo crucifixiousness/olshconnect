@@ -37,6 +37,9 @@ const ProgramHeadTorEvaluation = () => {
   const [remainingCourses, setRemainingCourses] = useState([]);
   const [requiredCourses, setRequiredCourses] = useState([]);
   const [comments, setComments] = useState('');
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState('');
+  const [documentType, setDocumentType] = useState('');
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -144,6 +147,66 @@ const ProgramHeadTorEvaluation = () => {
     setEvaluationOpen(true);
   };
 
+  const handleViewTor = async (tor_request_id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/view-tor?tor_request_id=${tor_request_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      // Create blob URL for viewing
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      
+      // Determine document type from response headers
+      const contentType = response.headers['content-type'] || '';
+      let docType = 'pdf';
+      
+      if (contentType.includes('image/jpeg') || contentType.includes('image/jpg')) {
+        docType = 'image';
+      } else if (contentType.includes('image/png')) {
+        docType = 'image';
+      } else if (contentType.includes('application/pdf')) {
+        docType = 'pdf';
+      }
+      
+      setDocumentUrl(url);
+      setDocumentType(docType);
+      setViewModalOpen(true);
+
+    } catch (error) {
+      console.error('❌ ERROR viewing TOR:', error);
+      
+      let errorMessage = 'Failed to view TOR document';
+      
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+        
+        if (status === 404) {
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+          } else {
+            errorMessage = 'TOR document not found. Please check if the document was uploaded.';
+          }
+        } else if (status === 401) {
+          errorMessage = 'Authentication failed. Please log in again.';
+        } else if (status === 400) {
+          errorMessage = 'Invalid request. Please try again.';
+        } else {
+          errorMessage = `Server error (${status}). Please try again later.`;
+        }
+      } else if (error.request) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else {
+        errorMessage = 'Failed to prepare view request.';
+      }
+      
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+    }
+  };
+
   const handleDownloadTor = async (tor_request_id) => {
     try {
       const token = localStorage.getItem('token');
@@ -207,6 +270,16 @@ const ProgramHeadTorEvaluation = () => {
       
       setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     }
+  };
+
+  const handleCloseViewModal = () => {
+    setViewModalOpen(false);
+    // Clean up blob URL to prevent memory leaks
+    if (documentUrl) {
+      window.URL.revokeObjectURL(documentUrl);
+      setDocumentUrl('');
+    }
+    setDocumentType('');
   };
 
   const handleAddEquivalency = () => {
@@ -360,25 +433,45 @@ const ProgramHeadTorEvaluation = () => {
                           backgroundColor: '#1976d2',
                           '&:hover': { backgroundColor: '#155fa8' }
                         }}
+                        title="Evaluate TOR"
                       >
                         <FaEye size={16} color="#fff" />
                       </Button>
                       {request.tor_document_path && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => handleDownloadTor(request.id)}
-                          sx={{ 
-                            minWidth: 36, 
-                            height: 32, 
-                            p: 0, 
-                            borderRadius: 1, 
-                            backgroundColor: '#c70202',
-                            '&:hover': { backgroundColor: '#a00000' }
-                          }}
-                        >
-                          <FaDownload size={16} color="#fff" />
-                        </Button>
+                        <>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleViewTor(request.id)}
+                            sx={{ 
+                              minWidth: 36, 
+                              height: 32, 
+                              p: 0, 
+                              borderRadius: 1, 
+                              backgroundColor: '#28a745',
+                              '&:hover': { backgroundColor: '#218838' }
+                            }}
+                            title="View Document"
+                          >
+                            <FaEye size={16} color="#fff" />
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleDownloadTor(request.id)}
+                            sx={{ 
+                              minWidth: 36, 
+                              height: 32, 
+                              p: 0, 
+                              borderRadius: 1, 
+                              backgroundColor: '#c70202',
+                              '&:hover': { backgroundColor: '#a00000' }
+                            }}
+                            title="Download Document"
+                          >
+                            <FaDownload size={16} color="#fff" />
+                          </Button>
+                        </>
                       )}
                     </Box>
                   </TableCell>
@@ -642,6 +735,84 @@ const ProgramHeadTorEvaluation = () => {
               }}
             >
               Submit Evaluation
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Document View Modal */}
+        <Dialog 
+          open={viewModalOpen} 
+          onClose={handleCloseViewModal} 
+          maxWidth="lg" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              height: '90vh',
+              maxHeight: '90vh'
+            }
+          }}
+        >
+          <DialogTitle style={{ 
+            color: '#c70202', 
+            fontWeight: 'bold', 
+            fontSize: '1.5rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>TOR Document Viewer</span>
+            <Button
+              onClick={handleCloseViewModal}
+              sx={{
+                minWidth: '30px',
+                minHeight: '30px',
+                padding: '5px',
+                fontSize: '1.2rem',
+                color: '#c70202',
+                '&:hover': {
+                  backgroundColor: 'rgba(199, 2, 2, 0.1)',
+                },
+              }}
+            >
+              &times;
+            </Button>
+          </DialogTitle>
+          <DialogContent sx={{ p: 0, height: '100%', overflow: 'hidden' }}>
+            {documentUrl && (
+              <Box sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {documentType === 'pdf' ? (
+                  <iframe
+                    src={documentUrl}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                    title="TOR Document"
+                  />
+                ) : (
+                  <img
+                    src={documentUrl}
+                    alt="TOR Document"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={handleCloseViewModal}
+              style={{ color: '#666' }}
+            >
+              Close
             </Button>
           </DialogActions>
         </Dialog>
