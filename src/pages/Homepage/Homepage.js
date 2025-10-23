@@ -310,7 +310,7 @@ const Homepage = () => {
             if (age < 17) {
                 setSnackbar({
                     open: true,
-                    message: "You must be at least 17 years old to register",
+                    message: "Invalid age",
                     severity: 'error'
                 });
                 return; // Prevent updating the birthdate field if age is less than 17
@@ -319,7 +319,7 @@ const Homepage = () => {
             if (age > 50) {
                 setSnackbar({
                     open: true,
-                    message: "Maximum age for registration is 50 years old",
+                    message: "Invalid age",
                     severity: 'error'
                 });
                 return; // Prevent updating the birthdate field if age is more than 50
@@ -889,7 +889,6 @@ const Homepage = () => {
                                                                 onChange={handleInputChange}
                                                                 required
                                                                 InputLabelProps={{ shrink: true }}
-                                                                helperText="Age must be between 17-50 years old"
                                                             />
                                                         </Grid>
                                                         <Grid item xs={4}>
