@@ -440,9 +440,13 @@ const StudentProfile = () => {
       // Common files for both student types
       let files = {
         idpic: formDataa.idpic,
-        birthCertificateDoc: formDataa.birthCertificateDoc,
-        form137Doc: formDataa.form137Doc
+        birthCertificateDoc: formDataa.birthCertificateDoc
       };
+
+      // Form 137 only required for new students
+      if (formDataa.studentType === 'new') {
+        files.form137Doc = formDataa.form137Doc;
+      }
 
       // Additional files for transferee students
       if (formDataa.studentType === 'transferee') {
@@ -491,7 +495,11 @@ const StudentProfile = () => {
       // Add all documents
       if (formDataa.idpic) formDataToSend.append('idpic', formDataa.idpic);
       if (formDataa.birthCertificateDoc) formDataToSend.append('birthCertificateDoc', formDataa.birthCertificateDoc);
-      if (formDataa.form137Doc) formDataToSend.append('form137Doc', formDataa.form137Doc);
+      
+      // Form 137 only for new students
+      if (formDataa.studentType === 'new' && formDataa.form137Doc) {
+        formDataToSend.append('form137Doc', formDataa.form137Doc);
+      }
       
       // Add transferee-specific documents
       if (formDataa.studentType === 'transferee') {
@@ -1198,19 +1206,22 @@ const StudentProfile = () => {
                       data-testid="birth-cert-input"
                     />
                   </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" sx={{ mb: 1, mt: 2, color: '#666' }}>Form 137</Typography>
-                    <input
-                      type="file"
-                      accept=".pdf, .jpeg, .jpg, .png"
-                      className="form-control"
-                      name="form137Doc"
-                      onChange={(e) => setFormDataa({ ...formDataa, form137Doc: e.target.files[0] })}
-                      required
-                      aria-label="Form 137 (JPEG/JPG)"
-                      data-testid="form137-input"
-                    />
-                  </Grid>
+                  {/* Form 137 only required for new students */}
+                  {formDataa.studentType === 'new' && (
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" sx={{ mb: 1, mt: 2, color: '#666' }}>Form 137</Typography>
+                      <input
+                        type="file"
+                        accept=".pdf, .jpeg, .jpg, .png"
+                        className="form-control"
+                        name="form137Doc"
+                        onChange={(e) => setFormDataa({ ...formDataa, form137Doc: e.target.files[0] })}
+                        required
+                        aria-label="Form 137 (JPEG/JPG)"
+                        data-testid="form137-input"
+                      />
+                    </Grid>
+                  )}
                   
                   {/* Additional documents for transferee students */}
                   {formDataa.studentType === 'transferee' && (
