@@ -94,6 +94,7 @@ const Homepage = () => {
     const [verificationType, setVerificationType] = useState(''); // 'email' or 'phone'
     const [verificationCode, setVerificationCode] = useState('');
     const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     
@@ -101,6 +102,7 @@ const Homepage = () => {
         // Reset modal state so it always opens with a fresh form
         setIsRegistered(false);
         setIsEmailVerified(false);
+        setIsPhoneVerified(false);
         setVerificationType('');
         setVerificationCode('');
         setOpen(true);
@@ -110,6 +112,7 @@ const Homepage = () => {
         // Also reset when closing to avoid stale success screen next open
         setIsRegistered(false);
         setIsEmailVerified(false);
+        setIsPhoneVerified(false);
         setVerificationType('');
         setVerificationCode('');
     };
@@ -557,6 +560,15 @@ const Homepage = () => {
             });
             return;
         }
+        
+        if (!isPhoneVerified) {
+            setSnackbar({
+                open: true,
+                message: "Please verify your phone number before submitting",
+                severity: 'error'
+            });
+            return;
+        }
 
         try {
             // Clean the form data to ensure no undefined values
@@ -609,6 +621,7 @@ const Homepage = () => {
                 guardianContactNo: "",
             });
             setIsEmailVerified(false);
+            setIsPhoneVerified(false);
         } catch (error) {
             console.error("Registration error:", error.response?.data || error.message);
             setSnackbar({
