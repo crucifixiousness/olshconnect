@@ -49,38 +49,82 @@ export const sendVerificationEmail = async (email, otp, studentName = 'Student')
   }
 };
 
-export const sendSMS = async (phoneNumber, otp) => {
-  // For SMS, you would typically use a service like Twilio
-  // This is a placeholder implementation
+export const sendSMS = async (phoneNumber, otp, studentName = 'Student') => {
   try {
-    // In a real implementation, you would call your SMS service here
-    console.log(`SMS would be sent to ${phoneNumber} with code: ${otp}`);
+    console.log(`📱 Sending SMS to ${phoneNumber} via AWS SNS`);
     
-    // Beautiful SMS message template
-    const smsMessage = `🎓 OLSHCO Registration Verification
+    // Call the AWS SNS SMS API endpoint
+    const response = await fetch('/api/send-sms-verification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phoneNumber: phoneNumber,
+        studentName: studentName
+      })
+    });
 
-Your verification code is: ${otp}
+    const result = await response.json();
 
-This code expires in 10 minutes.
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send SMS');
+    }
 
-If you didn't request this verification, please ignore this message.
-
-Our Lady of the Sacred Heart College of Guimba, Inc.
-📧 olshco.acesschools.ph
-📞 0956-2774029`;
-
-    console.log('SMS Message:', smsMessage);
+    console.log('✅ SMS sent successfully via AWS SNS:', result);
     
-    // For development, you can simulate SMS sending
-    return { 
-      success: true, 
-      message: 'SMS sent successfully (simulated)',
-      smsMessage: smsMessage,
+    return {
+      success: true,
+      message: result.message,
+      messageId: result.messageId,
+      phoneNumber: result.phoneNumber,
       // In development, include the OTP for testing
-      developmentOTP: process.env.NODE_ENV === 'development' ? otp : undefined
+      developmentOTP: result.developmentOTP
     };
   } catch (error) {
-    console.error('Error sending SMS:', error);
-    return { success: false, message: 'Failed to send SMS', error: error.message };
+    console.error('❌ Error sending SMS via AWS SNS:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Failed to send SMS verification code',
+      error: error.message 
+    };
+  }
+};
+
+export const verifySMSCode = async (phoneNumber, otp) => {
+  try {
+    console.log(`🔍 Verifying SMS code for ${phoneNumber}`);
+    
+    // Call the SMS verification API endpoint
+    const response = await fetch('/api/verify-sms-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phoneNumber: phoneNumber,
+        otp: otp
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to verify SMS code');
+    }
+
+    console.log('✅ SMS code verified successfully');
+    
+    return {
+      success: true,
+      message: result.message
+    };
+  } catch (error) {
+    console.error('❌ Error verifying SMS code:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Failed to verify SMS code',
+      error: error.message 
+    };
   }
 };
