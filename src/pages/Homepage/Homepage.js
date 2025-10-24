@@ -16,7 +16,7 @@ import announcement from '../../asset/images/anno.png';
 import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
-import { sendVerificationEmail, sendSMS, verifySMSCode } from '../../utils/emailService';
+import { sendVerificationEmail, validatePhoneNumber } from '../../utils/emailService';
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -94,7 +94,6 @@ const Homepage = () => {
     const [verificationType, setVerificationType] = useState(''); // 'email' or 'phone'
     const [verificationCode, setVerificationCode] = useState('');
     const [isEmailVerified, setIsEmailVerified] = useState(false);
-    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     
@@ -102,7 +101,6 @@ const Homepage = () => {
         // Reset modal state so it always opens with a fresh form
         setIsRegistered(false);
         setIsEmailVerified(false);
-        setIsPhoneVerified(false);
         setVerificationType('');
         setVerificationCode('');
         setOpen(true);
@@ -112,7 +110,6 @@ const Homepage = () => {
         // Also reset when closing to avoid stale success screen next open
         setIsRegistered(false);
         setIsEmailVerified(false);
-        setIsPhoneVerified(false);
         setVerificationType('');
         setVerificationCode('');
     };
@@ -124,7 +121,9 @@ const Homepage = () => {
         setVerificationCode('');
         
         // Automatically send verification code when modal opens
-        sendVerificationCode(type);
+        if (type === 'email') {
+            sendVerificationCode(type);
+        }
     };
     const handleVerificationClose = () => {
         setVerificationModal(false);
@@ -383,21 +382,14 @@ const Homepage = () => {
     const sendVerificationCode = async (type) => {
         setVerificationLoading(true);
         try {
-            let result;
+            // Generate OTP on frontend
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
             
-            if (type === 'email') {
-                // Generate OTP on frontend for email
-                const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                
-                // Store OTP temporarily (in production, use backend storage)
-                const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-                sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
-                
-                result = await sendVerificationEmail(formData.email, otp, formData.firstName);
-            } else if (type === 'phone') {
-                // For phone verification, the OTP is generated and stored on the backend
-                result = await sendSMS(formData.number, null, formData.firstName);
-            }
+            // Store OTP temporarily (in production, use backend storage)
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+            sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
+            
+            const result = await sendVerificationEmail(formData.email, otp, formData.firstName);
             
             if (result.success) {
                 setSnackbar({
@@ -417,13 +409,8 @@ const Homepage = () => {
                         return prev - 1;
                     });
                 }, 1000);
-                
-                // In development, show the OTP for testing
-                if (result.developmentOTP) {
-                    console.log(`🔑 Development OTP for ${type}:`, result.developmentOTP);
-                }
             } else {
-                console.error(`❌ ${type} sending failed:`, result.message);
+                console.error('❌ Email sending failed:', result.message);
                 throw new Error(result.message);
             }
         } catch (error) {
@@ -560,14 +547,18 @@ const Homepage = () => {
             });
             return;
         }
-        
-        if (!isPhoneVerified) {
-            setSnackbar({
-                open: true,
-                message: "Please verify your phone number before submitting",
-                severity: 'error'
-            });
-            return;
+
+        // Validate phone number
+        if (process.env.REACT_APP_NUMLOOKUP_API_KEY) {
+            const phoneValidation = await validatePhoneNumber(formData.number);
+            if (!phoneValidation.isValid) {
+                setSnackbar({
+                    open: true,
+                    message: "Invalid phone number. Please check your phone number and try again.",
+                    severity: 'error'
+                });
+                return;
+            }
         }
 
         try {
@@ -621,7 +612,6 @@ const Homepage = () => {
                 guardianContactNo: "",
             });
             setIsEmailVerified(false);
-            setIsPhoneVerified(false);
         } catch (error) {
             console.error("Registration error:", error.response?.data || error.message);
             setSnackbar({
@@ -999,20 +989,6 @@ const Homepage = () => {
                                                                 required
                                                                 error={!!contactNumberError}
                                                                 helperText={contactNumberError}
-                                                                InputProps={{
-                                                                    endAdornment: (
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant={isPhoneVerified ? "contained" : "outlined"}
-                                                                            color={isPhoneVerified ? "success" : "primary"}
-                                                                            onClick={() => handleVerificationOpen('phone')}
-                                                                            disabled={!formData.number || verificationLoading}
-                                                                            sx={{ ml: 1, minWidth: '100px' }}
-                                                                        >
-                                                                            {isPhoneVerified ? '✓ Verified' : 'Verify'}
-                                                                        </Button>
-                                                                    )
-                                                                }}
                                                             />
                                                         </Grid>
                                                     </Grid>
