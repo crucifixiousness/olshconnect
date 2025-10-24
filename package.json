@@ -11,6 +11,7 @@
     "@mui/styled-engine-sc": "^6.1.5",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
+    "aws-sdk": "^2.1692.0",
     "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.3",
@@ -31,6 +32,7 @@
     "recharts": "^3.1.0",
     "select-philippines-address": "^1.0.6",
     "styled-components": "^6.1.13",
+    "twilio": "^5.10.3",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
   },
