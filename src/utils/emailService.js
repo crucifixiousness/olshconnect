@@ -11,6 +11,48 @@ const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_pub
 // Initialize EmailJS
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
+export const validatePhoneNumber = async (phoneNumber) => {
+  try {
+    console.log(`🔍 Validating phone number: ${phoneNumber}`);
+    
+    // Call the phone validation API endpoint
+    const response = await fetch('/api/validate-phone', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phoneNumber: phoneNumber
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to validate phone number');
+    }
+
+    console.log('✅ Phone number validation result:', result);
+    
+    return {
+      success: true,
+      isValid: result.isValid,
+      phoneNumber: result.phoneNumber,
+      country: result.country,
+      carrier: result.carrier,
+      lineType: result.lineType,
+      message: result.message
+    };
+  } catch (error) {
+    console.error('❌ Error validating phone number:', error);
+    return { 
+      success: false, 
+      isValid: false,
+      message: error.message || 'Failed to validate phone number',
+      error: error.message 
+    };
+  }
+};
 export const sendVerificationEmail = async (email, otp, studentName = 'Student') => {
   try {
     if (!process.env.REACT_APP_EMAILJS_SERVICE_ID || !process.env.REACT_APP_EMAILJS_TEMPLATE_ID || !process.env.REACT_APP_EMAILJS_PUBLIC_KEY) {
@@ -49,82 +91,3 @@ export const sendVerificationEmail = async (email, otp, studentName = 'Student')
   }
 };
 
-export const sendSMS = async (phoneNumber, otp, studentName = 'Student') => {
-  try {
-    console.log(`📱 Sending SMS to ${phoneNumber} via AWS SNS`);
-    
-    // Call the AWS SNS SMS API endpoint
-    const response = await fetch('/api/send-sms-verification', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phoneNumber: phoneNumber,
-        studentName: studentName
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to send SMS');
-    }
-
-    console.log('✅ SMS sent successfully via AWS SNS:', result);
-    
-    return {
-      success: true,
-      message: result.message,
-      messageId: result.messageId,
-      phoneNumber: result.phoneNumber,
-      // In development, include the OTP for testing
-      developmentOTP: result.developmentOTP
-    };
-  } catch (error) {
-    console.error('❌ Error sending SMS via AWS SNS:', error);
-    return { 
-      success: false, 
-      message: error.message || 'Failed to send SMS verification code',
-      error: error.message 
-    };
-  }
-};
-
-export const verifySMSCode = async (phoneNumber, otp) => {
-  try {
-    console.log(`🔍 Verifying SMS code for ${phoneNumber}`);
-    
-    // Call the SMS verification API endpoint
-    const response = await fetch('/api/verify-sms-code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phoneNumber: phoneNumber,
-        otp: otp
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to verify SMS code');
-    }
-
-    console.log('✅ SMS code verified successfully');
-    
-    return {
-      success: true,
-      message: result.message
-    };
-  } catch (error) {
-    console.error('❌ Error verifying SMS code:', error);
-    return { 
-      success: false, 
-      message: error.message || 'Failed to verify SMS code',
-      error: error.message 
-    };
-  }
-};
