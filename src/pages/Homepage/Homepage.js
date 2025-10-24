@@ -986,6 +986,20 @@ const Homepage = () => {
                                                                 required
                                                                 error={!!contactNumberError}
                                                                 helperText={contactNumberError}
+                                                                InputProps={{
+                                                                    endAdornment: (
+                                                                        <Button
+                                                                            size="small"
+                                                                            variant={isPhoneVerified ? "contained" : "outlined"}
+                                                                            color={isPhoneVerified ? "success" : "primary"}
+                                                                            onClick={() => handleVerificationOpen('phone')}
+                                                                            disabled={!formData.number || verificationLoading}
+                                                                            sx={{ ml: 1, minWidth: '100px' }}
+                                                                        >
+                                                                            {isPhoneVerified ? '✓ Verified' : 'Verify'}
+                                                                        </Button>
+                                                                    )
+                                                                }}
                                                             />
                                                         </Grid>
                                                     </Grid>
