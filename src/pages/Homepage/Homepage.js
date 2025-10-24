@@ -16,7 +16,7 @@ import announcement from '../../asset/images/anno.png';
 import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
-import { sendVerificationEmail, sendSMS } from '../../utils/emailService';
+import { sendVerificationEmail, sendSMS, verifySMSCode } from '../../utils/emailService';
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -121,9 +121,7 @@ const Homepage = () => {
         setVerificationCode('');
         
         // Automatically send verification code when modal opens
-        if (type === 'email') {
-            sendVerificationCode(type);
-        }
+        sendVerificationCode(type);
     };
     const handleVerificationClose = () => {
         setVerificationModal(false);
@@ -382,14 +380,21 @@ const Homepage = () => {
     const sendVerificationCode = async (type) => {
         setVerificationLoading(true);
         try {
-            // Generate OTP on frontend
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            let result;
             
-            // Store OTP temporarily (in production, use backend storage)
-            const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-            sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
-            
-            const result = await sendVerificationEmail(formData.email, otp, formData.firstName);
+            if (type === 'email') {
+                // Generate OTP on frontend for email
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                // Store OTP temporarily (in production, use backend storage)
+                const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+                sessionStorage.setItem(`verification_${type}`, JSON.stringify({ otp, expiresAt }));
+                
+                result = await sendVerificationEmail(formData.email, otp, formData.firstName);
+            } else if (type === 'phone') {
+                // For phone verification, the OTP is generated and stored on the backend
+                result = await sendSMS(formData.number, null, formData.firstName);
+            }
             
             if (result.success) {
                 setSnackbar({
@@ -409,8 +414,13 @@ const Homepage = () => {
                         return prev - 1;
                     });
                 }, 1000);
+                
+                // In development, show the OTP for testing
+                if (result.developmentOTP) {
+                    console.log(`🔑 Development OTP for ${type}:`, result.developmentOTP);
+                }
             } else {
-                console.error('❌ Email sending failed:', result.message);
+                console.error(`❌ ${type} sending failed:`, result.message);
                 throw new Error(result.message);
             }
         } catch (error) {
