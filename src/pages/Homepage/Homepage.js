@@ -345,35 +345,42 @@ const Homepage = () => {
         else if (name === 'number' || name === 'guardianContactNo') {
             let validNumber = value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
     
-            // Ensure the number starts with "09" and restrict to 11 digits
-            if (validNumber.length > 11) {
-                validNumber = validNumber.slice(0, 11); // Restrict to 11 digits
-            }
-    
-            if (validNumber.length === 1 && validNumber !== '0') {
-                validNumber = ''; // If the first digit is not 0, clear the field
-            }
-    
-            if (validNumber.length === 2 && validNumber !== '09') {
-                validNumber = '09'; // Ensure the number starts with "09"
-            }
-    
-            // Set error for contact number if less than 11 digits  
+            // For contact number, allow international numbers (at least 7 digits)
             if (name === 'number') {
-                if (validNumber.length > 0 && validNumber.length < 11) {
-                    setContactNumberError("Contact number must be 11 digits");
+                // Allow any number with at least 7 digits
+                if (validNumber.length > 15) {
+                    validNumber = validNumber.slice(0, 15); // Restrict to 15 digits max
+                }
+                
+                // Set error for contact number if less than 7 digits  
+                if (validNumber.length > 0 && validNumber.length < 7) {
+                    setContactNumberError("Phone number must be at least 7 digits");
                 } else {
                     setContactNumberError("");
                 }
                 
                 // Trigger real-time phone validation
-                if (validNumber.length === 11) {
+                if (validNumber.length >= 7) {
                     validatePhoneInRealTime(validNumber);
                 } else {
                     setPhoneValidation({ isValid: null, message: '' });
                 }
             }
-
+            // For guardian contact, keep Philippine format (11 digits starting with 09)
+            else if (name === 'guardianContactNo') {
+                if (validNumber.length > 11) {
+                    validNumber = validNumber.slice(0, 11); // Restrict to 11 digits
+                }
+    
+                if (validNumber.length === 1 && validNumber !== '0') {
+                    validNumber = ''; // If the first digit is not 0, clear the field
+                }
+    
+                if (validNumber.length === 2 && validNumber !== '09') {
+                    validNumber = '09'; // Ensure the number starts with "09"
+                }
+            }
+    
             setFormData({ ...formData, [name]: validNumber });
     
         } 
@@ -390,16 +397,16 @@ const Homepage = () => {
 
     // Phone validation function
     const validatePhoneInRealTime = async (phoneNumber) => {
-        if (!phoneNumber || phoneNumber.length !== 11) {
+        if (!phoneNumber || phoneNumber.length < 7) {
             setPhoneValidation({ isValid: null, message: '' });
             return;
         }
 
-        // Basic format validation first
-        if (!phoneNumber.startsWith('09')) {
+        // Basic format validation - must be at least 7 digits
+        if (phoneNumber.length < 7) {
             setPhoneValidation({ 
                 isValid: false, 
-                message: 'Phone number must start with 09' 
+                message: 'Phone number must be at least 7 digits' 
             });
             return;
         }
@@ -579,10 +586,10 @@ const Homepage = () => {
             return;
         }
         // Validate contact number length
-        if (formData.number.length !== 11) {
+        if (formData.number.length < 7) {
             setSnackbar({
                 open: true,
-                message: "Contact number must be exactly 11 digits",
+                message: "Contact number must be at least 7 digits",
                 severity: 'error'
             });
             return;
@@ -1028,7 +1035,7 @@ const Homepage = () => {
                                                         </Grid>
                                                         <Grid item xs={12}>
                                                             <TextField
-                                                                label="Contact Number"
+                                                                label="Contact Number (International)"
                                                                 fullWidth
                                                                 margin="normal"
                                                                 name="number"
@@ -1040,7 +1047,8 @@ const Homepage = () => {
                                                                 helperText={
                                                                     contactNumberError || 
                                                                     (phoneValidation.isValid === false ? phoneValidation.message : '') ||
-                                                                    (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '')
+                                                                    (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '') ||
+                                                                    'Enter phone number (minimum 7 digits)'
                                                                 }
                                                                 InputProps={{
                                                                     endAdornment: phoneValidation.isValid === true && (
