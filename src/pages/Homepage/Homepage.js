@@ -95,6 +95,7 @@ const Homepage = () => {
     const [verificationCode, setVerificationCode] = useState('');
     const [isEmailVerified, setIsEmailVerified] = useState(false);
     const [phoneValidation, setPhoneValidation] = useState({ isValid: null, message: '' });
+    const [guardianPhoneValidation, setGuardianPhoneValidation] = useState({ isValid: null, message: '' });
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     
@@ -103,6 +104,7 @@ const Homepage = () => {
         setIsRegistered(false);
         setIsEmailVerified(false);
         setPhoneValidation({ isValid: null, message: '' });
+        setGuardianPhoneValidation({ isValid: null, message: '' });
         setVerificationType('');
         setVerificationCode('');
         setOpen(true);
@@ -113,6 +115,7 @@ const Homepage = () => {
         setIsRegistered(false);
         setIsEmailVerified(false);
         setPhoneValidation({ isValid: null, message: '' });
+        setGuardianPhoneValidation({ isValid: null, message: '' });
         setVerificationType('');
         setVerificationCode('');
     };
@@ -373,6 +376,15 @@ const Homepage = () => {
                     setPhoneValidation({ isValid: null, message: '' });
                 }
             }
+            // For guardian contact, add validation
+            else if (name === 'guardianContactNo') {
+                // Trigger real-time guardian phone validation
+                if (validNumber.length === 11) {
+                    validateGuardianPhoneInRealTime(validNumber);
+                } else {
+                    setGuardianPhoneValidation({ isValid: null, message: '' });
+                }
+            }
 
             setFormData({ ...formData, [name]: validNumber });
     
@@ -387,6 +399,66 @@ const Homepage = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [contactNumberError, setContactNumberError] = useState("");
+
+    // Guardian phone validation function
+    const validateGuardianPhoneInRealTime = async (phoneNumber) => {
+        if (!phoneNumber || phoneNumber.length !== 11) {
+            setGuardianPhoneValidation({ isValid: null, message: '' });
+            return;
+        }
+
+        // Basic format validation first
+        if (!phoneNumber.startsWith('09')) {
+            setGuardianPhoneValidation({ 
+                isValid: false, 
+                message: 'Phone number must start with 09' 
+            });
+            return;
+        }
+
+        // Check for repeated numbers (all same digits)
+        const allSameDigits = /^(\d)\1{10}$/.test(phoneNumber);
+        if (allSameDigits) {
+            setGuardianPhoneValidation({ 
+                isValid: false, 
+                message: 'Phone number cannot be all the same digits' 
+            });
+            return;
+        }
+
+        // Check for 4 or more consecutive identical digits
+        const consecutivePattern = /(\d)\1{3,}/;
+        if (consecutivePattern.test(phoneNumber)) {
+            setGuardianPhoneValidation({ 
+                isValid: false, 
+                message: 'Phone number cannot have 4 or more consecutive identical digits' 
+            });
+            return;
+        }
+
+        // Check for common invalid patterns
+        const invalidPatterns = [
+            /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
+            /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
+            /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
+        ];
+
+        for (const pattern of invalidPatterns) {
+            if (pattern.test(phoneNumber)) {
+                setGuardianPhoneValidation({ 
+                    isValid: false, 
+                    message: 'Phone number contains invalid pattern' 
+                });
+                return;
+            }
+        }
+
+        // Basic validation only
+        setGuardianPhoneValidation({
+            isValid: true,
+            message: 'Phone number format is valid'
+        });
+    };
 
     // Phone validation function
     const validatePhoneInRealTime = async (phoneNumber) => {
@@ -650,8 +722,50 @@ const Homepage = () => {
                 });
                 return;
             }
+        // Validate guardian contact number patterns
+        if (formData.guardianContactNo) {
+            const guardianPhoneNumber = formData.guardianContactNo;
+            
+            // Check for repeated numbers (all same digits)
+            const allSameDigits = /^(\d)\1{10}$/.test(guardianPhoneNumber);
+            if (allSameDigits) {
+                setSnackbar({
+                    open: true,
+                    message: "Guardian phone number cannot be all the same digits",
+                    severity: 'error'
+                });
+                return;
+            }
+
+            // Check for 4 or more consecutive identical digits
+            const consecutivePattern = /(\d)\1{3,}/;
+            if (consecutivePattern.test(guardianPhoneNumber)) {
+                setSnackbar({
+                    open: true,
+                    message: "Guardian phone number cannot have 4 or more consecutive identical digits",
+                    severity: 'error'
+                });
+                return;
+            }
+
+            // Check for common invalid patterns
+            const invalidPatterns = [
+                /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
+                /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
+                /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
+            ];
+
+            for (const pattern of invalidPatterns) {
+                if (pattern.test(guardianPhoneNumber)) {
+                    setSnackbar({
+                        open: true,
+                        message: "Guardian phone number contains invalid pattern",
+                        severity: 'error'
+                    });
+                    return;
+                }
+            }
         }
-        // Validate verification status
         if (!isEmailVerified) {
             setSnackbar({
                 open: true,
@@ -1252,6 +1366,18 @@ const Homepage = () => {
                                                         value={formData.guardianContactNo}
                                                         onChange={handleInputChange}
                                                         required
+                                                        error={guardianPhoneValidation.isValid === false}
+                                                        helperText={
+                                                            guardianPhoneValidation.isValid === false ? guardianPhoneValidation.message : 
+                                                            guardianPhoneValidation.isValid === true ? '✓ ' + guardianPhoneValidation.message : ''
+                                                        }
+                                                        InputProps={{
+                                                            endAdornment: guardianPhoneValidation.isValid === true && (
+                                                                <span style={{ color: 'green', fontSize: '20px', marginLeft: '8px' }}>
+                                                                    ✓
+                                                                </span>
+                                                            )
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
