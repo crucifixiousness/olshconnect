@@ -16,17 +16,31 @@ module.exports = async (req, res) => {
     // Clean phone number
     const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
     
-    // Validate Philippine format
-    if (cleanPhoneNumber.length !== 11 || !cleanPhoneNumber.startsWith('09')) {
+    // Basic validation - must be at least 7 digits (international minimum)
+    if (cleanPhoneNumber.length < 7) {
       return res.status(400).json({ 
-        error: 'Invalid phone number format. Please use a valid Philippine mobile number (09xxxxxxxxx)',
+        error: 'Phone number must be at least 7 digits',
         isValid: false,
         phoneNumber: phoneNumber
       });
     }
 
     // Format for NumLookup API (international format)
-    const formattedPhoneNumber = '+63' + cleanPhoneNumber.substring(1);
+    let formattedPhoneNumber;
+    
+    // If it starts with 09 (Philippines), convert to +63
+    if (cleanPhoneNumber.startsWith('09') && cleanPhoneNumber.length === 11) {
+      formattedPhoneNumber = '+63' + cleanPhoneNumber.substring(1);
+    }
+    // If it already has country code, use as is
+    else if (cleanPhoneNumber.startsWith('63') && cleanPhoneNumber.length === 12) {
+      formattedPhoneNumber = '+' + cleanPhoneNumber;
+    }
+    // For other formats, assume it needs a country code (you can modify this)
+    else {
+      // For testing purposes, let's assume it's a valid international number
+      formattedPhoneNumber = '+' + cleanPhoneNumber;
+    }
 
     // NumLookup API call
     const numlookupApiKey = process.env.NUMLOOKUP_API_KEY;
@@ -37,7 +51,7 @@ module.exports = async (req, res) => {
         success: true,
         isValid: true,
         phoneNumber: formattedPhoneNumber,
-        country: 'Philippines',
+        country: 'Unknown',
         carrier: 'Unknown',
         lineType: 'mobile',
         message: 'Phone number format is valid (NumLookup not configured)'
@@ -85,13 +99,13 @@ module.exports = async (req, res) => {
     
     // If NumLookup fails, fall back to basic validation
     const cleanPhoneNumber = req.body.phoneNumber?.replace(/\D/g, '');
-    const isValid = cleanPhoneNumber && cleanPhoneNumber.length === 11 && cleanPhoneNumber.startsWith('09');
+    const isValid = cleanPhoneNumber && cleanPhoneNumber.length >= 7; // At least 7 digits for international
     
     res.status(200).json({
       success: true,
       isValid: isValid,
-      phoneNumber: isValid ? '+63' + cleanPhoneNumber.substring(1) : req.body.phoneNumber,
-      country: 'Philippines',
+      phoneNumber: isValid ? '+' + cleanPhoneNumber : req.body.phoneNumber,
+      country: 'Unknown',
       carrier: 'Unknown',
       lineType: 'mobile',
       message: isValid ? 'Phone number format is valid (validation service unavailable)' : 'Invalid phone number format',
