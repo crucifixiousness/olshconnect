@@ -28,18 +28,53 @@ module.exports = async (req, res) => {
     // Format for NumLookup API (international format)
     let formattedPhoneNumber;
     
+    console.log('🔍 Original phone number:', phoneNumber);
+    console.log('🔍 Cleaned phone number:', cleanPhoneNumber);
+    
     // If it starts with 09 (Philippines), convert to +63
     if (cleanPhoneNumber.startsWith('09') && cleanPhoneNumber.length === 11) {
       formattedPhoneNumber = '+63' + cleanPhoneNumber.substring(1);
+      console.log('🇵🇭 Philippine number detected, formatted as:', formattedPhoneNumber);
     }
     // If it already has country code, use as is
     else if (cleanPhoneNumber.startsWith('63') && cleanPhoneNumber.length === 12) {
       formattedPhoneNumber = '+' + cleanPhoneNumber;
+      console.log('🇵🇭 Philippine number with country code, formatted as:', formattedPhoneNumber);
     }
-    // For other formats, assume it needs a country code (you can modify this)
+    // For US numbers (10 digits), add +1
+    else if (cleanPhoneNumber.length === 10 && !cleanPhoneNumber.startsWith('0')) {
+      formattedPhoneNumber = '+1' + cleanPhoneNumber;
+      console.log('🇺🇸 US number detected, formatted as:', formattedPhoneNumber);
+    }
+    // For UK numbers (10 digits starting with 7), add +44
+    else if (cleanPhoneNumber.length === 10 && cleanPhoneNumber.startsWith('7')) {
+      formattedPhoneNumber = '+44' + cleanPhoneNumber;
+      console.log('🇬🇧 UK number detected, formatted as:', formattedPhoneNumber);
+    }
+    // For other international numbers, try to detect country code
+    else if (cleanPhoneNumber.length >= 7) {
+      // For now, let's try common country codes
+      if (cleanPhoneNumber.startsWith('1') && cleanPhoneNumber.length === 10) {
+        formattedPhoneNumber = '+1' + cleanPhoneNumber;
+        console.log('🇺🇸 US number (starts with 1), formatted as:', formattedPhoneNumber);
+      } else if (cleanPhoneNumber.startsWith('44') && cleanPhoneNumber.length >= 10) {
+        formattedPhoneNumber = '+' + cleanPhoneNumber;
+        console.log('🇬🇧 UK number (starts with 44), formatted as:', formattedPhoneNumber);
+      } else if (cleanPhoneNumber.startsWith('49') && cleanPhoneNumber.length >= 10) {
+        formattedPhoneNumber = '+' + cleanPhoneNumber;
+        console.log('🇩🇪 German number (starts with 49), formatted as:', formattedPhoneNumber);
+      } else if (cleanPhoneNumber.startsWith('81') && cleanPhoneNumber.length >= 10) {
+        formattedPhoneNumber = '+' + cleanPhoneNumber;
+        console.log('🇯🇵 Japanese number (starts with 81), formatted as:', formattedPhoneNumber);
+      } else {
+        // Default: assume it's already formatted or add a generic prefix
+        formattedPhoneNumber = '+' + cleanPhoneNumber;
+        console.log('🌍 Generic international number, formatted as:', formattedPhoneNumber);
+      }
+    }
     else {
-      // For testing purposes, let's assume it's a valid international number
       formattedPhoneNumber = '+' + cleanPhoneNumber;
+      console.log('❓ Unknown format, default formatting as:', formattedPhoneNumber);
     }
 
     // NumLookup API call
@@ -61,8 +96,12 @@ module.exports = async (req, res) => {
     // Call NumLookup API
     const numlookupUrl = `https://api.numlookupapi.com/v1/validate/${formattedPhoneNumber}?apikey=${numlookupApiKey}`;
     
+    console.log('🌐 Calling NumLookup API with URL:', numlookupUrl);
+    
     const response = await fetch(numlookupUrl);
     const data = await response.json();
+
+    console.log('📡 NumLookup API response:', data);
 
     if (!response.ok) {
       throw new Error(`NumLookup API error: ${data.error || 'Unknown error'}`);
