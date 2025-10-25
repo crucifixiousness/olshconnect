@@ -722,6 +722,8 @@ const Homepage = () => {
                 });
                 return;
             }
+        }
+        
         // Validate guardian contact number patterns
         if (formData.guardianContactNo) {
             const guardianPhoneNumber = formData.guardianContactNo;
