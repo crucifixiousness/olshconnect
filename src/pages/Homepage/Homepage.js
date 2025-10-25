@@ -661,19 +661,6 @@ const Homepage = () => {
             return;
         }
 
-        // Validate phone number
-        if (process.env.REACT_APP_NUMLOOKUP_API_KEY) {
-            const phoneValidation = await validatePhoneNumber(formData.number);
-            if (!phoneValidation.isValid) {
-                setSnackbar({
-                    open: true,
-                    message: "Invalid phone number. Please check your phone number and try again.",
-                    severity: 'error'
-                });
-                return;
-            }
-        }
-
         try {
             // Clean the form data to ensure no undefined values
             const cleanFormData = {
