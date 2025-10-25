@@ -18,7 +18,7 @@ import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
 import { sendVerificationEmail, validatePhoneNumber } from '../../utils/emailService';
 
-// Honeypot detection for registratio
+// Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
   const suspiciousUsernames = [
     'admin', 'root', 'administrator', 'guest', 'user', 'demo',
@@ -94,6 +94,7 @@ const Homepage = () => {
     const [verificationType, setVerificationType] = useState(''); // 'email' or 'phone'
     const [verificationCode, setVerificationCode] = useState('');
     const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [phoneValidation, setPhoneValidation] = useState({ isValid: null, message: '' });
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     
@@ -101,6 +102,7 @@ const Homepage = () => {
         // Reset modal state so it always opens with a fresh form
         setIsRegistered(false);
         setIsEmailVerified(false);
+        setPhoneValidation({ isValid: null, message: '' });
         setVerificationType('');
         setVerificationCode('');
         setOpen(true);
@@ -110,6 +112,7 @@ const Homepage = () => {
         // Also reset when closing to avoid stale success screen next open
         setIsRegistered(false);
         setIsEmailVerified(false);
+        setPhoneValidation({ isValid: null, message: '' });
         setVerificationType('');
         setVerificationCode('');
     };
@@ -362,8 +365,15 @@ const Homepage = () => {
                 } else {
                     setContactNumberError("");
                 }
+                
+                // Trigger real-time phone validation
+                if (validNumber.length === 11) {
+                    validatePhoneInRealTime(validNumber);
+                } else {
+                    setPhoneValidation({ isValid: null, message: '' });
+                }
             }
-    
+
             setFormData({ ...formData, [name]: validNumber });
     
         } 
@@ -377,6 +387,45 @@ const Homepage = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [contactNumberError, setContactNumberError] = useState("");
+
+    // Phone validation function
+    const validatePhoneInRealTime = async (phoneNumber) => {
+        if (!phoneNumber || phoneNumber.length !== 11) {
+            setPhoneValidation({ isValid: null, message: '' });
+            return;
+        }
+
+        // Basic format validation first
+        if (!phoneNumber.startsWith('09')) {
+            setPhoneValidation({ 
+                isValid: false, 
+                message: 'Phone number must start with 09' 
+            });
+            return;
+        }
+
+        // If NumLookup API is configured, use it for validation
+        if (process.env.REACT_APP_NUMLOOKUP_API_KEY) {
+            try {
+                const result = await validatePhoneNumber(phoneNumber);
+                setPhoneValidation({
+                    isValid: result.isValid,
+                    message: result.isValid ? 'Phone number is valid' : result.message
+                });
+            } catch (error) {
+                setPhoneValidation({
+                    isValid: true, // Fallback to basic validation
+                    message: 'Phone number format is valid'
+                });
+            }
+        } else {
+            // Basic validation only
+            setPhoneValidation({
+                isValid: true,
+                message: 'Phone number format is valid'
+            });
+        }
+    };
 
     // Verification functions
     const sendVerificationCode = async (type) => {
@@ -987,8 +1036,19 @@ const Homepage = () => {
                                                                 value={formData.number}
                                                                 onChange={handleInputChange}
                                                                 required
-                                                                error={!!contactNumberError}
-                                                                helperText={contactNumberError}
+                                                                error={!!contactNumberError || phoneValidation.isValid === false}
+                                                                helperText={
+                                                                    contactNumberError || 
+                                                                    (phoneValidation.isValid === false ? phoneValidation.message : '') ||
+                                                                    (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '')
+                                                                }
+                                                                InputProps={{
+                                                                    endAdornment: phoneValidation.isValid === true && (
+                                                                        <span style={{ color: 'green', fontSize: '20px', marginLeft: '8px' }}>
+                                                                            ✓
+                                                                        </span>
+                                                                    )
+                                                                }}
                                                             />
                                                         </Grid>
                                                     </Grid>
