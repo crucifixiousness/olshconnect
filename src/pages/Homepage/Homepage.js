@@ -16,7 +16,7 @@ import announcement from '../../asset/images/anno.png';
 import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
 import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
-import { sendVerificationEmail, validatePhoneNumber } from '../../utils/emailService';
+import { sendVerificationEmail } from '../../utils/emailService';
 
 // Honeypot detection for registration
 const detectMaliciousRegistration = (fields) => {
@@ -345,42 +345,35 @@ const Homepage = () => {
         else if (name === 'number' || name === 'guardianContactNo') {
             let validNumber = value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
     
-            // For contact number, allow international numbers (at least 7 digits)
+            // Ensure the number starts with "09" and restrict to 11 digits
+            if (validNumber.length > 11) {
+                validNumber = validNumber.slice(0, 11); // Restrict to 11 digits
+            }
+    
+            if (validNumber.length === 1 && validNumber !== '0') {
+                validNumber = ''; // If the first digit is not 0, clear the field
+            }
+    
+            if (validNumber.length === 2 && validNumber !== '09') {
+                validNumber = '09'; // Ensure the number starts with "09"
+            }
+    
+            // Set error for contact number if less than 11 digits  
             if (name === 'number') {
-                // Allow any number with at least 7 digits
-                if (validNumber.length > 15) {
-                    validNumber = validNumber.slice(0, 15); // Restrict to 15 digits max
-                }
-                
-                // Set error for contact number if less than 7 digits  
-                if (validNumber.length > 0 && validNumber.length < 7) {
-                    setContactNumberError("Phone number must be at least 7 digits");
+                if (validNumber.length > 0 && validNumber.length < 11) {
+                    setContactNumberError("Contact number must be 11 digits");
                 } else {
                     setContactNumberError("");
                 }
                 
                 // Trigger real-time phone validation
-                if (validNumber.length >= 7) {
+                if (validNumber.length === 11) {
                     validatePhoneInRealTime(validNumber);
                 } else {
                     setPhoneValidation({ isValid: null, message: '' });
                 }
             }
-            // For guardian contact, keep Philippine format (11 digits starting with 09)
-            else if (name === 'guardianContactNo') {
-                if (validNumber.length > 11) {
-                    validNumber = validNumber.slice(0, 11); // Restrict to 11 digits
-                }
-    
-                if (validNumber.length === 1 && validNumber !== '0') {
-                    validNumber = ''; // If the first digit is not 0, clear the field
-                }
-    
-                if (validNumber.length === 2 && validNumber !== '09') {
-                    validNumber = '09'; // Ensure the number starts with "09"
-                }
-            }
-    
+
             setFormData({ ...formData, [name]: validNumber });
     
         } 
@@ -397,41 +390,62 @@ const Homepage = () => {
 
     // Phone validation function
     const validatePhoneInRealTime = async (phoneNumber) => {
-        if (!phoneNumber || phoneNumber.length < 7) {
+        if (!phoneNumber || phoneNumber.length !== 11) {
             setPhoneValidation({ isValid: null, message: '' });
             return;
         }
 
-        // Basic format validation - must be at least 7 digits
-        if (phoneNumber.length < 7) {
+        // Basic format validation first
+        if (!phoneNumber.startsWith('09')) {
             setPhoneValidation({ 
                 isValid: false, 
-                message: 'Phone number must be at least 7 digits' 
+                message: 'Phone number must start with 09' 
             });
             return;
         }
 
-        // If NumLookup API is configured, use it for validation
-        if (process.env.REACT_APP_NUMLOOKUP_API_KEY) {
-            try {
-                const result = await validatePhoneNumber(phoneNumber);
-                setPhoneValidation({
-                    isValid: result.isValid,
-                    message: result.isValid ? 'Phone number is valid' : result.message
-                });
-            } catch (error) {
-                setPhoneValidation({
-                    isValid: true, // Fallback to basic validation
-                    message: 'Phone number format is valid'
-                });
-            }
-        } else {
-            // Basic validation only
-            setPhoneValidation({
-                isValid: true,
-                message: 'Phone number format is valid'
+        // Check for repeated numbers (all same digits)
+        const allSameDigits = /^(\d)\1{10}$/.test(phoneNumber);
+        if (allSameDigits) {
+            setPhoneValidation({ 
+                isValid: false, 
+                message: 'Phone number cannot be all the same digits' 
             });
+            return;
         }
+
+        // Check for 4 or more consecutive identical digits
+        const consecutivePattern = /(\d)\1{3,}/;
+        if (consecutivePattern.test(phoneNumber)) {
+            setPhoneValidation({ 
+                isValid: false, 
+                message: 'Phone number cannot have 4 or more consecutive identical digits' 
+            });
+            return;
+        }
+
+        // Check for common invalid patterns
+        const invalidPatterns = [
+            /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
+            /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
+            /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
+        ];
+
+        for (const pattern of invalidPatterns) {
+            if (pattern.test(phoneNumber)) {
+                setPhoneValidation({ 
+                    isValid: false, 
+                    message: 'Phone number contains invalid pattern' 
+                });
+                return;
+            }
+        }
+
+        // Basic validation only
+        setPhoneValidation({
+            isValid: true,
+            message: 'Phone number format is valid'
+        });
     };
 
     // Verification functions
@@ -586,13 +600,56 @@ const Homepage = () => {
             return;
         }
         // Validate contact number length
-        if (formData.number.length < 7) {
+        if (formData.number.length !== 11) {
             setSnackbar({
                 open: true,
-                message: "Contact number must be at least 7 digits",
+                message: "Contact number must be exactly 11 digits",
                 severity: 'error'
             });
             return;
+        }
+
+        // Validate contact number patterns
+        const phoneNumber = formData.number;
+        
+        // Check for repeated numbers (all same digits)
+        const allSameDigits = /^(\d)\1{10}$/.test(phoneNumber);
+        if (allSameDigits) {
+            setSnackbar({
+                open: true,
+                message: "Phone number cannot be all the same digits",
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Check for 4 or more consecutive identical digits
+        const consecutivePattern = /(\d)\1{3,}/;
+        if (consecutivePattern.test(phoneNumber)) {
+            setSnackbar({
+                open: true,
+                message: "Phone number cannot have 4 or more consecutive identical digits",
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Check for common invalid patterns
+        const invalidPatterns = [
+            /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
+            /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
+            /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
+        ];
+
+        for (const pattern of invalidPatterns) {
+            if (pattern.test(phoneNumber)) {
+                setSnackbar({
+                    open: true,
+                    message: "Phone number contains invalid pattern",
+                    severity: 'error'
+                });
+                return;
+            }
         }
         // Validate verification status
         if (!isEmailVerified) {
@@ -1035,7 +1092,7 @@ const Homepage = () => {
                                                         </Grid>
                                                         <Grid item xs={12}>
                                                             <TextField
-                                                                label="Contact Number (International)"
+                                                                label="Contact Number"
                                                                 fullWidth
                                                                 margin="normal"
                                                                 name="number"
@@ -1047,8 +1104,7 @@ const Homepage = () => {
                                                                 helperText={
                                                                     contactNumberError || 
                                                                     (phoneValidation.isValid === false ? phoneValidation.message : '') ||
-                                                                    (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '') ||
-                                                                    'Enter phone number (minimum 7 digits)'
+                                                                    (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '')
                                                                 }
                                                                 InputProps={{
                                                                     endAdornment: phoneValidation.isValid === true && (
