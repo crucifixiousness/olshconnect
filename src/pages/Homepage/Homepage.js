@@ -18,7 +18,7 @@ import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
 import { sendVerificationEmail, validatePhoneNumber } from '../../utils/emailService';
 
-// Honeypot detection for registration
+// Honeypot detection for registratio
 const detectMaliciousRegistration = (fields) => {
   const suspiciousUsernames = [
     'admin', 'root', 'administrator', 'guest', 'user', 'demo',
