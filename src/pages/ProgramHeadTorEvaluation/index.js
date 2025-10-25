@@ -20,7 +20,8 @@ import {
   TextField,
   Alert,
   Snackbar,
-  Chip
+  Chip,
+  Autocomplete
 } from '@mui/material';
 import { FaEye, FaCheck, FaTimes, FaDownload, FaClipboardList } from "react-icons/fa";
 import { MyContext } from "../../App";
@@ -595,36 +596,43 @@ const ProgramHeadTorEvaluation = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <TextField
-                          select
-                          label="Equivalent Course"
-                          fullWidth
-                          size="small"
-                          value={equiv.equivalent_course_id}
-                          onChange={(e) => handleEquivalencyChange(index, 'equivalent_course_id', e.target.value)}
-                          className="mb-2"
-                          SelectProps={{
-                            native: true,
-                            MenuProps: {
-                              anchorOrigin: {
-                                vertical: "bottom",
-                                horizontal: "left"
-                              },
-                              transformOrigin: {
-                                vertical: "top",
-                                horizontal: "left"
-                              },
-                              getContentAnchorEl: null
-                            }
+                        <Autocomplete
+                          options={availableCourses}
+                          getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
+                          value={availableCourses.find(course => course.course_id == equiv.equivalent_course_id) || null}
+                          onChange={(event, newValue) => {
+                            handleEquivalencyChange(index, 'equivalent_course_id', newValue ? newValue.course_id : '');
                           }}
-                        >
-                          <option value=""></option>
-                          {availableCourses.map((course) => (
-                            <option key={course.course_id} value={course.course_id}>
-                              {course.course_code} - {course.course_name} ({course.units} units)
-                            </option>
-                          ))}
-                        </TextField>
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Equivalent Course"
+                              size="small"
+                              className="mb-2"
+                              placeholder="Type to search courses..."
+                            />
+                          )}
+                          filterOptions={(options, { inputValue }) => {
+                            if (!inputValue) return options;
+                            
+                            const filterValue = inputValue.toLowerCase();
+                            return options.filter(option => {
+                              const courseCode = option.course_code?.toLowerCase() || '';
+                              const courseName = option.course_name?.toLowerCase() || '';
+                              const fullText = `${courseCode} - ${courseName}`.toLowerCase();
+                              
+                              // Check if input matches course code, course name, or full text
+                              return courseCode.includes(filterValue) || 
+                                     courseName.includes(filterValue) || 
+                                     fullText.includes(filterValue);
+                            });
+                          }}
+                          isOptionEqualToValue={(option, value) => option.course_id === value?.course_id}
+                          noOptionsText="No courses found"
+                          clearOnEscape
+                          selectOnFocus
+                          handleHomeEndKeys
+                        />
                       </div>
                     </div>
                   </Card>
@@ -638,29 +646,12 @@ const ProgramHeadTorEvaluation = () => {
                   </Typography>
                   <div className="row">
                     <div className="col-md-8">
-                      <TextField
-                        select
-                        label="Remaining Course"
-                        fullWidth
-                        size="small"
-                        className="mb-2"
-                        SelectProps={{ 
-                          native: true,
-                          MenuProps: {
-                            anchorOrigin: {
-                              vertical: "bottom",
-                              horizontal: "left"
-                            },
-                            transformOrigin: {
-                              vertical: "top",
-                              horizontal: "left"
-                            },
-                            getContentAnchorEl: null
-                          }
-                        }}
-                        onChange={async (e) => {
-                          const pcId = Number(e.target.value || 0);
-                          if (!pcId) return;
+                      <Autocomplete
+                        options={remainingCourses}
+                        getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units) - Year ${option.year_level}` : ''}
+                        onChange={async (event, newValue) => {
+                          if (!newValue) return;
+                          const pcId = Number(newValue.pc_id);
                           try {
                             const token = localStorage.getItem('token');
                             await axios.post('/api/student-required-courses', {
@@ -679,16 +670,37 @@ const ProgramHeadTorEvaluation = () => {
                             console.error('Error adding required course:', err);
                             setSnackbar({ open: true, message: 'Failed to add required course', severity: 'error' });
                           }
-                          e.target.value = '';
                         }}
-                      >
-                        <option value=""></option>
-                        {remainingCourses.map(rc => (
-                          <option key={rc.pc_id} value={rc.pc_id}>
-                            {rc.course_code} - {rc.course_name} ({rc.units} units) - Year {rc.year_level}
-                          </option>
-                        ))}
-                      </TextField>
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Remaining Course"
+                            size="small"
+                            className="mb-2"
+                            placeholder="Type to search courses..."
+                          />
+                        )}
+                        filterOptions={(options, { inputValue }) => {
+                          if (!inputValue) return options;
+                          
+                          const filterValue = inputValue.toLowerCase();
+                          return options.filter(option => {
+                            const courseCode = option.course_code?.toLowerCase() || '';
+                            const courseName = option.course_name?.toLowerCase() || '';
+                            const fullText = `${courseCode} - ${courseName}`.toLowerCase();
+                            
+                            // Check if input matches course code, course name, or full text
+                            return courseCode.includes(filterValue) || 
+                                   courseName.includes(filterValue) || 
+                                   fullText.includes(filterValue);
+                          });
+                        }}
+                        isOptionEqualToValue={(option, value) => option.pc_id === value?.pc_id}
+                        noOptionsText="No courses found"
+                        clearOnEscape
+                        selectOnFocus
+                        handleHomeEndKeys
+                      />
                     </div>
                   </div>
 
