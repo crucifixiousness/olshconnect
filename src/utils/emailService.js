@@ -11,48 +11,6 @@ const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_pub
 // Initialize EmailJS
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
-export const validatePhoneNumber = async (phoneNumber) => {
-  try {
-    console.log(`🔍 Validating phone number: ${phoneNumber}`);
-    
-    // Call the phone validation API endpoint
-    const response = await fetch('/api/validate-phone', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phoneNumber: phoneNumber
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to validate phone number');
-    }
-
-    console.log('✅ Phone number validation result:', result);
-    
-    return {
-      success: true,
-      isValid: result.isValid,
-      phoneNumber: result.phoneNumber,
-      country: result.country,
-      carrier: result.carrier,
-      lineType: result.lineType,
-      message: result.message
-    };
-  } catch (error) {
-    console.error('❌ Error validating phone number:', error);
-    return { 
-      success: false, 
-      isValid: false,
-      message: error.message || 'Failed to validate phone number',
-      error: error.message 
-    };
-  }
-};
 export const sendVerificationEmail = async (email, otp, studentName = 'Student') => {
   try {
     if (!process.env.REACT_APP_EMAILJS_SERVICE_ID || !process.env.REACT_APP_EMAILJS_TEMPLATE_ID || !process.env.REACT_APP_EMAILJS_PUBLIC_KEY) {
