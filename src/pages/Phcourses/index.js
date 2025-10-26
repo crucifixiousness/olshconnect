@@ -971,8 +971,13 @@ const AssignCourses = () => {
                       // Exclude if it's the same course being created
                       (option.course_code === newAssignment.course_code) ||
                       // Exclude courses with higher year levels (prerequisites should be lower level)
-                      (option.year_level && newAssignment.year_level && 
-                       parseInt(option.year_level) > parseInt(newAssignment.year_level)) ||
+                      // Check against assignedCourses to get year level information
+                      (assignedCourses.some(assignedCourse => 
+                        assignedCourse.course_id === option.course_id && 
+                        assignedCourse.year_level && 
+                        newAssignment.year_level && 
+                        parseInt(assignedCourse.year_level) > parseInt(newAssignment.year_level)
+                      )) ||
                       // Exclude courses that already have this course as prerequisite (prevent circular dependencies)
                       (option.prerequisite_id && option.prerequisite_id.toString() === newAssignment.course_id) ||
                       // Exclude courses that are already prerequisites of other courses
