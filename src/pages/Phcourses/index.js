@@ -38,9 +38,9 @@ const AssignCourses = () => {
       units: "",
       semester: "",
       major_id: "",
-      prerequisite_id: ""
+      prerequisite_ids: []
     });
-    setSelectedPrerequisite(null);
+    setSelectedPrerequisites([]);
   };
   const [loading, setLoading] = useState(false);
   const [assignedCourses, setAssignedCourses] = useState([]);
@@ -208,9 +208,9 @@ const AssignCourses = () => {
     units: "",
     semester: "",
     major_id: "",
-    prerequisite_id: ""
+    prerequisite_ids: []
   });
-  const [selectedPrerequisite, setSelectedPrerequisite] = useState(null);
+  const [selectedPrerequisites, setSelectedPrerequisites] = useState([]);
 
   // Fetch logged-in user details (assuming it's stored in localStorage)
   useEffect(() => {
@@ -415,7 +415,7 @@ const AssignCourses = () => {
         units: newAssignment.units,
         semester: newAssignment.semester,
         year_level: newAssignment.year_level,
-        prerequisite_id: newAssignment.prerequisite_id || null
+        prerequisite_ids: newAssignment.prerequisite_ids || []
       };
 
       // Add major_id if majors are available
@@ -930,22 +930,23 @@ const AssignCourses = () => {
                 data-testid="input-units" 
               />
               <Autocomplete
+                multiple
                 options={courses}
                 getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
-                value={selectedPrerequisite}
+                value={selectedPrerequisites}
                 onChange={(event, newValue) => {
-                  setSelectedPrerequisite(newValue);
+                  setSelectedPrerequisites(newValue);
                   setNewAssignment({
                     ...newAssignment,
-                    prerequisite_id: newValue ? newValue.course_id : ""
+                    prerequisite_ids: newValue.map(prereq => prereq.course_id)
                   });
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Prerequisite Course (Optional)"
+                    label="Prerequisite Courses (Optional)"
                     margin="normal"
-                    placeholder="Type to search prerequisite courses..."
+                    placeholder="Select multiple prerequisite courses..."
                     data-testid="input-prerequisite"
                   />
                 )}
@@ -968,10 +969,7 @@ const AssignCourses = () => {
                       (newAssignment.course_code && option.course_code === newAssignment.course_code) ||
                       // Exclude courses with higher year levels (prerequisites should be equal or lower level)
                       (option.year_level && newAssignment.year_level && 
-                       parseInt(option.year_level) > parseInt(newAssignment.year_level)) ||
-                      // Exclude courses that already have this course as prerequisite (prevent circular dependencies)
-                      (option.prerequisite_id && newAssignment.course_id && 
-                       option.prerequisite_id.toString() === newAssignment.course_id.toString());
+                       parseInt(option.year_level) > parseInt(newAssignment.year_level));
                     
                     return matchesSearch && !isExcluded;
                   });
