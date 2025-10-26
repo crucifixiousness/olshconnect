@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button, Modal, TextField, FormControl, InputLabel, Select, MenuItem, Pagination, Snackbar, Alert, Box, Typography, Grid, CircularProgress } from "@mui/material";
+import { Button, Modal, TextField, FormControl, InputLabel, Select, MenuItem, Pagination, Snackbar, Alert, Box, Typography, Grid, CircularProgress, Autocomplete } from "@mui/material";
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { FaCirclePlus } from "react-icons/fa6";
@@ -37,8 +37,10 @@ const AssignCourses = () => {
       course_name: "",
       units: "",
       semester: "",
-      major_id: ""
+      major_id: "",
+      prerequisite_id: ""
     });
+    setSelectedPrerequisite(null);
   };
   const [loading, setLoading] = useState(false);
   const [assignedCourses, setAssignedCourses] = useState([]);
@@ -207,8 +209,10 @@ const AssignCourses = () => {
     course_name: "",
     units: "",
     semester: "",
-    major_id: ""
+    major_id: "",
+    prerequisite_id: ""
   });
+  const [selectedPrerequisite, setSelectedPrerequisite] = useState(null);
   
   // Fetch logged-in user details (assuming it's stored in localStorage)
   useEffect(() => {
@@ -412,7 +416,8 @@ const AssignCourses = () => {
         course_name: newAssignment.course_name,
         units: newAssignment.units,
         semester: newAssignment.semester,
-        year_level: newAssignment.year_level
+        year_level: newAssignment.year_level,
+        prerequisite_id: newAssignment.prerequisite_id || null
       };
 
       // Add major_id if majors are available
@@ -926,6 +931,47 @@ const AssignCourses = () => {
                 fullWidth 
                 margin="normal"
                 data-testid="input-units" 
+              />
+              <Autocomplete
+                options={courses}
+                getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
+                value={selectedPrerequisite}
+                onChange={(event, newValue) => {
+                  setSelectedPrerequisite(newValue);
+                  setNewAssignment({
+                    ...newAssignment,
+                    prerequisite_id: newValue ? newValue.course_id : ""
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Prerequisite Course (Optional)"
+                    margin="normal"
+                    placeholder="Type to search prerequisite courses..."
+                    data-testid="input-prerequisite"
+                  />
+                )}
+                filterOptions={(options, { inputValue }) => {
+                  if (!inputValue) return options;
+                  
+                  const filterValue = inputValue.toLowerCase();
+                  return options.filter(option => {
+                    const courseCode = option.course_code?.toLowerCase() || '';
+                    const courseName = option.course_name?.toLowerCase() || '';
+                    const fullText = `${courseCode} - ${courseName}`.toLowerCase();
+                    
+                    // Check if input matches course code, course name, or full text
+                    return courseCode.includes(filterValue) || 
+                           courseName.includes(filterValue) || 
+                           fullText.includes(filterValue);
+                  });
+                }}
+                isOptionEqualToValue={(option, value) => option.course_id === value?.course_id}
+                noOptionsText="No courses found"
+                clearOnEscape
+                selectOnFocus
+                handleHomeEndKeys
               />
             </div>
 
