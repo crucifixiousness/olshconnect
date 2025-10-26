@@ -978,6 +978,10 @@ const AssignCourses = () => {
                       (assignedCourses.some(assignedCourse => 
                         assignedCourse.prerequisite_id && 
                         assignedCourse.prerequisite_id.toString() === option.course_id.toString()
+                      )) ||
+                      // Exclude courses not assigned to the current program
+                      (!assignedCourses.some(assignedCourse => 
+                        assignedCourse.course_id === option.course_id
                       ));
                     
                     return matchesSearch && !isExcluded;
