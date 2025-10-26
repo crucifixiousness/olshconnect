@@ -933,7 +933,9 @@ const AssignCourses = () => {
                 data-testid="input-units" 
               />
               <Autocomplete
-                options={courses}
+                options={courses.filter(course => 
+                  assignedCourses.some(assigned => assigned.course_id === course.course_id)
+                )}
                 getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
                 value={selectedPrerequisite}
                 onChange={(event, newValue) => {
@@ -978,10 +980,6 @@ const AssignCourses = () => {
                       (assignedCourses.some(assignedCourse => 
                         assignedCourse.prerequisite_id && 
                         assignedCourse.prerequisite_id.toString() === option.course_id.toString()
-                      )) ||
-                      // Exclude courses not assigned to the current program
-                      (!assignedCourses.some(assignedCourse => 
-                        assignedCourse.course_id === option.course_id
                       ));
                     
                     return matchesSearch && !isExcluded;
