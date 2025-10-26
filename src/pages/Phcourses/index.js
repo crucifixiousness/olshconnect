@@ -964,13 +964,14 @@ const AssignCourses = () => {
                     
                     // Exclude courses that shouldn't be prerequisites
                     const isExcluded = 
-                      // Exclude if it's the same course being created
-                      (option.course_code === newAssignment.course_code) ||
-                      // Exclude courses with higher or equal year levels (prerequisites should be lower level)
+                      // Exclude if it's the same course being created (only if course_code matches)
+                      (newAssignment.course_code && option.course_code === newAssignment.course_code) ||
+                      // Exclude courses with higher year levels (prerequisites should be equal or lower level)
                       (option.year_level && newAssignment.year_level && 
-                       parseInt(option.year_level) >= parseInt(newAssignment.year_level)) ||
+                       parseInt(option.year_level) > parseInt(newAssignment.year_level)) ||
                       // Exclude courses that already have this course as prerequisite (prevent circular dependencies)
-                      (option.prerequisite_id && option.prerequisite_id.toString() === newAssignment.course_id);
+                      (option.prerequisite_id && newAssignment.course_id && 
+                       option.prerequisite_id.toString() === newAssignment.course_id.toString());
                     
                     return matchesSearch && !isExcluded;
                   });
