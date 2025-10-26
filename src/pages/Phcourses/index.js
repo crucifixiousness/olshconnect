@@ -965,12 +965,6 @@ const AssignCourses = () => {
                                         courseName.includes(filterValue) || 
                                         fullText.includes(filterValue);
                     
-                    // Debug logging
-                    if (!inputValue) {
-                      console.log('Filtering for course:', newAssignment.course_code, 'Year Level:', newAssignment.year_level);
-                      console.log('Option:', option.course_code, 'Year Level:', option.year_level);
-                    }
-                    
                     // Exclude courses that shouldn't be prerequisites
                     const isExcluded = 
                       // Exclude if it's the same course being created
@@ -985,10 +979,6 @@ const AssignCourses = () => {
                         assignedCourse.prerequisite_id && 
                         assignedCourse.prerequisite_id.toString() === option.course_id.toString()
                       ));
-                    
-                    if (!inputValue) {
-                      console.log('IsExcluded:', isExcluded, 'MatchesSearch:', matchesSearch);
-                    }
                     
                     return matchesSearch && !isExcluded;
                   });
