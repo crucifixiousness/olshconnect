@@ -91,8 +91,6 @@ const AssignCourses = () => {
       });
       const assignmentData = assignmentResponse.data;
 
-      console.log('Schedule Data:', assignmentData.schedules);
-
       setSelectedViewCourse({ 
         ...course,
         schedules: assignmentData.schedules || []
@@ -385,7 +383,6 @@ const AssignCourses = () => {
   // Assign Course
   const handleAssignCourse = async (event) => {
     event.preventDefault();
-    console.log("Form submitted");
 
     // Check if major is required (when program has majors)
     const isMajorRequired = majors.length > 0;
@@ -428,7 +425,6 @@ const AssignCourses = () => {
 
       const response = await axios.post("/api/program-course", requestBody);
 
-      console.log("Response:", response.data);
       setSnackbar({
         open: true,
         message: "Course assigned successfully!",
