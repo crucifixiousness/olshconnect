@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   console.log('Request body:', req.body);
   
   if (req.method === 'POST') {
-    const { program_id, major_id, course_code, course_name, units, semester, year_level } = req.body;
+    const { program_id, major_id, course_code, course_name, units, semester, year_level, prerequisite_id } = req.body;
     let client;
 
     try {
@@ -54,14 +54,23 @@ module.exports = async (req, res) => {
       if (existingCourse.rows.length === 0) {
         console.log('Creating new course');
         const newCourse = await client.query(
-          "INSERT INTO course (course_code, course_name, units) VALUES ($1, $2, $3) RETURNING course_id",
-          [course_code, course_name, units]
+          "INSERT INTO course (course_code, course_name, units, prerequisite_id) VALUES ($1, $2, $3, $4) RETURNING course_id",
+          [course_code, course_name, units, prerequisite_id || null]
         );
         course_id = newCourse.rows[0].course_id;
         console.log('New course created with ID:', course_id);
       } else {
         course_id = existingCourse.rows[0].course_id;
         console.log('Using existing course with ID:', course_id);
+        
+        // Update existing course with prerequisite if provided
+        if (prerequisite_id) {
+          console.log('Updating existing course with prerequisite:', prerequisite_id);
+          await client.query(
+            "UPDATE course SET prerequisite_id = $1 WHERE course_id = $2",
+            [prerequisite_id, course_id]
+          );
+        }
       }
 
       // 2. Create or get program year
@@ -139,7 +148,8 @@ module.exports = async (req, res) => {
           course_name,
           units,
           semester,
-          year_level
+          year_level,
+          prerequisite_id: prerequisite_id || null
         }
       });
     } catch (error) {
