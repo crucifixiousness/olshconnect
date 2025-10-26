@@ -933,7 +933,7 @@ const AssignCourses = () => {
                 data-testid="input-units" 
               />
               <Autocomplete
-                options={assignedCourses}
+                options={courses}
                 getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
                 value={selectedPrerequisite}
                 onChange={(event, newValue) => {
