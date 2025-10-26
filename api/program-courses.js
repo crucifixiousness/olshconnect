@@ -20,12 +20,15 @@ module.exports = async (req, res) => {
       client = await pool.connect();
       const result = await client.query(
         `SELECT pc.pc_id, p.program_name, py.year_level, c.course_code, 
-                c.course_name, c.units, pc.semester, pc.major_id, m.major_name
+                c.course_name, c.units, pc.semester, pc.major_id, m.major_name,
+                c.prerequisite_id, prereq.course_code as prerequisite_code,
+                prereq.course_name as prerequisite_name
          FROM program_course pc
          JOIN program p ON pc.program_id = p.program_id
          JOIN program_year py ON pc.year_id = py.year_id
          JOIN course c ON pc.course_id = c.course_id
          LEFT JOIN majors m ON pc.major_id = m.major_id
+         LEFT JOIN course prereq ON c.prerequisite_id = prereq.course_id
          WHERE pc.program_id = $1
          ORDER BY py.year_level, pc.semester, c.course_name`,
         [program_id]
