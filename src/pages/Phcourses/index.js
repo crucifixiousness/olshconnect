@@ -22,7 +22,7 @@ const AssignCourses = () => {
     severity: 'success'
   });
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
-  
+
   // Add these functions with your other function declarations
   const handleOpen = () => {
     setShowAddCourseModal(true);
@@ -90,9 +90,9 @@ const AssignCourses = () => {
         }
       });
       const assignmentData = assignmentResponse.data;
-      
+
       console.log('Schedule Data:', assignmentData.schedules);
-      
+
       setSelectedViewCourse({ 
         ...course,
         schedules: assignmentData.schedules || []
@@ -117,15 +117,15 @@ const AssignCourses = () => {
   const handleEditOpen = async (course) => {
     setSelectedCourse(course);
     setShowEditModal(true);
-    
+
     try {
       // Fetch instructors
       await fetchInstructors();
-      
+
       // Fetch existing assignment data
       const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
       const assignmentData = response.data;
-      
+
       if (assignmentData) {
         setSelectedSection(assignmentData.section || '');
         setSelectedDay(assignmentData.day || '');
@@ -173,7 +173,7 @@ const AssignCourses = () => {
       setLoading(false);
     }
   }, [program_id]); // Add program_id as dependency
-  
+
   // Update the useEffect for fetchInstructors
   useEffect(() => {
     if (program_id) { // Only fetch if program_id exists
@@ -192,7 +192,7 @@ const AssignCourses = () => {
   const handleSemesterChange = (event) => {
     setSelectedSemester(event.target.value);
   };
-    
+
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
@@ -213,12 +213,12 @@ const AssignCourses = () => {
     prerequisite_id: ""
   });
   const [selectedPrerequisite, setSelectedPrerequisite] = useState(null);
-  
+
   // Fetch logged-in user details (assuming it's stored in localStorage)
   useEffect(() => {
     const storedProgramId = localStorage.getItem("program_id");
     const storedStaffId = localStorage.getItem("staff_id");
-    
+
     // Try to get program_id from localStorage first
     if (storedProgramId) {
       const programId = parseInt(storedProgramId, 10);
@@ -265,7 +265,7 @@ const AssignCourses = () => {
       }
     }
   }, []);
-  
+
   // Fetch program_name based on program_id
   /*useEffect(() => {
     if (program_id) {
@@ -280,7 +280,7 @@ const AssignCourses = () => {
       fetchProgramName();
     }
   }, [program_id]);*/
-  
+
   // First, wrap fetchAssignedCourses in useCallback
   const fetchAssignedCourses = useCallback(async () => {
     if (!program_id) return;
@@ -289,7 +289,7 @@ const AssignCourses = () => {
       const cachedData = localStorage.getItem('assignedCoursesData');
       const cacheTimestamp = localStorage.getItem('assignedCoursesTimestamp');
       const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
+
       // Use cache if it's less than 5 minutes old
       if (cachedData && cacheAge && cacheAge < 300000) {
         setAssignedCourses(JSON.parse(cachedData));
@@ -297,11 +297,11 @@ const AssignCourses = () => {
       }
 
       const response = await axios.get(`/api/program-courses?program_id=${program_id}`);
-      
+
       // Cache the data
       localStorage.setItem('assignedCoursesData', JSON.stringify(response.data));
       localStorage.setItem('assignedCoursesTimestamp', Date.now().toString());
-      
+
       setAssignedCourses(response.data);
     } catch (error) {
       console.error("Error fetching assigned courses:", error);
@@ -315,7 +315,7 @@ const AssignCourses = () => {
       localStorage.removeItem('assignedCoursesTimestamp');
     };
   }, []);
-  
+
   // Then update the useEffects that use fetchAssignedCourses
   useEffect(() => {
     if (program_id) {
@@ -324,7 +324,7 @@ const AssignCourses = () => {
       fetchMajors(); // Add fetchMajors call
     }
   }, [program_id, fetchAssignedCourses]);
-  
+
   useEffect(() => {
     fetchAssignedCourses();
     fetchCourses();
@@ -370,36 +370,36 @@ const AssignCourses = () => {
       console.error("Error fetching majors:", error);
     }
   };
-  
+
   useEffect(() => {
     fetchAssignedCourses();
     fetchCourses();
   }, [program_id, fetchAssignedCourses]); // Runs when program_id is available
-  
+
   // Handle input changes
   const handleInputChange = (e) => {
     setNewAssignment({ ...newAssignment, [e.target.name]: e.target.value });
   };
-  
+
   // Assign Course
   const handleAssignCourse = async (event) => {
     event.preventDefault();
     console.log("Form submitted");
-  
+
     // Check if major is required (when program has majors)
     const isMajorRequired = majors.length > 0;
     const requiredFields = ['program_id', 'year_level', 'course_code', 'course_name', 'units', 'semester'];
-    
+
     if (isMajorRequired) {
       requiredFields.push('major_id');
     }
-    
+
     const missingFields = requiredFields.filter(field => {
       if (field === 'program_id') return !program_id;
       if (field === 'major_id') return isMajorRequired && (!newAssignment.major_id || newAssignment.major_id === '');
       return !newAssignment[field];
     });
-  
+
     if (missingFields.length > 0) {
       setSnackbar({
         open: true,
@@ -408,7 +408,7 @@ const AssignCourses = () => {
       });
       return;
     }
-  
+
     try {
       const requestBody = {
         program_id: program_id,
@@ -426,7 +426,7 @@ const AssignCourses = () => {
       }
 
       const response = await axios.post("/api/program-course", requestBody);
-  
+
       console.log("Response:", response.data);
       setSnackbar({
         open: true,
@@ -454,7 +454,7 @@ const AssignCourses = () => {
   // Update the handleEditSubmit function
   const handleEditSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!selectedCourse || !selectedInstructor || !selectedSection || !selectedDay || !startTime || !endTime) {
       setSnackbar({
         open: true,
@@ -467,7 +467,7 @@ const AssignCourses = () => {
     // Validate time format and range
     const start = new Date(`2000-01-01T${startTime}`);
     const end = new Date(`2000-01-01T${endTime}`);
-    
+
     if (end <= start) {
       setSnackbar({
         open: true,
@@ -476,7 +476,7 @@ const AssignCourses = () => {
       });
       return;
     }
-  
+
     try {
       const response = await axios.put(`/api/assign-instructor`, {
         course_id: selectedCourse.pc_id,
@@ -490,13 +490,13 @@ const AssignCourses = () => {
       if (response.data.error) {
         throw new Error(response.data.error);
       }
-  
+
       setSnackbar({
         open: true,
         message: "Instructor assigned successfully!",
         severity: 'success'
       });
-  
+
       handleEditClose();
       await fetchAssignedCourses(); // Added await to ensure data is refreshed
     } catch (error) {
@@ -753,7 +753,7 @@ const AssignCourses = () => {
                   <Typography>Units: {selectedViewCourse.units}</Typography>
                   <Typography>Semester: {selectedViewCourse.semester}</Typography>
                 </Grid>
-                
+
                 <Grid item xs={12} sx={{ mt: 2 }}>
                   <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>Assigned Details</Typography>
                   <TableContainer component={Paper} sx={{ maxHeight: 300 }}>
@@ -933,9 +933,7 @@ const AssignCourses = () => {
                 data-testid="input-units" 
               />
               <Autocomplete
-                options={courses.filter(course => 
-                  assignedCourses.some(assigned => assigned.course_id === course.course_id)
-                )}
+                options={courses}
                 getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
                 value={selectedPrerequisite}
                 onChange={(event, newValue) => {
@@ -955,17 +953,25 @@ const AssignCourses = () => {
                   />
                 )}
                 filterOptions={(options, { inputValue }) => {
+
+
                   const filterValue = inputValue.toLowerCase();
                   return options.filter(option => {
                     const courseCode = option.course_code?.toLowerCase() || '';
                     const courseName = option.course_name?.toLowerCase() || '';
                     const fullText = `${courseCode} - ${courseName}`.toLowerCase();
-                    
+
                     // Check if input matches course code, course name, or full text
                     const matchesSearch = !inputValue || 
                                         courseCode.includes(filterValue) || 
                                         courseName.includes(filterValue) || 
                                         fullText.includes(filterValue);
+
+                    // Debug logging
+                    if (!inputValue) {
+                      console.log('Filtering for course:', newAssignment.course_code, 'Year Level:', newAssignment.year_level);
+                      console.log('Option:', option.course_code, 'Year Level:', option.year_level);
+                    }
                     
                     // Exclude courses that shouldn't be prerequisites
                     const isExcluded = 
@@ -981,6 +987,10 @@ const AssignCourses = () => {
                         assignedCourse.prerequisite_id && 
                         assignedCourse.prerequisite_id.toString() === option.course_id.toString()
                       ));
+
+                    if (!inputValue) {
+                      console.log('IsExcluded:', isExcluded, 'MatchesSearch:', matchesSearch);
+                    }
                     
                     return matchesSearch && !isExcluded;
                   });
