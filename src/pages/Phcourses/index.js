@@ -962,9 +962,26 @@ const AssignCourses = () => {
                     const fullText = `${courseCode} - ${courseName}`.toLowerCase();
                     
                     // Check if input matches course code, course name, or full text
-                    return courseCode.includes(filterValue) || 
-                           courseName.includes(filterValue) || 
-                           fullText.includes(filterValue);
+                    const matchesSearch = courseCode.includes(filterValue) || 
+                                        courseName.includes(filterValue) || 
+                                        fullText.includes(filterValue);
+                    
+                    // Exclude courses that shouldn't be prerequisites
+                    const isExcluded = 
+                      // Exclude if it's the same course being created
+                      (option.course_code === newAssignment.course_code) ||
+                      // Exclude courses with higher year levels (prerequisites should be lower level)
+                      (option.year_level && newAssignment.year_level && 
+                       parseInt(option.year_level) > parseInt(newAssignment.year_level)) ||
+                      // Exclude courses that already have this course as prerequisite (prevent circular dependencies)
+                      (option.prerequisite_id && option.prerequisite_id.toString() === newAssignment.course_id) ||
+                      // Exclude courses that are already prerequisites of other courses
+                      (assignedCourses.some(assignedCourse => 
+                        assignedCourse.prerequisite_id && 
+                        assignedCourse.prerequisite_id.toString() === option.course_id.toString()
+                      ));
+                    
+                    return matchesSearch && !isExcluded;
                   });
                 }}
                 isOptionEqualToValue={(option, value) => option.course_id === value?.course_id}
