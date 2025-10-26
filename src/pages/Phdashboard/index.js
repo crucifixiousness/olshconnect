@@ -55,25 +55,19 @@ const ProgramHeadDashboard = () => {
     const storedProgramId = localStorage.getItem("program_id");
     const userString = localStorage.getItem("user");
     
-    console.log('Stored program_id from localStorage:', storedProgramId);
-    console.log('User string from localStorage:', userString);
-    
     let programId = null;
     
     // Try to get program_id from localStorage first
     if (storedProgramId) {
       programId = parseInt(storedProgramId, 10);
-      console.log('Using program_id from localStorage:', programId);
     }
     
     // If not found, try to get it from user object
     if (!programId && userString) {
       try {
         const user = JSON.parse(userString);
-        console.log('Parsed user object:', user);
         if (user.program_id) {
           programId = parseInt(user.program_id, 10);
-          console.log('Using program_id from user object:', programId);
         }
       } catch (error) {
         console.error('Error parsing user object:', error);
@@ -83,10 +77,6 @@ const ProgramHeadDashboard = () => {
     if (!isNaN(programId)) {
       setProgramId(programId);
       setProgramName(programMapping[programId] || "Unknown");
-      console.log('Set program_id in state:', programId);
-      console.log('Set program_name in state:', programMapping[programId] || "Unknown");
-    } else {
-      console.error('No valid program_id found');
     }
   }, []);
 
@@ -94,32 +84,25 @@ const ProgramHeadDashboard = () => {
   useEffect(() => {
     const fetchProgramData = async () => {
       if (!program_id) {
-        console.log('No program_id available yet');
         return;
       }
-      
-      console.log('Fetching data for program_id:', program_id);
       
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          console.error('No token found');
           setLoading(false);
           return;
         }
 
-        console.log('Making API call to program-head-dashboard...');
         const response = await axios.get(`/api/program-head-dashboard?program_id=${program_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        console.log('API Response:', response.data);
         setProgramData(response.data);
         // Also fetch classes for approval
         await fetchClassApprovalData();
       } catch (error) {
         console.error('Error fetching program data:', error);
-        console.error('Error response:', error.response?.data);
       } finally {
         setLoading(false);
       }
