@@ -330,10 +330,11 @@ const AssignCourses = () => {
     fetchCourses();
   }, [program_id, fetchAssignedCourses]);
 
-  // Fetch all available courses
+  // Fetch all available courses for the current program
   const fetchCourses = async () => {
+    if (!program_id) return;
     try {
-      const response = await axios.get("/api/courses");
+      const response = await axios.get(`/api/courses?program_id=${program_id}`);
       setCourses(response.data);
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -953,25 +954,17 @@ const AssignCourses = () => {
                   />
                 )}
                 filterOptions={(options, { inputValue }) => {
-
-
                   const filterValue = inputValue.toLowerCase();
                   return options.filter(option => {
                     const courseCode = option.course_code?.toLowerCase() || '';
                     const courseName = option.course_name?.toLowerCase() || '';
                     const fullText = `${courseCode} - ${courseName}`.toLowerCase();
-
+                    
                     // Check if input matches course code, course name, or full text
                     const matchesSearch = !inputValue || 
                                         courseCode.includes(filterValue) || 
                                         courseName.includes(filterValue) || 
                                         fullText.includes(filterValue);
-
-                    // Debug logging
-                    if (!inputValue) {
-                      console.log('Filtering for course:', newAssignment.course_code, 'Year Level:', newAssignment.year_level);
-                      console.log('Option:', option.course_code, 'Year Level:', option.year_level);
-                    }
                     
                     // Exclude courses that shouldn't be prerequisites
                     const isExcluded = 
@@ -987,10 +980,6 @@ const AssignCourses = () => {
                         assignedCourse.prerequisite_id && 
                         assignedCourse.prerequisite_id.toString() === option.course_id.toString()
                       ));
-
-                    if (!inputValue) {
-                      console.log('IsExcluded:', isExcluded, 'MatchesSearch:', matchesSearch);
-                    }
                     
                     return matchesSearch && !isExcluded;
                   });
