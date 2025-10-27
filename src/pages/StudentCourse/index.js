@@ -98,14 +98,37 @@ const StudentCourses = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    courses.map((course, idx) => (
-                      <TableRow hover key={`${course.course_code}-${idx}`}>
-                        <TableCell>{course.course_name}</TableCell>
-                        <TableCell align="center">{course.course_code}</TableCell>
-                        <TableCell align="center">{course.units}</TableCell>
-                        <TableCell align="center">--</TableCell>
-                      </TableRow>
-                    ))
+                    courses.map((course, idx) => {
+                      // Handle prerequisites - can be array or object
+                      let prerequisites = [];
+                      if (course.prerequisites) {
+                        if (Array.isArray(course.prerequisites)) {
+                          prerequisites = course.prerequisites;
+                        } else if (typeof course.prerequisites === 'string') {
+                          try {
+                            prerequisites = JSON.parse(course.prerequisites);
+                          } catch (e) {
+                            prerequisites = [];
+                          }
+                        }
+                      }
+                      
+                      const prerequisiteCodes = prerequisites
+                        .filter(p => p && p.course_code)
+                        .map(p => p.course_code)
+                        .join(', ');
+                      
+                      return (
+                        <TableRow hover key={`${course.course_code}-${idx}`}>
+                          <TableCell>{course.course_name}</TableCell>
+                          <TableCell align="center">{course.course_code}</TableCell>
+                          <TableCell align="center">{course.units}</TableCell>
+                          <TableCell align="center">
+                            {prerequisiteCodes || '--'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
