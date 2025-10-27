@@ -147,11 +147,22 @@ module.exports = async (req, res) => {
       // For regular students: show all program courses (existing logic)
       if (hasProgramCourseMajorId) {
         coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                               pc.major_id, m.major_name, 'Regular' as course_status
+                               pc.major_id, m.major_name, 'Regular' as course_status,
+                               COALESCE(
+                                 json_agg(
+                                   json_build_object(
+                                     'course_id', cp.prerequisite_course_id,
+                                     'course_code', prereq.course_code
+                                   )
+                                 ) FILTER (WHERE cp.prerequisite_course_id IS NOT NULL),
+                                 '[]'::json
+                               ) as prerequisites
                         FROM program_course pc
                         JOIN course c ON pc.course_id = c.course_id
                         JOIN program_year py ON pc.year_id = py.year_id
                         LEFT JOIN majors m ON pc.major_id = m.major_id
+                        LEFT JOIN course_prerequisites cp ON c.course_id = cp.course_id
+                        LEFT JOIN course prereq ON cp.prerequisite_course_id = prereq.course_id
                         WHERE pc.program_id = $1
                           AND pc.year_id = $2
                           AND pc.semester = $3
@@ -159,17 +170,30 @@ module.exports = async (req, res) => {
                             pc.major_id IS NULL
                             OR pc.major_id = $4
                           )
+                        GROUP BY c.course_code, c.course_name, c.units, pc.semester, py.year_level, pc.major_id, m.major_name
                         ORDER BY c.course_name`;
         queryParams = [program_id, year_id, normalizedSemester, major_id];
       } else {
         coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                               'Regular' as course_status
+                               'Regular' as course_status,
+                               COALESCE(
+                                 json_agg(
+                                   json_build_object(
+                                     'course_id', cp.prerequisite_course_id,
+                                     'course_code', prereq.course_code
+                                   )
+                                 ) FILTER (WHERE cp.prerequisite_course_id IS NOT NULL),
+                                 '[]'::json
+                               ) as prerequisites
                         FROM program_course pc
                         JOIN course c ON pc.course_id = c.course_id
                         JOIN program_year py ON pc.year_id = py.year_id
+                        LEFT JOIN course_prerequisites cp ON c.course_id = cp.course_id
+                        LEFT JOIN course prereq ON cp.prerequisite_course_id = prereq.course_id
                         WHERE pc.program_id = $1
                           AND pc.year_id = $2
                           AND pc.semester = $3
+                        GROUP BY c.course_code, c.course_name, c.units, pc.semester, py.year_level
                         ORDER BY c.course_name`;
         queryParams = [program_id, year_id, normalizedSemester];
       }
