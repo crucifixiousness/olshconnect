@@ -123,12 +123,24 @@ module.exports = async (req, res) => {
     if (studentType === 'transferee') {
       // For transferees: show only courses assigned by Program Head
       coursesQuery = `SELECT c.course_code, c.course_name, c.units, pc.semester, py.year_level,
-                             'Assigned' as course_status
+                             'Assigned' as course_status,
+                             COALESCE(
+                               json_agg(
+                                 json_build_object(
+                                   'course_id', cp.prerequisite_course_id,
+                                   'course_code', prereq.course_code
+                                 )
+                               ) FILTER (WHERE cp.prerequisite_course_id IS NOT NULL),
+                               '[]'::json
+                             ) as prerequisites
                       FROM student_required_courses src
                       JOIN program_course pc ON src.pc_id = pc.pc_id
                       JOIN course c ON pc.course_id = c.course_id
                       JOIN program_year py ON pc.year_id = py.year_id
+                      LEFT JOIN course_prerequisites cp ON c.course_id = cp.course_id
+                      LEFT JOIN course prereq ON cp.prerequisite_course_id = prereq.course_id
                       WHERE src.student_id = $1
+                      GROUP BY c.course_code, c.course_name, c.units, pc.semester, py.year_level
                       ORDER BY c.course_name`;
       queryParams = [studentId];
     } else {
