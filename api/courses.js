@@ -22,12 +22,13 @@ module.exports = async (req, res) => {
       
       if (program_id) {
         query = `
-          SELECT DISTINCT c.course_id, c.course_code, c.course_name, c.units, c.prerequisite_id,
-                 py.year_level
+          SELECT c.course_id, c.course_code, c.course_name, c.units, c.prerequisite_id,
+                 MIN(py.year_level) as year_level
           FROM course c
           INNER JOIN program_course pc ON c.course_id = pc.course_id
           INNER JOIN program_year py ON pc.year_id = py.year_id
           WHERE pc.program_id = $1
+          GROUP BY c.course_id, c.course_code, c.course_name, c.units, c.prerequisite_id
           ORDER BY c.course_code
         `;
         params = [program_id];
