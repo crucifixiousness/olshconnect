@@ -44,6 +44,7 @@ const ProgramHeadTorEvaluation = () => {
   const [enrollmentSchool, setEnrollmentSchool] = useState('');
   const [enrollmentAcademicYear, setEnrollmentAcademicYear] = useState('');
   const [allowedPrevAcademicYears, setAllowedPrevAcademicYears] = useState([]);
+  const [dialogLoading, setDialogLoading] = useState(false);
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -119,6 +120,22 @@ const ProgramHeadTorEvaluation = () => {
     }
   };
 
+  const fetchRemainingAndRequired = async (request) => {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams({
+      student_id: String(request.student_id),
+      program_id: String(request.program_id),
+      year_id: String(request.year_id || request.year_id === 0 ? request.year_id : request.year_id),
+      semester: String(request.semester),
+      tor_request_id: String(request.id)
+    }).toString();
+    const res = await axios.get(`/api/student-remaining-courses?${params}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setRemainingCourses(res.data.remainingCourses || []);
+    setRequiredCourses(res.data.requiredCourses || []);
+  };
+
   const fetchStudentEnrollment = async (student_id) => {
     try {
       const token = localStorage.getItem('token');
@@ -161,42 +178,32 @@ const ProgramHeadTorEvaluation = () => {
     setSelectedRequest(request);
     setComments('');
     
-    // Fetch available courses for the student's program
-    await fetchAvailableCourses(request.program_id);
-
-    // Fetch student's latest enrollment to prefill source school and previous AY first
-    const { school: fetchedSchool, prevAy: fetchedPrevAy } = await fetchStudentEnrollment(request.student_id);
-
-    // Then fetch existing equivalencies (so we can apply the fetched values)
-    await fetchExistingEquivalencies(request.id);
-
-    // Fetch remaining (current semester) and required courses
-    try {
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        student_id: String(request.student_id),
-        program_id: String(request.program_id),
-        year_id: String(request.year_id || request.year_id === 0 ? request.year_id : request.year_id),
-        semester: String(request.semester),
-        tor_request_id: String(request.id)
-      }).toString();
-      const res = await axios.get(`/api/student-remaining-courses?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRemainingCourses(res.data.remainingCourses || []);
-      setRequiredCourses(res.data.requiredCourses || []);
-    } catch (e) {
-      console.error('Error fetching remaining/required courses:', e);
-    }
-    
-    // Ensure equivalencies have enrollment-derived source fields using freshly fetched values
-    setEquivalencies(prev => prev.map(e => ({
-      ...e,
-      source_school: fetchedSchool || e.source_school,
-      source_academic_year: fetchedPrevAy || e.source_academic_year
-    })));
-
+    // Open dialog immediately with loading state and fetch data in parallel to reduce wait time
     setEvaluationOpen(true);
+    setDialogLoading(true);
+
+    try {
+      const [_, enrollmentInfo] = await Promise.all([
+        fetchAvailableCourses(request.program_id),
+        fetchStudentEnrollment(request.student_id),
+        fetchExistingEquivalencies(request.id),
+        fetchRemainingAndRequired(request)
+      ]);
+
+      // Ensure equivalencies have enrollment-derived source fields using freshly fetched values
+      const fetchedSchool = enrollmentInfo?.school || '';
+      const fetchedPrevAy = enrollmentInfo?.prevAy || '';
+      setEquivalencies(prev => prev.map(e => ({
+        ...e,
+        source_school: fetchedSchool || e.source_school,
+        source_academic_year: fetchedPrevAy || e.source_academic_year
+      })));
+    } catch (e) {
+      console.error('Error loading evaluation data:', e);
+      setSnackbar({ open: true, message: 'Failed to load evaluation data', severity: 'error' });
+    } finally {
+      setDialogLoading(false);
+    }
   };
 
   const handleViewTor = async (tor_request_id) => {
@@ -547,6 +554,12 @@ const ProgramHeadTorEvaluation = () => {
             TOR Evaluation - {selectedRequest?.first_name} {selectedRequest?.last_name}
           </DialogTitle>
           <DialogContent>
+            {dialogLoading && (
+              <Box className="mb-3" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={20} style={{ color: '#c70202' }} />
+                <Typography variant="body2">Loading evaluation data...</Typography>
+              </Box>
+            )}
             {selectedRequest && (
               <Box>
                 <Typography variant="h6" className="mb-3" style={{ color: '#c70202', fontWeight: 'bold' }}>Student Information</Typography>
