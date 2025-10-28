@@ -43,6 +43,7 @@ const ProgramHeadTorEvaluation = () => {
   const [documentType, setDocumentType] = useState('');
   const [enrollmentSchool, setEnrollmentSchool] = useState('');
   const [enrollmentAcademicYear, setEnrollmentAcademicYear] = useState('');
+  const [allowedPrevAcademicYears, setAllowedPrevAcademicYears] = useState([]);
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -132,11 +133,26 @@ const ProgramHeadTorEvaluation = () => {
       const prevAy = latest?.previous_academic_year || '';
       setEnrollmentSchool(school);
       setEnrollmentAcademicYear(prevAy);
+      // Build covered AY options from range (e.g., 2023-2025 -> 2023-2024, 2024-2025)
+      const options = (() => {
+        const match = /^\s*(\d{4})\s*-\s*(\d{4})\s*$/.exec(prevAy || '');
+        if (!match) return [];
+        const start = parseInt(match[1], 10);
+        const end = parseInt(match[2], 10);
+        if (isNaN(start) || isNaN(end) || end <= start) return [];
+        const years = [];
+        for (let y = start; y < end; y++) {
+          years.push(`${y}-${y + 1}`);
+        }
+        return years;
+      })();
+      setAllowedPrevAcademicYears(options);
       return { school, prevAy };
     } catch (e) {
       console.error('Error fetching student enrollment:', e);
       setEnrollmentSchool('');
       setEnrollmentAcademicYear('');
+      setAllowedPrevAcademicYears([]);
       return { school: '', prevAy: '' };
     }
   };
@@ -328,7 +344,7 @@ const ProgramHeadTorEvaluation = () => {
       equivalent_course_code: '',
       equivalent_course_name: '',
       source_school: enrollmentSchool || '',
-      source_academic_year: enrollmentAcademicYear || ''
+      source_academic_year: (allowedPrevAcademicYears[0] || enrollmentAcademicYear || '')
     }]);
   };
 
@@ -340,7 +356,7 @@ const ProgramHeadTorEvaluation = () => {
   const handleEquivalencyChange = (index, field, value) => {
     const updated = [...equivalencies];
     // Prevent manual edit of source fields (derived from enrollment)
-    if (field === 'source_school' || field === 'source_academic_year') {
+    if (field === 'source_school') {
       return;
     }
     updated[index][field] = value;
@@ -627,14 +643,38 @@ const ProgramHeadTorEvaluation = () => {
                           disabled
                           className="mb-2"
                         />
-                        <TextField
-                          label="Academic Year (e.g., 2022-2023)"
-                          fullWidth
-                          size="small"
-                          value={equiv.source_academic_year}
-                          onChange={(e) => handleEquivalencyChange(index, 'source_academic_year', e.target.value)}
-                          disabled
-                        />
+                        {allowedPrevAcademicYears.length > 0 ? (
+                          <Autocomplete
+                            options={allowedPrevAcademicYears}
+                            value={equiv.source_academic_year || null}
+                            onChange={(event, newValue) => {
+                              handleEquivalencyChange(index, 'source_academic_year', newValue || '');
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Academic Year (e.g., 2022-2023)"
+                                size="small"
+                                className="mb-2"
+                                placeholder="Select academic year"
+                              />
+                            )}
+                            isOptionEqualToValue={(opt, val) => opt === val}
+                            noOptionsText="No years available"
+                            clearOnEscape
+                            selectOnFocus
+                            handleHomeEndKeys
+                          />
+                        ) : (
+                          <TextField
+                            label="Academic Year (e.g., 2022-2023)"
+                            fullWidth
+                            size="small"
+                            value={equiv.source_academic_year}
+                            onChange={(e) => handleEquivalencyChange(index, 'source_academic_year', e.target.value)}
+                            disabled
+                          />
+                        )}
                       </div>
                       <div className="col-md-6">
                         <Autocomplete
