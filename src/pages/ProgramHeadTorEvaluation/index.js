@@ -760,21 +760,20 @@ const ProgramHeadTorEvaluation = () => {
                             />
                           )}
                           filterOptions={(options, { inputValue }) => {
-                            if (!inputValue) return options;
-                            
+                            // Always enforce prerequisite filtering first
+                            const prereqFiltered = options.filter(opt => arePrerequisitesSatisfied(opt));
+                            if (!inputValue) return prereqFiltered;
+
                             const filterValue = inputValue.toLowerCase();
-                            return options.filter(option => {
+                            return prereqFiltered.filter(option => {
                               const courseCode = option.course_code?.toLowerCase() || '';
                               const courseName = option.course_name?.toLowerCase() || '';
                               const fullText = `${courseCode} - ${courseName}`.toLowerCase();
                               
                               // Check if input matches course code, course name, or full text
-                              const textMatch = courseCode.includes(filterValue) || 
+                              return courseCode.includes(filterValue) || 
                                      courseName.includes(filterValue) || 
                                      fullText.includes(filterValue);
-                              // Hide options whose prerequisites aren't satisfied
-                              const prereqOk = arePrerequisitesSatisfied(option);
-                              return textMatch && prereqOk;
                             });
                           }}
                           isOptionEqualToValue={(option, value) => option.course_id === value?.course_id}
