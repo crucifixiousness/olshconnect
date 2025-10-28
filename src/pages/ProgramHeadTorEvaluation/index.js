@@ -359,6 +359,10 @@ const ProgramHeadTorEvaluation = () => {
     if (field === 'source_school') {
       return;
     }
+    // If a course is already selected, lock the academic year selection for that equivalency
+    if (field === 'source_academic_year' && updated[index]?.equivalent_course_id) {
+      return;
+    }
     updated[index][field] = value;
     
     // Auto-populate course info when course is selected
@@ -650,6 +654,7 @@ const ProgramHeadTorEvaluation = () => {
                             onChange={(event, newValue) => {
                               handleEquivalencyChange(index, 'source_academic_year', newValue || '');
                             }}
+                            disabled={Boolean(equiv.equivalent_course_id)}
                             renderInput={(params) => (
                               <TextField
                                 {...params}
@@ -672,7 +677,7 @@ const ProgramHeadTorEvaluation = () => {
                             size="small"
                             value={equiv.source_academic_year}
                             onChange={(e) => handleEquivalencyChange(index, 'source_academic_year', e.target.value)}
-                            disabled
+                            disabled={Boolean(equiv.equivalent_course_id)}
                           />
                         )}
                       </div>
