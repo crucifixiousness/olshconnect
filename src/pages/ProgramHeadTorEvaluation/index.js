@@ -125,18 +125,19 @@ const ProgramHeadTorEvaluation = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const rows = res.data || [];
-      const latest = rows.find(r => String(r.student_id) === String(student_id));
-      if (latest) {
-        setEnrollmentSchool(latest.previous_school || '');
-        setEnrollmentAcademicYear(latest.academic_year || '');
-      } else {
-        setEnrollmentSchool('');
-        setEnrollmentAcademicYear('');
-      }
+      // Get the most recent enrollment for this student
+      const studentEnrollments = rows.filter(r => String(r.student_id) === String(student_id));
+      const latest = studentEnrollments[0] || null; // rows are DESC by enrollment_date
+      const school = latest?.previous_school || '';
+      const prevAy = latest?.previous_academic_year || '';
+      setEnrollmentSchool(school);
+      setEnrollmentAcademicYear(prevAy);
+      return { school, prevAy };
     } catch (e) {
       console.error('Error fetching student enrollment:', e);
       setEnrollmentSchool('');
       setEnrollmentAcademicYear('');
+      return { school: '', prevAy: '' };
     }
   };
 
@@ -150,8 +151,8 @@ const ProgramHeadTorEvaluation = () => {
     // Fetch existing equivalencies if any
     await fetchExistingEquivalencies(request.id);
 
-    // Fetch student's latest enrollment to prefill source school and AY
-    await fetchStudentEnrollment(request.student_id);
+    // Fetch student's latest enrollment to prefill source school and previous AY
+    const { school: fetchedSchool, prevAy: fetchedPrevAy } = await fetchStudentEnrollment(request.student_id);
 
     // Fetch remaining (current semester) and required courses
     try {
@@ -172,11 +173,11 @@ const ProgramHeadTorEvaluation = () => {
       console.error('Error fetching remaining/required courses:', e);
     }
     
-    // Ensure equivalencies have enrollment-derived source fields
+    // Ensure equivalencies have enrollment-derived source fields using freshly fetched values
     setEquivalencies(prev => prev.map(e => ({
       ...e,
-      source_school: enrollmentSchool || e.source_school,
-      source_academic_year: enrollmentAcademicYear || e.source_academic_year
+      source_school: fetchedSchool || e.source_school,
+      source_academic_year: fetchedPrevAy || e.source_academic_year
     })));
 
     setEvaluationOpen(true);
