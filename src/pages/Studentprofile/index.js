@@ -322,9 +322,25 @@ const StudentProfile = () => {
      else if (['programs', 'yearLevel', 'semester', 'academic_year', 'studentType'].includes(name)) {
       if (name === 'studentType') {
         if (value === 'new') {
-          setFormDataa({ ...formDataa, studentType: value, yearLevel: 1 });
+          // Switching to new student: ensure transferee-only fields/files are cleared
+          setFormDataa({ 
+            ...formDataa, 
+            studentType: value, 
+            yearLevel: 1,
+            previousSchool: '',
+            previousProgram: '',
+            previousAcademicYear: '',
+            transferCertificateDoc: null,
+            torDoc: null
+          });
         } else {
-          setFormDataa({ ...formDataa, studentType: value, yearLevel: '' });
+          // Switching to transferee: clear Form 137 so it isn't enforced client-side
+          setFormDataa({ 
+            ...formDataa, 
+            studentType: value, 
+            yearLevel: '',
+            form137Doc: null
+          });
         }
       } else if (name === 'yearLevel') {
         // Only allow year level changes if student type is not 'new'
