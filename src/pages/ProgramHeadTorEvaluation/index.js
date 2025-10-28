@@ -147,12 +147,12 @@ const ProgramHeadTorEvaluation = () => {
     
     // Fetch available courses for the student's program
     await fetchAvailableCourses(request.program_id);
-    
-    // Fetch existing equivalencies if any
-    await fetchExistingEquivalencies(request.id);
 
-    // Fetch student's latest enrollment to prefill source school and previous AY
+    // Fetch student's latest enrollment to prefill source school and previous AY first
     const { school: fetchedSchool, prevAy: fetchedPrevAy } = await fetchStudentEnrollment(request.student_id);
+
+    // Then fetch existing equivalencies (so we can apply the fetched values)
+    await fetchExistingEquivalencies(request.id);
 
     // Fetch remaining (current semester) and required courses
     try {
