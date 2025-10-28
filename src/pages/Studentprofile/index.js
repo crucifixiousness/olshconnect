@@ -335,8 +335,8 @@ const StudentProfile = () => {
         setFormDataa({ ...formDataa, [name]: value });
       }
      }
-     // Handle text inputs for transferee information
-     else if (['previousSchool', 'previousProgram'].includes(name)) {
+    // Handle text inputs for transferee information
+    else if (['previousSchool', 'previousProgram', 'previousAcademicYear'].includes(name)) {
        setFormDataa({ ...formDataa, [name]: value });
      }
     // Handle file uploads separately
