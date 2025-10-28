@@ -102,9 +102,10 @@ module.exports = async (req, res) => {
         });
       }
 
-      if (!files.form137Doc) {
+      // Form 137 is only required for new students, not transferees
+      if (normalizedFields.studentType !== 'transferee' && !files.form137Doc) {
         return res.status(400).json({
-          error: "Form 137 is required for all students"
+          error: "Form 137 is required for new students"
         });
       }
 
