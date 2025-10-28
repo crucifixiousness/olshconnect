@@ -41,6 +41,8 @@ const ProgramHeadTorEvaluation = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [documentUrl, setDocumentUrl] = useState('');
   const [documentType, setDocumentType] = useState('');
+  const [enrollmentSchool, setEnrollmentSchool] = useState('');
+  const [enrollmentAcademicYear, setEnrollmentAcademicYear] = useState('');
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -116,6 +118,28 @@ const ProgramHeadTorEvaluation = () => {
     }
   };
 
+  const fetchStudentEnrollment = async (student_id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/registrar-enrollments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const rows = res.data || [];
+      const latest = rows.find(r => String(r.student_id) === String(student_id));
+      if (latest) {
+        setEnrollmentSchool(latest.previous_school || '');
+        setEnrollmentAcademicYear(latest.academic_year || '');
+      } else {
+        setEnrollmentSchool('');
+        setEnrollmentAcademicYear('');
+      }
+    } catch (e) {
+      console.error('Error fetching student enrollment:', e);
+      setEnrollmentSchool('');
+      setEnrollmentAcademicYear('');
+    }
+  };
+
   const handleViewRequest = async (request) => {
     setSelectedRequest(request);
     setComments('');
@@ -125,6 +149,9 @@ const ProgramHeadTorEvaluation = () => {
     
     // Fetch existing equivalencies if any
     await fetchExistingEquivalencies(request.id);
+
+    // Fetch student's latest enrollment to prefill source school and AY
+    await fetchStudentEnrollment(request.student_id);
 
     // Fetch remaining (current semester) and required courses
     try {
@@ -145,6 +172,13 @@ const ProgramHeadTorEvaluation = () => {
       console.error('Error fetching remaining/required courses:', e);
     }
     
+    // Ensure equivalencies have enrollment-derived source fields
+    setEquivalencies(prev => prev.map(e => ({
+      ...e,
+      source_school: enrollmentSchool || e.source_school,
+      source_academic_year: enrollmentAcademicYear || e.source_academic_year
+    })));
+
     setEvaluationOpen(true);
   };
 
@@ -292,8 +326,8 @@ const ProgramHeadTorEvaluation = () => {
       equivalent_course_id: '',
       equivalent_course_code: '',
       equivalent_course_name: '',
-      source_school: '',
-      source_academic_year: ''
+      source_school: enrollmentSchool || '',
+      source_academic_year: enrollmentAcademicYear || ''
     }]);
   };
 
@@ -304,6 +338,10 @@ const ProgramHeadTorEvaluation = () => {
 
   const handleEquivalencyChange = (index, field, value) => {
     const updated = [...equivalencies];
+    // Prevent manual edit of source fields (derived from enrollment)
+    if (field === 'source_school' || field === 'source_academic_year') {
+      return;
+    }
     updated[index][field] = value;
     
     // Auto-populate course info when course is selected
@@ -585,6 +623,7 @@ const ProgramHeadTorEvaluation = () => {
                           size="small"
                           value={equiv.source_school}
                           onChange={(e) => handleEquivalencyChange(index, 'source_school', e.target.value)}
+                          disabled
                           className="mb-2"
                         />
                         <TextField
@@ -593,6 +632,7 @@ const ProgramHeadTorEvaluation = () => {
                           size="small"
                           value={equiv.source_academic_year}
                           onChange={(e) => handleEquivalencyChange(index, 'source_academic_year', e.target.value)}
+                          disabled
                         />
                       </div>
                       <div className="col-md-6">
@@ -604,11 +644,11 @@ const ProgramHeadTorEvaluation = () => {
                             handleEquivalencyChange(index, 'equivalent_course_id', newValue ? newValue.course_id : '');
                           }}
                           renderInput={(params) => (
-                            <TextField
+                        <TextField
                               {...params}
-                              label="Equivalent Course"
-                              size="small"
-                              className="mb-2"
+                          label="Equivalent Course"
+                          size="small"
+                          className="mb-2"
                               placeholder="Type to search courses..."
                             />
                           )}
