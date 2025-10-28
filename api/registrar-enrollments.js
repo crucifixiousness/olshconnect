@@ -28,6 +28,15 @@ module.exports = async (req, res) => {
       const client = await pool.connect();
       
       try {
+        // Detect if previous_academic_year column exists
+        const prevAyColCheck = await client.query(
+          `SELECT 1 FROM information_schema.columns WHERE table_name = 'enrollments' AND column_name = 'previous_academic_year' LIMIT 1`
+        );
+
+        const selectPreviousAy = prevAyColCheck.rows.length > 0
+          ? 'e.previous_academic_year'
+          : 'NULL AS previous_academic_year';
+
         const { rows } = await client.query(
           `SELECT 
             e.enrollment_id as _id,
@@ -37,6 +46,7 @@ module.exports = async (req, res) => {
             e.semester,
             e.enrollment_status as status,
             e.academic_year,
+            ${selectPreviousAy},
             e.idpic,
             e.birth_certificate_doc,
             e.transfer_certificate_doc,
