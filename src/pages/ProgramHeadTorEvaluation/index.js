@@ -46,6 +46,54 @@ const ProgramHeadTorEvaluation = () => {
   const [allowedPrevAcademicYears, setAllowedPrevAcademicYears] = useState([]);
   const [dialogLoading, setDialogLoading] = useState(false);
 
+  // Build quick lookups for prerequisite checks
+  const creditedCourseIds = (equivalencies || []).reduce((set, e) => {
+    const id = Number(e.equivalent_course_id);
+    if (!isNaN(id) && id) set.add(id);
+    return set;
+  }, new Set());
+  const courseIdToCode = (availableCourses || []).reduce((map, c) => {
+    const id = Number(c.course_id);
+    if (!isNaN(id) && id) map.set(id, c.course_code);
+    return map;
+  }, new Map());
+
+  const arePrerequisitesSatisfied = (option) => {
+    // Normalize variety of prerequisite formats
+    const raw = option?.prerequisites ?? option?.prerequisite ?? option?.prereq ?? null;
+    if (!raw) return true; // no prereqs
+    const toIds = (val) => {
+      if (val == null) return [];
+      if (Array.isArray(val)) {
+        return val.flatMap(v => toIds(v));
+      }
+      if (typeof val === 'object') {
+        // object with course_id or values that are arrays
+        if ('course_id' in val) return [Number(val.course_id)];
+        return Object.values(val).flatMap(v => toIds(v));
+      }
+      if (typeof val === 'number') return [Number(val)];
+      if (typeof val === 'string') {
+        // either a single id/code or comma-separated
+        const parts = val.split(',').map(s => s.trim()).filter(Boolean);
+        return parts.map(p => {
+          const asNum = Number(p);
+          if (!isNaN(asNum)) return asNum;
+          // fallback: map by code to id
+          for (const [id, code] of courseIdToCode.entries()) {
+            if ((code || '').toLowerCase() === p.toLowerCase()) return id;
+          }
+          return NaN;
+        }).filter(n => !isNaN(n));
+      }
+      return [];
+    };
+
+    const prereqIds = toIds(raw);
+    if (!prereqIds.length) return true;
+    return prereqIds.every(id => creditedCourseIds.has(Number(id)));
+  };
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
@@ -721,9 +769,12 @@ const ProgramHeadTorEvaluation = () => {
                               const fullText = `${courseCode} - ${courseName}`.toLowerCase();
                               
                               // Check if input matches course code, course name, or full text
-                              return courseCode.includes(filterValue) || 
+                              const textMatch = courseCode.includes(filterValue) || 
                                      courseName.includes(filterValue) || 
                                      fullText.includes(filterValue);
+                              // Hide options whose prerequisites aren't satisfied
+                              const prereqOk = arePrerequisitesSatisfied(option);
+                              return textMatch && prereqOk;
                             });
                           }}
                           isOptionEqualToValue={(option, value) => option.course_id === value?.course_id}
