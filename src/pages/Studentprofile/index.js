@@ -77,6 +77,7 @@ const StudentProfile = () => {
     studentType: 'new',     // Add student type field
     previousSchool: '',     // Add previous school field
     previousProgram: '',    // Add previous program field
+    previousAcademicYear: '', // Add previous academic year field
     transferCertificateDoc: '', // Add transfer certificate field
     torDoc: ''             // Add TOR field
   });
@@ -223,6 +224,7 @@ const StudentProfile = () => {
         studentType: enrollment.student_type || 'new',
         previousSchool: enrollment.previous_school || '',
         previousProgram: enrollment.previous_program || '',
+        previousAcademicYear: enrollment.previous_academic_year || '',
         transferCertificateDoc: '',
         torDoc: ''
       });
@@ -240,6 +242,7 @@ const StudentProfile = () => {
         studentType: 'new',
         previousSchool: '',
         previousProgram: '',
+        previousAcademicYear: '',
         transferCertificateDoc: '',
         torDoc: ''
       });
@@ -448,8 +451,17 @@ const StudentProfile = () => {
         files.form137Doc = formDataa.form137Doc;
       }
 
-      // Additional files for transferee students
+      // Additional fields and files for transferee students
       if (formDataa.studentType === 'transferee') {
+        if (!formDataa.previousAcademicYear) {
+          setSnackbar({
+            open: true,
+            message: 'Previous Academic Year is required for transferees',
+            severity: 'error'
+          });
+          setLoading(false);
+          return;
+        }
         files = {
           ...files,
           transferCertificateDoc: formDataa.transferCertificateDoc,
@@ -490,6 +502,7 @@ const StudentProfile = () => {
       if (formDataa.studentType === 'transferee') {
         formDataToSend.append('previousSchool', formDataa.previousSchool);
         formDataToSend.append('previousProgram', formDataa.previousProgram);
+        formDataToSend.append('previousAcademicYear', formDataa.previousAcademicYear);
       }
 
       // Add all documents
@@ -1170,6 +1183,17 @@ const StudentProfile = () => {
                     onChange={handleInputChange}
                     required
                     data-testid="previous-program-input"
+                  />
+                  <TextField
+                    label="Previous Academic Year (e.g., 2022-2023)"
+                    fullWidth
+                    margin="normal"
+                    name="previousAcademicYear"
+                    value={formDataa.previousAcademicYear}
+                    onChange={handleInputChange}
+                    required
+                    inputProps={{ pattern: "^\\d{4}-\\d{4}$", title: "Format: YYYY-YYYY" }}
+                    data-testid="previous-academic-year-input"
                   />
                 </div>
               )}
