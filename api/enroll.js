@@ -130,6 +130,11 @@ module.exports = async (req, res) => {
             error: "Previous program information is required for transferee students"
           });
         }
+        if (!normalizedFields.previousAcademicYear || !/^\d{4}-\d{4}$/.test(normalizedFields.previousAcademicYear)) {
+          return res.status(400).json({
+            error: "Previous academic year (YYYY-YYYY) is required for transferee students"
+          });
+        }
       }
 
       client = await pool.connect();
@@ -199,19 +204,41 @@ module.exports = async (req, res) => {
         });
       }
 
-      const enrollmentResult = await client.query(
-        `INSERT INTO enrollments 
-         (student_id, program_id, year_id, semester, enrollment_status, 
-          enrollment_date, idpic, birth_certificate_doc, form137_doc, 
-          payment_status, academic_year, student_type, previous_school, previous_program, transfer_certificate_doc, tor_doc) 
-         VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10, $11, $12, $13)
-         RETURNING enrollment_id`,
-        [
-          id, programs, year_id, normalizedFields.semester, idpic, birthCertificateDoc, 
-          form137Doc, normalizedFields.academic_year, normalizedFields.studentType, normalizedFields.previousSchool || null, 
-          normalizedFields.previousProgram || null, transferCertificateDoc, torDoc
-        ]
+      // Detect if previous_academic_year column exists
+      const prevAyColCheck = await client.query(
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'enrollments' AND column_name = 'previous_academic_year' LIMIT 1`
       );
+
+      let enrollmentResult;
+      if (prevAyColCheck.rows.length > 0) {
+        enrollmentResult = await client.query(
+          `INSERT INTO enrollments 
+           (student_id, program_id, year_id, semester, enrollment_status, 
+            enrollment_date, idpic, birth_certificate_doc, form137_doc, 
+            payment_status, academic_year, student_type, previous_school, previous_program, previous_academic_year, transfer_certificate_doc, tor_doc) 
+           VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10, $11, $12, $13, $14)
+           RETURNING enrollment_id`,
+          [
+            id, programs, year_id, normalizedFields.semester, idpic, birthCertificateDoc,
+            form137Doc, normalizedFields.academic_year, normalizedFields.studentType, normalizedFields.previousSchool || null,
+            normalizedFields.previousProgram || null, normalizedFields.previousAcademicYear || null, transferCertificateDoc, torDoc
+          ]
+        );
+      } else {
+        enrollmentResult = await client.query(
+          `INSERT INTO enrollments 
+           (student_id, program_id, year_id, semester, enrollment_status, 
+            enrollment_date, idpic, birth_certificate_doc, form137_doc, 
+            payment_status, academic_year, student_type, previous_school, previous_program, transfer_certificate_doc, tor_doc) 
+           VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6, $7, 'Unpaid', $8, $9, $10, $11, $12, $13)
+           RETURNING enrollment_id`,
+          [
+            id, programs, year_id, normalizedFields.semester, idpic, birthCertificateDoc,
+            form137Doc, normalizedFields.academic_year, normalizedFields.studentType, normalizedFields.previousSchool || null,
+            normalizedFields.previousProgram || null, transferCertificateDoc, torDoc
+          ]
+        );
+      }
 
       // Create TOR evaluation request for transferees
       if (normalizedFields.studentType === 'transferee') {
