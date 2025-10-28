@@ -46,23 +46,22 @@ const ProgramHeadTorEvaluation = () => {
   const [allowedPrevAcademicYears, setAllowedPrevAcademicYears] = useState([]);
   const [dialogLoading, setDialogLoading] = useState(false);
 
-  // Build quick lookup for credited course ids (memoized)
-  const creditedCourseIds = React.useMemo(() => {
-    const set = new Set();
-    (equivalencies || []).forEach(e => {
-      const id = Number(e.equivalent_course_id);
-      if (!isNaN(id) && id) set.add(id);
-    });
+  // Build quick lookup for credited course ids
+  const creditedCourseIds = (equivalencies || []).reduce((set, e) => {
+    const id = Number(e.equivalent_course_id);
+    if (!isNaN(id) && id) set.add(id);
     return set;
-  }, [equivalencies]);
+  }, new Set());
 
+  // Prereq check: only support canonical prerequisites array from backend
   const arePrerequisitesSatisfied = (option) => {
     const prereqs = Array.isArray(option?.prerequisites) ? option.prerequisites : [];
     if (prereqs.length === 0) return true;
-    return prereqs
-      .map(p => Number(p.course_id))
-      .filter(id => !isNaN(id) && id)
-      .every(id => creditedCourseIds.has(id));
+    const prereqIds = prereqs
+      .map(p => Number(p?.course_id))
+      .filter(id => !isNaN(id) && id);
+    if (prereqIds.length === 0) return true;
+    return prereqIds.every(id => creditedCourseIds.has(id));
   };
 
   useEffect(() => {
