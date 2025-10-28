@@ -46,52 +46,23 @@ const ProgramHeadTorEvaluation = () => {
   const [allowedPrevAcademicYears, setAllowedPrevAcademicYears] = useState([]);
   const [dialogLoading, setDialogLoading] = useState(false);
 
-  // Build quick lookups for prerequisite checks
-  const creditedCourseIds = (equivalencies || []).reduce((set, e) => {
-    const id = Number(e.equivalent_course_id);
-    if (!isNaN(id) && id) set.add(id);
+  // Build quick lookup for credited course ids (memoized)
+  const creditedCourseIds = React.useMemo(() => {
+    const set = new Set();
+    (equivalencies || []).forEach(e => {
+      const id = Number(e.equivalent_course_id);
+      if (!isNaN(id) && id) set.add(id);
+    });
     return set;
-  }, new Set());
-  const courseIdToCode = (availableCourses || []).reduce((map, c) => {
-    const id = Number(c.course_id);
-    if (!isNaN(id) && id) map.set(id, c.course_code);
-    return map;
-  }, new Map());
+  }, [equivalencies]);
 
   const arePrerequisitesSatisfied = (option) => {
-    // Normalize variety of prerequisite formats
-    const raw = option?.prerequisites ?? option?.prerequisite ?? option?.prereq ?? null;
-    if (!raw) return true; // no prereqs
-    const toIds = (val) => {
-      if (val == null) return [];
-      if (Array.isArray(val)) {
-        return val.flatMap(v => toIds(v));
-      }
-      if (typeof val === 'object') {
-        // object with course_id or values that are arrays
-        if ('course_id' in val) return [Number(val.course_id)];
-        return Object.values(val).flatMap(v => toIds(v));
-      }
-      if (typeof val === 'number') return [Number(val)];
-      if (typeof val === 'string') {
-        // either a single id/code or comma-separated
-        const parts = val.split(',').map(s => s.trim()).filter(Boolean);
-        return parts.map(p => {
-          const asNum = Number(p);
-          if (!isNaN(asNum)) return asNum;
-          // fallback: map by code to id
-          for (const [id, code] of courseIdToCode.entries()) {
-            if ((code || '').toLowerCase() === p.toLowerCase()) return id;
-          }
-          return NaN;
-        }).filter(n => !isNaN(n));
-      }
-      return [];
-    };
-
-    const prereqIds = toIds(raw);
-    if (!prereqIds.length) return true;
-    return prereqIds.every(id => creditedCourseIds.has(Number(id)));
+    const prereqs = Array.isArray(option?.prerequisites) ? option.prerequisites : [];
+    if (prereqs.length === 0) return true;
+    return prereqs
+      .map(p => Number(p.course_id))
+      .filter(id => !isNaN(id) && id)
+      .every(id => creditedCourseIds.has(id));
   };
 
   useEffect(() => {
