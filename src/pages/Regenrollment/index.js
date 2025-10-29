@@ -30,6 +30,58 @@ const RegistrarEnrollment = () => {
   const [rowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Helpers: detect file type from base64 and render appropriately
+  const detectFileType = (base64Data) => {
+    try {
+      if (!base64Data) return 'unknown';
+      const binary = atob(base64Data.slice(0, 32)); // peek first bytes
+      const bytes = Array.from(binary).map(c => c.charCodeAt(0));
+      // PDF header: %PDF
+      if (binary.startsWith('%PDF')) return 'pdf';
+      // JPEG header: 0xFF 0xD8 0xFF
+      if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) return 'jpeg';
+      // PNG header: 0x89 0x50 0x4E 0x47
+      if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return 'png';
+      return 'unknown';
+    } catch (e) {
+      return 'unknown';
+    }
+  };
+
+  const renderDocument = (base64Data, altText) => {
+    if (!base64Data) return <div className="no-doc-message">No {altText} uploaded</div>;
+    const type = detectFileType(base64Data);
+    if (type === 'pdf') {
+      return (
+        <Box>
+          <iframe
+            title={altText}
+            src={`data:application/pdf;base64,${base64Data}`}
+            style={{ width: '100%', height: '480px', border: 'none', borderRadius: '8px' }}
+          />
+          <Box sx={{ mt: 1, textAlign: 'right' }}>
+            <a
+              href={`data:application/pdf;base64,${base64Data}`}
+              download={`${altText}.pdf`}
+              style={{ color: '#c70202', textDecoration: 'none', fontWeight: 600 }}
+            >
+              Download PDF
+            </a>
+          </Box>
+        </Box>
+      );
+    }
+    // default to image (jpeg/png/unknown)
+    const mime = type === 'png' ? 'image/png' : 'image/jpeg';
+    return (
+      <img 
+        src={`data:${mime};base64,${base64Data}`} 
+        alt={altText} 
+        style={{ width: '100%', borderRadius: '8px' }}
+      />
+    );
+  };
+
   const [yearLevel, setYearLevel] = useState('');
   const [studentType, setStudentType] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -641,15 +693,7 @@ const RegistrarEnrollment = () => {
                       Student ID Picture
                     </Typography>
                   </div>
-                  {selectedEnrollment.idpic ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.idpic}`} 
-                      alt="Student ID" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No ID picture uploaded</div>
-                  )}
+                  {renderDocument(selectedEnrollment.idpic, 'Student ID')}
                 </div>
 
                 <div className="document-preview">
@@ -658,15 +702,7 @@ const RegistrarEnrollment = () => {
                       Birth Certificate
                     </Typography>
                   </div>
-                  {selectedEnrollment.birthCertificateDoc ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.birthCertificateDoc}`} 
-                      alt="Birth Certificate" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No birth certificate uploaded</div>
-                  )}
+                  {renderDocument(selectedEnrollment.birthCertificateDoc, 'Birth Certificate')}
                 </div>
 
                 <div className="document-preview">
@@ -675,15 +711,7 @@ const RegistrarEnrollment = () => {
                       Form 137
                     </Typography>
                   </div>
-                  {selectedEnrollment.form137Doc ? (
-                    <img 
-                      src={`data:image/jpeg;base64,${selectedEnrollment.form137Doc}`} 
-                      alt="Form 137" 
-                      style={{ width: '100%', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <div className="no-doc-message">No Form 137 uploaded</div>
-                  )}
+                  {renderDocument(selectedEnrollment.form137Doc, 'Form 137')}
                 </div>
 
                 {/* Additional documents for transferee students */}
@@ -695,15 +723,7 @@ const RegistrarEnrollment = () => {
                           Transfer Certificate
                         </Typography>
                       </div>
-                      {selectedEnrollment.transferCertificateDoc ? (
-                        <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.transferCertificateDoc}`} 
-                          alt="Transfer Certificate" 
-                          style={{ width: '100%', borderRadius: '8px' }}
-                        />
-                      ) : (
-                        <div className="no-doc-message">No transfer certificate uploaded</div>
-                      )}
+                      {renderDocument(selectedEnrollment.transferCertificateDoc, 'Transfer Certificate')}
                     </div>
 
                     <div className="document-preview">
@@ -712,15 +732,7 @@ const RegistrarEnrollment = () => {
                           Transcript of Records (TOR)
                         </Typography>
                       </div>
-                      {selectedEnrollment.torDoc ? (
-                        <img 
-                          src={`data:image/jpeg;base64,${selectedEnrollment.torDoc}`} 
-                          alt="Transcript of Records" 
-                          style={{ width: '100%', borderRadius: '8px' }}
-                        />
-                      ) : (
-                        <div className="no-doc-message">No TOR uploaded</div>
-                      )}
+                      {renderDocument(selectedEnrollment.torDoc, 'Transcript of Records (TOR)')}
                     </div>
                   </>
                 )}
