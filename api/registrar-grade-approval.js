@@ -30,88 +30,52 @@ module.exports = async (req, res) => {
 
       client = await pool.connect();
 
-      // Get grade approval statistics
-      const statsQuery = `
+      const query = `
         SELECT 
-          COUNT(*) as total_grades,
-          COUNT(CASE WHEN approval_status = 'pending' THEN 1 END) as pending_approval,
-          COUNT(CASE WHEN approval_status = 'registrar_approved' THEN 1 END) as registrar_approved,
-          COUNT(CASE WHEN approval_status = 'dean_approved' THEN 1 END) as dean_approved,
-          COUNT(CASE WHEN approval_status = 'final' THEN 1 END) as final_approved
-        FROM grades
-      `;
-
-      const statsResult = await client.query(statsQuery);
-      const stats = statsResult.rows[0];
-
-      // Get detailed grade information for registrar dashboard
-      const gradesQuery = `
-        SELECT DISTINCT ON (g.grade_id)
-          g.grade_id,
-          g.student_id,
-          g.pc_id,
-          g.final_grade,
-          g.approval_status,
-          g.created_at as grade_entered_at,
-          g.updated_at as grade_updated_at,
-          g.registrar_approved_at,
-          g.dean_approved_at,
-          g.final_approved_at,
-          
-          -- Student information
-          CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
-          s.email as student_email,
-          
-          -- Course information
+          ca.assignment_id,
+          ca.pc_id,
+          ca.section,
           c.course_code,
           c.course_name,
-          c.units,
-          pc.semester,
-          
-          -- Program information
           p.program_name,
           py.year_level,
-          
-          -- Instructor information
-          st.full_name as instructor_name,
-          
-          -- Assignment information
-          ca.section,
-          ca.day,
-          TO_CHAR(ca.start_time, 'HH12:MI AM') as start_time,
-          TO_CHAR(ca.end_time, 'HH12:MI AM') as end_time,
-          
-          -- Approval information
-          reg.full_name as registrar_name,
-          dean.full_name as dean_name
-          
-        FROM grades g
-        JOIN students s ON g.student_id = s.id
-        JOIN program_course pc ON g.pc_id = pc.pc_id
-        JOIN course c ON pc.course_id = c.course_id
-        JOIN program p ON pc.program_id = p.program_id
-        JOIN program_year py ON pc.year_id = py.year_id
-        LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
-        LEFT JOIN admins st ON ca.staff_id = st.staff_id
-        LEFT JOIN admins reg ON g.registrar_approved_by = reg.staff_id
-        LEFT JOIN admins dean ON g.dean_approved_by = dean.staff_id
-        ORDER BY g.grade_id, ca.day NULLS LAST, ca.start_time NULLS LAST
-        LIMIT 100
+          pc.semester,
+          COALESCE(a.full_name, 'Not assigned') AS instructor_name,
+          COUNT(g.*) AS total_grades,
+          COUNT(CASE WHEN g.approval_status = 'pending' THEN 1 END) AS pending_count,
+          COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) AS registrar_approved_count,
+          COUNT(CASE WHEN g.approval_status = 'dean_approved' THEN 1 END) AS dean_approved_count,
+          COUNT(CASE WHEN g.approval_status = 'ph_approved' THEN 1 END) AS program_head_approved_count,
+          CASE 
+            WHEN COUNT(CASE WHEN g.approval_status = 'ph_approved' THEN 1 END) > 0 
+             AND COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) = 0 
+            THEN 'ph_approved'
+            ELSE NULL
+          END AS approval_status
+        FROM course_assignments ca
+        JOIN program_course pc ON pc.pc_id = ca.pc_id
+        JOIN course c ON c.course_id = pc.course_id
+        JOIN program p ON p.program_id = pc.program_id
+        JOIN program_year py ON py.year_id = pc.year_id
+        LEFT JOIN admins a ON a.staff_id = ca.staff_id
+        JOIN enrollments e 
+          ON e.program_id = pc.program_id 
+         AND e.year_id = pc.year_id 
+         AND e.semester = pc.semester
+         AND e.enrollment_status = 'Officially Enrolled'
+        JOIN student_blocks sb 
+          ON sb.block_id = e.block_id 
+         AND sb.block_name = ca.section
+        LEFT JOIN grades g ON g.pc_id = pc.pc_id AND g.student_id = e.student_id
+        GROUP BY ca.assignment_id, ca.pc_id, ca.section, c.course_code, c.course_name, p.program_name, py.year_level, pc.semester, a.full_name
+        HAVING COUNT(g.*) > 0
+           AND COUNT(CASE WHEN g.approval_status = 'ph_approved' THEN 1 END) > 0
+           AND COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) = 0
+        ORDER BY c.course_code, ca.section
       `;
 
-      const gradesResult = await client.query(gradesQuery);
-
-      res.json({
-        success: true,
-        stats: {
-          totalGrades: parseInt(stats.total_grades),
-          pendingApproval: parseInt(stats.pending_approval),
-          registrarApproved: parseInt(stats.registrar_approved),
-          deanApproved: parseInt(stats.dean_approved),
-          finalApproved: parseInt(stats.final_approved)
-        },
-        grades: gradesResult.rows
-      });
+      const result = await client.query(query);
+      return res.status(200).json({ success: true, classes: result.rows });
 
     } catch (error) {
       console.error("Registrar grade approval error:", {
