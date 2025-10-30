@@ -83,7 +83,7 @@ const RegistrarDashboard = () => {
           return;
         }
 
-        // Fetch dashboard data from new API
+        // Fetch dashboard data from new api
         const response = await axios.get('/api/registrar-dashboard', {
           headers: { Authorization: `Bearer ${token}` }
         });
