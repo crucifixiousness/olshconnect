@@ -46,12 +46,12 @@ module.exports = async (req, res) => {
         COALESCE(a.full_name, 'Not assigned') AS instructor_name,
         COUNT(g.*) AS total_grades,
         COUNT(CASE WHEN g.approval_status = 'pending' THEN 1 END) AS pending_count,
-        COUNT(CASE WHEN g.approval_status = 'reg_approved' THEN 1 END) AS registrar_approved_count,
+        COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) AS registrar_approved_count,
         COUNT(CASE WHEN g.approval_status = 'dean_approved' THEN 1 END) AS dean_approved_count,
         COUNT(CASE WHEN g.approval_status = 'ph_approved' THEN 1 END) AS program_head_approved_count,
         CASE 
           WHEN COUNT(CASE WHEN g.approval_status = 'ph_approved' THEN 1 END) > 0 
-           AND COUNT(CASE WHEN g.approval_status = 'reg_approved' THEN 1 END) = 0 
+           AND COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) = 0 
           THEN 'ph_approved'
           ELSE NULL
         END AS approval_status
@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
       GROUP BY ca.assignment_id, ca.pc_id, ca.section, c.course_code, c.course_name, p.program_name, py.year_level, pc.semester, a.full_name
       HAVING COUNT(g.*) > 0
          AND COUNT(CASE WHEN g.approval_status = 'ph_approved' THEN 1 END) > 0
-         AND COUNT(CASE WHEN g.approval_status = 'reg_approved' THEN 1 END) = 0
+         AND COUNT(CASE WHEN g.approval_status = 'registrar_approved' THEN 1 END) = 0
       ORDER BY c.course_code, ca.section
     `;
 
