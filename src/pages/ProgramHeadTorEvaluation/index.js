@@ -46,23 +46,7 @@ const ProgramHeadTorEvaluation = () => {
   const [allowedPrevAcademicYears, setAllowedPrevAcademicYears] = useState([]);
   const [dialogLoading, setDialogLoading] = useState(false);
 
-  // Build quick lookup for credited course ids
-  const creditedCourseIds = (equivalencies || []).reduce((set, e) => {
-    const id = Number(e.equivalent_course_id);
-    if (!isNaN(id) && id) set.add(id);
-    return set;
-  }, new Set());
-
-  // Prereq check: only support canonical prerequisites array from backend
-  const arePrerequisitesSatisfied = (option) => {
-    const prereqs = Array.isArray(option?.prerequisites) ? option.prerequisites : [];
-    if (prereqs.length === 0) return true;
-    const prereqIds = prereqs
-      .map(p => Number(p?.course_id))
-      .filter(id => !isNaN(id) && id);
-    if (prereqIds.length === 0) return true;
-    return prereqIds.every(id => creditedCourseIds.has(id));
-  };
+  // No prerequisite restrictions in selection per latest requirement
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -730,12 +714,10 @@ const ProgramHeadTorEvaluation = () => {
                             />
                           )}
                           filterOptions={(options, { inputValue }) => {
-                            // Always enforce prerequisite filtering first
-                            const prereqFiltered = options.filter(opt => arePrerequisitesSatisfied(opt));
-                            if (!inputValue) return prereqFiltered;
+                            if (!inputValue) return options;
 
                             const filterValue = inputValue.toLowerCase();
-                            return prereqFiltered.filter(option => {
+                            return options.filter(option => {
                               const courseCode = option.course_code?.toLowerCase() || '';
                               const courseName = option.course_name?.toLowerCase() || '';
                               const fullText = `${courseCode} - ${courseName}`.toLowerCase();
