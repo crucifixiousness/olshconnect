@@ -639,8 +639,7 @@ const RegistrarDashboard = () => {
               {(classes || [])
                 .filter(c => selectedProgram === 'All' || c.program_name === selectedProgram)
                 .filter(c => (parseInt(c.total_grades, 10) || 0) > 0)
-                .filter(c => (parseInt(c.dean_approved_count, 10) || 0) > 0)
-                .filter(c => (parseInt(c.registrar_approved_count, 10) || 0) === 0)
+                .filter(c => c.approval_status === 'ph_approved')
                 .map((cls) => (
                         <TableRow key={`${cls.pc_id}-${cls.section}`}>
                           <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
