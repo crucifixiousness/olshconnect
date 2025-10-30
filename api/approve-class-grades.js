@@ -46,9 +46,11 @@ module.exports = async (req, res) => {
     } else if (action === 'dean_approve') {
       setClause = `approval_status = 'dean_approved', dean_approved_by = $1, dean_approved_at = CURRENT_TIMESTAMP`;
     } else if (action === 'final_approve') {
-      setClause = `approval_status = 'final', final_approved_at = CURRENT_TIMESTAMP`;
+      // Final approval phase removed; treat as registrar approval to avoid missing columns
+      setClause = `approval_status = 'registrar_approved', registrar_approved_by = $1, registrar_approved_at = CURRENT_TIMESTAMP`;
     } else if (action === 'reject') {
-      setClause = `approval_status = 'pending', registrar_approved_by = NULL, registrar_approved_at = NULL, dean_approved_by = NULL, dean_approved_at = NULL, final_approved_at = NULL`;
+      // Remove references to non-existent final_approved_at
+      setClause = `approval_status = 'pending', registrar_approved_by = NULL, registrar_approved_at = NULL, dean_approved_by = NULL, dean_approved_at = NULL`;
     } else {
       return res.status(400).json({ error: 'Invalid action' });
     }
