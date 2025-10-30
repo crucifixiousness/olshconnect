@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
     let params = [];
     let paramIndex = 1;
 
-    // Registrar set clause
+    // Registrar set clause (Registrar approval after Program Head)
     const setClause = `approval_status = 'reg_approved', registrar_approved_by = $1, registrar_approved_at = CURRENT_TIMESTAMP`;
     params.push(decoded.staff_id || decoded.user_id || null);
     paramIndex++;
@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
               AND e.semester = $${paramIndex + 3}
               AND sb.block_name = $${paramIndex + 4}
           )
-          AND g.approval_status = 'dean_approved'
+          AND g.approval_status = 'ph_approved'
       `;
     } else {
       params.push(pcId);
@@ -85,7 +85,7 @@ module.exports = async (req, res) => {
         UPDATE grades
         SET ${setClause}, updated_at = CURRENT_TIMESTAMP
         WHERE pc_id = $${paramIndex}
-          AND approval_status = 'dean_approved'
+          AND approval_status = 'ph_approved'
       `;
     }
 
