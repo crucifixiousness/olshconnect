@@ -76,14 +76,14 @@ const RegistrarDashboard = () => {
     const fetchRegistrarData = async () => {
       try {
         const token = localStorage.getItem('token');
-        
+
         if (!token) {
           console.error('No token found');
           setLoading(false);
           return;
         }
 
-        // Fetch dashboard data from new api
+        // Fetch dashboard data from new API
         const response = await axios.get('/api/registrar-dashboard', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -107,7 +107,7 @@ const RegistrarDashboard = () => {
         await fetchGradeApprovalData();
         // Fetch class approval data
         await fetchClassApprovalData();
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching registrar data:', error);
@@ -121,7 +121,7 @@ const RegistrarDashboard = () => {
   const fetchGradeApprovalData = async () => {
     try {
       const token = localStorage.getItem('token');
-      
+
       if (!token) {
         return;
       }
@@ -226,7 +226,7 @@ const RegistrarDashboard = () => {
     try {
       setApproving(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.post('/api/approve-grade', {
         gradeId: selectedGrade.grade_id,
         action: action,
@@ -244,7 +244,7 @@ const RegistrarDashboard = () => {
       setApprovalDialogOpen(false);
       setSelectedGrade(null);
       setApprovalComments('');
-      
+
       // Refresh data
       fetchGradeApprovalData();
     } catch (error) {
@@ -368,7 +368,7 @@ const RegistrarDashboard = () => {
       <div className="right-content w-100">
         <div className="card shadow border-0 p-3 mt-1">
           <h3 className="mb-4">Registrar Dashboard</h3>
-          
+
           {/* Stat Cards - Show skeleton loading */}
           <div className="row">
             {[1, 2, 3, 4].map((index) => (
@@ -413,7 +413,7 @@ const RegistrarDashboard = () => {
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
         <h3 className="mb-4">Registrar Dashboard</h3>
-        
+
         {/* Stat Cards */}
         <div className="row">
           {statCards.map((card, index) => (
@@ -443,7 +443,7 @@ const RegistrarDashboard = () => {
           <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Enrollment Statistics</Typography>
-              
+
               {/* Program-wise Statistics */}
               {enrollmentStats.programStats.length > 0 ? (
                 <Box mb={3}>
@@ -639,7 +639,8 @@ const RegistrarDashboard = () => {
               {(classes || [])
                 .filter(c => selectedProgram === 'All' || c.program_name === selectedProgram)
                 .filter(c => (parseInt(c.total_grades, 10) || 0) > 0)
-                .filter(c => c.approval_status === 'ph_approved')
+                .filter(c => (parseInt(c.dean_approved_count, 10) || 0) > 0)
+                .filter(c => (parseInt(c.registrar_approved_count, 10) || 0) === 0)
                 .map((cls) => (
                         <TableRow key={`${cls.pc_id}-${cls.section}`}>
                           <TableCell>{cls.course_code} - {cls.course_name}</TableCell>
@@ -720,7 +721,7 @@ const RegistrarDashboard = () => {
               </Typography>
             </div>
           )}
-          
+
           <TableContainer component={Paper} elevation={0}>
             <Table>
               <TableHead>
