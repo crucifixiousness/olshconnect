@@ -56,7 +56,6 @@ module.exports = async (req, res) => {
           g.updated_at as grade_updated_at,
           g.registrar_approved_at,
           g.dean_approved_at,
-          g.final_approved_at,
           
           -- Student information
           CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
