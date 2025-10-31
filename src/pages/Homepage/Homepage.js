@@ -159,6 +159,7 @@ const Homepage = () => {
     const [formData, setFormData] = useState({
         userName: '',
         password: '',
+        confirmPassword: '',
         firstName: '',
         middleName: '',
         lastName: '',
@@ -671,6 +672,15 @@ const Homepage = () => {
             });
             return;
         }
+        // Confirm password check
+        if (formData.password !== formData.confirmPassword) {
+            setSnackbar({
+                open: true,
+                message: "Passwords do not match",
+                severity: 'error'
+            });
+            return;
+        }
         // Validate contact number length
         if (formData.number.length !== 11) {
             setSnackbar({
@@ -812,6 +822,7 @@ const Homepage = () => {
             setFormData({
                 userName: "",
                 password: "",
+                confirmPassword: "",
                 firstName: "",
                 middleName: "",
                 lastName: "",
@@ -1021,6 +1032,21 @@ const Homepage = () => {
                                                             value={formData.password}
                                                             onChange={handleInputChange}
                                                             required
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                            type='password'
+                                                            label="Confirm Password"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="confirmPassword"
+                                                            data-testid="input-confirmPassword"
+                                                            value={formData.confirmPassword}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            error={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword}
+                                                            helperText={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
                                                             />
                                                         </Grid>                                    
                                                     </Grid>
