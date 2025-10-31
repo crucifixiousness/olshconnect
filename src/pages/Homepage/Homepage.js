@@ -13,7 +13,9 @@ import courses from '../../asset/images/courses.png';
 import { Link } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import announcement from '../../asset/images/anno.png';
-import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl } from "@mui/material";
+import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl, IconButton, InputAdornment } from "@mui/material";
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import axios from "axios";
 import { regions, provinces, cities, barangays } from 'select-philippines-address';
 import { sendVerificationEmail } from '../../utils/emailService';
@@ -98,6 +100,8 @@ const Homepage = () => {
     const [guardianPhoneValidation, setGuardianPhoneValidation] = useState({ isValid: null, message: '' });
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     
     const handleOpen = () => {
         // Reset modal state so it always opens with a fresh form
@@ -1008,7 +1012,7 @@ const Homepage = () => {
                                                     Account Details
                                                 </Typography>
                                                 <div className="mb-3">
-                                                    <Grid container spacing={2}>
+                                                    <Grid container spacing={2} justifyContent="center">
                                                         <Grid item xs={6}>
                                                             <TextField
                                                             label="Username"
@@ -1023,7 +1027,7 @@ const Homepage = () => {
                                                         </Grid>
                                                         <Grid item xs={6}>
                                                             <TextField
-                                                            type='password'
+                                                            type={showPassword ? 'text' : 'password'}
                                                             label="Password"
                                                             fullWidth
                                                             margin="normal"
@@ -1032,11 +1036,24 @@ const Homepage = () => {
                                                             value={formData.password}
                                                             onChange={handleInputChange}
                                                             required
+                                                            InputProps={{
+                                                                endAdornment: (
+                                                                    <InputAdornment position="end">
+                                                                        <IconButton
+                                                                            aria-label="toggle password visibility"
+                                                                            onClick={() => setShowPassword(prev => !prev)}
+                                                                            edge="end"
+                                                                        >
+                                                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                                )
+                                                            }}
                                                             />
                                                         </Grid>
                                                         <Grid item xs={6}>
                                                             <TextField
-                                                            type='password'
+                                                            type={showConfirmPassword ? 'text' : 'password'}
                                                             label="Confirm Password"
                                                             fullWidth
                                                             margin="normal"
@@ -1047,6 +1064,19 @@ const Homepage = () => {
                                                             required
                                                             error={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword}
                                                             helperText={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
+                                                            InputProps={{
+                                                                endAdornment: (
+                                                                    <InputAdornment position="end">
+                                                                        <IconButton
+                                                                            aria-label="toggle confirm password visibility"
+                                                                            onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                                            edge="end"
+                                                                        >
+                                                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                                )
+                                                            }}
                                                             />
                                                         </Grid>                                    
                                                     </Grid>
