@@ -22,14 +22,22 @@ import { useSearchParams } from 'react-router-dom';
 import Searchbar from '../Searchbar';
 
 const StudentBalance = () => {
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [searchParams] = useSearchParams();
   const yearLevel = searchParams.get('year');
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('studentBalancesData');
+  const cacheTimestamp = localStorage.getItem('studentBalancesTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [students, setStudents] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   // Add CSS to override Searchbar margin
   useEffect(() => {
@@ -46,14 +54,48 @@ const StudentBalance = () => {
     };
   }, []);
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (forceRefresh = false) => {
     try {
-      setLoading(true);
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('studentBalancesData');
+        const cacheTimestamp = localStorage.getItem('studentBalancesTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setStudents(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (balance changes, new payments, etc.)
+          fetchStudents(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+
       const response = await axios.get('/api/student-balances');
+      
+      // Cache the new data (like Academic Records and Student Profile)
+      localStorage.setItem('studentBalancesData', JSON.stringify(response.data));
+      localStorage.setItem('studentBalancesTimestamp', Date.now().toString());
+
       setStudents(response.data);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Error fetching students:", error);
-    } finally {
       setLoading(false);
     }
   }, []);
