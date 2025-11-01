@@ -14,13 +14,11 @@ import { useRef } from 'react';
 const RequestDocument = () => {
   // eslint-disable-next-line
   const [isLoading, setIsLoading] = useState(false);
-  const [requestList, setRequestList] = useState([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [page, setPage] = useState(1); // Pagination state
   const handleOpen = () => setShowRequestModal(true);
   const handleClose = () => setShowRequestModal(false);
   const context = useContext(MyContext);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -28,21 +26,20 @@ const RequestDocument = () => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const pdfCache = useRef(new Map());
 
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('requestDocumentData');
+  const cacheTimestamp = localStorage.getItem('requestDocumentTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [requestList, setRequestList] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    
-    // Check if cache exists and is valid - if so, skip loading delay
-    const now = Date.now();
-    if (requestDataCache.current.data &&
-        requestDataCache.current.timestamp &&
-        (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
-      setRequestList(requestDataCache.current.data);
-      setLoading(false); // Immediately hide loading if cache is valid
-    } else {
-      // Only show loading if no cache or cache expired
-      setTimeout(() => setLoading(false), 1000);
-    }
+    fetchRequestData();
   }, [context]);
 
   // Add safe parsing of user data
@@ -94,30 +91,33 @@ const RequestDocument = () => {
     setPage(newPage);
   };
 
-  // Add this near other useRef declarations
-  const requestDataCache = useRef({
-    data: null,
-    timestamp: null,
-    ttl: 5 * 60 * 1000 // 5 minutes cache TTL
-  });
-
-  const fetchRequestData = useCallback(async () => {
+  const fetchRequestData = useCallback(async (forceRefresh = false) => {
     try {
       if (!user || !user.id) {
         console.error("No user ID found");
         return;
       }
 
-      // Check if cache is valid
-      const now = Date.now();
-      if (requestDataCache.current.data &&
-          requestDataCache.current.timestamp &&
-          (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
-        setRequestList(requestDataCache.current.data);
-        setLoading(false); // Hide loading immediately when using cache
-        return;
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('requestDocumentData');
+        const cacheTimestamp = localStorage.getItem('requestDocumentTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setRequestList(parsedData);
+          setLoading(false);
+          return;
+        }
       }
 
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+      
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/request-document', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -130,18 +130,19 @@ const RequestDocument = () => {
         return dateB - dateA; // Descending order (newest first)
       });
 
-      // Update cache with sorted data
-      requestDataCache.current = {
-        data: sortedData,
-        timestamp: now,
-        ttl: 5 * 60 * 1000
-      };
+      // Cache the new data (like Academic Records and Student Profile)
+      localStorage.setItem('requestDocumentData', JSON.stringify(sortedData));
+      localStorage.setItem('requestDocumentTimestamp', Date.now().toString());
 
       setRequestList(sortedData);
-      setLoading(false); // Hide loading after data is fetched
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Error fetching request data:", error);
-      setLoading(false); // Hide loading even on error
+      setLoading(false);
     }
   }, [user]);
 
@@ -197,12 +198,26 @@ const RequestDocument = () => {
       );
 
       if (response.status === 201) {
-        // Invalidate cache to force fresh data fetch
-        requestDataCache.current = {
-          data: null,
-          timestamp: null,
-          ttl: 5 * 60 * 1000
-        };
+        const newRequest = response.data;
+        
+        // Immediately update cache and state with the new request (optimistic update)
+        const now = Date.now();
+        const currentCache = localStorage.getItem('requestDocumentData');
+        const currentList = currentCache ? JSON.parse(currentCache) : [];
+        
+        // Add new request to the beginning of the list (newest first)
+        const updatedList = [newRequest, ...currentList].sort((a, b) => {
+          const dateA = new Date(a.req_date || a.requestDate || 0);
+          const dateB = new Date(b.req_date || b.requestDate || 0);
+          return dateB - dateA; // Descending order (newest first)
+        });
+        
+        // Update cache immediately with the new request
+        localStorage.setItem('requestDocumentData', JSON.stringify(updatedList));
+        localStorage.setItem('requestDocumentTimestamp', now.toString());
+        
+        // Update state immediately for instant UI update
+        setRequestList(updatedList);
 
         setShowRequestModal(false);
         setSnackbar({
@@ -220,8 +235,12 @@ const RequestDocument = () => {
         });
         // Reset pagination to show first page
         setPage(1);
-        // Force refresh by bypassing cache
-        fetchRequestData();
+        
+        // Background fetch to ensure data consistency - force refresh to get true server state
+        fetchRequestData(true).catch(err => {
+          console.error("Background fetch error:", err);
+          // If background fetch fails, keep the optimistic update
+        });
       }
     } catch (error) {
       console.error("Error submitting request:", error);
