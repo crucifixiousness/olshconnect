@@ -155,17 +155,30 @@ Additional Data: ${JSON.stringify(details, null, 2)}
 };
 
 const StudentPayment = () => {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedPaymentData = localStorage.getItem('paymentData');
+  const cachedPaymentTimestamp = localStorage.getItem('paymentDataTimestamp');
+  const cachedPaymentAge = cachedPaymentTimestamp ? Date.now() - parseInt(cachedPaymentTimestamp) : null;
+  const hasValidPaymentCache = cachedPaymentData && cachedPaymentAge && cachedPaymentAge < 300000; // 5 minutes
+
+  const cachedHistoryData = localStorage.getItem('paymentHistoryData');
+  const cachedHistoryTimestamp = localStorage.getItem('paymentHistoryTimestamp');
+  const cachedHistoryAge = cachedHistoryTimestamp ? Date.now() - parseInt(cachedHistoryTimestamp) : null;
+  const hasValidHistoryCache = cachedHistoryData && cachedHistoryAge && cachedHistoryAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const cachedPayment = hasValidPaymentCache ? JSON.parse(cachedPaymentData) : null;
+  const [payments, setPayments] = useState(cachedPayment ? [cachedPayment] : []);
+  const [loading, setLoading] = useState(!hasValidPaymentCache && !hasValidHistoryCache);
   const [error, setError] = useState(null);
-  const [totalBalance, setTotalBalance] = useState(0);
-  const [breakdown, setBreakdown] = useState({
+  const [totalBalance, setTotalBalance] = useState(cachedPayment?.remaining_balance || 0);
+  const [breakdown, setBreakdown] = useState(cachedPayment?.breakdown || {
     tuition: 0,
     misc: 0,
     lab: 0,
     other: 0
   });
-  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [paymentHistory, setPaymentHistory] = useState(hasValidHistoryCache ? JSON.parse(cachedHistoryData) : []);
   const [activeTab, setActiveTab] = useState(0);
   
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
@@ -284,8 +297,16 @@ const StudentPayment = () => {
         message: 'Receipt uploaded successfully! Please wait for verification.',
         severity: 'success'
       });
-      fetchPayments();
-      fetchPaymentHistory();
+      
+      // Invalidate cache and force refresh to get updated payment data
+      localStorage.removeItem('paymentData');
+      localStorage.removeItem('paymentDataTimestamp');
+      localStorage.removeItem('paymentHistoryData');
+      localStorage.removeItem('paymentHistoryTimestamp');
+      
+      // Force refresh to get updated data
+      fetchPayments(true);
+      fetchPaymentHistory(true);
     } catch (error) {
       console.error('Upload Error:', error);
       setSnackbar({
@@ -300,8 +321,28 @@ const StudentPayment = () => {
     fetchPaymentHistory();
   }, []);
 
-  const fetchPaymentHistory = async () => {
+  const fetchPaymentHistory = async (forceRefresh = false) => {
     try {
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedHistoryData = localStorage.getItem('paymentHistoryData');
+        const cachedHistoryTimestamp = localStorage.getItem('paymentHistoryTimestamp');
+        const cachedHistoryAge = cachedHistoryTimestamp ? Date.now() - parseInt(cachedHistoryTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedHistoryData && cachedHistoryAge && cachedHistoryAge < 300000) {
+          const parsedData = JSON.parse(cachedHistoryData);
+          setPaymentHistory(parsedData);
+          
+          // Always do background refresh to check for updates (new payments, status changes, etc.)
+          fetchPaymentHistory(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
       const token = localStorage.getItem('token');
       
       // Decode the JWT token to get student ID
@@ -321,6 +362,11 @@ const StudentPayment = () => {
       });
       
       console.log('Payment history response:', response.data);
+      
+      // Cache the new data
+      localStorage.setItem('paymentHistoryData', JSON.stringify(response.data));
+      localStorage.setItem('paymentHistoryTimestamp', Date.now().toString());
+      
       setPaymentHistory(response.data);
     } catch (error) {
       console.error('Error fetching payment history:', error);
@@ -328,25 +374,36 @@ const StudentPayment = () => {
     }
   };
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (forceRefresh = false) => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Check cache first
-      const cachedData = localStorage.getItem('paymentData');
-      const cacheTimestamp = localStorage.getItem('paymentDataTimestamp');
-      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
-      // Use cache if it's less than 5 minutes old
-      if (cachedData && cacheAge && cacheAge < 300000) {
-        const parsedData = JSON.parse(cachedData);
-        setPayments([parsedData]);
-        setTotalBalance(parsedData.remaining_balance || 0); // Changed from amount to remaining_balance
-        setBreakdown(parsedData.breakdown);
-        setLoading(false);
-        return;
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('paymentData');
+        const cacheTimestamp = localStorage.getItem('paymentDataTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setPayments([parsedData]);
+          setTotalBalance(parsedData.remaining_balance || 0);
+          setBreakdown(parsedData.breakdown);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (balance changes, status updates, etc.)
+          fetchPayments(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
       }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+      setError(null);
 
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/student-payments', {
@@ -367,13 +424,17 @@ const StudentPayment = () => {
         localStorage.setItem('paymentDataTimestamp', Date.now().toString());
         
         setPayments([formattedPayment]);
-        setTotalBalance(formattedPayment.remaining_balance || 0); // Changed from amount to remaining_balance
+        setTotalBalance(formattedPayment.remaining_balance || 0);
         setBreakdown(formattedPayment.breakdown);
+      }
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
       setError('Failed to fetch payment information.');
-    } finally {
       setLoading(false);
     }
   };
