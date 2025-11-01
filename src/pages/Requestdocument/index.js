@@ -109,6 +109,13 @@ const RequestDocument = () => {
           const parsedData = JSON.parse(cachedData);
           setRequestList(parsedData);
           setLoading(false);
+          
+          // Always do background refresh to check for status updates (approvals, rejections, etc.)
+          // This ensures status changes appear on next navigation
+          fetchRequestData(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
           return;
         }
       }
