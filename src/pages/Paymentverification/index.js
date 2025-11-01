@@ -10,13 +10,21 @@ import axios from 'axios';
 const PaymentVerification = () => {
   const [showBy, setshowBy] = useState('');
   const [showProgramBy, setProgramBy] = useState('');
-  const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const token = localStorage.getItem('token');
-  const [loading, setLoading] = useState(true);
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('paymentVerificationData');
+  const cacheTimestamp = localStorage.getItem('paymentVerificationTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [payments, setPayments] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   // Add snackbar state
   const [snackbar, setSnackbar] = useState({
@@ -31,19 +39,32 @@ const PaymentVerification = () => {
   };
 
   // Update fetchPayments to fetch enrollment payments with caching
-  const fetchPayments = useCallback(async () => {
-    setLoading(true);
+  const fetchPayments = useCallback(async (forceRefresh = false) => {
     try {
-      // Check cache first
-      const cachedData = localStorage.getItem('paymentVerificationData');
-      const cacheTimestamp = localStorage.getItem('paymentVerificationTimestamp');
-      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
-      // Use cache if it's less than 5 minutes old
-      if (cachedData && cacheAge && cacheAge < 300000) {
-        setPayments(JSON.parse(cachedData));
-        setLoading(false);
-        return;
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('paymentVerificationData');
+        const cacheTimestamp = localStorage.getItem('paymentVerificationTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setPayments(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new payments, status changes, etc.)
+          fetchPayments(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
       }
 
       const response = await axios.get('/api/enrollment-for-verification', {
@@ -58,6 +79,11 @@ const PaymentVerification = () => {
       localStorage.setItem('paymentVerificationTimestamp', Date.now().toString());
       
       setPayments(response.data || []);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Error fetching payments:', error);
       setSnackbar({
@@ -65,7 +91,6 @@ const PaymentVerification = () => {
         message: error.response?.data?.error || 'Failed to fetch enrollment payments',
         severity: 'error'
       });
-    } finally {
       setLoading(false);
     }
   }, [token]);
@@ -87,7 +112,13 @@ const PaymentVerification = () => {
         message: 'Student officially enrolled successfully',
         severity: 'success'
       });
-      fetchPayments();
+      
+      // Invalidate cache and force refresh to show updated status
+      localStorage.removeItem('paymentVerificationData');
+      localStorage.removeItem('paymentVerificationTimestamp');
+      
+      // Force refresh to get updated data
+      fetchPayments(true);
     } catch (error) {
       console.error('Error verifying enrollment:', error);
       setSnackbar({
@@ -115,7 +146,13 @@ const PaymentVerification = () => {
         message: 'Enrollment payment rejected',
         severity: 'warning'
       });
-      fetchPayments();
+      
+      // Invalidate cache and force refresh to show updated status
+      localStorage.removeItem('paymentVerificationData');
+      localStorage.removeItem('paymentVerificationTimestamp');
+      
+      // Force refresh to get updated data
+      fetchPayments(true);
     } catch (error) {
       console.error('Error rejecting enrollment:', error);
       setSnackbar({
@@ -129,14 +166,6 @@ const PaymentVerification = () => {
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
-
-  // Add cleanup effect
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem('paymentVerificationData');
-      localStorage.removeItem('paymentVerificationTimestamp');
-    };
-  }, []);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
