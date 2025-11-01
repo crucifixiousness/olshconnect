@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { MyContext } from "../../App";
 import { 
   Button, 
@@ -24,10 +24,28 @@ const AcademicRecords = () => {
   const [enrollment, setEnrollment] = useState(null);
   const [error, setError] = useState('');
 
+  // Cache for academic records data
+  const academicDataCache = useRef({
+    data: null,
+    timestamp: null,
+    ttl: 5 * 60 * 1000 // 5 minutes cache TTL
+  });
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    fetchAcademicRecord();
+
+    // Check if cache exists and is valid - if so, skip loading delay
+    const now = Date.now();
+    if (academicDataCache.current.data &&
+        academicDataCache.current.timestamp &&
+        (now - academicDataCache.current.timestamp) < academicDataCache.current.ttl) {
+      setCourses(academicDataCache.current.data.courses || []);
+      setEnrollment(academicDataCache.current.data.enrollment || null);
+      setLoading(false); // Immediately hide loading if cache is valid
+    } else {
+      fetchAcademicRecord();
+    }
   }, [context]);
 
   const fetchAcademicRecord = async () => {
@@ -39,16 +57,39 @@ const AcademicRecords = () => {
         setLoading(false);
         return;
       }
+
+      // Check if cache is valid
+      const now = Date.now();
+      if (academicDataCache.current.data &&
+          academicDataCache.current.timestamp &&
+          (now - academicDataCache.current.timestamp) < academicDataCache.current.ttl) {
+        setCourses(academicDataCache.current.data.courses || []);
+        setEnrollment(academicDataCache.current.data.enrollment || null);
+        setLoading(false); // Hide loading immediately when using cache
+        return;
+      }
+
       const res = await axios.get('/api/student-academic-record', {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Update cache with fetched data
+      academicDataCache.current = {
+        data: {
+          courses: res.data.courses || [],
+          enrollment: res.data.enrollment || null
+        },
+        timestamp: now,
+        ttl: 5 * 60 * 1000
+      };
+
       setCourses(res.data.courses || []);
       setEnrollment(res.data.enrollment || null);
       setError('');
+      setLoading(false); // Hide loading after data is fetched
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to load academic records');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Hide loading even on error
     }
   };
 
