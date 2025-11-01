@@ -190,28 +190,12 @@ const RequestDocument = () => {
       );
       
       if (response.status === 201) {
-        const newRequest = response.data;
-        
-        // Immediately update cache and state with the new request
-        const now = Date.now();
-        const currentCache = requestDataCache.current.data || [];
-        
-        // Add new request to the beginning of the list (newest first)
-        const updatedList = [newRequest, ...currentCache].sort((a, b) => {
-          const dateA = new Date(a.req_date || a.requestDate || 0);
-          const dateB = new Date(b.req_date || b.requestDate || 0);
-          return dateB - dateA; // Descending order (newest first)
-        });
-        
-        // Update cache immediately
+        // Invalidate cache to force fresh data fetch
         requestDataCache.current = {
-          data: updatedList,
-          timestamp: now,
+          data: null,
+          timestamp: null,
           ttl: 5 * 60 * 1000
         };
-        
-        // Update state immediately for instant UI update
-        setRequestList(updatedList);
         
         setShowRequestModal(false);
         setSnackbar({
@@ -229,12 +213,8 @@ const RequestDocument = () => {
         });
         // Reset pagination to show first page
         setPage(1);
-        
-        // Background fetch to ensure data consistency (don't await)
-        fetchRequestData().catch(err => {
-          console.error("Background fetch error:", err);
-          // If background fetch fails, keep the optimistic update
-        });
+        // Force refresh by bypassing cache - await to ensure it completes
+        await fetchRequestData();
       }
     } catch (error) {
       console.error("Error submitting request:", error);
