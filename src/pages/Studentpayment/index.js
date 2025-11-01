@@ -155,11 +155,19 @@ Additional Data: ${JSON.stringify(details, null, 2)}
 };
 
 const StudentPayment = () => {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedPaymentData = localStorage.getItem('paymentData');
+  const cachedPaymentTimestamp = localStorage.getItem('paymentDataTimestamp');
+  const cachedPaymentAge = cachedPaymentTimestamp ? Date.now() - parseInt(cachedPaymentTimestamp) : null;
+  const hasValidPaymentCache = cachedPaymentData && cachedPaymentAge && cachedPaymentAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const cachedPayment = hasValidPaymentCache ? JSON.parse(cachedPaymentData) : null;
+  const [payments, setPayments] = useState(cachedPayment ? [cachedPayment] : []);
+  const [loading, setLoading] = useState(!hasValidPaymentCache); // Only show loading if no valid cache
   const [error, setError] = useState(null);
-  const [totalBalance, setTotalBalance] = useState(0);
-  const [breakdown, setBreakdown] = useState({
+  const [totalBalance, setTotalBalance] = useState(cachedPayment?.remaining_balance || 0);
+  const [breakdown, setBreakdown] = useState(cachedPayment?.breakdown || {
     tuition: 0,
     misc: 0,
     lab: 0,
@@ -284,7 +292,9 @@ const StudentPayment = () => {
         message: 'Receipt uploaded successfully! Please wait for verification.',
         severity: 'success'
       });
-      fetchPayments();
+      
+      // Force refresh to get updated payment data after receipt upload
+      fetchPayments(true);
       fetchPaymentHistory();
     } catch (error) {
       console.error('Upload Error:', error);
@@ -328,25 +338,36 @@ const StudentPayment = () => {
     }
   };
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (forceRefresh = false) => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Check cache first
-      const cachedData = localStorage.getItem('paymentData');
-      const cacheTimestamp = localStorage.getItem('paymentDataTimestamp');
-      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
-      // Use cache if it's less than 5 minutes old
-      if (cachedData && cacheAge && cacheAge < 300000) {
-        const parsedData = JSON.parse(cachedData);
-        setPayments([parsedData]);
-        setTotalBalance(parsedData.remaining_balance || 0); // Changed from amount to remaining_balance
-        setBreakdown(parsedData.breakdown);
-        setLoading(false);
-        return;
+      // Check cache first (unless forcing refresh), but keep existing logic
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('paymentData');
+        const cacheTimestamp = localStorage.getItem('paymentDataTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setPayments([parsedData]);
+          setTotalBalance(parsedData.remaining_balance || 0);
+          setBreakdown(parsedData.breakdown);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (balance changes, status updates, etc.)
+          fetchPayments(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
       }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+      setError(null);
 
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/student-payments', {
@@ -367,13 +388,17 @@ const StudentPayment = () => {
         localStorage.setItem('paymentDataTimestamp', Date.now().toString());
         
         setPayments([formattedPayment]);
-        setTotalBalance(formattedPayment.remaining_balance || 0); // Changed from amount to remaining_balance
+        setTotalBalance(formattedPayment.remaining_balance || 0);
         setBreakdown(formattedPayment.breakdown);
+      }
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
       setError('Failed to fetch payment information.');
-    } finally {
       setLoading(false);
     }
   };
