@@ -27,9 +27,7 @@ import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import Searchbar from '../../components/Searchbar';
 
 const TuitionManagement = () => {
-  const [tuitionFees, setTuitionFees] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  const [loading, setLoading] = useState(true);
   // Modify the formData state to include program_id
   const [formData, setFormData] = useState({
     program_id: '', // Changed from 'program' to 'program_id'
@@ -40,10 +38,25 @@ const TuitionManagement = () => {
     labFees: '',
     otherFees: ''
   });
-  const [programs, setPrograms] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedTuitionData = localStorage.getItem('tuitionFeesData');
+  const cachedTuitionTimestamp = localStorage.getItem('tuitionFeesTimestamp');
+  const cachedTuitionAge = cachedTuitionTimestamp ? Date.now() - parseInt(cachedTuitionTimestamp) : null;
+  const hasValidTuitionCache = cachedTuitionData && cachedTuitionAge && cachedTuitionAge < 300000; // 5 minutes
+
+  const cachedProgramsData = localStorage.getItem('programsData');
+  const cachedProgramsTimestamp = localStorage.getItem('programsTimestamp');
+  const cachedProgramsAge = cachedProgramsTimestamp ? Date.now() - parseInt(cachedProgramsTimestamp) : null;
+  const hasValidProgramsCache = cachedProgramsData && cachedProgramsAge && cachedProgramsAge < 600000; // 10 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [tuitionFees, setTuitionFees] = useState(hasValidTuitionCache ? (JSON.parse(cachedTuitionData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidTuitionCache); // Only show loading if no valid cache
+  const [programs, setPrograms] = useState(hasValidProgramsCache ? (JSON.parse(cachedProgramsData) || []) : []);
 
   // Add CSS to override Searchbar margin
   useEffect(() => {
@@ -60,17 +73,28 @@ const TuitionManagement = () => {
     };
   }, []);
 
-  const fetchPrograms = async () => {
+  const fetchPrograms = async (forceRefresh = false) => {
     try {
-      // Check cache first
-      const cachedData = localStorage.getItem('programsData');
-      const cacheTimestamp = localStorage.getItem('programsTimestamp');
-      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
-      // Use cache if it's less than 10 minutes old (programs don't change often)
-      if (cachedData && cacheAge && cacheAge < 600000) {
-        setPrograms(JSON.parse(cachedData));
-        return;
+      // Check cache first (unless forcing refresh), but keep existing logic
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('programsData');
+        const cacheTimestamp = localStorage.getItem('programsTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        
+        // Use cache if it's less than 10 minutes old (programs don't change often)
+        if (cachedData && cacheAge && cacheAge < 600000) {
+          setPrograms(JSON.parse(cachedData));
+          
+          // Background refresh to check for program updates (less frequent than tuition fees)
+          // Only refresh if cache is older than 5 minutes to avoid too many requests
+          if (cacheAge > 300000) {
+            fetchPrograms(true).catch(err => {
+              console.error("Background refresh error:", err);
+              // Keep showing cached data if background refresh fails
+            });
+          }
+          return;
+        }
       }
 
       const response = await axios.get('/api/programs');
@@ -90,28 +114,32 @@ const TuitionManagement = () => {
     fetchPrograms();
   }, []);
 
-  // Add cleanup effect
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem('tuitionFeesData');
-      localStorage.removeItem('tuitionFeesTimestamp');
-      localStorage.removeItem('programsData');
-      localStorage.removeItem('programsTimestamp');
-    };
-  }, []);
-
-  const fetchTuitionFees = async () => {
+  const fetchTuitionFees = async (forceRefresh = false) => {
     try {
-      // Check cache first
-      const cachedData = localStorage.getItem('tuitionFeesData');
-      const cacheTimestamp = localStorage.getItem('tuitionFeesTimestamp');
-      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-      
-      // Use cache if it's less than 5 minutes old
-      if (cachedData && cacheAge && cacheAge < 300000) {
-        setTuitionFees(JSON.parse(cachedData));
-        setLoading(false);
-        return;
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('tuitionFeesData');
+        const cacheTimestamp = localStorage.getItem('tuitionFeesTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setTuitionFees(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new fees, fee changes, etc.)
+          fetchTuitionFees(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
       }
 
       const response = await axios.get('/api/tuition-fees');
@@ -121,9 +149,14 @@ const TuitionManagement = () => {
       localStorage.setItem('tuitionFeesTimestamp', Date.now().toString());
       
       setTuitionFees(response.data);
-      setLoading(false);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Error fetching tuition fees:', error);
+      setLoading(false);
       // No error message displayed to user
     }
   };
@@ -146,10 +179,16 @@ const TuitionManagement = () => {
         message: 'Tuition fee set successfully!',
         severity: 'success'
       });
-      fetchTuitionFees(); // Refresh the list
+      
+      // Invalidate cache and force refresh to show new tuition fee
+      localStorage.removeItem('tuitionFeesData');
+      localStorage.removeItem('tuitionFeesTimestamp');
+      
+      // Force refresh to get updated data
+      fetchTuitionFees(true);
       setOpenModal(false);
       setFormData({
-        program: '',
+        program_id: '',
         yearLevel: '',
         semester: '',
         tuitionAmount: '',
