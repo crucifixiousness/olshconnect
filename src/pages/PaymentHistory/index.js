@@ -21,21 +21,57 @@ import { FaPrint } from 'react-icons/fa';
 import axios from 'axios';
 
 const PaymentHistory = () => {
-  const [payments, setPayments] = useState([]);
   const [filterProgram, setFilterProgram] = useState('');
   const [filterDate, setFilterDate] = useState('');
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const token = localStorage.getItem('token');
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  // Note: Cache is for unfiltered data; filters are applied client-side for instant results
+  const cachedData = localStorage.getItem('allPaymentHistoryData');
+  const cacheTimestamp = localStorage.getItem('allPaymentHistoryTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [payments, setPayments] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   useEffect(() => {
     fetchPayments();
   }, []);
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (forceRefresh = false) => {
     try {
-      setLoading(true);
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      // Cache stores unfiltered data for instant display
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('allPaymentHistoryData');
+        const cacheTimestamp = localStorage.getItem('allPaymentHistoryTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setPayments(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new payments, status changes, etc.)
+          fetchPayments(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+
+      // Fetch with current filters
       const response = await axios.get('/api/all-payment-history', {
         params: {
           program: filterProgram,
@@ -43,10 +79,19 @@ const PaymentHistory = () => {
         },
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Cache the fetched data
+      localStorage.setItem('allPaymentHistoryData', JSON.stringify(response.data));
+      localStorage.setItem('allPaymentHistoryTimestamp', Date.now().toString());
+      
       setPayments(response.data);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Error fetching payments:', error);
-    } finally {
       setLoading(false);
     }
   };
