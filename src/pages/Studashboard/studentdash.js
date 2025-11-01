@@ -16,14 +16,22 @@ import { MyContext } from "../../App";
 import axios from 'axios';
 
 const StuDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [schedule, setSchedule] = useState([]);
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
   const { user } = useContext(MyContext);
   /* eslint-disable no-unused-vars */
   const context = useContext(MyContext);
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('studentScheduleData');
+  const cacheTimestamp = localStorage.getItem('studentScheduleTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [schedule, setSchedule] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   // Format time function for displaying schedule times
   const formatTime = (time) => {
@@ -38,8 +46,20 @@ const StuDashboard = () => {
   // Fetch student's schedule data
   const fetchStudentSchedule = async () => {
     try {
+      // Check cache first (like Academic Records and Student Profile)
+      const cachedData = localStorage.getItem('studentScheduleData');
+      const cacheTimestamp = localStorage.getItem('studentScheduleTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        const parsedData = JSON.parse(cachedData);
+        setSchedule(parsedData);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      
       const token = localStorage.getItem('token');
       if (!token) {
         setLoading(false);
@@ -51,10 +71,16 @@ const StuDashboard = () => {
       });
 
       console.log('Student schedule response:', response.data);
-      setSchedule(response.data.schedule || []);
+      const scheduleData = response.data.schedule || [];
+
+      // Cache the new data (like Academic Records and Student Profile)
+      localStorage.setItem('studentScheduleData', JSON.stringify(scheduleData));
+      localStorage.setItem('studentScheduleTimestamp', Date.now().toString());
+
+      setSchedule(scheduleData);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching student schedule:', error);
-    } finally {
       setLoading(false);
     }
   };
