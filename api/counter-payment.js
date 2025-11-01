@@ -44,14 +44,14 @@ module.exports = async (req, res) => {
        FROM enrollments e
        JOIN students s ON e.student_id = s.id
        WHERE e.enrollment_id = $1 
-       AND e.enrollment_status = 'Verified'`,
+       AND e.enrollment_status IN ('Verified', 'Officially Enrolled', 'For Payment')`,
       [enrollment_id]
     );
 
     if (enrollmentResult.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({
-        error: "No verified enrollment found"
+        error: "No eligible enrollment found. Enrollment must be Verified, Officially Enrolled, or For Payment."
       });
     }
 
