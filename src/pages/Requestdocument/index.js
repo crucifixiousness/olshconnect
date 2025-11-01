@@ -113,14 +113,21 @@ const RequestDocument = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      // Update cache
+      // Sort requests by date (newest first) before caching and setting state
+      const sortedData = [...response.data].sort((a, b) => {
+        const dateA = new Date(a.req_date || a.requestDate || 0);
+        const dateB = new Date(b.req_date || b.requestDate || 0);
+        return dateB - dateA; // Descending order (newest first)
+      });
+
+      // Update cache with sorted data
       requestDataCache.current = {
-        data: response.data,
+        data: sortedData,
         timestamp: now,
         ttl: 5 * 60 * 1000
       };
 
-      setRequestList(response.data);
+      setRequestList(sortedData);
     } catch (error) {
       console.error("Error fetching request data:", error);
     }
@@ -178,7 +185,13 @@ const RequestDocument = () => {
       );
       
       if (response.status === 201) {
-        setRequestList([...requestList, response.data]);
+        // Invalidate cache to force fresh data fetch
+        requestDataCache.current = {
+          data: null,
+          timestamp: null,
+          ttl: 5 * 60 * 1000
+        };
+        
         setShowRequestModal(false);
         setSnackbar({
           open: true,
@@ -193,6 +206,9 @@ const RequestDocument = () => {
           requestDate: new Date().toISOString().slice(0, 10),
           status: "Pending",
         });
+        // Reset pagination to show first page
+        setPage(1);
+        // Force refresh by bypassing cache
         fetchRequestData();
       }
     } catch (error) {
