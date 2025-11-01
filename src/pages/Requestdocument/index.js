@@ -28,12 +28,21 @@ const RequestDocument = () => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const pdfCache = useRef(new Map());
 
-
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    // Simulate loading time
-    setTimeout(() => setLoading(false), 1000);
+    
+    // Check if cache exists and is valid - if so, skip loading delay
+    const now = Date.now();
+    if (requestDataCache.current.data &&
+        requestDataCache.current.timestamp &&
+        (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
+      setRequestList(requestDataCache.current.data);
+      setLoading(false); // Immediately hide loading if cache is valid
+    } else {
+      // Only show loading if no cache or cache expired
+      setTimeout(() => setLoading(false), 1000);
+    }
   }, [context]);
 
   // Add safe parsing of user data
@@ -63,7 +72,7 @@ const RequestDocument = () => {
 
   // Filter requests
   const filteredRequests = requestList.filter(request => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       request.doc_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -101,10 +110,11 @@ const RequestDocument = () => {
 
       // Check if cache is valid
       const now = Date.now();
-      if (requestDataCache.current.data && 
-          requestDataCache.current.timestamp && 
+      if (requestDataCache.current.data &&
+          requestDataCache.current.timestamp &&
           (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
         setRequestList(requestDataCache.current.data);
+        setLoading(false); // Hide loading immediately when using cache
         return;
       }
 
@@ -128,8 +138,10 @@ const RequestDocument = () => {
       };
 
       setRequestList(sortedData);
+      setLoading(false); // Hide loading after data is fetched
     } catch (error) {
       console.error("Error fetching request data:", error);
+      setLoading(false); // Hide loading even on error
     }
   }, [user]);
 
@@ -174,10 +186,10 @@ const RequestDocument = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post("/api/requesting-document", 
+      const response = await axios.post("/api/requesting-document",
         { doc_type, description }, // Include description in request
         {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
@@ -191,7 +203,7 @@ const RequestDocument = () => {
           timestamp: null,
           ttl: 5 * 60 * 1000
         };
-        
+
         setShowRequestModal(false);
         setSnackbar({
           open: true,
@@ -234,8 +246,8 @@ const RequestDocument = () => {
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/generate-document`, {
         params: { req_id: request.req_id },
-        headers: { 
-          'Authorization': `Bearer ${token}` 
+        headers: {
+          'Authorization': `Bearer ${token}`
         },
         responseType: 'arraybuffer',
         validateStatus: false
