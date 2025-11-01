@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useCallback } from 'react';
 import { 
   CircularProgress,
   Paper,
@@ -13,44 +13,89 @@ import axios from 'axios';
 import { MyContext } from "../../App";
 
 const StudentCourses = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [courses, setCourses] = useState([]);
   /* eslint-disable no-unused-vars */
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
   /* eslint-disable no-unused-vars */
   const context = useContext(MyContext);
 
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('studentCoursesData');
+  const cacheTimestamp = localStorage.getItem('studentCoursesTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [courses, setCourses] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
+
+  const fetchCourses = useCallback(async (forceRefresh = false) => {
+    try {
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('studentCoursesData');
+        const cacheTimestamp = localStorage.getItem('studentCoursesTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setCourses(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new courses, course changes, etc.)
+          fetchCourses(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+      setError('');
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please login to view your courses.');
+        setCourses([]);
+        setLoading(false);
+        return;
+      }
+      
+      const { data } = await axios.get('/api/student-courses', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const coursesData = Array.isArray(data.courses) ? data.courses : [];
+
+      // Cache the new data (like Academic Records and Student Profile)
+      localStorage.setItem('studentCoursesData', JSON.stringify(coursesData));
+      localStorage.setItem('studentCoursesTimestamp', Date.now().toString());
+
+      setCourses(coursesData);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
+    } catch (err) {
+      const message = err.response?.data?.error || 'Failed to load courses.';
+      setError(message);
+      setCourses([]);
+      setLoading(false);
+    }
+  }, []); // Empty dependency array - function doesn't depend on props or state
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-
-    const fetchCourses = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Please login to view your courses.');
-          setCourses([]);
-          return;
-        }
-        
-        const { data } = await axios.get('/api/student-courses', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        setCourses(Array.isArray(data.courses) ? data.courses : []);
-      } catch (err) {
-        const message = err.response?.data?.error || 'Failed to load courses.';
-        setError(message);
-        setCourses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCourses();
-  }, [context]);
+  }, [context, fetchCourses]);
 
   // Debug logging for state changes
   useEffect(() => {
