@@ -16,13 +16,8 @@ import {
 import axios from 'axios';
 
 const AcademicRecords = () => {
-  const [loading, setLoading] = useState(true);
   const { user } = useContext(MyContext);
   const context = useContext(MyContext);
-
-  const [courses, setCourses] = useState([]);
-  const [enrollment, setEnrollment] = useState(null);
-  const [error, setError] = useState('');
 
   // Cache for academic records data
   const academicDataCache = useRef({
@@ -31,21 +26,38 @@ const AcademicRecords = () => {
     ttl: 5 * 60 * 1000 // 5 minutes cache TTL
   });
 
+  // Check cache synchronously on mount to determine initial loading state
+  const now = Date.now();
+  const hasValidCache = academicDataCache.current.data &&
+    academicDataCache.current.timestamp &&
+    (now - academicDataCache.current.timestamp) < academicDataCache.current.ttl;
+
+  // Initialize state with cached data if available, otherwise empty
+  const [courses, setCourses] = useState(hasValidCache ? (academicDataCache.current.data.courses || []) : []);
+  const [enrollment, setEnrollment] = useState(hasValidCache ? (academicDataCache.current.data.enrollment || null) : null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
+
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
 
-    // Check if cache exists and is valid - if so, skip loading delay
-    const now = Date.now();
-    if (academicDataCache.current.data &&
-        academicDataCache.current.timestamp &&
-        (now - academicDataCache.current.timestamp) < academicDataCache.current.ttl) {
+    // Check cache again in case it was updated
+    const checkNow = Date.now();
+    const cacheValid = academicDataCache.current.data &&
+      academicDataCache.current.timestamp &&
+      (checkNow - academicDataCache.current.timestamp) < academicDataCache.current.ttl;
+
+    // If cache is valid, ensure data is set and loading is false, then skip fetch
+    if (cacheValid) {
       setCourses(academicDataCache.current.data.courses || []);
       setEnrollment(academicDataCache.current.data.enrollment || null);
-      setLoading(false); // Immediately hide loading if cache is valid
-    } else {
-      fetchAcademicRecord();
+      setLoading(false);
+      return;
     }
+
+    // Only fetch if no valid cache exists
+    fetchAcademicRecord();
   }, [context]);
 
   const fetchAcademicRecord = async () => {
