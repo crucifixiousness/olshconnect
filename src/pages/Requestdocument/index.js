@@ -35,7 +35,7 @@ const RequestDocument = () => {
     // Simulate loading time
     setTimeout(() => setLoading(false), 1000);
   }, [context]);
-  
+
   // Add safe parsing of user data
   const user = (() => {
     try {
@@ -66,9 +66,9 @@ const RequestDocument = () => {
     const matchesSearch = !searchTerm || 
       request.doc_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = !statusFilter || request.req_status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -101,14 +101,9 @@ const RequestDocument = () => {
 
       // Check if cache is valid
       const now = Date.now();
-      const cacheAge = requestDataCache.current.timestamp ? (now - requestDataCache.current.timestamp) : Infinity;
-      
-      // If cache exists and is valid (and not too recent - might miss new submissions), use it
-      // For very recent cache (< 30 seconds), still fetch fresh to catch any new submissions
       if (requestDataCache.current.data && 
           requestDataCache.current.timestamp && 
-          cacheAge < requestDataCache.current.ttl &&
-          cacheAge >= 30000) { // Only use cache if it's at least 30 seconds old
+          (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
         setRequestList(requestDataCache.current.data);
         return;
       }
@@ -156,9 +151,9 @@ const RequestDocument = () => {
   // Submit new document request
   const handleAddRequest = async (e) => {
     e.preventDefault();
-  
+
     const { doc_type, description } = newRequest;
-  
+
     if (!doc_type) {
       setSnackbar({
         open: true,
@@ -176,7 +171,7 @@ const RequestDocument = () => {
       });
       return;
     }
-  
+
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post("/api/requesting-document", 
@@ -188,7 +183,7 @@ const RequestDocument = () => {
           }
         }
       );
-      
+
       if (response.status === 201) {
         // Invalidate cache to force fresh data fetch
         requestDataCache.current = {
@@ -213,8 +208,8 @@ const RequestDocument = () => {
         });
         // Reset pagination to show first page
         setPage(1);
-        // Force refresh by bypassing cache - await to ensure it completes
-        await fetchRequestData();
+        // Force refresh by bypassing cache
+        fetchRequestData();
       }
     } catch (error) {
       console.error("Error submitting request:", error);
@@ -253,10 +248,10 @@ const RequestDocument = () => {
 
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      
+
       // Cache the PDF URL
       pdfCache.current.set(request.req_id, pdfUrl);
-      
+
       setPdfUrl(pdfUrl);
       setShowPdfModal(true);
     } catch (error) {
@@ -630,7 +625,7 @@ const RequestDocument = () => {
           </form>
         </Box>
       </Modal>
-      
+
       {/* Add this before the closing div */}
       <Snackbar
         data-testid="snackbar"
