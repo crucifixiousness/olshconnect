@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { MyContext } from "../../App";
 import { 
   Button, 
@@ -19,49 +19,40 @@ const AcademicRecords = () => {
   const { user } = useContext(MyContext);
   const context = useContext(MyContext);
 
-  // Cache for academic records data
-  const academicDataCache = useRef({
-    data: null,
-    timestamp: null,
-    ttl: 5 * 60 * 1000 // 5 minutes cache TTL
-  });
-
-  // Check cache synchronously on mount to determine initial loading state
-  const now = Date.now();
-  const hasValidCache = academicDataCache.current.data &&
-    academicDataCache.current.timestamp &&
-    (now - academicDataCache.current.timestamp) < academicDataCache.current.ttl;
+  // Check localStorage cache synchronously on mount (like Student Profile)
+  const cachedData = localStorage.getItem('academicRecordsData');
+  const cacheTimestamp = localStorage.getItem('academicRecordsTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
 
   // Initialize state with cached data if available, otherwise empty
-  const [courses, setCourses] = useState(hasValidCache ? (academicDataCache.current.data.courses || []) : []);
-  const [enrollment, setEnrollment] = useState(hasValidCache ? (academicDataCache.current.data.enrollment || null) : null);
+  const [courses, setCourses] = useState(hasValidCache ? (JSON.parse(cachedData).courses || []) : []);
+  const [enrollment, setEnrollment] = useState(hasValidCache ? (JSON.parse(cachedData).enrollment || null) : null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-
-    // Check cache again in case it was updated
-    const checkNow = Date.now();
-    const cacheValid = academicDataCache.current.data &&
-      academicDataCache.current.timestamp &&
-      (checkNow - academicDataCache.current.timestamp) < academicDataCache.current.ttl;
-
-    // If cache is valid, ensure data is set and loading is false, then skip fetch
-    if (cacheValid) {
-      setCourses(academicDataCache.current.data.courses || []);
-      setEnrollment(academicDataCache.current.data.enrollment || null);
-      setLoading(false);
-      return;
-    }
-
-    // Only fetch if no valid cache exists
     fetchAcademicRecord();
   }, [context]);
 
   const fetchAcademicRecord = async () => {
     try {
+      // Check cache first (like Student Profile)
+      const cachedData = localStorage.getItem('academicRecordsData');
+      const cacheTimestamp = localStorage.getItem('academicRecordsTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it's less than 5 minutes old
+      if (cachedData && cacheAge && cacheAge < 300000) {
+        const parsedData = JSON.parse(cachedData);
+        setCourses(parsedData.courses || []);
+        setEnrollment(parsedData.enrollment || null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
@@ -70,38 +61,24 @@ const AcademicRecords = () => {
         return;
       }
 
-      // Check if cache is valid
-      const now = Date.now();
-      if (academicDataCache.current.data &&
-          academicDataCache.current.timestamp &&
-          (now - academicDataCache.current.timestamp) < academicDataCache.current.ttl) {
-        setCourses(academicDataCache.current.data.courses || []);
-        setEnrollment(academicDataCache.current.data.enrollment || null);
-        setLoading(false); // Hide loading immediately when using cache
-        return;
-      }
-
       const res = await axios.get('/api/student-academic-record', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Update cache with fetched data
-      academicDataCache.current = {
-        data: {
-          courses: res.data.courses || [],
-          enrollment: res.data.enrollment || null
-        },
-        timestamp: now,
-        ttl: 5 * 60 * 1000
-      };
+      // Cache the new data (like Student Profile)
+      localStorage.setItem('academicRecordsData', JSON.stringify({
+        courses: res.data.courses || [],
+        enrollment: res.data.enrollment || null
+      }));
+      localStorage.setItem('academicRecordsTimestamp', Date.now().toString());
 
       setCourses(res.data.courses || []);
       setEnrollment(res.data.enrollment || null);
       setError('');
-      setLoading(false); // Hide loading after data is fetched
+      setLoading(false);
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to load academic records');
-      setLoading(false); // Hide loading even on error
+      setLoading(false);
     }
   };
 
