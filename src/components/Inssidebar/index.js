@@ -1,7 +1,6 @@
 import Button from '@mui/material/Button';
 import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { FaAnglesRight } from "react-icons/fa6";
-import { PiStudentBold } from "react-icons/pi";
 import { IoDocuments } from "react-icons/io5";
 import { BsCalendar3 } from "react-icons/bs";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -21,12 +20,9 @@ const InstructorSidebar = () => {
         return 0;
       case '/instructor-classes':
       case '/instructor-classes/grades':
-      case '/instructor-classes/reports':
         return 1;
       case '/instructor-schedule':
         return 2;
-      case '/instructor-students':
-        return 3;
       default:
         return 0;
     }
@@ -69,7 +65,6 @@ const InstructorSidebar = () => {
             <div className={`studentMenuWrap ${isClassMenuOpen ? 'colapse' : 'colapsed'}`}>
               <ul className="studentMenu">
                 <li><Link to="/instructor-classes/grades">Grade Entry</Link></li>
-                <li><Link to="/instructor-classes/reports">Class Reports</Link></li>
               </ul>
             </div>
           </li>
@@ -78,15 +73,6 @@ const InstructorSidebar = () => {
               <Button className={`w-100 ${activeTab === 2 ? 'active' : ''}`} >
                 <span className='icon'><BsCalendar3 /></span>
                 Schedule
-                <span className='arrow'><FaAnglesRight /></span>
-              </Button>
-            </Link>
-          </li>
-          <li>
-            <Link to="/instructor-students">
-              <Button className={`w-100 ${activeTab === 3 ? 'active' : ''}`} >
-                <span className='icon'><PiStudentBold /></span>
-                Student Records
                 <span className='arrow'><FaAnglesRight /></span>
               </Button>
             </Link>
