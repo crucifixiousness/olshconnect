@@ -74,7 +74,17 @@ module.exports = async (req, res) => {
 
     // Check if this is the first payment
     const isFirstPayment = parseFloat(enrollment.amount_paid || 0) === 0;
-    const paymentRemarks = isFirstPayment ? "For Enrollment" : `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`;
+    // If status is Verified, this payment is for enrollment
+    const paymentRemarks = (isFirstPayment || enrollment.enrollment_status === 'Verified') 
+      ? "For Enrollment" 
+      : `Counter payment for ${enrollment.first_name} ${enrollment.last_name}`;
+
+    // Determine enrollment status update
+    // If status is Verified, update to Officially Enrolled when payment is made
+    let newEnrollmentStatus = enrollment.enrollment_status;
+    if (enrollment.enrollment_status === 'Verified') {
+      newEnrollmentStatus = 'Officially Enrolled';
+    }
 
     // Update enrollment status and payment details
     await client.query(`
@@ -82,16 +92,13 @@ module.exports = async (req, res) => {
       SET amount_paid = $1,
           remaining_balance = $2,
           payment_status = $3,
-          enrollment_status = CASE 
-            WHEN $4 = true THEN 'For Payment'
-            ELSE enrollment_status 
-          END
+          enrollment_status = $4
       WHERE enrollment_id = $5`,
       [
         totalAmountPaid,
         remainingBalance,
         paymentStatus,
-        isFirstPayment,
+        newEnrollmentStatus,
         enrollment_id
       ]
     );
