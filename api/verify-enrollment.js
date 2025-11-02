@@ -113,11 +113,11 @@ module.exports = async (req, res) => {
         });
       } else {
         // For regular students, use standard fee structure
-        const fees = feesResult.rows[0];
+      const fees = feesResult.rows[0];
         totalFee = parseFloat(fees.tuition_amount) +
-                  parseFloat(fees.misc_fees) +
-                  parseFloat(fees.lab_fees) +
-                  parseFloat(fees.other_fees);
+                      parseFloat(fees.misc_fees) +
+                      parseFloat(fees.lab_fees) +
+                      parseFloat(fees.other_fees);
         
         console.log('Regular student fee calculation:', {
           tuition_amount: fees.tuition_amount,
@@ -128,16 +128,20 @@ module.exports = async (req, res) => {
         });
       }
 
+      // Determine enrollment status based on student type
+      // Transferees get 'Pending TOR', regular students get 'Verified'
+      const enrollmentStatus = enrollment.student_type === 'transferee' ? 'Pending TOR' : 'Verified';
+
       // Update enrollment with fees and status
       const result = await pool.query(
         `UPDATE enrollments 
-         SET enrollment_status = 'Verified',
-             total_fee = $1,
-             remaining_balance = $2,
+         SET enrollment_status = $1,
+             total_fee = $2,
+             remaining_balance = $3,
              payment_status = 'Unpaid'
-         WHERE enrollment_id = $3
+         WHERE enrollment_id = $4
          RETURNING *`,
-        [totalFee, totalFee, enrollmentId]
+        [enrollmentStatus, totalFee, totalFee, enrollmentId]
       );
       
       console.log('Query result:', result); // Debug log
