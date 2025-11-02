@@ -32,10 +32,27 @@ const RegistrarEnrollment = () => {
   const cachedData = localStorage.getItem('registrarEnrollmentsData');
   const cacheTimestamp = localStorage.getItem('registrarEnrollmentsTimestamp');
   const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+  
+  // Validate cache: must exist, be less than 5 minutes old, and contain data (not empty array)
+  let parsedCache = null;
+  let hasValidCache = false;
+  
+  try {
+    if (cachedData) {
+      parsedCache = JSON.parse(cachedData);
+      // Validate: must be an array with data and valid timestamp
+      hasValidCache = Array.isArray(parsedCache) && parsedCache.length > 0 && cacheAge && cacheAge < 300000;
+    }
+  } catch (e) {
+    // Invalid cache, clear it
+    localStorage.removeItem('registrarEnrollmentsData');
+    localStorage.removeItem('registrarEnrollmentsTimestamp');
+    parsedCache = null;
+    hasValidCache = false;
+  }
 
   // Initialize state with cached data if available, otherwise empty
-  const [enrollments, setEnrollments] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [enrollments, setEnrollments] = useState(hasValidCache ? parsedCache : []);
   const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   // Helpers: detect file type from base64 and render appropriately
@@ -246,18 +263,28 @@ const RegistrarEnrollment = () => {
         const cacheTimestamp = localStorage.getItem('registrarEnrollmentsTimestamp');
         const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
 
-        // Use cache if it's less than 5 minutes old
+        // Use cache if it's less than 5 minutes old AND contains valid data (not empty array)
         if (cachedData && cacheAge && cacheAge < 300000) {
-          const parsedData = JSON.parse(cachedData);
-          setEnrollments(parsedData);
-          setLoading(false);
-          
-          // Always do background refresh to check for updates (new enrollments, status changes, etc.)
-          fetchEnrollments(true).catch(err => {
-            console.error("Background refresh error:", err);
-            // Keep showing cached data if background refresh fails
-          });
-          return;
+          try {
+            const parsedData = JSON.parse(cachedData);
+            // Validate: must be an array with data
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              setEnrollments(parsedData);
+              setLoading(false);
+              
+              // Always do background refresh to check for updates (new enrollments, status changes, etc.)
+              fetchEnrollments(true).catch(err => {
+                console.error("Background refresh error:", err);
+                // Keep showing cached data if background refresh fails
+              });
+              return;
+            }
+          } catch (e) {
+            // Invalid cache data, clear it and fetch fresh
+            console.error("Invalid cache data, clearing and fetching fresh:", e);
+            localStorage.removeItem('registrarEnrollmentsData');
+            localStorage.removeItem('registrarEnrollmentsTimestamp');
+          }
         }
       }
 
@@ -270,11 +297,19 @@ const RegistrarEnrollment = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Cache the fetched data
-      localStorage.setItem('registrarEnrollmentsData', JSON.stringify(response.data));
-      localStorage.setItem('registrarEnrollmentsTimestamp', Date.now().toString());
+      // Validate response data before caching and setting state
+      const data = response.data;
+      if (Array.isArray(data) && data.length > 0) {
+        // Cache the fetched data only if it's a valid non-empty array
+        localStorage.setItem('registrarEnrollmentsData', JSON.stringify(data));
+        localStorage.setItem('registrarEnrollmentsTimestamp', Date.now().toString());
+      } else if (Array.isArray(data) && data.length === 0) {
+        // Don't cache empty arrays - clear any existing cache
+        localStorage.removeItem('registrarEnrollmentsData');
+        localStorage.removeItem('registrarEnrollmentsTimestamp');
+      }
       
-      setEnrollments(response.data);
+      setEnrollments(data || []);
       
       // Only update loading if not forcing refresh
       if (!forceRefresh) {
