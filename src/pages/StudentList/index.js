@@ -9,11 +9,19 @@ import axios from 'axios';
 const StudentList = () => {
   const [showBy, setshowBy] = useState('');
   const [showCourseBy, setCourseBy] = useState('');
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('studentListData');
+  const cacheTimestamp = localStorage.getItem('studentListTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [students, setStudents] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   const programMapping = {
     '1': 'BSIT',
@@ -23,14 +31,48 @@ const StudentList = () => {
     '5': 'BSCrim'
   };
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (forceRefresh = false) => {
     try {
-      setLoading(true);
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('studentListData');
+        const cacheTimestamp = localStorage.getItem('studentListTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setStudents(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new enrollments, student changes, etc.)
+          fetchStudents(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+
       const response = await axios.get('/api/get-enrolled-students');
+      
+      // Cache the fetched data
+      localStorage.setItem('studentListData', JSON.stringify(response.data));
+      localStorage.setItem('studentListTimestamp', Date.now().toString());
+      
       setStudents(response.data);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Error fetching students:', error);
-    } finally {
       setLoading(false);
     }
   }, []);
