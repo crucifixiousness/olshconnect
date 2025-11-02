@@ -35,7 +35,7 @@ const CounterPayment = () => {
   const [studentInfo, setStudentInfo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [showHistory, setShowHistory] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const token = localStorage.getItem('token');
@@ -148,7 +148,7 @@ const CounterPayment = () => {
           severity: 'success'
         });
         setPaymentAmount('');
-        setPaymentMethod('');
+        setPaymentMethod('Cash');
         handleSearch();
       }
     } catch (error) {
