@@ -9,72 +9,120 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const FinanceDashboard = () => {
   const context = useContext(MyContext);
 
-  useEffect(() => {
-    context.setIsHideComponents(false);
-    window.scrollTo(0,0);
-  }, [context]);
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedDashboardData = localStorage.getItem('financeDashboardData');
+  const cachedDashboardTimestamp = localStorage.getItem('financeDashboardTimestamp');
+  const cachedDashboardAge = cachedDashboardTimestamp ? Date.now() - parseInt(cachedDashboardTimestamp) : null;
+  const hasValidCache = cachedDashboardData && cachedDashboardAge && cachedDashboardAge < 300000; // 5 minutes
 
-  const [dashboardData, setDashboardData] = useState({
+  // Initialize state with cached data if available, otherwise empty
+  const cachedData = hasValidCache ? JSON.parse(cachedDashboardData) : null;
+  const [dashboardData, setDashboardData] = useState(cachedData?.dashboardData || {
     totalRevenue: 0,
     totalStudentsPaid: 0,
     pendingPayments: 0,
     recentTransactions: []
   });
-  const [paymentStats, setPaymentStats] = useState({
+  const [paymentStats, setPaymentStats] = useState(cachedData?.paymentStats || {
     monthlyData: [],
     paymentMethods: [],
     programStats: []
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   useEffect(() => {
-    const fetchFinanceData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          console.error('No token found');
+    context.setIsHideComponents(false);
+    window.scrollTo(0,0);
+  }, [context]);
+
+  const fetchFinanceData = async (forceRefresh = false) => {
+    try {
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('financeDashboardData');
+        const cacheTimestamp = localStorage.getItem('financeDashboardTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setDashboardData(parsedData.dashboardData);
+          setPaymentStats(parsedData.paymentStats);
           setLoading(false);
+          
+          // Always do background refresh to check for updates (new transactions, revenue changes, etc.)
+          fetchFinanceData(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
           return;
         }
+      }
 
-        // Fetch dashboard data from new API
-        const response = await axios.get('/api/finance-dashboard', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
 
-        setDashboardData({
-          totalRevenue: response.data.totalRevenue || 0,
-          totalStudentsPaid: response.data.totalStudentsPaid || 0,
-          pendingPayments: response.data.pendingPayments || 0,
-          recentTransactions: response.data.recentTransactions || []
-        });
-
-        setPaymentStats({
-          monthlyData: (response.data.paymentStats?.monthlyData || []).map(item => ({
-            ...item,
-            monthly_revenue: parseFloat(item.monthly_revenue) || 0,
-            transaction_count: parseInt(item.transaction_count) || 0
-          })),
-          paymentMethods: (response.data.paymentStats?.paymentMethods || []).map(item => ({
-            ...item,
-            total_amount: parseFloat(item.total_amount) || 0,
-            count: parseInt(item.count) || 0
-          })),
-          programStats: (response.data.paymentStats?.programStats || []).map(item => ({
-            ...item,
-            total_revenue: parseFloat(item.total_revenue) || 0,
-            student_count: parseInt(item.student_count) || 0
-          }))
-        });
-        
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No token found');
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching finance data:', error);
+        return;
+      }
+
+      // Fetch dashboard data from new API
+      const response = await axios.get('/api/finance-dashboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const formattedDashboardData = {
+        totalRevenue: response.data.totalRevenue || 0,
+        totalStudentsPaid: response.data.totalStudentsPaid || 0,
+        pendingPayments: response.data.pendingPayments || 0,
+        recentTransactions: response.data.recentTransactions || []
+      };
+
+      const formattedPaymentStats = {
+        monthlyData: (response.data.paymentStats?.monthlyData || []).map(item => ({
+          ...item,
+          monthly_revenue: parseFloat(item.monthly_revenue) || 0,
+          transaction_count: parseInt(item.transaction_count) || 0
+        })),
+        paymentMethods: (response.data.paymentStats?.paymentMethods || []).map(item => ({
+          ...item,
+          total_amount: parseFloat(item.total_amount) || 0,
+          count: parseInt(item.count) || 0
+        })),
+        programStats: (response.data.paymentStats?.programStats || []).map(item => ({
+          ...item,
+          total_revenue: parseFloat(item.total_revenue) || 0,
+          student_count: parseInt(item.student_count) || 0
+        }))
+      };
+
+      // Cache the new data (like Academic Records and Student Profile)
+      localStorage.setItem('financeDashboardData', JSON.stringify({
+        dashboardData: formattedDashboardData,
+        paymentStats: formattedPaymentStats
+      }));
+      localStorage.setItem('financeDashboardTimestamp', Date.now().toString());
+
+      setDashboardData(formattedDashboardData);
+      setPaymentStats(formattedPaymentStats);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
         setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching finance data:', error);
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFinanceData();
   }, []);
 
