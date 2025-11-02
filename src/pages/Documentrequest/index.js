@@ -26,12 +26,20 @@ import { FaXmark } from "react-icons/fa6";
 import { sendDocumentApprovalEmail, sendDocumentRejectionEmail } from '../../utils/documentEmailService';
 
 const DocumentRequests = () => {
-  const [requests, setRequests] = useState([]);
   const [filterBy, setFilterBy] = useState('');
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('documentRequestsData');
+  const cacheTimestamp = localStorage.getItem('documentRequestsTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [requests, setRequests] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   // Add new state for snackbar
   const [snackbar, setSnackbar] = useState({
@@ -41,14 +49,49 @@ const DocumentRequests = () => {
   });
 
   // Update fetchRequests function
-  const fetchRequests = async () => {
+  const fetchRequests = async (forceRefresh = false) => {
     try {
-      setLoading(true);
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('documentRequestsData');
+        const cacheTimestamp = localStorage.getItem('documentRequestsTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setRequests(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new requests, status changes, etc.)
+          fetchRequests(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/requests-all', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Cache the fetched data
+      localStorage.setItem('documentRequestsData', JSON.stringify(response.data));
+      localStorage.setItem('documentRequestsTimestamp', Date.now().toString());
+      
       setRequests(response.data);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Error fetching requests:', error);
       setSnackbar({
@@ -56,7 +99,6 @@ const DocumentRequests = () => {
         message: 'Failed to fetch document requests',
         severity: 'error'
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -131,7 +173,10 @@ const DocumentRequests = () => {
         severity: 'success'
       });
       
-      fetchRequests();
+      // Invalidate cache and force refresh to show updated status
+      localStorage.removeItem('documentRequestsData');
+      localStorage.removeItem('documentRequestsTimestamp');
+      fetchRequests(true);
     } catch (error) {
       console.error('Error updating status:', error);
       setSnackbar({
