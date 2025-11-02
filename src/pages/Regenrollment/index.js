@@ -252,9 +252,21 @@ const RegistrarEnrollment = () => {
   const paginatedEnrollments = filteredEnrollments.slice(startIndex, endIndex);
   const pageCount = Math.ceil(filteredEnrollments.length / rowsPerPage);
 
-  const fetchEnrollments = useCallback(async () => {
+  const fetchEnrollments = useCallback(async (forceRefresh = false) => {
+    let wasLoadingSet = false;
     try {
-      setLoading(true);
+      // Check if we have valid cache and don't need to show loading
+      const cachedData = localStorage.getItem('registrarEnrollmentsData');
+      const cacheTimestamp = localStorage.getItem('registrarEnrollmentsTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+      
+      // Only show loading if we don't have valid cache (first load or cache expired)
+      if (!hasValidCache) {
+        setLoading(true);
+        wasLoadingSet = true;
+      }
+      
       const response = await axios.get(`/api/registrar-enrollments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -307,7 +319,11 @@ const RegistrarEnrollment = () => {
       console.error('❌ [REGENROLLMENT] Error fetching enrollments:', err);
       setEnrollments([]);
     } finally {
-      setLoading(false);
+      // Only set loading to false if we had set it to true (no valid cache)
+      // If we had valid cache, loading was already false, so don't change it
+      if (wasLoadingSet) {
+        setLoading(false);
+      }
     }
   }, [token]); 
 
