@@ -27,13 +27,21 @@ import { MyContext } from "../../App";
 
 const RegistrarCreditTransfer = () => {
   const context = useContext(MyContext);
-  const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [torRequests, setTorRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [approvalOpen, setApprovalOpen] = useState(false);
   const [equivalencies, setEquivalencies] = useState([]);
   const [comments, setComments] = useState('');
+
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedData = localStorage.getItem('creditTransferRequestsData');
+  const cacheTimestamp = localStorage.getItem('creditTransferRequestsTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
+
+  // Initialize state with cached data if available, otherwise empty
+  const [torRequests, setTorRequests] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -41,8 +49,34 @@ const RegistrarCreditTransfer = () => {
     fetchTorRequests();
   }, [context]);
 
-  const fetchTorRequests = async () => {
+  const fetchTorRequests = async (forceRefresh = false) => {
     try {
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('creditTransferRequestsData');
+        const cacheTimestamp = localStorage.getItem('creditTransferRequestsTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setTorRequests(parsedData);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates (new requests, status changes, etc.)
+          fetchTorRequests(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
+
       const token = localStorage.getItem('token');
 
       if (!token) {
@@ -55,8 +89,16 @@ const RegistrarCreditTransfer = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      // Cache the fetched data
+      localStorage.setItem('creditTransferRequestsData', JSON.stringify(response.data.requests || []));
+      localStorage.setItem('creditTransferRequestsTimestamp', Date.now().toString());
+
       setTorRequests(response.data.requests || []);
-      setLoading(false);
+      
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Error fetching TOR requests:', error);
       setSnackbar({ open: true, message: 'Failed to load TOR requests', severity: 'error' });
@@ -100,7 +142,10 @@ const RegistrarCreditTransfer = () => {
         severity: 'success' 
       });
       setApprovalOpen(false);
-      fetchTorRequests();
+      // Invalidate cache and force refresh to show updated status
+      localStorage.removeItem('creditTransferRequestsData');
+      localStorage.removeItem('creditTransferRequestsTimestamp');
+      fetchTorRequests(true);
     } catch (error) {
       console.error(`Error ${action}ing credit transfer:`, error);
       setSnackbar({ 
