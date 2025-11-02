@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Stepper, Step, StepLabel, Paper, CircularProgress, StepIcon } from '@mui/material';
+import { Stepper, Step, StepLabel, Paper, CircularProgress } from '@mui/material';
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
@@ -9,7 +9,7 @@ import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { FaSchool } from "react-icons/fa";
-import { FaUserEdit, FaCheck } from "react-icons/fa";
+import { FaUserEdit } from "react-icons/fa";
 import { MenuItem, Select, FormControl } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material';
 import { Snackbar, Alert } from '@mui/material';
@@ -32,44 +32,6 @@ const formatFullName = (studentData) => {
   }
   
   return fullName;
-};
-
-// Custom StepIcon component to show checkmarks for completed steps and numbers for current/future steps
-const CustomStepIcon = (props) => {
-  const { active, completed, icon } = props;
-  
-  return (
-    <div
-      style={{
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: completed 
-          ? '#c70202' 
-          : active 
-            ? '#c70202' 
-            : '#e0e0e0',
-        color: 'white',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        border: '2px solid',
-        borderColor: completed 
-          ? '#c70202' 
-          : active 
-            ? '#c70202' 
-            : '#e0e0e0',
-      }}
-    >
-      {completed ? (
-        <FaCheck style={{ fontSize: '18px' }} />
-      ) : (
-        <span>{icon}</span>
-      )}
-    </div>
-  );
 };
 
 const StudentProfile = () => {
@@ -666,9 +628,7 @@ const StudentProfile = () => {
                       key={label}
                       completed={completedSteps.includes(index)}
                     >
-                      <StepLabel 
-                        StepIconComponent={CustomStepIcon}
-                      >
+                      <StepLabel>
                         {label}
                       </StepLabel>
                     </Step>
