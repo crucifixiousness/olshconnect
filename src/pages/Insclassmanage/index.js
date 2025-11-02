@@ -31,9 +31,29 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const ClassManagement = () => {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('instructorClassesData');
+  const cacheTimestamp = localStorage.getItem('instructorClassesTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = false;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [INSTRUCTOR CLASSES] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [courses, setCourses] = useState(initialData);
+  const [loading, setLoading] = useState(initialLoading);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -76,7 +96,7 @@ const ClassManagement = () => {
         return '#388e3c';
       case 'Dean Approved':
         return '#2e7d32';
-      case 'Registrar Approved':
+      case 'Program Head Approved':
         return '#1976d2';
       case 'Pending':
         return '#ed6c02';
@@ -90,27 +110,72 @@ const ClassManagement = () => {
   };
 
   useEffect(() => {
-    const fetchInstructorCourses = async () => {
-      const userStr = localStorage.getItem("user");
-      const user = userStr ? JSON.parse(userStr) : null;
-      const staff_id = user?.staff_id;
-      const token = localStorage.getItem('token');
-
-      if (!staff_id || !token) {
-        setSnackbar({
-          open: true,
-          message: "Please login again",
-          severity: 'error'
-        });
-        return;
-      }
-
+    const fetchInstructorCourses = async (forceRefresh = false) => {
+      let wasLoadingSet = false;
       try {
-        setLoading(true);
+        // Check if we have valid cache and don't need to show loading
+        const cachedData = localStorage.getItem('instructorClassesData');
+        const cacheTimestamp = localStorage.getItem('instructorClassesTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+
+        // Use cache if it's less than 5 minutes old
+        if (hasValidCache) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCourses(parsed);
+            setLoading(false);
+            
+            // Always do background refresh to check for updates
+            fetchInstructorCourses(true).catch(err => {
+              console.error("Background refresh error:", err);
+            });
+            return;
+          }
+        }
+
+        // Only show loading if not forcing refresh
+        if (!forceRefresh) {
+          setLoading(true);
+          wasLoadingSet = true;
+        }
+
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        const staff_id = user?.staff_id;
+        const token = localStorage.getItem('token');
+
+        if (!staff_id || !token) {
+          setSnackbar({
+            open: true,
+            message: "Please login again",
+            severity: 'error'
+          });
+          if (wasLoadingSet) {
+            setLoading(false);
+          }
+          return;
+        }
+
         const response = await axios.get(`/api/instructor-classes?staff_id=${staff_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setCourses(response.data);
+        
+        const data = response.data || [];
+        setCourses(data);
+        
+        // Cache the fetched data
+        try {
+          if (Array.isArray(data) && data.length > 0) {
+            localStorage.setItem('instructorClassesData', JSON.stringify(data));
+            localStorage.setItem('instructorClassesTimestamp', Date.now().toString());
+          } else {
+            localStorage.removeItem('instructorClassesData');
+            localStorage.removeItem('instructorClassesTimestamp');
+          }
+        } catch (storageError) {
+          console.warn('⚠️ [INSTRUCTOR CLASSES] Could not cache data:', storageError.message);
+        }
       } catch (error) {
         console.error("Error fetching courses:", error);
         setSnackbar({
@@ -119,7 +184,9 @@ const ClassManagement = () => {
           severity: 'error'
         });
       } finally {
-        setLoading(false);
+        if (wasLoadingSet) {
+          setLoading(false);
+        }
       }
     };
 
