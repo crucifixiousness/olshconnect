@@ -37,8 +37,27 @@ import {
 } from '@mui/icons-material';
 
 const InstructorGrades = () => {
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('instructorGradesCoursesData');
+  const cacheTimestamp = localStorage.getItem('instructorGradesCoursesTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialCourses = [];
+  let initialLoading = true;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialCourses = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [INSTRUCTOR GRADES] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [loading, setLoading] = useState(initialLoading);
+  const [courses, setCourses] = useState(initialCourses);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [students, setStudents] = useState([]);
   const [grades, setGrades] = useState({});
@@ -58,8 +77,36 @@ const InstructorGrades = () => {
   const [selectedSheet, setSelectedSheet] = useState('');
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchCourses = async (forceRefresh = false) => {
+      let wasLoadingSet = false;
       try {
+        // Check if we have valid cache and don't need to show loading
+        const cachedData = localStorage.getItem('instructorGradesCoursesData');
+        const cacheTimestamp = localStorage.getItem('instructorGradesCoursesTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+
+        // Use cache if it's less than 5 minutes old
+        if (hasValidCache) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCourses(parsed);
+            setLoading(false);
+            
+            // Always do background refresh to check for updates
+            fetchCourses(true).catch(err => {
+              console.error("Background refresh error:", err);
+            });
+            return;
+          }
+        }
+
+        // Only show loading if not forcing refresh
+        if (!forceRefresh) {
+          setLoading(true);
+          wasLoadingSet = true;
+        }
+
         const userStr = localStorage.getItem("user");
         const user = userStr ? JSON.parse(userStr) : null;
         const staff_id = user?.staff_id;
@@ -71,6 +118,9 @@ const InstructorGrades = () => {
             message: "Please login again",
             severity: 'error'
           });
+          if (wasLoadingSet) {
+            setLoading(false);
+          }
           return;
         }
 
@@ -79,8 +129,21 @@ const InstructorGrades = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        setCourses(response.data);
-        setLoading(false);
+        const data = response.data || [];
+        setCourses(data);
+        
+        // Cache the fetched data
+        try {
+          if (Array.isArray(data) && data.length > 0) {
+            localStorage.setItem('instructorGradesCoursesData', JSON.stringify(data));
+            localStorage.setItem('instructorGradesCoursesTimestamp', Date.now().toString());
+          } else {
+            localStorage.removeItem('instructorGradesCoursesData');
+            localStorage.removeItem('instructorGradesCoursesTimestamp');
+          }
+        } catch (storageError) {
+          console.warn('⚠️ [INSTRUCTOR GRADES] Could not cache data:', storageError.message);
+        }
       } catch (error) {
         console.error('Error fetching courses:', error);
         setSnackbar({
@@ -88,7 +151,10 @@ const InstructorGrades = () => {
           message: "Failed to fetch courses",
           severity: 'error'
         });
-        setLoading(false);
+      } finally {
+        if (wasLoadingSet) {
+          setLoading(false);
+        }
       }
     };
 
@@ -162,6 +228,14 @@ const InstructorGrades = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      // Invalidate cache after saving grades
+      try {
+        localStorage.removeItem('instructorGradesCoursesData');
+        localStorage.removeItem('instructorGradesCoursesTimestamp');
+      } catch (e) {
+        // Ignore storage errors
+      }
       
       setSnackbar({
         open: true,
