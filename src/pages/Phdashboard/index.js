@@ -28,11 +28,15 @@ const programIcons = {
 };           
             
 const ProgramHeadDashboard = () => {
-  const [loading, setLoading] = useState(true);
   const context = useContext(MyContext);
   const [program_id, setProgramId] = useState(null);
   const [program_name, setProgramName] = useState("");
-  const [programData, setProgramData] = useState({
+
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('programHeadDashboardData');
+  const cacheTimestamp = localStorage.getItem('programHeadDashboardTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialProgramData = {
     total_students: 0,
     students_per_year: {
       first: 0,
@@ -40,7 +44,23 @@ const ProgramHeadDashboard = () => {
       third: 0,
       fourth: 0
     }
-  });
+  };
+  let initialLoading = true;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (parsed && typeof parsed === 'object') {
+        initialProgramData = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [PH DASHBOARD] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [loading, setLoading] = useState(initialLoading);
+  const [programData, setProgramData] = useState(initialProgramData);
 
   // Class approvals state
   const [classes, setClasses] = useState([]);
@@ -80,34 +100,71 @@ const ProgramHeadDashboard = () => {
     }
   }, []);
 
-  // Fetch student data when program_id is available
-  useEffect(() => {
-    const fetchProgramData = async () => {
-      if (!program_id) {
+  const fetchProgramData = async (forceRefresh = false) => {
+    if (!program_id) {
+      return;
+    }
+    
+    let wasLoadingSet = false;
+    try {
+      // Check if we have valid cache and don't need to show loading
+      const cachedData = localStorage.getItem('programHeadDashboardData');
+      const cacheTimestamp = localStorage.getItem('programHeadDashboardTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+
+      // Only show loading if we don't have valid cache (first load or cache expired)
+      if (!hasValidCache) {
+        setLoading(true);
+        wasLoadingSet = true;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        if (wasLoadingSet) {
+          setLoading(false);
+        }
         return;
       }
-      
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setLoading(false);
-          return;
-        }
 
-        const response = await axios.get(`/api/program-head-dashboard?program_id=${program_id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setProgramData(response.data);
-        // Also fetch classes for approval
-        await fetchClassApprovalData();
-      } catch (error) {
-        console.error('Error fetching program data:', error);
-      } finally {
+      const response = await axios.get(`/api/program-head-dashboard?program_id=${program_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = response.data || {
+        total_students: 0,
+        students_per_year: {
+          first: 0,
+          second: 0,
+          third: 0,
+          fourth: 0
+        }
+      };
+      setProgramData(data);
+      
+      // Cache the fetched data
+      try {
+        if (data && typeof data === 'object') {
+          localStorage.setItem('programHeadDashboardData', JSON.stringify(data));
+          localStorage.setItem('programHeadDashboardTimestamp', Date.now().toString());
+        }
+      } catch (storageError) {
+        console.warn('⚠️ [PH DASHBOARD] Could not cache data:', storageError.message);
+      }
+      
+      // Also fetch classes for approval
+      await fetchClassApprovalData();
+    } catch (error) {
+      console.error('Error fetching program data:', error);
+    } finally {
+      if (wasLoadingSet) {
         setLoading(false);
       }
-    };
+    }
+  };
 
+  // Fetch student data when program_id is available
+  useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0,0);
     fetchProgramData();
@@ -138,6 +195,14 @@ const ProgramHeadDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchClassApprovalData();
+      // Invalidate cache and force refresh
+      try {
+        localStorage.removeItem('programHeadDashboardData');
+        localStorage.removeItem('programHeadDashboardTimestamp');
+      } catch (e) {
+        // Ignore storage errors
+      }
+      fetchProgramData(true);
       setSnackbar({ open: true, message: 'Class approved by Program Head', severity: 'success' });
     } catch (e) {
       console.error('Error approving class:', e);
@@ -153,6 +218,14 @@ const ProgramHeadDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchClassApprovalData();
+      // Invalidate cache and force refresh
+      try {
+        localStorage.removeItem('programHeadDashboardData');
+        localStorage.removeItem('programHeadDashboardTimestamp');
+      } catch (e) {
+        // Ignore storage errors
+      }
+      fetchProgramData(true);
       setSnackbar({ open: true, message: 'Class reset to pending', severity: 'success' });
     } catch (e) {
       console.error('Error rejecting class:', e);
@@ -231,12 +304,7 @@ const ProgramHeadDashboard = () => {
     }
   ];
   
-  useEffect(() => {
-    context.setIsHideComponents(false);
-    window.scrollTo(0,0);
-    // Simulate loading
-    setTimeout(() => setLoading(false), 1000);
-  }, [context]);
+  // Removed setTimeout - loading is now managed by cache and fetchProgramData
 
   // Replace the current loading state
   if (loading) {
