@@ -13,25 +13,86 @@ const InstructorDashboard = () => {
     window.scrollTo(0,0);
   }, [context]);
 
-  const [dashboardData, setDashboardData] = useState({
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedDashboardData = localStorage.getItem('instructorDashboardData');
+  const cachedScheduleData = localStorage.getItem('instructorDashboardScheduleData');
+  const cacheTimestamp = localStorage.getItem('instructorDashboardTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  
+  let initialDashboardData = {
     assignedClasses: 0,
     totalStudents: 0,
     pendingGrades: 0,
     todayClasses: 0
-  });
-  const [loading, setLoading] = useState(true);
-  const [todaySchedule, setTodaySchedule] = useState([]);
+  };
+  let initialSchedule = [];
+  let initialLoading = true;
+  
+  try {
+    if (cachedDashboardData && cachedScheduleData && cacheAge && cacheAge < 300000) {
+      const parsedDashboard = JSON.parse(cachedDashboardData);
+      const parsedSchedule = JSON.parse(cachedScheduleData);
+      if (parsedDashboard && typeof parsedDashboard === 'object' && Array.isArray(parsedSchedule)) {
+        initialDashboardData = parsedDashboard;
+        initialSchedule = parsedSchedule;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [INSTRUCTOR DASHBOARD] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [dashboardData, setDashboardData] = useState(initialDashboardData);
+  const [loading, setLoading] = useState(initialLoading);
+  const [todaySchedule, setTodaySchedule] = useState(initialSchedule);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (forceRefresh = false) => {
+      let wasLoadingSet = false;
       try {
+        // Check if we have valid cache and don't need to show loading
+        const cachedDashboardData = localStorage.getItem('instructorDashboardData');
+        const cachedScheduleData = localStorage.getItem('instructorDashboardScheduleData');
+        const cacheTimestamp = localStorage.getItem('instructorDashboardTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        const hasValidCache = !forceRefresh && cachedDashboardData && cachedScheduleData && cacheAge && cacheAge < 300000;
+
+        // Use cache if it's less than 5 minutes old
+        if (hasValidCache) {
+          try {
+            const parsedDashboard = JSON.parse(cachedDashboardData);
+            const parsedSchedule = JSON.parse(cachedScheduleData);
+            if (parsedDashboard && typeof parsedDashboard === 'object' && Array.isArray(parsedSchedule)) {
+              setDashboardData(parsedDashboard);
+              setTodaySchedule(parsedSchedule);
+              setLoading(false);
+              
+              // Always do background refresh to check for updates
+              fetchDashboardData(true).catch(err => {
+                console.error("Background refresh error:", err);
+              });
+              return;
+            }
+          } catch (parseError) {
+            console.warn('⚠️ [INSTRUCTOR DASHBOARD] Error parsing cached data:', parseError);
+          }
+        }
+
+        // Only show loading if not forcing refresh
+        if (!forceRefresh) {
+          setLoading(true);
+          wasLoadingSet = true;
+        }
+
         const user = JSON.parse(localStorage.getItem('user'));
         const staff_id = user?.staff_id;
         const token = localStorage.getItem('token');
         
         if (!staff_id || !token) {
           console.error('No staff ID or token found');
-          setLoading(false);
+          if (wasLoadingSet) {
+            setLoading(false);
+          }
           return;
         }
 
@@ -46,20 +107,33 @@ const InstructorDashboard = () => {
         });
 
         const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        const todayCourses = scheduleResponse.data.filter(course => course.day === today);
+        const todayCourses = (scheduleResponse.data || []).filter(course => course.day === today);
         
-        setTodaySchedule(todayCourses.sort((a, b) => a.start_time.localeCompare(b.start_time)));
-        setDashboardData({
+        const sortedTodaySchedule = todayCourses.sort((a, b) => a.start_time.localeCompare(b.start_time));
+        setTodaySchedule(sortedTodaySchedule);
+        
+        const dashboardInfo = {
           assignedClasses: Number(dashboardResponse.data.assignedClasses) || 0,
           totalStudents: Number(dashboardResponse.data.totalStudents) || 0,
           pendingGrades: Number(dashboardResponse.data.pendingGrades) || 0,
           todayClasses: Number(dashboardResponse.data.todayClasses) || 0
-        });
+        };
+        setDashboardData(dashboardInfo);
         
-        setLoading(false);
+        // Cache the fetched data
+        try {
+          localStorage.setItem('instructorDashboardData', JSON.stringify(dashboardInfo));
+          localStorage.setItem('instructorDashboardScheduleData', JSON.stringify(sortedTodaySchedule));
+          localStorage.setItem('instructorDashboardTimestamp', Date.now().toString());
+        } catch (storageError) {
+          console.warn('⚠️ [INSTRUCTOR DASHBOARD] Could not cache data:', storageError.message);
+        }
       } catch (error) {
         console.error('Error details:', error);
-        setLoading(false);
+      } finally {
+        if (wasLoadingSet) {
+          setLoading(false);
+        }
       }
     };
 
