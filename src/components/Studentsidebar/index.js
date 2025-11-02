@@ -34,8 +34,6 @@ const StudentSidebar = () => {
         return 4; // Request Document
       case '/student-payment':
         return 5; // Payment
-      case '/student-grades':
-        return 6; // My Grades
       default:
         return 1; // Default to My Profile
     }
@@ -199,26 +197,6 @@ const StudentSidebar = () => {
               Payment
             </Button>
           , false, true)} {/* false for requiresEnrollment, true for requiresPayment */}
-        </li>
-        <li>
-          {renderLink("/student-grades",
-            <Button 
-              className={`w-100 ${activeTab === 6 ? 'active' : ''}`} 
-              disabled={!isOfficiallyEnrolled}
-              sx={{ 
-                opacity: !isOfficiallyEnrolled ? 0.6 : 1,
-                color: !isOfficiallyEnrolled ? '#666 !important' : 'inherit',
-                backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
-                cursor: !isOfficiallyEnrolled ? 'not-allowed' : 'pointer',
-                '&:hover': {
-                  backgroundColor: !isOfficiallyEnrolled ? '#f5f5f5' : 'inherit',
-                }
-              }}
-            >
-              <span className='icon'><FaBookOpen /></span>
-              My Grades
-            </Button>
-          )}
         </li>
       </ul>
 
