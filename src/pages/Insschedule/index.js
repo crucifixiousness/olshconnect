@@ -28,8 +28,27 @@ import {
 import axios from 'axios';
 
 const InstructorSchedule = () => {
-  const [schedules, setSchedules] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('instructorScheduleData');
+  const cacheTimestamp = localStorage.getItem('instructorScheduleTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = false;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [INSTRUCTOR SCHEDULE] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [schedules, setSchedules] = useState(initialData);
+  const [loading, setLoading] = useState(initialLoading);
   const [selectedSemester, setSelectedSemester] = useState('');
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -39,9 +58,35 @@ const InstructorSchedule = () => {
 
   // Fetch logged-in instructor details
   useEffect(() => {
-    const fetchInstructorSchedule = async () => {
+    const fetchInstructorSchedule = async (forceRefresh = false) => {
+      let wasLoadingSet = false;
       try {
-        setLoading(true);
+        // Check if we have valid cache and don't need to show loading
+        const cachedData = localStorage.getItem('instructorScheduleData');
+        const cacheTimestamp = localStorage.getItem('instructorScheduleTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+        const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+
+        // Use cache if it's less than 5 minutes old
+        if (hasValidCache) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSchedules(parsed);
+            setLoading(false);
+            
+            // Always do background refresh to check for updates
+            fetchInstructorSchedule(true).catch(err => {
+              console.error("Background refresh error:", err);
+            });
+            return;
+          }
+        }
+
+        // Only show loading if not forcing refresh
+        if (!forceRefresh) {
+          setLoading(true);
+          wasLoadingSet = true;
+        }
         
         // Get staff_id from localStorage with safe parsing
         const userStr = localStorage.getItem("user");
@@ -54,6 +99,9 @@ const InstructorSchedule = () => {
             message: "No instructor ID found. Please login again.",
             severity: 'error'
           });
+          if (wasLoadingSet) {
+            setLoading(false);
+          }
           return;
         }
 
@@ -64,8 +112,20 @@ const InstructorSchedule = () => {
           }
         });
         
-        if (response.data) {
-          setSchedules(response.data);
+        const data = response.data || [];
+        setSchedules(data);
+        
+        // Cache the fetched data
+        try {
+          if (Array.isArray(data) && data.length > 0) {
+            localStorage.setItem('instructorScheduleData', JSON.stringify(data));
+            localStorage.setItem('instructorScheduleTimestamp', Date.now().toString());
+          } else {
+            localStorage.removeItem('instructorScheduleData');
+            localStorage.removeItem('instructorScheduleTimestamp');
+          }
+        } catch (storageError) {
+          console.warn('⚠️ [INSTRUCTOR SCHEDULE] Could not cache data:', storageError.message);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -75,9 +135,9 @@ const InstructorSchedule = () => {
           severity: 'error'
         });
       } finally {
-        setTimeout(() => {
+        if (wasLoadingSet) {
           setLoading(false);
-        }, 100);
+        }
       }
     };
 
