@@ -16,11 +16,33 @@ const RegistrarEnrollment = () => {
 
   const [showBy, setshowBy] = useState('');
   const [showProgramBy, setProgramBy] = useState('');
-  const [enrollments, setEnrollments] = useState([]);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const token = localStorage.getItem('token');
+
+  // Check localStorage cache synchronously on mount for instant display
+  // Cache contains lightweight data (without base64 documents) for list display
+  const cachedData = localStorage.getItem('registrarEnrollmentsData');
+  const cacheTimestamp = localStorage.getItem('registrarEnrollmentsTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = true;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false; // Show cached data immediately, but still fetch fresh data with documents
+      }
+    }
+  } catch (e) {
+    // Invalid cache, ignore it
+    console.warn('⚠️ [REGENROLLMENT] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [enrollments, setEnrollments] = useState(initialData);
+  const [loading, setLoading] = useState(initialLoading);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -236,10 +258,53 @@ const RegistrarEnrollment = () => {
       const response = await axios.get(`/api/registrar-enrollments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setEnrollments(response.data);
+      
+      const data = response.data || [];
+      setEnrollments(data);
+      
+      // Try to cache data, but handle localStorage quota errors gracefully
+      // Cache only essential fields (without base64 documents) to reduce size
+      try {
+        if (Array.isArray(data) && data.length > 0) {
+          // Create a lightweight version without base64 document data for caching
+          const lightweightData = data.map(enrollment => ({
+            _id: enrollment._id,
+            student: enrollment.student,
+            program_name: enrollment.program_name,
+            programs: enrollment.programs,
+            year_level: enrollment.year_level,
+            semester: enrollment.semester,
+            academic_year: enrollment.academic_year,
+            student_type: enrollment.student_type,
+            previous_school: enrollment.previous_school,
+            previous_program: enrollment.previous_program,
+            status: enrollment.status,
+            // Don't cache base64 document data to avoid quota issues
+            has_idpic: !!enrollment.idpic,
+            has_birthCertificate: !!enrollment.birthCertificateDoc,
+            has_form137: !!enrollment.form137Doc,
+            has_transferCertificate: !!enrollment.transferCertificateDoc,
+            has_torDoc: !!enrollment.torDoc
+          }));
+          
+          localStorage.setItem('registrarEnrollmentsData', JSON.stringify(lightweightData));
+          localStorage.setItem('registrarEnrollmentsTimestamp', Date.now().toString());
+        } else {
+          // Clear cache if empty response
+          localStorage.removeItem('registrarEnrollmentsData');
+          localStorage.removeItem('registrarEnrollmentsTimestamp');
+        }
+      } catch (storageError) {
+        // localStorage quota exceeded or other storage error
+        // This is NOT a critical error - data still displays, just won't be cached
+        console.warn('⚠️ [REGENROLLMENT] Could not cache data (localStorage quota exceeded):', storageError.message);
+        // Don't clear existing cache, just log the warning
+      }
+      
     } catch (error) {
+      // This is a real API error
       const err = new Error('Failed to fetch enrollments');
-      console.error('Error fetching enrollments:', err);
+      console.error('❌ [REGENROLLMENT] Error fetching enrollments:', err);
       setEnrollments([]);
     } finally {
       setLoading(false);
@@ -266,6 +331,13 @@ const RegistrarEnrollment = () => {
           message: "Enrollment verified successfully",
           severity: "success"
         });
+        // Invalidate cache so we get fresh data with updated status
+        try {
+          localStorage.removeItem('registrarEnrollmentsData');
+          localStorage.removeItem('registrarEnrollmentsTimestamp');
+        } catch (e) {
+          // Ignore storage errors
+        }
         fetchEnrollments();
       }
     } catch (error) {
