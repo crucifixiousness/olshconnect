@@ -16,11 +16,60 @@ const RegistrarEnrollment = () => {
 
   const [showBy, setshowBy] = useState('');
   const [showProgramBy, setProgramBy] = useState('');
-  const [enrollments, setEnrollments] = useState([]);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const token = localStorage.getItem('token');
+
+  // Check localStorage cache synchronously on mount for instant display
+  // This is safe because we ALWAYS fetch in useEffect - cache is just for instant display
+  const cachedData = localStorage.getItem('registrarEnrollmentsData');
+  const cacheTimestamp = localStorage.getItem('registrarEnrollmentsTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = true;
+  
+  console.log('🔍 [REGENROLLMENT] Cache check on mount:', {
+    hasCachedData: !!cachedData,
+    cacheTimestamp,
+    cacheAge: cacheAge ? `${Math.round(cacheAge / 1000)}s` : null,
+    cacheAgeValid: cacheAge ? cacheAge < 300000 : false
+  });
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      console.log('🔍 [REGENROLLMENT] Parsed cache:', {
+        isArray: Array.isArray(parsed),
+        length: Array.isArray(parsed) ? parsed.length : 0,
+        firstItem: Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null
+      });
+      
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false; // Show cached data immediately, but still fetch in background
+        console.log('✅ [REGENROLLMENT] Using cached data for instant display:', {
+          itemCount: parsed.length,
+          initialLoading
+        });
+      } else {
+        console.log('⚠️ [REGENROLLMENT] Cache exists but is empty or invalid array');
+      }
+    } else {
+      console.log('⚠️ [REGENROLLMENT] No valid cache found');
+    }
+  } catch (e) {
+    // Invalid cache, ignore it and fetch fresh
+    console.error('❌ [REGENROLLMENT] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [enrollments, setEnrollments] = useState(initialData);
+  const [loading, setLoading] = useState(initialLoading);
+  
+  console.log('🔍 [REGENROLLMENT] Initial state:', {
+    enrollmentsCount: enrollments.length,
+    loading,
+    firstEnrollment: enrollments.length > 0 ? enrollments[0] : null
+  });
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -178,6 +227,18 @@ const RegistrarEnrollment = () => {
   };
 
   // Update the filteredEnrollments logic
+  console.log('🔍 [REGENROLLMENT] Computing filteredEnrollments:', {
+    totalEnrollments: enrollments.length,
+    filters: {
+      showBy,
+      showProgramBy,
+      yearLevel,
+      studentType,
+      statusFilter,
+      searchTerm
+    }
+  });
+  
   const filteredEnrollments = enrollments
     // First apply all filters
     .filter(enrollment => {
@@ -224,31 +285,118 @@ const RegistrarEnrollment = () => {
       return showBy === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     });
   
+  // Log filtered results
+  console.log('✅ [REGENROLLMENT] Filtered enrollments:', {
+    originalCount: enrollments.length,
+    filteredCount: filteredEnrollments.length,
+    firstFilteredItem: filteredEnrollments.length > 0 ? filteredEnrollments[0] : null
+  });
+  
   // Now use filteredEnrollments for pagination
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const paginatedEnrollments = filteredEnrollments.slice(startIndex, endIndex);
   const pageCount = Math.ceil(filteredEnrollments.length / rowsPerPage);
+  
+  console.log('📄 [REGENROLLMENT] Paginated enrollments:', {
+    filteredCount: filteredEnrollments.length,
+    paginatedCount: paginatedEnrollments.length,
+    page,
+    rowsPerPage,
+    pageCount,
+    startIndex,
+    endIndex
+  });
 
   const fetchEnrollments = useCallback(async () => {
+    console.log('🚀 [REGENROLLMENT] fetchEnrollments called');
     try {
+      // Always fetch fresh data (cache is only for instant display on mount)
+      console.log('🔄 [REGENROLLMENT] Setting loading to true and fetching...');
       setLoading(true);
+      
       const response = await axios.get(`/api/registrar-enrollments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setEnrollments(response.data);
+      
+      console.log('📥 [REGENROLLMENT] API response received:', {
+        status: response.status,
+        dataType: typeof response.data,
+        isArray: Array.isArray(response.data),
+        dataLength: Array.isArray(response.data) ? response.data.length : 'not an array',
+        firstItem: Array.isArray(response.data) && response.data.length > 0 ? response.data[0] : null,
+        fullResponse: response.data
+      });
+      
+      const data = response.data || [];
+      
+      console.log('💾 [REGENROLLMENT] Setting enrollments state:', {
+        dataLength: data.length,
+        isArray: Array.isArray(data),
+        firstItem: data.length > 0 ? data[0] : null
+      });
+      
+      setEnrollments(data);
+      
+      // Cache the fetched data for next time (only cache if we got data)
+      if (Array.isArray(data) && data.length > 0) {
+        console.log('✅ [REGENROLLMENT] Caching data:', {
+          itemCount: data.length,
+          timestamp: Date.now()
+        });
+        localStorage.setItem('registrarEnrollmentsData', JSON.stringify(data));
+        localStorage.setItem('registrarEnrollmentsTimestamp', Date.now().toString());
+      } else {
+        // Clear cache if empty response
+        console.log('⚠️ [REGENROLLMENT] Empty response, clearing cache');
+        localStorage.removeItem('registrarEnrollmentsData');
+        localStorage.removeItem('registrarEnrollmentsTimestamp');
+      }
     } catch (error) {
       const err = new Error('Failed to fetch enrollments');
-      console.error('Error fetching enrollments:', err);
+      console.error('❌ [REGENROLLMENT] Error fetching enrollments:', {
+        error: err,
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       setEnrollments([]);
     } finally {
+      console.log('🏁 [REGENROLLMENT] Setting loading to false');
       setLoading(false);
+      
+      // Log final state
+      setTimeout(() => {
+        console.log('📊 [REGENROLLMENT] Final state after fetch:', {
+          enrollmentsCount: enrollments.length,
+          loading
+        });
+      }, 100);
     }
   }, [token]); 
 
   useEffect(() => {
+    console.log('🎯 [REGENROLLMENT] useEffect triggered, calling fetchEnrollments');
     fetchEnrollments();
   }, [fetchEnrollments]);
+
+  // Debug filtered enrollments
+  useEffect(() => {
+    console.log('🔍 [REGENROLLMENT] enrollments state changed:', {
+      enrollmentsCount: enrollments.length,
+      loading,
+      filteredCount: filteredEnrollments.length,
+      paginatedCount: paginatedEnrollments.length,
+      filters: {
+        showBy,
+        showProgramBy,
+        yearLevel,
+        studentType,
+        statusFilter,
+        searchTerm
+      }
+    });
+  }, [enrollments, loading, filteredEnrollments.length, paginatedEnrollments.length, showBy, showProgramBy, yearLevel, studentType, statusFilter, searchTerm]);
 
   const handleVerify = async (enrollmentId) => {
     try {
@@ -266,6 +414,9 @@ const RegistrarEnrollment = () => {
           message: "Enrollment verified successfully",
           severity: "success"
         });
+        // Invalidate cache so we get fresh data with updated status
+        localStorage.removeItem('registrarEnrollmentsData');
+        localStorage.removeItem('registrarEnrollmentsTimestamp');
         fetchEnrollments();
       }
     } catch (error) {
