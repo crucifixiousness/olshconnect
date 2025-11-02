@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Stepper, Step, StepLabel, Paper, CircularProgress } from '@mui/material';
+import { Stepper, Step, StepLabel, Paper, CircularProgress, StepIcon } from '@mui/material';
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
@@ -9,7 +9,7 @@ import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { FaSchool } from "react-icons/fa";
-import { FaUserEdit } from "react-icons/fa";
+import { FaUserEdit, FaCheck } from "react-icons/fa";
 import { MenuItem, Select, FormControl } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material';
 import { Snackbar, Alert } from '@mui/material';
@@ -32,6 +32,44 @@ const formatFullName = (studentData) => {
   }
   
   return fullName;
+};
+
+// Custom StepIcon component to show checkmarks for completed steps and numbers for current/future steps
+const CustomStepIcon = (props) => {
+  const { active, completed, icon } = props;
+  
+  return (
+    <div
+      style={{
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: completed 
+          ? '#c70202' 
+          : active 
+            ? '#c70202' 
+            : '#e0e0e0',
+        color: 'white',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        border: '2px solid',
+        borderColor: completed 
+          ? '#c70202' 
+          : active 
+            ? '#c70202' 
+            : '#e0e0e0',
+      }}
+    >
+      {completed ? (
+        <FaCheck style={{ fontSize: '18px' }} />
+      ) : (
+        <span>{icon}</span>
+      )}
+    </div>
+  );
 };
 
 const StudentProfile = () => {
@@ -85,6 +123,7 @@ const StudentProfile = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   
   const [activeStep, setActiveStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState([]);
   const steps = [
     'Registration',
     'Enrollment',
@@ -94,27 +133,44 @@ const StudentProfile = () => {
   ];
 
   useEffect(() => {
+    // Registration is always completed since student has an account
+    let completed = [0]; // Registration is always checked
+    let currentActiveStep = 1; // Default: Enrollment is current
+    
     if (studentData?.enrollment) {
-      switch (studentData.enrollment.status) {
-        case 'Registered':
-          setActiveStep(0);
-          break;
+      const status = studentData.enrollment.status;
+      
+      switch (status) {
         case 'Pending':
-          setActiveStep(1);
+          // Registration and Enrollment are completed, Verify is current
+          completed = [0, 1];
+          currentActiveStep = 2;
           break;
         case 'Verified':
-          setActiveStep(2);
+          // Registration, Enrollment, Verify are completed, Payment is current
+          completed = [0, 1, 2];
+          currentActiveStep = 3;
           break;
         case 'For Payment':
-          setActiveStep(3);
+          // All but Officially Enrolled are completed, Officially Enrolled is current
+          completed = [0, 1, 2, 3];
+          currentActiveStep = 4;
           break;
         case 'Officially Enrolled':
-          setActiveStep(4);
+          // All steps are completed
+          completed = [0, 1, 2, 3, 4];
+          currentActiveStep = 4;
           break;
         default:
-          setActiveStep(0);
+          // No enrollment status or unknown status - Registration completed, Enrollment is current
+          completed = [0];
+          currentActiveStep = 1;
       }
     }
+    // else: No enrollment data - Registration completed (default), Enrollment is current (default)
+    
+    setCompletedSteps(completed);
+    setActiveStep(currentActiveStep);
   }, [studentData]);
 
   const token = localStorage.getItem('token'); 
@@ -605,9 +661,16 @@ const StudentProfile = () => {
                 padding: '0 16px'
               }}>
                 <Stepper activeStep={activeStep} alternativeLabel data-testid="enrollment-stepper">
-                  {steps.map((label) => (
-                    <Step key={label}>
-                      <StepLabel>{label}</StepLabel>
+                  {steps.map((label, index) => (
+                    <Step 
+                      key={label}
+                      completed={completedSteps.includes(index)}
+                    >
+                      <StepLabel 
+                        StepIconComponent={CustomStepIcon}
+                      >
+                        {label}
+                      </StepLabel>
                     </Step>
                   ))}
                 </Stepper>
