@@ -78,8 +78,10 @@ module.exports = async (req, res) => {
         JOIN students s ON ter.student_id = s.id
         JOIN program p ON ter.program_id = p.program_id
         JOIN program_year py ON ter.year_id = py.year_id
+        JOIN enrollments e ON e.student_id = ter.student_id
         LEFT JOIN admins ph ON ter.program_head_id = ph.staff_id
         WHERE ter.status = 'ph_reviewed'
+          AND e.enrollment_status = 'Pending TOR'
         ORDER BY ter.program_head_reviewed_at ASC
       `;
 
@@ -183,6 +185,15 @@ module.exports = async (req, res) => {
             tor_request_id
           ]);
         }
+
+        // Update enrollment status from 'Pending TOR' to 'Verified' when credit transfer is approved
+        const updateEnrollmentQuery = `
+          UPDATE enrollments 
+          SET enrollment_status = 'Verified'
+          WHERE student_id = $1 
+            AND enrollment_status = 'Pending TOR'
+        `;
+        await client.query(updateEnrollmentQuery, [student_id]);
       } else if (action === 'reject') {
         // Update TOR request status to rejected
         const updateRequestQuery = `
