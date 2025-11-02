@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
           g.updated_at as grade_updated_at,
           g.registrar_approved_at,
           g.dean_approved_at,
-          g.final_approved_at,
+          NULL as final_approved_at,
           
           -- Student information
           CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) as student_name,
@@ -119,11 +119,11 @@ module.exports = async (req, res) => {
         stack: error.stack,
         type: error.name
       });
-
+      
       if (error.message === 'No token provided' || error.name === 'JsonWebTokenError') {
         return res.status(401).json({ error: 'Authentication failed' });
       }
-
+      
       res.status(500).json({ 
         error: "Failed to fetch registrar grade approval data",
         details: error.message 
