@@ -42,8 +42,27 @@ const AssignCourses = () => {
     });
     setSelectedPrerequisites([]);
   };
-  const [loading, setLoading] = useState(false);
-  const [assignedCourses, setAssignedCourses] = useState([]);
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('assignedCoursesData');
+  const cacheTimestamp = localStorage.getItem('assignedCoursesTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = false;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [PH COURSES] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [loading, setLoading] = useState(initialLoading);
+  const [assignedCourses, setAssignedCourses] = useState(initialData);
   //eslint-disable-next-line
   const [courses, setCourses] = useState([]); // Store available courses
   const [program_id, setProgramId] = useState(null);
@@ -280,39 +299,64 @@ const AssignCourses = () => {
   }, [program_id]);*/
 
   // First, wrap fetchAssignedCourses in useCallback
-  const fetchAssignedCourses = useCallback(async () => {
+  const fetchAssignedCourses = useCallback(async (forceRefresh = false) => {
     if (!program_id) return;
+    let wasLoadingSet = false;
     try {
-      // Check cache first
+      // Check if we have valid cache and don't need to show loading
       const cachedData = localStorage.getItem('assignedCoursesData');
       const cacheTimestamp = localStorage.getItem('assignedCoursesTimestamp');
       const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
 
       // Use cache if it's less than 5 minutes old
-      if (cachedData && cacheAge && cacheAge < 300000) {
-        setAssignedCourses(JSON.parse(cachedData));
-        return;
+      if (hasValidCache) {
+        const parsed = JSON.parse(cachedData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAssignedCourses(parsed);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates
+          fetchAssignedCourses(true).catch(err => {
+            console.error("Background refresh error:", err);
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(true);
+        wasLoadingSet = true;
       }
 
       const response = await axios.get(`/api/program-courses?program_id=${program_id}`);
 
       // Cache the data
-      localStorage.setItem('assignedCoursesData', JSON.stringify(response.data));
-      localStorage.setItem('assignedCoursesTimestamp', Date.now().toString());
-
-      setAssignedCourses(response.data);
+      try {
+        const data = response.data || [];
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('assignedCoursesData', JSON.stringify(data));
+          localStorage.setItem('assignedCoursesTimestamp', Date.now().toString());
+        } else {
+          localStorage.removeItem('assignedCoursesData');
+          localStorage.removeItem('assignedCoursesTimestamp');
+        }
+        setAssignedCourses(data);
+      } catch (storageError) {
+        console.warn('⚠️ [PH COURSES] Could not cache data:', storageError.message);
+        setAssignedCourses(response.data || []);
+      }
     } catch (error) {
       console.error("Error fetching assigned courses:", error);
+    } finally {
+      if (wasLoadingSet) {
+        setLoading(false);
+      }
     }
   }, [program_id]);
 
-  // Add cleanup effect
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem('assignedCoursesData');
-      localStorage.removeItem('assignedCoursesTimestamp');
-    };
-  }, []);
+  // Removed cleanup effect - cache should persist across navigation
 
   // Then update the useEffects that use fetchAssignedCourses
   useEffect(() => {
@@ -431,7 +475,14 @@ const AssignCourses = () => {
         severity: 'success'
       });
       handleClose();
-      fetchAssignedCourses();
+      // Invalidate cache and force refresh
+      try {
+        localStorage.removeItem('assignedCoursesData');
+        localStorage.removeItem('assignedCoursesTimestamp');
+      } catch (e) {
+        // Ignore storage errors
+      }
+      fetchAssignedCourses(true);
     } catch (error) {
       console.error("Error assigning course:", error);
       const errorMessage = error.response?.data?.error || error.response?.data?.details || error.message;
@@ -495,7 +546,14 @@ const AssignCourses = () => {
       });
 
       handleEditClose();
-      await fetchAssignedCourses(); // Added await to ensure data is refreshed
+      // Invalidate cache and force refresh
+      try {
+        localStorage.removeItem('assignedCoursesData');
+        localStorage.removeItem('assignedCoursesTimestamp');
+      } catch (e) {
+        // Ignore storage errors
+      }
+      await fetchAssignedCourses(true); // Added await to ensure data is refreshed
     } catch (error) {
       console.error("Error assigning instructor:", error);
       setSnackbar({
