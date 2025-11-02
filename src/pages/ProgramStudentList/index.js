@@ -29,8 +29,28 @@ const ProgramStudentList = () => {
   const [showBy, setshowBy] = useState('');
   const [block, setBlock] = useState('');
   const [yearLevel, setYearLevel] = useState('');
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('programStudentListData');
+  const cacheTimestamp = localStorage.getItem('programStudentListTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = true;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [PROGRAM STUDENT LIST] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [students, setStudents] = useState(initialData);
+  const [loading, setLoading] = useState(initialLoading);
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [programId, setProgramId] = useState(null);
@@ -103,7 +123,7 @@ const ProgramStudentList = () => {
     }
   }, []);
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (forceRefresh = false) => {
     if (!programId) {
       console.log('ProgramStudentList - No programId available yet');
       return;
@@ -111,8 +131,35 @@ const ProgramStudentList = () => {
     
     console.log('ProgramStudentList - Fetching students for programId:', programId);
     
+    let wasLoadingSet = false;
     try {
-      setLoading(true);
+      // Check if we have valid cache and don't need to show loading
+      const cachedData = localStorage.getItem('programStudentListData');
+      const cacheTimestamp = localStorage.getItem('programStudentListTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+
+      // Use cache if it's less than 5 minutes old
+      if (hasValidCache) {
+        const parsed = JSON.parse(cachedData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setStudents(parsed);
+          setLoading(false);
+          
+          // Always do background refresh to check for updates
+          fetchStudents(true).catch(err => {
+            console.error("Background refresh error:", err);
+          });
+          return;
+        }
+      }
+
+      // Only show loading if not forcing refresh
+      if (!forceRefresh) {
+        setLoading(true);
+        wasLoadingSet = true;
+      }
+
       // Only include non-empty filter values and ensure year_level is a number
       const params = {
         program_id: programId,
@@ -123,13 +170,30 @@ const ProgramStudentList = () => {
       console.log('ProgramStudentList - API call parameters:', params);
       const response = await axios.get('/api/get-program-students', { params });
       console.log('ProgramStudentList - API response:', response.data);
-      setStudents(response.data);
+      
+      const data = response.data || [];
+      setStudents(data);
+      
+      // Cache the fetched data
+      try {
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('programStudentListData', JSON.stringify(data));
+          localStorage.setItem('programStudentListTimestamp', Date.now().toString());
+        } else {
+          localStorage.removeItem('programStudentListData');
+          localStorage.removeItem('programStudentListTimestamp');
+        }
+      } catch (storageError) {
+        console.warn('⚠️ [PROGRAM STUDENT LIST] Could not cache data:', storageError.message);
+      }
     } catch (error) {
       console.error('ProgramStudentList - Error fetching students:', error);
       console.error('ProgramStudentList - Error response:', error.response?.data);
       setStudents([]);
     } finally {
-      setLoading(false);
+      if (wasLoadingSet) {
+        setLoading(false);
+      }
     }
   }, [programId, yearLevel, block, showBy]);
 
@@ -267,13 +331,14 @@ const ProgramStudentList = () => {
         });
         handleCloseAssignModal();
         
-        // Refresh the student list and existing blocks
-        const updatedStudents = students.map(student => 
-          student.id === selectedStudent.id 
-            ? { ...student, block: blockToAssign }
-            : student
-        );
-        setStudents(updatedStudents);
+        // Invalidate cache and force refresh
+        try {
+          localStorage.removeItem('programStudentListData');
+          localStorage.removeItem('programStudentListTimestamp');
+        } catch (e) {
+          // Ignore storage errors
+        }
+        fetchStudents(true);
         
         // Refresh the existing blocks list if a new block was added
         if (newBlockName && !existingBlocks.includes(newBlockName)) {
