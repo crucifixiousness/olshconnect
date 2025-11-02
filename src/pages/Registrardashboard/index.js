@@ -28,25 +28,33 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 const RegistrarDashboard = () => {
   const context = useContext(MyContext);
 
-  useEffect(() => {
-    context.setIsHideComponents(false);
-    window.scrollTo(0,0);
-  }, [context]);
+  // Check localStorage cache synchronously on mount (like Academic Records)
+  const cachedDashboardData = localStorage.getItem('registrarDashboardData');
+  const cachedDashboardTimestamp = localStorage.getItem('registrarDashboardTimestamp');
+  const cachedDashboardAge = cachedDashboardTimestamp ? Date.now() - parseInt(cachedDashboardTimestamp) : null;
+  const hasValidCache = cachedDashboardData && cachedDashboardAge && cachedDashboardAge < 300000; // 5 minutes
 
-  const [dashboardData, setDashboardData] = useState({
+  // Initialize state with cached data if available, otherwise empty
+  const cachedData = hasValidCache ? JSON.parse(cachedDashboardData) : null;
+  const [dashboardData, setDashboardData] = useState(cachedData?.dashboardData || {
     totalEnrollments: 0,
     totalVerified: 0,
     totalPending: 0,
     totalRejected: 0
   });
-  const [enrollmentStats, setEnrollmentStats] = useState({
+  const [enrollmentStats, setEnrollmentStats] = useState(cachedData?.enrollmentStats || {
     programStats: [],
     yearLevelStats: [],
     monthlyData: [],
     statusDistribution: [],
     documentStats: {}
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
+
+  useEffect(() => {
+    context.setIsHideComponents(false);
+    window.scrollTo(0,0);
+  }, [context]);
 
   // Grade approval states
   const [gradeApprovalTab, setGradeApprovalTab] = useState(0);
@@ -72,49 +80,93 @@ const RegistrarDashboard = () => {
   const [viewStudents, setViewStudents] = useState([]);
   const [viewClassInfo, setViewClassInfo] = useState(null);
 
-  useEffect(() => {
-    const fetchRegistrarData = async () => {
-      try {
-        const token = localStorage.getItem('token');
+  const fetchRegistrarData = async (forceRefresh = false) => {
+    try {
+      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem('registrarDashboardData');
+        const cacheTimestamp = localStorage.getItem('registrarDashboardTimestamp');
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
 
-        if (!token) {
-          console.error('No token found');
+        // Use cache if it's less than 5 minutes old
+        if (cachedData && cacheAge && cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setDashboardData(parsedData.dashboardData);
+          setEnrollmentStats(parsedData.enrollmentStats);
           setLoading(false);
+          
+          // Always do background refresh to check for updates (new enrollments, status changes, etc.)
+          fetchRegistrarData(true).catch(err => {
+            console.error("Background refresh error:", err);
+            // Keep showing cached data if background refresh fails
+          });
+          
+          // Still fetch grade and class approval data (they're separate and dynamic)
+          await fetchGradeApprovalData();
+          await fetchClassApprovalData();
           return;
         }
+      }
 
-        // Fetch dashboard data from new API
-        const response = await axios.get('/api/registrar-dashboard', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+      // Only show loading if not forcing refresh (we already have data in background refresh)
+      if (!forceRefresh) {
+        setLoading(true);
+      }
 
-        setDashboardData({
-          totalEnrollments: response.data.totalEnrollments || 0,
-          totalVerified: response.data.totalVerified || 0,
-          totalPending: response.data.totalPending || 0,
-          totalRejected: response.data.totalRejected || 0
-        });
+      const token = localStorage.getItem('token');
 
-        setEnrollmentStats({
-          programStats: response.data.enrollmentStats?.programStats || [],
-          yearLevelStats: response.data.enrollmentStats?.yearLevelStats || [],
-          monthlyData: response.data.enrollmentStats?.monthlyData || [],
-          statusDistribution: response.data.enrollmentStats?.statusDistribution || [],
-          documentStats: response.data.enrollmentStats?.documentStats || {}
-        });
-
-        // Fetch grade approval data
-        await fetchGradeApprovalData();
-        // Fetch class approval data
-        await fetchClassApprovalData();
-
+      if (!token) {
+        console.error('No token found');
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching registrar data:', error);
+        return;
+      }
+
+      // Fetch dashboard data from new API
+      const response = await axios.get('/api/registrar-dashboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const formattedDashboardData = {
+        totalEnrollments: response.data.totalEnrollments || 0,
+        totalVerified: response.data.totalVerified || 0,
+        totalPending: response.data.totalPending || 0,
+        totalRejected: response.data.totalRejected || 0
+      };
+
+      const formattedEnrollmentStats = {
+        programStats: response.data.enrollmentStats?.programStats || [],
+        yearLevelStats: response.data.enrollmentStats?.yearLevelStats || [],
+        monthlyData: response.data.enrollmentStats?.monthlyData || [],
+        statusDistribution: response.data.enrollmentStats?.statusDistribution || [],
+        documentStats: response.data.enrollmentStats?.documentStats || {}
+      };
+
+      // Cache the new data (like Academic Records and Student Profile)
+      localStorage.setItem('registrarDashboardData', JSON.stringify({
+        dashboardData: formattedDashboardData,
+        enrollmentStats: formattedEnrollmentStats
+      }));
+      localStorage.setItem('registrarDashboardTimestamp', Date.now().toString());
+
+      setDashboardData(formattedDashboardData);
+      setEnrollmentStats(formattedEnrollmentStats);
+
+      // Fetch grade approval data
+      await fetchGradeApprovalData();
+      // Fetch class approval data
+      await fetchClassApprovalData();
+
+      // Only update loading if not forcing refresh
+      if (!forceRefresh) {
         setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching registrar data:', error);
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchRegistrarData();
   }, []);
 
