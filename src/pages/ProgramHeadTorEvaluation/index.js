@@ -28,9 +28,29 @@ import { MyContext } from "../../App";
 
 const ProgramHeadTorEvaluation = () => {
   const context = useContext(MyContext);
-  const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [torRequests, setTorRequests] = useState([]);
+
+  // Check localStorage cache synchronously on mount for instant display
+  const cachedData = localStorage.getItem('torEvaluationRequestsData');
+  const cacheTimestamp = localStorage.getItem('torEvaluationRequestsTimestamp');
+  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+  let initialData = [];
+  let initialLoading = true;
+  
+  try {
+    if (cachedData && cacheAge && cacheAge < 300000) {
+      const parsed = JSON.parse(cachedData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        initialData = parsed;
+        initialLoading = false;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [TOR EVALUATION] Invalid cache, will fetch fresh:', e);
+  }
+
+  const [torRequests, setTorRequests] = useState(initialData);
+  const [loading, setLoading] = useState(initialLoading);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [evaluationOpen, setEvaluationOpen] = useState(false);
   const [equivalencies, setEquivalencies] = useState([]);
@@ -54,15 +74,30 @@ const ProgramHeadTorEvaluation = () => {
     fetchTorRequests();
   }, [context]);
 
-  const fetchTorRequests = async () => {
+  const fetchTorRequests = async (forceRefresh = false) => {
+    let wasLoadingSet = false;
     try {
+      // Check if we have valid cache and don't need to show loading
+      const cachedData = localStorage.getItem('torEvaluationRequestsData');
+      const cacheTimestamp = localStorage.getItem('torEvaluationRequestsTimestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
+      const hasValidCache = !forceRefresh && cachedData && cacheAge && cacheAge < 300000;
+      
+      // Only show loading if we don't have valid cache (first load or cache expired)
+      if (!hasValidCache) {
+        setLoading(true);
+        wasLoadingSet = true;
+      }
+
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user'));
       const program_id = user.program_id;
 
       if (!token || !program_id) {
         console.error('No token or program_id found');
-        setLoading(false);
+        if (wasLoadingSet) {
+          setLoading(false);
+        }
         return;
       }
 
@@ -70,12 +105,29 @@ const ProgramHeadTorEvaluation = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setTorRequests(response.data.requests || []);
-      setLoading(false);
+      const data = response.data.requests || [];
+      setTorRequests(data);
+      
+      // Cache the fetched data
+      try {
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('torEvaluationRequestsData', JSON.stringify(data));
+          localStorage.setItem('torEvaluationRequestsTimestamp', Date.now().toString());
+        } else {
+          localStorage.removeItem('torEvaluationRequestsData');
+          localStorage.removeItem('torEvaluationRequestsTimestamp');
+        }
+      } catch (storageError) {
+        console.warn('⚠️ [TOR EVALUATION] Could not cache data:', storageError.message);
+      }
+      
     } catch (error) {
       console.error('Error fetching TOR requests:', error);
       setSnackbar({ open: true, message: 'Failed to load TOR requests', severity: 'error' });
-      setLoading(false);
+    } finally {
+      if (wasLoadingSet) {
+        setLoading(false);
+      }
     }
   };
 
@@ -421,7 +473,14 @@ const ProgramHeadTorEvaluation = () => {
 
       setSnackbar({ open: true, message: 'Course equivalencies submitted successfully', severity: 'success' });
       setEvaluationOpen(false);
-      fetchTorRequests();
+      // Invalidate cache and force refresh to show updated status
+      try {
+        localStorage.removeItem('torEvaluationRequestsData');
+        localStorage.removeItem('torEvaluationRequestsTimestamp');
+      } catch (e) {
+        // Ignore storage errors
+      }
+      fetchTorRequests(true);
     } catch (error) {
       console.error('Error submitting evaluation:', error);
       setSnackbar({ open: true, message: 'Failed to submit evaluation', severity: 'error' });
