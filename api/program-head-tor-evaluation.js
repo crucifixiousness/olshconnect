@@ -85,8 +85,10 @@ module.exports = async (req, res) => {
         JOIN students s ON ter.student_id = s.id
         JOIN program p ON ter.program_id = p.program_id
         JOIN program_year py ON ter.year_id = py.year_id
+        JOIN enrollments e ON e.student_id = ter.student_id
         WHERE ter.program_id = $1 
           AND ter.status IN ('pending', 'ph_reviewed')
+          AND e.enrollment_status = 'Pending TOR'
         ORDER BY ter.id DESC
       `;
 
