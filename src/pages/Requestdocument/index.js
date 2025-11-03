@@ -10,6 +10,7 @@ import { IconButton, Dialog } from '@mui/material';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import { useRef } from 'react';
+import olshcoLogo from '../../asset/images/olshco-logo1.png';
 
 const RequestDocument = () => {
   // eslint-disable-next-line
@@ -574,7 +575,9 @@ const RequestDocument = () => {
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={6}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ width: 56, height: 56, border: '1px solid #999', borderRadius: '50%' }} />
+                  <Box sx={{ width: 56, height: 56, border: '1px solid #999', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#fff' }}>
+                    <img src={olshcoLogo} alt="School logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </Box>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>REQUEST FORM</Typography>
                     <Typography variant="body2">PAASCU ACCREDITED</Typography>
