@@ -207,26 +207,13 @@ const RequestDocument = () => {
       );
 
       if (response.status === 201) {
-        const newRequest = response.data;
-        
-        // Immediately update cache and state with the new request (optimistic update)
-        const now = Date.now();
-        const currentCache = localStorage.getItem('requestDocumentData');
-        const currentList = currentCache ? JSON.parse(currentCache) : [];
-        
-        // Add new request to the beginning of the list (newest first)
-        const updatedList = [newRequest, ...currentList].sort((a, b) => {
-          const dateA = new Date(a.req_date || a.requestDate || 0);
-          const dateB = new Date(b.req_date || b.requestDate || 0);
-          return dateB - dateA; // Descending order (newest first)
-        });
-        
-        // Update cache immediately with the new request
-        localStorage.setItem('requestDocumentData', JSON.stringify(updatedList));
-        localStorage.setItem('requestDocumentTimestamp', now.toString());
-        
-        // Update state immediately for instant UI update
-        setRequestList(updatedList);
+        // Invalidate cache and refetch from server (no optimistic update)
+        try {
+          localStorage.removeItem('requestDocumentData');
+          localStorage.removeItem('requestDocumentTimestamp');
+        } catch (e) {
+          // ignore storage errors
+        }
 
         setShowRequestModal(false);
         setSnackbar({
@@ -234,6 +221,7 @@ const RequestDocument = () => {
           message: 'Request added successfully.',
           severity: 'success'
         });
+
         // Reset form
         setNewRequest({
           id: user?.id || null,
@@ -244,11 +232,10 @@ const RequestDocument = () => {
         });
         // Reset pagination to show first page
         setPage(1);
-        
-        // Background fetch to ensure data consistency - force refresh to get true server state
+
+        // Force refresh to get true server state
         fetchRequestData(true).catch(err => {
           console.error("Background fetch error:", err);
-          // If background fetch fails, keep the optimistic update
         });
       }
     } catch (error) {
