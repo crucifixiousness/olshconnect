@@ -15,11 +15,13 @@ import olshcoLogo from '../../asset/images/olshco-logo1.png';
 const RequestDocument = () => {
   // eslint-disable-next-line
   const [isLoading, setIsLoading] = useState(false);
+  const [requestList, setRequestList] = useState([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [page, setPage] = useState(1); // Pagination state
   const handleOpen = () => setShowRequestModal(true);
   const handleClose = () => setShowRequestModal(false);
   const context = useContext(MyContext);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -28,14 +30,12 @@ const RequestDocument = () => {
   const pdfCache = useRef(new Map());
   const [showFormPreview, setShowFormPreview] = useState(false);
 
-  // Initialize without localStorage cache
-  const [requestList, setRequestList] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-    fetchRequestData();
+    // Simulate loading time
+    setTimeout(() => setLoading(false), 1000);
   }, [context]);
 
   // Add safe parsing of user data
@@ -65,7 +65,7 @@ const RequestDocument = () => {
 
   // Filter requests
   const filteredRequests = requestList.filter(request => {
-    const matchesSearch = !searchTerm ||
+    const matchesSearch = !searchTerm || 
       request.doc_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -87,38 +87,56 @@ const RequestDocument = () => {
     setPage(newPage);
   };
 
+  // Add this near other useRef declarations
+  const requestDataCache = useRef({
+    data: null,
+    timestamp: null,
+    ttl: 5 * 60 * 1000 // 5 minutes cache TTL
+  });
+
   const fetchRequestData = useCallback(async () => {
     try {
       if (!user || !user.id) {
         console.error("No user ID found");
-        setLoading(false);
         return;
       }
 
-      setLoading(true);
+      // Check if cache is valid
+      const now = Date.now();
+      if (requestDataCache.current.data && 
+          requestDataCache.current.timestamp && 
+          (now - requestDataCache.current.timestamp) < requestDataCache.current.ttl) {
+        setRequestList(requestDataCache.current.data);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/request-document', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      // Sort requests by date (newest first)
-      const sortedData = [...response.data].sort((a, b) => {
-        const dateA = new Date(a.req_date || a.requestDate || 0);
-        const dateB = new Date(b.req_date || b.requestDate || 0);
-        return dateB - dateA;
-      });
+      // Update cache
+      requestDataCache.current = {
+        data: response.data,
+        timestamp: now,
+        ttl: 5 * 60 * 1000
+      };
 
-      setRequestList(sortedData);
+      setRequestList(response.data);
     } catch (error) {
       console.error("Error fetching request data:", error);
-    } finally {
-      setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
     fetchRequestData();
   }, [fetchRequestData]);
+
+  useEffect(() => {
+    if (user) {
+      fetchRequestData();
+    }
+  }, [user, fetchRequestData]); // Add both dependencies
 
   // Handle new request input changes
   const handleInputChange = (e) => {
@@ -151,10 +169,10 @@ const RequestDocument = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post("/api/requesting-document",
+      const response = await axios.post("/api/requesting-document", 
         { doc_type, description }, // Include description in request
         {
-          headers: {
+          headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
@@ -162,18 +180,7 @@ const RequestDocument = () => {
       );
 
       if (response.status === 201) {
-        const newRequest = response.data;
-        
-        // Immediately update state with the new request (optimistic update)
-        const updatedList = [newRequest, ...requestList].sort((a, b) => {
-          const dateA = new Date(a.req_date || a.requestDate || 0);
-          const dateB = new Date(b.req_date || b.requestDate || 0);
-          return dateB - dateA; // Descending order (newest first)
-        });
-        
-        // Update state immediately for instant UI update
-        setRequestList(updatedList);
-
+        setRequestList([...requestList, response.data]);
         setShowRequestModal(false);
         setSnackbar({
           open: true,
@@ -188,10 +195,7 @@ const RequestDocument = () => {
           requestDate: new Date().toISOString().slice(0, 10),
           status: "Pending",
         });
-        // Reset pagination to show first page
-        setPage(1);
-        
-        // No background refetch to avoid flicker; rely on next explicit fetch
+        fetchRequestData();
       }
     } catch (error) {
       console.error("Error submitting request:", error);
@@ -216,8 +220,8 @@ const RequestDocument = () => {
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/generate-document`, {
         params: { req_id: request.req_id },
-        headers: {
-          'Authorization': `Bearer ${token}`
+        headers: { 
+          'Authorization': `Bearer ${token}` 
         },
         responseType: 'arraybuffer',
         validateStatus: false
@@ -289,6 +293,7 @@ const RequestDocument = () => {
             <FaCirclePlus/> Request Document
           </Button>
         </div>
+
         <div className="mb-3">
           <Button
             variant="outlined"
