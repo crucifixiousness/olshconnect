@@ -28,15 +28,9 @@ const RequestDocument = () => {
   const pdfCache = useRef(new Map());
   const [showFormPreview, setShowFormPreview] = useState(false);
 
-  // Check localStorage cache synchronously on mount (like Academic Records)
-  const cachedData = localStorage.getItem('requestDocumentData');
-  const cacheTimestamp = localStorage.getItem('requestDocumentTimestamp');
-  const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-  const hasValidCache = cachedData && cacheAge && cacheAge < 300000; // 5 minutes
-
-  // Initialize state with cached data if available, otherwise empty
-  const [requestList, setRequestList] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
-  const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
+  // Initialize without localStorage cache
+  const [requestList, setRequestList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     context.setIsHideComponents(false);
@@ -93,64 +87,31 @@ const RequestDocument = () => {
     setPage(newPage);
   };
 
-  const fetchRequestData = useCallback(async (forceRefresh = false) => {
+  const fetchRequestData = useCallback(async () => {
     try {
       if (!user || !user.id) {
         console.error("No user ID found");
+        setLoading(false);
         return;
       }
 
-      // Check cache first (like Academic Records and Student Profile), unless forcing refresh
-      if (!forceRefresh) {
-        const cachedData = localStorage.getItem('requestDocumentData');
-        const cacheTimestamp = localStorage.getItem('requestDocumentTimestamp');
-        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : null;
-
-        // Use cache if it's less than 5 minutes old
-        if (cachedData && cacheAge && cacheAge < 300000) {
-          const parsedData = JSON.parse(cachedData);
-          setRequestList(parsedData);
-          setLoading(false);
-          
-          // Always do background refresh to check for status updates (approvals, rejections, etc.)
-          // This ensures status changes appear on next navigation
-          fetchRequestData(true).catch(err => {
-            console.error("Background refresh error:", err);
-            // Keep showing cached data if background refresh fails
-          });
-          return;
-        }
-      }
-
-      // Only show loading if not forcing refresh (we already have data in background refresh)
-      if (!forceRefresh) {
-        setLoading(true);
-      }
-      
+      setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/request-document', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      // Sort requests by date (newest first) before caching and setting state
+      // Sort requests by date (newest first)
       const sortedData = [...response.data].sort((a, b) => {
         const dateA = new Date(a.req_date || a.requestDate || 0);
         const dateB = new Date(b.req_date || b.requestDate || 0);
-        return dateB - dateA; // Descending order (newest first)
+        return dateB - dateA;
       });
 
-      // Cache the new data (like Academic Records and Student Profile)
-      localStorage.setItem('requestDocumentData', JSON.stringify(sortedData));
-      localStorage.setItem('requestDocumentTimestamp', Date.now().toString());
-
       setRequestList(sortedData);
-      
-      // Only update loading if not forcing refresh
-      if (!forceRefresh) {
-        setLoading(false);
-      }
     } catch (error) {
       console.error("Error fetching request data:", error);
+    } finally {
       setLoading(false);
     }
   }, [user]);
@@ -158,12 +119,6 @@ const RequestDocument = () => {
   useEffect(() => {
     fetchRequestData();
   }, [fetchRequestData]);
-
-  useEffect(() => {
-    if (user) {
-      fetchRequestData();
-    }
-  }, [user, fetchRequestData]); // Add both dependencies
 
   // Handle new request input changes
   const handleInputChange = (e) => {
@@ -207,13 +162,17 @@ const RequestDocument = () => {
       );
 
       if (response.status === 201) {
-        // Invalidate cache and refetch from server (no optimistic update)
-        try {
-          localStorage.removeItem('requestDocumentData');
-          localStorage.removeItem('requestDocumentTimestamp');
-        } catch (e) {
-          // ignore storage errors
-        }
+        const newRequest = response.data;
+        
+        // Immediately update state with the new request (optimistic update)
+        const updatedList = [newRequest, ...requestList].sort((a, b) => {
+          const dateA = new Date(a.req_date || a.requestDate || 0);
+          const dateB = new Date(b.req_date || b.requestDate || 0);
+          return dateB - dateA; // Descending order (newest first)
+        });
+        
+        // Update state immediately for instant UI update
+        setRequestList(updatedList);
 
         setShowRequestModal(false);
         setSnackbar({
@@ -221,7 +180,6 @@ const RequestDocument = () => {
           message: 'Request added successfully.',
           severity: 'success'
         });
-
         // Reset form
         setNewRequest({
           id: user?.id || null,
@@ -232,11 +190,8 @@ const RequestDocument = () => {
         });
         // Reset pagination to show first page
         setPage(1);
-
-        // Force refresh to get true server state
-        fetchRequestData(true).catch(err => {
-          console.error("Background fetch error:", err);
-        });
+        
+        // No background refetch to avoid flicker; rely on next explicit fetch
       }
     } catch (error) {
       console.error("Error submitting request:", error);
