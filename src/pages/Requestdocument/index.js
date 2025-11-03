@@ -42,7 +42,7 @@ const RequestDocument = () => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
     fetchRequestData();
-  }, [context, fetchRequestData]);
+  }, [context]);
 
   // Add safe parsing of user data
   const user = (() => {
@@ -94,7 +94,6 @@ const RequestDocument = () => {
   };
 
   const fetchRequestData = useCallback(async (forceRefresh = false) => {
-    let wasLoadingSet = false;
     try {
       if (!user || !user.id) {
         console.error("No user ID found");
@@ -126,7 +125,6 @@ const RequestDocument = () => {
       // Only show loading if not forcing refresh (we already have data in background refresh)
       if (!forceRefresh) {
         setLoading(true);
-        wasLoadingSet = true;
       }
       
       const token = localStorage.getItem('token');
@@ -148,21 +146,24 @@ const RequestDocument = () => {
       setRequestList(sortedData);
       
       // Only update loading if not forcing refresh
-      if (!forceRefresh && wasLoadingSet) {
+      if (!forceRefresh) {
         setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching request data:", error);
-      if (wasLoadingSet) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }, [user]);
 
-  // Single fetch effect to avoid double fetching/flicker
   useEffect(() => {
     fetchRequestData();
   }, [fetchRequestData]);
+
+  useEffect(() => {
+    if (user) {
+      fetchRequestData();
+    }
+  }, [user, fetchRequestData]); // Add both dependencies
 
   // Handle new request input changes
   const handleInputChange = (e) => {
