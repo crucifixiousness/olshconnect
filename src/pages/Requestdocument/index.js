@@ -25,6 +25,7 @@ const RequestDocument = () => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const pdfCache = useRef(new Map());
+  const [showFormPreview, setShowFormPreview] = useState(false);
 
   // Check localStorage cache synchronously on mount (like Academic Records)
   const cachedData = localStorage.getItem('requestDocumentData');
@@ -345,6 +346,15 @@ const RequestDocument = () => {
             <FaCirclePlus/> Request Document
           </Button>
         </div>
+        <div className="mb-3">
+          <Button
+            variant="outlined"
+            onClick={() => setShowFormPreview(true)}
+            sx={{ borderColor: '#c70202', color: '#c70202', '&:hover': { borderColor: '#a00000', color: '#a00000' } }}
+          >
+            View Request Form Template
+          </Button>
+        </div>
 
         {loading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
@@ -549,6 +559,156 @@ const RequestDocument = () => {
               <Viewer fileUrl={pdfUrl} />
             )}
           </Worker>
+        </Box>
+      </Dialog>
+
+      {/* Request Form Preview Modal */}
+      <Dialog
+        open={showFormPreview}
+        onClose={() => setShowFormPreview(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Box sx={{ p: 3 }}>
+          <Paper variant="outlined" sx={{ p: 2, borderWidth: 2 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={6}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ width: 56, height: 56, border: '1px solid #999', borderRadius: '50%' }} />
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>REQUEST FORM</Typography>
+                    <Typography variant="body2">PAASCU ACCREDITED</Typography>
+                    <Typography variant="body2">ISO ACCREDITED</Typography>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Grid container>
+                  <Grid item xs={8}>
+                    <Box sx={{ border: '1px solid #000', p: 1 }}>
+                      <Grid container>
+                        <Grid item xs={12}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">Document Code:</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACAD-REG-FM-001</Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">Effectivity Date:</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>April 12, 2024</Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">Revision No.</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>0</Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Box sx={{ border: '1px solid #000', borderLeft: 'none', height: '100%', p: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Page</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>1 of 1</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 2, border: '1px solid #000' }}>
+              <Grid container>
+                <Grid item xs={9} sx={{ borderRight: '1px solid #000' }}>
+                  <Box sx={{ p: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>NAME:</Typography>
+                    <Typography variant="caption">(Please use MAIDEN NAME for MARRIED Alumna) (Apilido noong Dalaga)</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={3}>
+                  <Box sx={{ p: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Date:</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>LEVEL ATTENDED:</Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  {['PS/GS','HS','JHS','SHS','COLLEGE'].map((label) => (
+                    <Grid item key={label}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 14, height: 14, border: '1px solid #000' }} />
+                        <Typography variant="body2">{label}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+
+              <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>GRADE / STRAND / COURSE:</Typography>
+              </Box>
+
+              <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>YEAR GRADUATED / SCHOOL YEAR:</Typography>
+              </Box>
+
+              <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACADEMIC CREDENTIALS: 15 Days Processing</Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  {['DIPLOMA','F137 / SF10 - PS / GS / JHS / SHS','TRANSCRIPT OF RECORDS - College'].map((label) => (
+                    <Grid item xs={12} md={6} key={label}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 14, height: 14, border: '1px solid #000' }} />
+                        <Typography variant="body2">{label}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+
+              <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>CERTIFICATION: 5 days Processing</Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  {['ENGLISH AS MEDIUM OF INSTRUCTION','ENROLLMENT','GRADES (FOR COLLEGE ONLY)','GRADUATION','GWA / HONORS / AWARDS','HONORABLE DISMISSAL'].map((label) => (
+                    <Grid item xs={12} md={6} key={label}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 14, height: 14, border: '1px solid #000' }} />
+                        <Typography variant="body2">{label}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+
+              <Box sx={{ borderTop: '1px solid #000', p: 1, minHeight: 64 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>PURPOSE:</Typography>
+              </Box>
+
+              <Grid container sx={{ borderTop: '1px solid #000' }}>
+                <Grid item xs={6} sx={{ borderRight: '1px solid #000' }}>
+                  <Box sx={{ p: 1, minHeight: 64 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>REQUESTED BY:</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box sx={{ p: 1, minHeight: 64 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACCOUNTING OFFICE:</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button onClick={() => setShowFormPreview(false)} variant="contained" sx={{ bgcolor: '#c70202', '&:hover': { bgcolor: '#a00000' } }}>
+                Close
+              </Button>
+            </Box>
+          </Paper>
         </Box>
       </Dialog>
 
