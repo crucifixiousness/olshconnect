@@ -1,4 +1,4 @@
-import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography, TextField, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography, TextField, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { FaCirclePlus } from "react-icons/fa6";
@@ -51,8 +51,15 @@ const RequestDocument = () => {
 
   const [newRequest, setNewRequest] = useState({
     id: user?.id || null,
+    name: user?.full_name || user?.name || "",
+    date: new Date().toISOString().slice(0, 10),
+    levelAttended: [],
+    gradeStrandCourse: "",
+    yearGraduated: "",
+    academicCredentials: [],
+    certification: [],
     doc_type: "",
-    description: "", // Added description field
+    description: "",
     requestDate: new Date().toISOString().slice(0, 10),
     status: "Pending",
   });
@@ -140,28 +147,60 @@ const RequestDocument = () => {
 
   // Handle new request input changes
   const handleInputChange = (e) => {
-    setNewRequest({ ...newRequest, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    
+    if (type === 'checkbox') {
+      // Handle checkbox arrays (levelAttended, academicCredentials, certification)
+      const currentArray = newRequest[name] || [];
+      if (checked) {
+        setNewRequest({ ...newRequest, [name]: [...currentArray, value] });
+      } else {
+        setNewRequest({ ...newRequest, [name]: currentArray.filter(item => item !== value) });
+      }
+    } else {
+      setNewRequest({ ...newRequest, [name]: value });
+    }
   };
 
   // Submit new document request
   const handleAddRequest = async (e) => {
     e.preventDefault();
 
-    const { doc_type, description } = newRequest;
+    const { name, levelAttended, academicCredentials, certification, description } = newRequest;
 
-    if (!doc_type) {
+    if (!name || !name.trim()) {
       setSnackbar({
         open: true,
-        message: 'Document type is required.',
+        message: 'Name is required.',
         severity: 'error'
       });
       return;
     }
 
-    if (!description.trim()) {
+    if (!levelAttended || levelAttended.length === 0) {
       setSnackbar({
         open: true,
-        message: 'Please provide a reason for your request.',
+        message: 'Please select at least one level attended.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (!academicCredentials || academicCredentials.length === 0) {
+      if (!certification || certification.length === 0) {
+        setSnackbar({
+          open: true,
+          message: 'Please select at least one academic credential or certification.',
+          severity: 'error'
+        });
+        return;
+      }
+    }
+
+    if (!description || !description.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Please provide a purpose for your request.',
         severity: 'error'
       });
       return;
@@ -169,8 +208,39 @@ const RequestDocument = () => {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // Determine doc_type from selections
+      let docType = "";
+      if (academicCredentials && academicCredentials.length > 0) {
+        if (academicCredentials.includes("TRANSCRIPT OF RECORDS - College")) {
+          docType = "Transcript of Records";
+        } else if (academicCredentials.includes("DIPLOMA")) {
+          docType = "Diploma";
+        } else if (academicCredentials.includes("F137 / SF10 - PS / GS / JHS / SHS")) {
+          docType = "Form 137 / SF10";
+        }
+      }
+      
+      if (!docType && certification && certification.length > 0) {
+        if (certification.includes("GRADES (FOR COLLEGE ONLY)")) {
+          docType = "Certificate of Grades";
+        } else if (certification.includes("ENROLLMENT")) {
+          docType = "Enrollment Certificate";
+        } else if (certification.includes("GRADUATION")) {
+          docType = "Graduation Certificate";
+        } else if (certification.includes("GOOD MORAL")) {
+          docType = "Good Moral Certificate";
+        } else {
+          docType = certification[0]; // Use first certification as default
+        }
+      }
+
       const response = await axios.post("/api/requesting-document", 
-        { doc_type, description }, // Include description in request
+        { 
+          doc_type: docType || "Document Request",
+          description: description,
+          form_data: newRequest // Send all form data for potential future use
+        },
         {
           headers: { 
             'Authorization': `Bearer ${token}`,
@@ -190,6 +260,13 @@ const RequestDocument = () => {
         // Reset form
         setNewRequest({
           id: user?.id || null,
+          name: user?.full_name || user?.name || "",
+          date: new Date().toISOString().slice(0, 10),
+          levelAttended: [],
+          gradeStrandCourse: "",
+          yearGraduated: "",
+          academicCredentials: [],
+          certification: [],
           doc_type: "",
           description: "",
           requestDate: new Date().toISOString().slice(0, 10),
@@ -674,68 +751,201 @@ const RequestDocument = () => {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: "90%",
-          maxWidth: "500px",
+          maxWidth: "800px",
+          maxHeight: "90vh",
           bgcolor: 'background.paper',
           borderRadius: "10px",
           boxShadow: 24,
           p: 4,
+          overflow: 'auto',
         }}>
           <Typography variant="h6" className="hd mb-4" sx={{ color: '#c70202', fontWeight: 'bold' }}>
             Request a Document
           </Typography>
           <form onSubmit={handleAddRequest}>
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="document-type-label">Document Type</InputLabel>
-              <Select
-                labelId="document-type-label"
-                name="doc_type"
-                value={newRequest.doc_type}
-                onChange={handleInputChange}
-                label="Document Type"
-                required
-                aria-label="Document Type"
-                data-testid="document-type-select"
-                data-value={newRequest.doc_type}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#c70202',
+            <Grid container spacing={2}>
+              {/* Name and Date */}
+              <Grid item xs={12} sm={8}>
+                <TextField
+                  label="Name"
+                  name="name"
+                  value={newRequest.name}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  helperText="(Please use MAIDEN NAME for MARRIED Alumna)"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#c70202' },
+                      '&.Mui-focused fieldset': { borderColor: '#c70202' },
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#c70202',
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Date"
+                  name="date"
+                  type="date"
+                  value={newRequest.date}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#c70202' },
+                      '&.Mui-focused fieldset': { borderColor: '#c70202' },
                     },
-                  },
-                }}
-              >
-                <MenuItem value="Certificate of Grades">Certificate of Grades</MenuItem>
-                <MenuItem value="Good Moral Certificate">Good Moral Certificate</MenuItem>
-                <MenuItem value="Diploma">Diploma</MenuItem>
-              </Select>
-            </FormControl>
+                  }}
+                />
+              </Grid>
 
-            <TextField
-              label="Reason for Request"
-              name="description"
-              value={newRequest.description}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-              multiline
-              rows={3}
-              placeholder="Please explain why you need this document (e.g., job application, scholarship, transfer, etc.)"
-              required
-              data-testid="description-input"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#c70202',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#c70202',
-                  },
-                },
-              }}
-            />
+              {/* Level Attended */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  LEVEL ATTENDED: *
+                </Typography>
+                <FormGroup>
+                  <Grid container spacing={1}>
+                    {['PS/GS', 'HS', 'JHS', 'SHS', 'COLLEGE'].map((level) => (
+                      <Grid item key={level}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              name="levelAttended"
+                              value={level}
+                              checked={newRequest.levelAttended.includes(level)}
+                              onChange={handleInputChange}
+                              sx={{
+                                color: '#c70202',
+                                '&.Mui-checked': { color: '#c70202' },
+                              }}
+                            />
+                          }
+                          label={level}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </FormGroup>
+              </Grid>
+
+              {/* Grade / Strand / Course */}
+              <Grid item xs={12}>
+                <TextField
+                  label="GRADE / STRAND / COURSE"
+                  name="gradeStrandCourse"
+                  value={newRequest.gradeStrandCourse}
+                  onChange={handleInputChange}
+                  fullWidth
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#c70202' },
+                      '&.Mui-focused fieldset': { borderColor: '#c70202' },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Year Graduated */}
+              <Grid item xs={12}>
+                <TextField
+                  label="YEAR GRADUATED / SCHOOL YEAR"
+                  name="yearGraduated"
+                  value={newRequest.yearGraduated}
+                  onChange={handleInputChange}
+                  fullWidth
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#c70202' },
+                      '&.Mui-focused fieldset': { borderColor: '#c70202' },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Academic Credentials */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  ACADEMIC CREDENTIALS: 15 Days Processing
+                </Typography>
+                <FormGroup>
+                  <Grid container spacing={1}>
+                    {['DIPLOMA', 'F137 / SF10 - PS / GS / JHS / SHS', 'TRANSCRIPT OF RECORDS - College'].map((credential) => (
+                      <Grid item xs={12} sm={6} key={credential}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              name="academicCredentials"
+                              value={credential}
+                              checked={newRequest.academicCredentials.includes(credential)}
+                              onChange={handleInputChange}
+                              sx={{
+                                color: '#c70202',
+                                '&.Mui-checked': { color: '#c70202' },
+                              }}
+                            />
+                          }
+                          label={credential}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </FormGroup>
+              </Grid>
+
+              {/* Certification */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  CERTIFICATION: 5 days Processing
+                </Typography>
+                <FormGroup>
+                  <Grid container spacing={1}>
+                    {['ENGLISH AS MEDIUM OF INSTRUCTION', 'ENROLLMENT', 'GRADES (FOR COLLEGE ONLY)', 'GRADUATION', 'GWA / HONORS / AWARDS', 'HONORABLE DISMISSAL'].map((cert) => (
+                      <Grid item xs={12} sm={6} key={cert}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              name="certification"
+                              value={cert}
+                              checked={newRequest.certification.includes(cert)}
+                              onChange={handleInputChange}
+                              sx={{
+                                color: '#c70202',
+                                '&.Mui-checked': { color: '#c70202' },
+                              }}
+                            />
+                          }
+                          label={cert}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </FormGroup>
+              </Grid>
+
+              {/* Purpose (Description) */}
+              <Grid item xs={12}>
+                <TextField
+                  label="PURPOSE"
+                  name="description"
+                  value={newRequest.description}
+                  onChange={handleInputChange}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  required
+                  placeholder="Please state the purpose of your request..."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#c70202' },
+                      '&.Mui-focused fieldset': { borderColor: '#c70202' },
+                    },
+                  }}
+                />
+              </Grid>
+            </Grid>
 
             <div className="d-flex justify-content-end gap-2 mt-4">
               <Button 
