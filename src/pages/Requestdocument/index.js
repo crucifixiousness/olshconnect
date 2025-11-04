@@ -53,7 +53,7 @@ const RequestDocument = () => {
     id: user?.id || null,
     name: user?.full_name || user?.name || "",
     date: new Date().toISOString().slice(0, 10),
-    levelAttended: [],
+    levelAttended: ["COLLEGE"],
     gradeStrandCourse: "",
     yearGraduated: "",
     academicCredentials: [],
@@ -166,16 +166,7 @@ const RequestDocument = () => {
   const handleAddRequest = async (e) => {
     e.preventDefault();
 
-    const { name, levelAttended, academicCredentials, certification, description } = newRequest;
-
-    if (!name || !name.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Name is required.',
-        severity: 'error'
-      });
-      return;
-    }
+    const { levelAttended, academicCredentials, certification, description } = newRequest;
 
     if (!levelAttended || levelAttended.length === 0) {
       setSnackbar({
@@ -262,7 +253,7 @@ const RequestDocument = () => {
           id: user?.id || null,
           name: user?.full_name || user?.name || "",
           date: new Date().toISOString().slice(0, 10),
-          levelAttended: [],
+          levelAttended: ["COLLEGE"],
           gradeStrandCourse: "",
           yearGraduated: "",
           academicCredentials: [],
@@ -611,32 +602,8 @@ const RequestDocument = () => {
               </Grid>
               <Grid item xs={6}>
                 <Grid container>
-                  <Grid item xs={8}>
-                    <Box sx={{ border: '1px solid #000', p: 1 }}>
-                      <Grid container>
-                        <Grid item xs={12}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2">Document Code:</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACAD-REG-FM-001</Typography>
-                          </Box>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2">Effectivity Date:</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>April 12, 2024</Typography>
-                          </Box>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2">Revision No.</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>0</Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Box sx={{ border: '1px solid #000', borderLeft: 'none', height: '100%', p: 1 }}>
+                  <Grid item xs={12}>
+                    <Box sx={{ border: '1px solid #000', height: '100%', p: 1 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="body2">Page</Typography>
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>1 of 1</Typography>
@@ -665,14 +632,12 @@ const RequestDocument = () => {
               <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>LEVEL ATTENDED:</Typography>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
-                  {['PS/GS','HS','JHS','SHS','COLLEGE'].map((label) => (
-                    <Grid item key={label}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ width: 14, height: 14, border: '1px solid #000' }} />
-                        <Typography variant="body2">{label}</Typography>
-                      </Box>
-                    </Grid>
-                  ))}
+                  <Grid item>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 14, height: 14, border: '1px solid #000' }} />
+                      <Typography variant="body2">COLLEGE</Typography>
+                    </Box>
+                  </Grid>
                 </Grid>
               </Box>
 
@@ -687,7 +652,7 @@ const RequestDocument = () => {
               <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACADEMIC CREDENTIALS: 15 Days Processing</Typography>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
-                  {['DIPLOMA','F137 / SF10 - PS / GS / JHS / SHS','TRANSCRIPT OF RECORDS - College'].map((label) => (
+                  {['DIPLOMA','TRANSCRIPT OF RECORDS - College'].map((label) => (
                     <Grid item xs={12} md={6} key={label}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Box sx={{ width: 14, height: 14, border: '1px solid #000' }} />
@@ -717,12 +682,7 @@ const RequestDocument = () => {
               </Box>
 
               <Grid container sx={{ borderTop: '1px solid #000' }}>
-                <Grid item xs={6} sx={{ borderRight: '1px solid #000' }}>
-                  <Box sx={{ p: 1, minHeight: 64 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>REQUESTED BY:</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={12}>
                   <Box sx={{ p: 1, minHeight: 64 }}>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACCOUNTING OFFICE:</Typography>
                   </Box>
@@ -764,24 +724,7 @@ const RequestDocument = () => {
           </Typography>
           <form onSubmit={handleAddRequest}>
             <Grid container spacing={2}>
-              {/* Name and Date */}
-              <Grid item xs={12} sm={8}>
-                <TextField
-                  label="Name"
-                  name="name"
-                  value={newRequest.name}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  helperText="(Please use MAIDEN NAME for MARRIED Alumna)"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': { borderColor: '#c70202' },
-                      '&.Mui-focused fieldset': { borderColor: '#c70202' },
-                    },
-                  }}
-                />
-              </Grid>
+              {/* Date */}
               <Grid item xs={12} sm={4}>
                 <TextField
                   label="Date"
@@ -808,7 +751,7 @@ const RequestDocument = () => {
                 </Typography>
                 <FormGroup>
                   <Grid container spacing={1}>
-                    {['PS/GS', 'HS', 'JHS', 'SHS', 'COLLEGE'].map((level) => (
+                    {['COLLEGE'].map((level) => (
                       <Grid item key={level}>
                         <FormControlLabel
                           control={
@@ -872,7 +815,7 @@ const RequestDocument = () => {
                 </Typography>
                 <FormGroup>
                   <Grid container spacing={1}>
-                    {['DIPLOMA', 'F137 / SF10 - PS / GS / JHS / SHS', 'TRANSCRIPT OF RECORDS - College'].map((credential) => (
+                    {['DIPLOMA', 'TRANSCRIPT OF RECORDS - College'].map((credential) => (
                       <Grid item xs={12} sm={6} key={credential}>
                         <FormControlLabel
                           control={
