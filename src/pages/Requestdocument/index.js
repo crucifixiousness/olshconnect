@@ -36,7 +36,29 @@ const RequestDocument = () => {
     window.scrollTo(0, 0);
     // Simulate loading time
     setTimeout(() => setLoading(false), 1000);
+    fetchStudentProgram();
   }, [context]);
+
+  // Fetch student's program to auto-fill grade/strand/course
+  const fetchStudentProgram = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/studentprofile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.data?.enrollment?.program) {
+        const program = response.data.enrollment.program;
+        setStudentProgram(program);
+        setNewRequest(prev => ({
+          ...prev,
+          gradeStrandCourse: program
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching student program:", error);
+    }
+  };
 
   // Add safe parsing of user data
   const user = (() => {
@@ -49,6 +71,7 @@ const RequestDocument = () => {
     }
   })();
 
+  const [studentProgram, setStudentProgram] = useState("");
   const [newRequest, setNewRequest] = useState({
     id: user?.id || null,
     name: user?.full_name || user?.name || "",
@@ -227,7 +250,7 @@ const RequestDocument = () => {
           name: user?.full_name || user?.name || "",
           date: new Date().toISOString().slice(0, 10),
           levelAttended: ["COLLEGE"],
-          gradeStrandCourse: "",
+          gradeStrandCourse: studentProgram || "",
           yearGraduated: "",
           academicCredentials: [],
           certification: [],
@@ -707,6 +730,7 @@ const RequestDocument = () => {
                   onChange={handleInputChange}
                   fullWidth
                   required
+                  disabled
                   InputLabelProps={{ shrink: true }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -752,9 +776,10 @@ const RequestDocument = () => {
                 <TextField
                   label="GRADE / STRAND / COURSE"
                   name="gradeStrandCourse"
-                  value={newRequest.gradeStrandCourse}
+                  value={newRequest.gradeStrandCourse || studentProgram}
                   onChange={handleInputChange}
                   fullWidth
+                  disabled
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': { borderColor: '#c70202' },
