@@ -32,6 +32,8 @@ const FinanceSidebar = () =>{
         return 4;
       case '/payment-history':
         return 5;
+      case '/finance-document-requests':
+        return 6;
       default:
         return 0;
     }
@@ -124,6 +126,17 @@ const FinanceSidebar = () =>{
                 <Button className={`w-100 ${activeTab===5 ? 'active' : ''}`} >
                   <span className='icon'><FaHistory /></span>
                     Payment History
+                  <span className='arrow'><FaAnglesRight /></span>
+                </Button>
+              </Link>              
+            </li>
+
+            {/* Add Document Requests menu item */}
+            <li>
+              <Link to="/finance-document-requests">
+                <Button className={`w-100 ${activeTab===6 ? 'active' : ''}`} >
+                  <span className='icon'><IoDocuments /></span>
+                    Document Requests
                   <span className='arrow'><FaAnglesRight /></span>
                 </Button>
               </Link>              
