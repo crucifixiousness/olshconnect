@@ -196,39 +196,130 @@ module.exports = async (req, res) => {
 
     const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-    // Insert with all new fields (doc_type derived from selections)
-    const result = await pool.query(
-      `INSERT INTO documentrequest (
-        id, 
-        doc_type, 
-        description, 
-        req_date, 
-        req_status,
-        level_attended,
-        grade_strand_course,
-        year_graduated,
-        academic_credentials,
-        certification
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-      [
-        id, 
-        docType, // Automatically derived from selections
-        sanitizedDescription, // Sanitized description
-        requestDate, 
-        "Pending",
-        levelAttended, // Comma-separated string
-        sanitizedGradeStrandCourse, // Sanitized
-        sanitizedYearGraduated, // Sanitized
-        academicCredentials, // Comma-separated string
-        certification // Comma-separated string
-      ]
+    // Get student's active enrollment
+    const enrollmentResult = await pool.query(
+      `SELECT enrollment_id, remaining_balance 
+       FROM enrollments 
+       WHERE student_id = $1 
+       AND enrollment_status IN ('Verified', 'Officially Enrolled', 'For Payment')
+       ORDER BY enrollment_id DESC 
+       LIMIT 1`,
+      [id]
     );
 
-    if (!result.rows || result.rows.length === 0) {
-      throw new Error('Failed to retrieve inserted record');
+    if (enrollmentResult.rows.length === 0) {
+      return res.status(400).json({ 
+        message: "No active enrollment found. Please ensure you are enrolled." 
+      });
     }
 
-    res.status(201).json(result.rows[0]);
+    const enrollment = enrollmentResult.rows[0];
+    const enrollmentId = enrollment.enrollment_id;
+    const currentBalance = parseFloat(enrollment.remaining_balance || 0);
+
+    // Calculate document price based on selected documents
+    let totalPrice = 0;
+    const pricingMap = {
+      'DIPLOMA': 500.00,
+      'TRANSCRIPT OF RECORDS - College': 300.00,
+      'ENGLISH AS MEDIUM OF INSTRUCTION': 200.00,
+      'ENROLLMENT': 150.00,
+      'GRADES (FOR COLLEGE ONLY)': 200.00,
+      'GRADUATION': 250.00,
+      'GWA / HONORS / AWARDS': 200.00,
+      'HONORABLE DISMISSAL': 300.00
+    };
+
+    // Calculate price for academic credentials
+    if (academicCredentials) {
+      const creds = academicCredentials.split(',').map(c => c.trim());
+      creds.forEach(cred => {
+        if (pricingMap[cred]) {
+          totalPrice += pricingMap[cred];
+        }
+      });
+    }
+
+    // Calculate price for certifications
+    if (certification) {
+      const certs = certification.split(',').map(c => c.trim());
+      certs.forEach(cert => {
+        if (pricingMap[cert]) {
+          totalPrice += pricingMap[cert];
+        }
+      });
+    }
+
+    // If no specific pricing found, use default pricing based on doc_type
+    if (totalPrice === 0) {
+      if (docType === "Academic Credentials") {
+        totalPrice = 500.00;
+      } else if (docType === "Certification") {
+        totalPrice = 200.00;
+      } else if (docType === "Academic Credentials, Certification") {
+        totalPrice = 700.00;
+      }
+    }
+
+    // Use transaction to ensure data consistency
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Insert document request with pricing
+      const result = await client.query(
+        `INSERT INTO documentrequest (
+          id, 
+          doc_type, 
+          description, 
+          req_date, 
+          req_status,
+          level_attended,
+          grade_strand_course,
+          year_graduated,
+          academic_credentials,
+          certification,
+          document_price,
+          enrollment_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+        [
+          id, 
+          docType,
+          sanitizedDescription,
+          requestDate, 
+          "Pending for Payment",
+          levelAttended,
+          sanitizedGradeStrandCourse,
+          sanitizedYearGraduated,
+          academicCredentials,
+          certification,
+          totalPrice,
+          enrollmentId
+        ]
+      );
+
+      if (!result.rows || result.rows.length === 0) {
+        throw new Error('Failed to retrieve inserted record');
+      }
+
+      // Update student's remaining balance by adding document price
+      const newBalance = currentBalance + totalPrice;
+      await client.query(
+        `UPDATE enrollments 
+         SET remaining_balance = $1 
+         WHERE enrollment_id = $2`,
+        [newBalance, enrollmentId]
+      );
+
+      await client.query('COMMIT');
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error("Error details:", error);
     
