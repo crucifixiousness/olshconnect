@@ -416,29 +416,77 @@ const CounterPayment = () => {
 
         {/* Student Information */}
         {studentInfo && (
-          <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0' }}>
-            <Typography variant="h6" className="mb-3" style={{ color: '#c70202' }}>Student Information</Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Typography><strong>Name:</strong> {studentInfo.fullName}</Typography>
-                <Typography><strong>Student ID:</strong> {studentInfo.studentId}</Typography>
-                <Typography><strong>Program:</strong> {studentInfo.program}</Typography>
-                <span className={`badge ${studentInfo.enrollmentStatus === 'Officially Enrolled' ? 'bg-success' : studentInfo.enrollmentStatus === 'Verified' ? 'bg-info' : 'bg-warning'} mt-1`}>
-                  {studentInfo.enrollmentStatus}
-                </span>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography><strong>Total Fee:</strong> ₱{studentInfo.totalFee?.toLocaleString()}</Typography>
-                <Typography><strong>Amount Paid:</strong> ₱{studentInfo.amountPaid?.toLocaleString()}</Typography>
-                <Typography><strong>Balance:</strong> ₱{studentInfo.balance?.toLocaleString()}</Typography>
-                {studentInfo.balance <= 0 && (
-                  <span className="badge bg-success mt-1">
-                    Fully Paid
+          <>
+            <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0' }}>
+              <Typography variant="h6" className="mb-3" style={{ color: '#c70202' }}>Student Information</Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography><strong>Name:</strong> {studentInfo.fullName}</Typography>
+                  <Typography><strong>Student ID:</strong> {studentInfo.studentId}</Typography>
+                  <Typography><strong>Program:</strong> {studentInfo.program}</Typography>
+                  <span className={`badge ${studentInfo.enrollmentStatus === 'Officially Enrolled' ? 'bg-success' : studentInfo.enrollmentStatus === 'Verified' ? 'bg-info' : 'bg-warning'} mt-1`}>
+                    {studentInfo.enrollmentStatus}
                   </span>
-                )}
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography><strong>Total Fee:</strong> ₱{studentInfo.totalFee?.toLocaleString()}</Typography>
+                  <Typography><strong>Amount Paid:</strong> ₱{studentInfo.amountPaid?.toLocaleString()}</Typography>
+                  <Typography><strong>Balance:</strong> ₱{studentInfo.balance?.toLocaleString()}</Typography>
+                  {studentInfo.balance <= 0 && (
+                    <span className="badge bg-success mt-1">
+                      Fully Paid
+                    </span>
+                  )}
+                </Grid>
               </Grid>
-            </Grid>
-          </Paper>
+            </Paper>
+
+            {/* Document Requests Pending for Payment */}
+            {studentInfo.documentRequests && studentInfo.documentRequests.length > 0 && (
+              <Paper elevation={3} className="p-3 mb-4" sx={{ border: '1px solid #e0e0e0', backgroundColor: '#fff3cd' }}>
+                <Typography variant="h6" className="mb-3" style={{ color: '#c70202' }}>
+                  Document Requests Pending for Payment
+                </Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell style={{ fontWeight: 'bold' }}>Document Type</TableCell>
+                        <TableCell style={{ fontWeight: 'bold' }}>Description</TableCell>
+                        <TableCell style={{ fontWeight: 'bold' }} align="right">Price</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {studentInfo.documentRequests.map((doc, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {doc.academic_credentials && doc.certification 
+                              ? `${doc.academic_credentials}, ${doc.certification}`
+                              : doc.academic_credentials || doc.certification || doc.doc_type}
+                          </TableCell>
+                          <TableCell>
+                            {doc.description || 'N/A'}
+                          </TableCell>
+                          <TableCell align="right" style={{ fontWeight: 'bold', color: '#c70202' }}>
+                            ₱{doc.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow>
+                        <TableCell colSpan={2} style={{ fontWeight: 'bold' }}>Total Document Price:</TableCell>
+                        <TableCell align="right" style={{ fontWeight: 'bold', color: '#c70202', fontSize: '1.1rem' }}>
+                          ₱{studentInfo.totalDocumentPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Typography variant="body2" sx={{ mt: 2, color: '#856404', fontStyle: 'italic' }}>
+                  * Document requests will be processed after payment is received
+                </Typography>
+              </Paper>
+            )}
+          </>
         )}
 
         {/* Payment Form */}
