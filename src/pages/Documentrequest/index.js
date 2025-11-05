@@ -19,11 +19,13 @@ import {
   TableHead, 
   TableRow,
   Box,
-  CircularProgress
+  CircularProgress,
+  Dialog
 } from '@mui/material';
 import { FaCheck } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { sendDocumentApprovalEmail, sendDocumentRejectionEmail } from '../../utils/documentEmailService';
+import olshcoLogo from '../../asset/images/olshco-logo1.png';
 
 const DocumentRequests = () => {
   const [filterBy, setFilterBy] = useState('');
@@ -47,6 +49,10 @@ const DocumentRequests = () => {
     message: '',
     severity: 'success'
   });
+
+  // Modal state for viewing request form template
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   // Update fetchRequests function
   const fetchRequests = async (forceRefresh = false) => {
@@ -355,7 +361,7 @@ const DocumentRequests = () => {
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Reason/Description</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Request Date</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
+                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -397,6 +403,15 @@ const DocumentRequests = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button 
+                          variant="outlined"
+                          size="small"
+                          onClick={() => { setSelectedRequest(request); setShowFormModal(true); }}
+                          sx={{ borderColor: '#c70202', color: '#c70202', minWidth: 'auto', px: 1,
+                               '&:hover': { borderColor: '#a00000', color: '#a00000' } }}
+                        >
+                          View
+                        </Button>
                         <Button 
                           variant="contained"
                           size="small"
@@ -480,6 +495,125 @@ const DocumentRequests = () => {
         )}
       </div>
       
+      {/* Request Form Template Modal */}
+      <Dialog open={showFormModal} onClose={() => setShowFormModal(false)} maxWidth="md" fullWidth>
+        <Box sx={{ p: 3 }}>
+          <Paper variant="outlined" sx={{ p: 2, borderWidth: 2 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={6}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ width: 56, height: 56, border: '1px solid #999', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#fff' }}>
+                    <img src={olshcoLogo} alt="School logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>REQUEST FORM</Typography>
+                    <Typography variant="body2">PAASCU ACCREDITED</Typography>
+                    <Typography variant="body2">ISO ACCREDITED</Typography>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Grid container>
+                  <Grid item xs={12}>
+                    <Box sx={{ border: '1px solid #000', height: '100%', p: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Page</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>1 of 1</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 2, border: '1px solid #000' }}>
+              <Grid container>
+                <Grid item xs={9} sx={{ borderRight: '1px solid #000' }}>
+                  <Box sx={{ p: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>NAME:</Typography>
+                    <Typography variant="caption">{selectedRequest ? formatStudentName(selectedRequest.first_name, selectedRequest.middle_name, selectedRequest.last_name, selectedRequest.suffix) : ''}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={3}>
+                  <Box sx={{ p: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Date:</Typography>
+                    <Typography variant="caption">{selectedRequest ? new Date(selectedRequest.req_date).toLocaleDateString() : ''}</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>LEVEL ATTENDED:</Typography>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid item>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 14, height: 14, border: '1px solid #000', bgcolor: (selectedRequest?.level_attended || '').includes('COLLEGE') ? '#c70202' : 'transparent' }} />
+                    <Typography variant="body2">COLLEGE</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>GRADE / STRAND / COURSE:</Typography>
+              <Typography variant="caption">{selectedRequest?.grade_strand_course || ''}</Typography>
+            </Box>
+
+            <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>YEAR GRADUATED / SCHOOL YEAR:</Typography>
+              <Typography variant="caption">{selectedRequest?.year_graduated || ''}</Typography>
+            </Box>
+
+            <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACADEMIC CREDENTIALS: 15 Days Processing</Typography>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {['DIPLOMA','TRANSCRIPT OF RECORDS - College'].map((label) => (
+                  <Grid item xs={12} md={6} key={label}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 14, height: 14, border: '1px solid #000', bgcolor: (selectedRequest?.academic_credentials || '').includes(label) ? '#c70202' : 'transparent' }} />
+                      <Typography variant="body2">{label}</Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+
+            <Box sx={{ borderTop: '1px solid #000', p: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>CERTIFICATION: 5 days Processing</Typography>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {['ENGLISH AS MEDIUM OF INSTRUCTION','ENROLLMENT','GRADES (FOR COLLEGE ONLY)','GRADUATION','GWA / HONORS / AWARDS','HONORABLE DISMISSAL'].map((label) => (
+                  <Grid item xs={12} md={6} key={label}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 14, height: 14, border: '1px solid #000', bgcolor: (selectedRequest?.certification || '').includes(label) ? '#c70202' : 'transparent' }} />
+                      <Typography variant="body2">{label}</Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+
+            <Box sx={{ borderTop: '1px solid #000', p: 1, minHeight: 64 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>PURPOSE:</Typography>
+              <Typography variant="caption">{selectedRequest?.description || ''}</Typography>
+            </Box>
+
+            <Grid container sx={{ borderTop: '1px solid #000' }}>
+              <Grid item xs={12}>
+                <Box sx={{ p: 1, minHeight: 64 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ACCOUNTING OFFICE:</Typography>
+                </Box>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button onClick={() => setShowFormModal(false)} variant="contained" sx={{ bgcolor: '#c70202', '&:hover': { bgcolor: '#a00000' } }}>
+                Close
+              </Button>
+            </Box>
+          </Paper>
+        </Box>
+      </Dialog>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
