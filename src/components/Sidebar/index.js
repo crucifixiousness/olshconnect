@@ -36,6 +36,8 @@ const Sidebar = () =>{
         return 5;
       case '/admin-account-management':
         return 6; // Add admin account management
+      case '/student-accounts-management':
+        return 7; // Add student accounts management
       default:
         return 0;
     }
@@ -137,6 +139,17 @@ const Sidebar = () =>{
                   <span className='icon'><FaUserCog />
                   </span>
                     Admin Account Management
+                  <span className='arrow'><FaAnglesRight />
+                  </span>
+                </Button>
+              </Link>              
+            </li>
+            <li>
+              <Link to="/student-accounts-management">
+                <Button className={`w-100 ${activeTab===7 ? 'active' : ''}`} onClick={()=>isOpenStudentMenu(7)}>
+                  <span className='icon'><PiStudentBold />
+                  </span>
+                    Student Accounts
                   <span className='arrow'><FaAnglesRight />
                   </span>
                 </Button>
