@@ -258,6 +258,24 @@ const DocumentRequests = () => {
           fontSize: '0.75rem',
           fontWeight: '600'
         };
+      case 'pending for payment':
+        return {
+          backgroundColor: '#ff9800', // Orange - Pending for Payment
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
+      case 'processing':
+        return {
+          backgroundColor: '#1976d2', // Blue - Processing
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
       default:
         return {
           backgroundColor: '#6c757d', // Gray - Unknown status
