@@ -63,6 +63,37 @@ module.exports = async (req, res) => {
     }
 
     const student = result.rows[0];
+    
+    // Get document requests pending for payment
+    const documentRequestsResult = await client.query(
+      `SELECT 
+        req_id,
+        doc_type,
+        document_price,
+        academic_credentials,
+        certification,
+        description
+       FROM documentrequest
+       WHERE enrollment_id = $1
+       AND req_status = 'Pending for Payment'
+       ORDER BY req_date DESC`,
+      [student.enrollment_id]
+    );
+
+    const documentRequests = documentRequestsResult.rows.map(doc => ({
+      req_id: doc.req_id,
+      doc_type: doc.doc_type,
+      price: parseFloat(doc.document_price || 0),
+      academic_credentials: doc.academic_credentials,
+      certification: doc.certification,
+      description: doc.description
+    }));
+
+    const totalDocumentPrice = documentRequests.reduce(
+      (sum, doc) => sum + doc.price, 
+      0
+    );
+
     res.status(200).json({
       id: student.id,
       fullName: `${student.last_name}, ${student.first_name} ${student.middle_name ? student.middle_name.charAt(0) + '.' : ''} ${student.suffix || ''}`.trim(),
@@ -73,7 +104,9 @@ module.exports = async (req, res) => {
       balance: parseFloat(student.remaining_balance) || 0,
       enrollmentId: student.enrollment_id,
       paymentStatus: student.payment_status,
-      enrollmentStatus: student.enrollment_status
+      enrollmentStatus: student.enrollment_status,
+      documentRequests: documentRequests,
+      totalDocumentPrice: totalDocumentPrice
     });
 
   } catch (error) {
