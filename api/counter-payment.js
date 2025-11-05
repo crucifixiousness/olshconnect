@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   let client;
   try {
     const decoded = authenticateToken(req);
-    const { id: staff_id } = decoded; // Changed from staff_id t id
+    const { id: staff_id } = decoded; // Changed from staff_id to id
 
     const { enrollment_id, amount_paid, payment_method, reference_number, remarks } = req.body;
 
@@ -154,38 +154,29 @@ module.exports = async (req, res) => {
       ]
     );
 
-    // Update enrollment payment status
-    await client.query(`
-      UPDATE enrollments 
-      SET payment_status = $1,
-          amount_paid = $2,
-          remaining_balance = $3,
-          next_payment_date = CURRENT_TIMESTAMP + INTERVAL '1 month'
-      WHERE enrollment_id = $4`,
-      [paymentStatus, totalAmountPaid, remainingBalance, enrollment_id]
-    );
+    // Note: Enrollment was already updated above with all necessary fields
 
     // Check if there are document requests pending for payment for this enrollment
-    // Automatically allocate payment to documents if payment covers them
+    // Update document request status to "Processing" if payment covers document costs
     const documentRequestsResult = await client.query(
       `SELECT req_id, document_price, req_status
        FROM documentrequest
        WHERE enrollment_id = $1
-       AND req_status = 'Pending for Payment'
-       ORDER BY req_date ASC`,
+       AND req_status = 'Pending for Payment'`,
       [enrollment_id]
     );
 
     if (documentRequestsResult.rows.length > 0) {
+      // Check if payment amount covers document requests
       const totalDocumentPrice = documentRequestsResult.rows.reduce(
         (sum, doc) => sum + parseFloat(doc.document_price || 0), 
         0
       );
 
-      // If payment amount covers document requests, update their status to "Processing"
-      // This automatically allocates payment to documents first
-      if (newPaymentAmount >= totalDocumentPrice) {
-        // Payment fully covers all document requests
+      // If payment is sufficient to cover document requests, update their status
+      // Note: We'll update all pending document requests if payment covers them
+      // In a real scenario, you might want more granular logic
+      if (newPaymentAmount >= totalDocumentPrice || totalAmountPaid >= totalDocumentPrice) {
         await client.query(
           `UPDATE documentrequest
            SET req_status = 'Processing'
@@ -193,30 +184,6 @@ module.exports = async (req, res) => {
            AND req_status = 'Pending for Payment'`,
           [enrollment_id]
         );
-      } else {
-        // Payment partially covers document requests
-        // Update document requests that are fully covered by payment (FIFO order)
-        let accumulatedPrice = 0;
-        const documentIdsToUpdate = [];
-        
-        for (const doc of documentRequestsResult.rows) {
-          const docPrice = parseFloat(doc.document_price || 0);
-          if (accumulatedPrice + docPrice <= newPaymentAmount) {
-            accumulatedPrice += docPrice;
-            documentIdsToUpdate.push(doc.req_id);
-          } else {
-            break; // Can't cover more documents
-          }
-        }
-        
-        if (documentIdsToUpdate.length > 0) {
-          await client.query(
-            `UPDATE documentrequest
-             SET req_status = 'Processing'
-             WHERE req_id = ANY($1)`,
-            [documentIdsToUpdate]
-          );
-        }
       }
     }
 
@@ -245,4 +212,3 @@ module.exports = async (req, res) => {
     }
   }
 };
-
