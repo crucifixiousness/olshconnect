@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   let client;
   try {
     const decoded = authenticateToken(req);
-    const { id: staff_id } = decoded; // Changed from staff_id to id
+    const { id: staff_id } = decoded; // Changed from staff_id t id
 
     const { enrollment_id, amount_paid, payment_method, reference_number, remarks } = req.body;
 
@@ -245,3 +245,4 @@ module.exports = async (req, res) => {
     }
   }
 };
+
