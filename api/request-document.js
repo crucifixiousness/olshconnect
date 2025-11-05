@@ -34,7 +34,12 @@ module.exports = async (req, res) => {
         doc_type,
         description,
         req_date,
-        req_status
+        req_status,
+        level_attended,
+        grade_strand_course,
+        year_graduated,
+        academic_credentials,
+        certification
       FROM 
         documentrequest
       WHERE 
