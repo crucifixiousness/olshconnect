@@ -199,38 +199,11 @@ const RequestDocument = () => {
 
     try {
       const token = localStorage.getItem('token');
-      
-      // Determine doc_type from selections
-      let docType = "";
-      if (academicCredentials && academicCredentials.length > 0) {
-        if (academicCredentials.includes("TRANSCRIPT OF RECORDS - College")) {
-          docType = "Transcript of Records";
-        } else if (academicCredentials.includes("DIPLOMA")) {
-          docType = "Diploma";
-        } else if (academicCredentials.includes("F137 / SF10 - PS / GS / JHS / SHS")) {
-          docType = "Form 137 / SF10";
-        }
-      }
-      
-      if (!docType && certification && certification.length > 0) {
-        if (certification.includes("GRADES (FOR COLLEGE ONLY)")) {
-          docType = "Certificate of Grades";
-        } else if (certification.includes("ENROLLMENT")) {
-          docType = "Enrollment Certificate";
-        } else if (certification.includes("GRADUATION")) {
-          docType = "Graduation Certificate";
-        } else if (certification.includes("GOOD MORAL")) {
-          docType = "Good Moral Certificate";
-        } else {
-          docType = certification[0]; // Use first certification as default
-        }
-      }
 
       const response = await axios.post("/api/requesting-document", 
         { 
-          doc_type: docType || "Document Request",
           description: description,
-          form_data: newRequest // Send all form data for potential future use
+          form_data: newRequest // Send all form data
         },
         {
           headers: { 
