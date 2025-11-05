@@ -61,12 +61,19 @@ module.exports = async (req, res) => {
     const newPaymentAmount = parseFloat(amount_paid);
     const totalAmountPaid = currentAmountPaid + newPaymentAmount;
     const totalFee = parseFloat(enrollment.total_fee);
-    const remainingBalance = totalFee - totalAmountPaid;
+    
+    // Get current balance (which includes document prices if any were added)
+    const currentBalance = parseFloat(enrollment.remaining_balance || 0);
+    
+    // Calculate new balance by subtracting payment from current balance
+    // This correctly handles document prices that were already added to the balance
+    const newRemainingBalance = currentBalance - newPaymentAmount;
 
+    // Calculate payment status based on remaining balance
     let paymentStatus;
-    if (totalAmountPaid >= totalFee) {
+    if (newRemainingBalance <= 0) {
       paymentStatus = 'Fully Paid';
-    } else if (totalAmountPaid > 0) {
+    } else if (newRemainingBalance < currentBalance) {
       paymentStatus = 'Partial';
     } else {
       paymentStatus = 'Unpaid';
@@ -96,7 +103,7 @@ module.exports = async (req, res) => {
       WHERE enrollment_id = $5`,
       [
         totalAmountPaid,
-        remainingBalance,
+        newRemainingBalance,
         paymentStatus,
         newEnrollmentStatus,
         enrollment_id
@@ -159,26 +166,26 @@ module.exports = async (req, res) => {
     );
 
     // Check if there are document requests pending for payment for this enrollment
-    // Update document request status to "Processing" if payment covers document costs
+    // Automatically allocate payment to documents if payment covers them
     const documentRequestsResult = await client.query(
       `SELECT req_id, document_price, req_status
        FROM documentrequest
        WHERE enrollment_id = $1
-       AND req_status = 'Pending for Payment'`,
+       AND req_status = 'Pending for Payment'
+       ORDER BY req_date ASC`,
       [enrollment_id]
     );
 
     if (documentRequestsResult.rows.length > 0) {
-      // Check if payment amount covers document requests
       const totalDocumentPrice = documentRequestsResult.rows.reduce(
         (sum, doc) => sum + parseFloat(doc.document_price || 0), 
         0
       );
 
-      // If payment is sufficient to cover document requests, update their status
-      // Note: We'll update all pending document requests if payment covers them
-      // In a real scenario, you might want more granular logic
-      if (newPaymentAmount >= totalDocumentPrice || totalAmountPaid >= totalDocumentPrice) {
+      // If payment amount covers document requests, update their status to "Processing"
+      // This automatically allocates payment to documents first
+      if (newPaymentAmount >= totalDocumentPrice) {
+        // Payment fully covers all document requests
         await client.query(
           `UPDATE documentrequest
            SET req_status = 'Processing'
@@ -186,6 +193,30 @@ module.exports = async (req, res) => {
            AND req_status = 'Pending for Payment'`,
           [enrollment_id]
         );
+      } else {
+        // Payment partially covers document requests
+        // Update document requests that are fully covered by payment (FIFO order)
+        let accumulatedPrice = 0;
+        const documentIdsToUpdate = [];
+        
+        for (const doc of documentRequestsResult.rows) {
+          const docPrice = parseFloat(doc.document_price || 0);
+          if (accumulatedPrice + docPrice <= newPaymentAmount) {
+            accumulatedPrice += docPrice;
+            documentIdsToUpdate.push(doc.req_id);
+          } else {
+            break; // Can't cover more documents
+          }
+        }
+        
+        if (documentIdsToUpdate.length > 0) {
+          await client.query(
+            `UPDATE documentrequest
+             SET req_status = 'Processing'
+             WHERE req_id = ANY($1)`,
+            [documentIdsToUpdate]
+          );
+        }
       }
     }
 
@@ -196,7 +227,7 @@ module.exports = async (req, res) => {
       message: 'Payment recorded successfully',
       transaction_id: result.rows[0].transaction_id,
       payment_status: paymentStatus,
-      remaining_balance: remainingBalance
+      remaining_balance: newRemainingBalance
     });
 
   } catch (error) {
