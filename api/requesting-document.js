@@ -36,8 +36,24 @@ module.exports = async (req, res) => {
       return res.status(400).json({ message: "User ID is required." });
     }
 
+    // Validate form_data exists
+    if (!form_data || typeof form_data !== 'object') {
+      return res.status(400).json({ message: "Form data is required." });
+    }
+
+    // Validate description
     if (!description || !description.trim()) {
       return res.status(400).json({ message: "Description/reason for request is required." });
+    }
+
+    // Validate description length
+    const trimmedDescription = description.trim();
+    if (trimmedDescription.length < 10) {
+      return res.status(400).json({ message: "Description must be at least 10 characters long." });
+    }
+
+    if (trimmedDescription.length > 500) {
+      return res.status(400).json({ message: "Description must not exceed 500 characters." });
     }
 
     // Extract form data fields
@@ -47,6 +63,46 @@ module.exports = async (req, res) => {
     const academicCredentialsArray = form_data?.academicCredentials || [];
     const certificationArray = form_data?.certification || [];
     const requestDate = form_data?.date || new Date().toISOString().slice(0, 10);
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(requestDate)) {
+      return res.status(400).json({ message: "Invalid date format. Expected YYYY-MM-DD." });
+    }
+
+    // Validate date is not in the future (with 1 day tolerance for timezone)
+    const requestDateObj = new Date(requestDate);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (requestDateObj > tomorrow) {
+      return res.status(400).json({ message: "Date cannot be in the future." });
+    }
+
+    // Validate year graduated (required)
+    if (!yearGraduated || !yearGraduated.trim()) {
+      return res.status(400).json({ message: "Year Graduated / School Year is required." });
+    }
+
+    const year = parseInt(yearGraduated.trim());
+    const currentYear = new Date().getFullYear();
+    const minYear = 1950;
+    if (isNaN(year) || year < minYear || year > currentYear + 1) {
+      return res.status(400).json({ 
+        message: `Year graduated must be a valid year between ${minYear} and ${currentYear + 1}.` 
+      });
+    }
+
+    // Validate grade/strand/course (should be auto-filled from student program)
+    if (!gradeStrandCourse || !gradeStrandCourse.trim()) {
+      return res.status(400).json({ 
+        message: "Grade/Strand/Course is required. Please ensure your program enrollment is complete." 
+      });
+    }
+
+    // Validate grade/strand/course length
+    if (gradeStrandCourse.trim().length > 255) {
+      return res.status(400).json({ message: "Grade/Strand/Course must not exceed 255 characters." });
+    }
 
     // Convert arrays to comma-separated strings (no brackets)
     // If empty, store as NULL instead of empty string
@@ -62,15 +118,62 @@ module.exports = async (req, res) => {
       ? certificationArray.join(',')
       : (Array.isArray(certificationArray) ? null : (certificationArray || null));
 
-    // Validate that at least one level is attended
+    // Validate level attended
     if (!levelAttended) {
       return res.status(400).json({ message: "At least one level attended must be selected." });
+    }
+
+    // Validate level attended values (only allow valid options)
+    const validLevels = ['PS/GS', 'HS', 'JHS', 'SHS', 'COLLEGE'];
+    const levelArray = levelAttended.split(',').map(l => l.trim());
+    const invalidLevels = levelArray.filter(level => !validLevels.includes(level));
+    if (invalidLevels.length > 0) {
+      return res.status(400).json({ message: `Invalid level attended: ${invalidLevels.join(', ')}` });
     }
 
     // Validate that at least one academic credential or certification is selected
     if (!academicCredentials && !certification) {
       return res.status(400).json({ message: "At least one academic credential or certification must be selected." });
     }
+
+    // Validate academic credentials values (if provided)
+    if (academicCredentials) {
+      const validCredentials = ['DIPLOMA', 'TRANSCRIPT OF RECORDS - College'];
+      const credArray = academicCredentials.split(',').map(c => c.trim());
+      const invalidCreds = credArray.filter(cred => !validCredentials.includes(cred));
+      if (invalidCreds.length > 0) {
+        return res.status(400).json({ message: `Invalid academic credential: ${invalidCreds.join(', ')}` });
+      }
+    }
+
+    // Validate certification values (if provided)
+    if (certification) {
+      const validCertifications = [
+        'ENGLISH AS MEDIUM OF INSTRUCTION',
+        'ENROLLMENT',
+        'GRADES (FOR COLLEGE ONLY)',
+        'GRADUATION',
+        'GWA / HONORS / AWARDS',
+        'HONORABLE DISMISSAL'
+      ];
+      const certArray = certification.split(',').map(c => c.trim());
+      const invalidCerts = certArray.filter(cert => !validCertifications.includes(cert));
+      if (invalidCerts.length > 0) {
+        return res.status(400).json({ message: `Invalid certification: ${invalidCerts.join(', ')}` });
+      }
+    }
+
+    // Sanitize text inputs (remove potentially dangerous characters while preserving necessary punctuation)
+    const sanitizeText = (text) => {
+      if (!text) return text;
+      // Remove null bytes, control characters, and excessive whitespace
+      return text.replace(/\0/g, '').replace(/[\x00-\x1F\x7F]/g, '').trim();
+    };
+
+    // Sanitize inputs
+    const sanitizedDescription = sanitizeText(trimmedDescription);
+    const sanitizedGradeStrandCourse = sanitizeText(gradeStrandCourse);
+    const sanitizedYearGraduated = yearGraduated ? sanitizeText(yearGraduated) : null;
 
     // Derive doc_type automatically from selections
     // If only academic credentials → "Academic Credentials"
@@ -110,12 +213,12 @@ module.exports = async (req, res) => {
       [
         id, 
         docType, // Automatically derived from selections
-        description.trim(), 
+        sanitizedDescription, // Sanitized description
         requestDate, 
         "Pending",
         levelAttended, // Comma-separated string
-        gradeStrandCourse,
-        yearGraduated,
+        sanitizedGradeStrandCourse, // Sanitized
+        sanitizedYearGraduated, // Sanitized
         academicCredentials, // Comma-separated string
         certification // Comma-separated string
       ]
