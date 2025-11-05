@@ -189,8 +189,9 @@ const RequestDocument = () => {
   const handleAddRequest = async (e) => {
     e.preventDefault();
 
-    const { levelAttended, academicCredentials, certification, description } = newRequest;
+    const { levelAttended, academicCredentials, certification, description, gradeStrandCourse, yearGraduated, date } = newRequest;
 
+    // Validate level attended
     if (!levelAttended || levelAttended.length === 0) {
       setSnackbar({
         open: true,
@@ -200,21 +201,89 @@ const RequestDocument = () => {
       return;
     }
 
-    if (!academicCredentials || academicCredentials.length === 0) {
-      if (!certification || certification.length === 0) {
+    // Validate at least one academic credential or certification
+    if ((!academicCredentials || academicCredentials.length === 0) && 
+        (!certification || certification.length === 0)) {
+      setSnackbar({
+        open: true,
+        message: 'Please select at least one academic credential or certification.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate grade/strand/course
+    if (!gradeStrandCourse || !gradeStrandCourse.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Grade/Strand/Course is required. Please ensure your program is properly enrolled.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate date
+    if (!date || !date.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Date is required.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      setSnackbar({
+        open: true,
+        message: 'Invalid date format. Please use YYYY-MM-DD format.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate year graduated (if provided)
+    if (yearGraduated && yearGraduated.trim()) {
+      const year = parseInt(yearGraduated);
+      const currentYear = new Date().getFullYear();
+      const minYear = 1950; // Reasonable minimum year
+      
+      if (isNaN(year) || year < minYear || year > currentYear + 1) {
         setSnackbar({
           open: true,
-          message: 'Please select at least one academic credential or certification.',
+          message: `Year graduated must be a valid year between ${minYear} and ${currentYear + 1}.`,
           severity: 'error'
         });
         return;
       }
     }
 
+    // Validate description/purpose
     if (!description || !description.trim()) {
       setSnackbar({
         open: true,
         message: 'Please provide a purpose for your request.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate description length
+    const trimmedDescription = description.trim();
+    if (trimmedDescription.length < 10) {
+      setSnackbar({
+        open: true,
+        message: 'Purpose must be at least 10 characters long. Please provide more details.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (trimmedDescription.length > 500) {
+      setSnackbar({
+        open: true,
+        message: 'Purpose must not exceed 500 characters.',
         severity: 'error'
       });
       return;
@@ -797,6 +866,21 @@ const RequestDocument = () => {
                   value={newRequest.yearGraduated}
                   onChange={handleInputChange}
                   fullWidth
+                  placeholder="e.g., 2024"
+                  helperText={newRequest.yearGraduated && (
+                    (() => {
+                      const year = parseInt(newRequest.yearGraduated);
+                      const currentYear = new Date().getFullYear();
+                      const minYear = 1950;
+                      if (isNaN(year)) {
+                        return 'Please enter a valid year (e.g., 2024)';
+                      }
+                      if (year < minYear || year > currentYear + 1) {
+                        return `Year must be between ${minYear} and ${currentYear + 1}`;
+                      }
+                      return '';
+                    })()
+                  )}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': { borderColor: '#c70202' },
@@ -877,7 +961,9 @@ const RequestDocument = () => {
                   multiline
                   rows={3}
                   required
-                  placeholder="Please state the purpose of your request..."
+                  placeholder="Please state the purpose of your request"
+                  helperText={`${newRequest.description?.length || 0}/500 characters`}
+                  inputProps={{ maxLength: 500 }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': { borderColor: '#c70202' },
