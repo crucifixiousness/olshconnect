@@ -51,6 +51,7 @@ import DeanSidebar from './components/Deansidebar';
 import ProgramHeadTorEvaluation from './pages/ProgramHeadTorEvaluation';
 import RegistrarCreditTransfer from './pages/RegistrarCreditTransfer';
 import AdminAccountManagement from './pages/AdminAccountManagement';
+import StudentAccountsManagement from './pages/StudentAccountsManagement';
 import InitialAdminCreation from './pages/InitialAdminCreation';
 
 const MyContext = createContext();
@@ -190,6 +191,7 @@ function App() {
               <Route path="/dashboard" exact={true} element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/program-management" exact={true} element={<ProtectedRoute element={<ProgramManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/admin-account-management" exact={true} element={<ProtectedRoute element={<AdminAccountManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
+              <Route path="/student-accounts-management" exact={true} element={<ProtectedRoute element={<StudentAccountsManagement />} requiredRole="admin" redirectTo="/stafflogin" />} />
               <Route path="/login" exact={true} element={<Login />} />
               <Route path="/forgot-password" exact={true} element={<ForgotPassword />} />
               <Route path="/logIn" exact={true} element={<FakeLogin />} />
