@@ -158,6 +158,37 @@ module.exports = async (req, res) => {
       [paymentStatus, totalAmountPaid, remainingBalance, enrollment_id]
     );
 
+    // Check if there are document requests pending for payment for this enrollment
+    // Update document request status to "Processing" if payment covers document costs
+    const documentRequestsResult = await client.query(
+      `SELECT req_id, document_price, req_status
+       FROM documentrequest
+       WHERE enrollment_id = $1
+       AND req_status = 'Pending for Payment'`,
+      [enrollment_id]
+    );
+
+    if (documentRequestsResult.rows.length > 0) {
+      // Check if payment amount covers document requests
+      const totalDocumentPrice = documentRequestsResult.rows.reduce(
+        (sum, doc) => sum + parseFloat(doc.document_price || 0), 
+        0
+      );
+
+      // If payment is sufficient to cover document requests, update their status
+      // Note: We'll update all pending document requests if payment covers them
+      // In a real scenario, you might want more granular logic
+      if (newPaymentAmount >= totalDocumentPrice || totalAmountPaid >= totalDocumentPrice) {
+        await client.query(
+          `UPDATE documentrequest
+           SET req_status = 'Processing'
+           WHERE enrollment_id = $1
+           AND req_status = 'Pending for Payment'`,
+          [enrollment_id]
+        );
+      }
+    }
+
     await client.query('COMMIT');
 
     res.status(200).json({
