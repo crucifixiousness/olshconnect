@@ -73,27 +73,22 @@ module.exports = async (req, res) => {
     }
 
     // Derive doc_type automatically from selections
+    // If only academic credentials → "Academic Credentials"
+    // If only certification → "Certification"
+    // If both → "Academic Credentials, Certification"
     let docType = null;
-    if (academicCredentials) {
-      const credArray = academicCredentials.split(',');
-      if (credArray.includes("TRANSCRIPT OF RECORDS - College")) {
-        docType = "Transcript of Records";
-      } else if (credArray.includes("DIPLOMA")) {
-        docType = "Diploma";
-      } else {
-        docType = credArray[0].trim(); // Use first selected credential
-      }
-    } else if (certification) {
-      const certArray = certification.split(',');
-      if (certArray.includes("GRADES (FOR COLLEGE ONLY)")) {
-        docType = "Certificate of Grades";
-      } else if (certArray.includes("ENROLLMENT")) {
-        docType = "Enrollment Certificate";
-      } else if (certArray.includes("GRADUATION")) {
-        docType = "Graduation Certificate";
-      } else {
-        docType = certArray[0].trim(); // Use first selected certification
-      }
+    const hasAcademicCredentials = academicCredentials && academicCredentials.trim() !== '';
+    const hasCertification = certification && certification.trim() !== '';
+    
+    if (hasAcademicCredentials && hasCertification) {
+      // Both selected
+      docType = "Academic Credentials, Certification";
+    } else if (hasAcademicCredentials) {
+      // Only academic credentials
+      docType = "Academic Credentials";
+    } else if (hasCertification) {
+      // Only certification
+      docType = "Certification";
     }
 
     const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
