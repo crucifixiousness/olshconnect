@@ -41,43 +41,50 @@ module.exports = async (req, res) => {
     }
 
     // Extract form data fields
-    const levelAttended = form_data?.levelAttended || [];
+    const levelAttendedArray = form_data?.levelAttended || [];
     const gradeStrandCourse = form_data?.gradeStrandCourse || null;
     const yearGraduated = form_data?.yearGraduated || null;
-    const academicCredentials = form_data?.academicCredentials || [];
-    const certification = form_data?.certification || [];
+    const academicCredentialsArray = form_data?.academicCredentials || [];
+    const certificationArray = form_data?.certification || [];
     const requestDate = form_data?.date || new Date().toISOString().slice(0, 10);
 
+    // Convert arrays to comma-separated strings (no brackets)
+    const levelAttended = Array.isArray(levelAttendedArray) ? levelAttendedArray.join(',') : (levelAttendedArray || '');
+    const academicCredentials = Array.isArray(academicCredentialsArray) ? academicCredentialsArray.join(',') : (academicCredentialsArray || '');
+    const certification = Array.isArray(certificationArray) ? certificationArray.join(',') : (certificationArray || '');
+
     // Validate that at least one level is attended
-    if (!levelAttended || levelAttended.length === 0) {
+    if (!levelAttended || levelAttended.trim() === '') {
       return res.status(400).json({ message: "At least one level attended must be selected." });
     }
 
     // Validate that at least one academic credential or certification is selected
-    if ((!academicCredentials || academicCredentials.length === 0) && 
-        (!certification || certification.length === 0)) {
+    if ((!academicCredentials || academicCredentials.trim() === '') && 
+        (!certification || certification.trim() === '')) {
       return res.status(400).json({ message: "At least one academic credential or certification must be selected." });
     }
 
     // Derive doc_type automatically from selections
     let docType = null;
-    if (academicCredentials && academicCredentials.length > 0) {
-      if (academicCredentials.includes("TRANSCRIPT OF RECORDS - College")) {
+    if (academicCredentials && academicCredentials.trim() !== '') {
+      const credArray = academicCredentials.split(',');
+      if (credArray.includes("TRANSCRIPT OF RECORDS - College")) {
         docType = "Transcript of Records";
-      } else if (academicCredentials.includes("DIPLOMA")) {
+      } else if (credArray.includes("DIPLOMA")) {
         docType = "Diploma";
       } else {
-        docType = academicCredentials[0]; // Use first selected credential
+        docType = credArray[0].trim(); // Use first selected credential
       }
-    } else if (certification && certification.length > 0) {
-      if (certification.includes("GRADES (FOR COLLEGE ONLY)")) {
+    } else if (certification && certification.trim() !== '') {
+      const certArray = certification.split(',');
+      if (certArray.includes("GRADES (FOR COLLEGE ONLY)")) {
         docType = "Certificate of Grades";
-      } else if (certification.includes("ENROLLMENT")) {
+      } else if (certArray.includes("ENROLLMENT")) {
         docType = "Enrollment Certificate";
-      } else if (certification.includes("GRADUATION")) {
+      } else if (certArray.includes("GRADUATION")) {
         docType = "Graduation Certificate";
       } else {
-        docType = certification[0]; // Use first selected certification
+        docType = certArray[0].trim(); // Use first selected certification
       }
     }
 
@@ -103,11 +110,11 @@ module.exports = async (req, res) => {
         description.trim(), 
         requestDate, 
         "Pending",
-        levelAttended, // PostgreSQL array
+        levelAttended, // Comma-separated string
         gradeStrandCourse,
         yearGraduated,
-        academicCredentials, // PostgreSQL array
-        certification // PostgreSQL array
+        academicCredentials, // Comma-separated string
+        certification // Comma-separated string
       ]
     );
 
