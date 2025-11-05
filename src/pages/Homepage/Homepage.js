@@ -421,29 +421,8 @@ const Homepage = () => {
             return;
         }
 
-        // Check for repeated numbers (all same digits)
-        const allSameDigits = /^(\d)\1{10}$/.test(phoneNumber);
-        if (allSameDigits) {
-            setGuardianPhoneValidation({ 
-                isValid: false, 
-                message: 'Phone number cannot be all the same digits' 
-            });
-            return;
-        }
-
-        // Check for 4 or more consecutive identical digits
-        const consecutivePattern = /(\d)\1{3,}/;
-        if (consecutivePattern.test(phoneNumber)) {
-            setGuardianPhoneValidation({ 
-                isValid: false, 
-                message: 'Phone number cannot have 4 or more consecutive identical digits' 
-            });
-            return;
-        }
-
-        // Check for common invalid patterns
+        // Check for common invalid patterns (allow repeated digits but block sequences)
         const invalidPatterns = [
-            /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
             /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
             /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
         ];
@@ -481,29 +460,8 @@ const Homepage = () => {
             return;
         }
 
-        // Check for repeated numbers (all same digits)
-        const allSameDigits = /^(\d)\1{10}$/.test(phoneNumber);
-        if (allSameDigits) {
-            setPhoneValidation({ 
-                isValid: false, 
-                message: 'Phone number cannot be all the same digits' 
-            });
-            return;
-        }
-
-        // Check for 4 or more consecutive identical digits
-        const consecutivePattern = /(\d)\1{3,}/;
-        if (consecutivePattern.test(phoneNumber)) {
-            setPhoneValidation({ 
-                isValid: false, 
-                message: 'Phone number cannot have 4 or more consecutive identical digits' 
-            });
-            return;
-        }
-
-        // Check for common invalid patterns
+        // Check for common invalid patterns (allow repeated digits but block sequences)
         const invalidPatterns = [
-            /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
             /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
             /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
         ];
@@ -698,31 +656,8 @@ const Homepage = () => {
         // Validate contact number patterns
         const phoneNumber = formData.number;
         
-        // Check for repeated numbers (all same digits)
-        const allSameDigits = /^(\d)\1{10}$/.test(phoneNumber);
-        if (allSameDigits) {
-            setSnackbar({
-                open: true,
-                message: "Phone number cannot be all the same digits",
-                severity: 'error'
-            });
-            return;
-        }
-
-        // Check for 4 or more consecutive identical digits
-        const consecutivePattern = /(\d)\1{3,}/;
-        if (consecutivePattern.test(phoneNumber)) {
-            setSnackbar({
-                open: true,
-                message: "Phone number cannot have 4 or more consecutive identical digits",
-                severity: 'error'
-            });
-            return;
-        }
-
-        // Check for common invalid patterns
+        // Check for common invalid patterns (allow repeated digits but block sequences)
         const invalidPatterns = [
-            /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
             /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
             /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
         ];
@@ -742,31 +677,8 @@ const Homepage = () => {
         if (formData.guardianContactNo) {
             const guardianPhoneNumber = formData.guardianContactNo;
             
-            // Check for repeated numbers (all same digits)
-            const allSameDigits = /^(\d)\1{10}$/.test(guardianPhoneNumber);
-            if (allSameDigits) {
-                setSnackbar({
-                    open: true,
-                    message: "Guardian phone number cannot be all the same digits",
-                    severity: 'error'
-                });
-                return;
-            }
-
-            // Check for 4 or more consecutive identical digits
-            const consecutivePattern = /(\d)\1{3,}/;
-            if (consecutivePattern.test(guardianPhoneNumber)) {
-                setSnackbar({
-                    open: true,
-                    message: "Guardian phone number cannot have 4 or more consecutive identical digits",
-                    severity: 'error'
-                });
-                return;
-            }
-
-            // Check for common invalid patterns
+            // Check for common invalid patterns (allow repeated digits but block sequences)
             const invalidPatterns = [
-                /^09(0{4,}|1{4,}|2{4,}|3{4,}|4{4,}|5{4,}|6{4,}|7{4,}|8{4,}|9{4,})/, // 4+ consecutive zeros or ones, etc.
                 /^09(0123|1234|2345|3456|4567|5678|6789|7890|8901|9012)/, // Sequential patterns
                 /^09(9876|8765|7654|6543|5432|4321|3210|2109|1098|0987)/, // Reverse sequential patterns
             ];
