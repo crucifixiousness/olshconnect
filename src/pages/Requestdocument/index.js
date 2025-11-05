@@ -243,20 +243,26 @@ const RequestDocument = () => {
       return;
     }
 
-    // Validate year graduated (if provided)
-    if (yearGraduated && yearGraduated.trim()) {
-      const year = parseInt(yearGraduated);
-      const currentYear = new Date().getFullYear();
-      const minYear = 1950; // Reasonable minimum year
-      
-      if (isNaN(year) || year < minYear || year > currentYear + 1) {
-        setSnackbar({
-          open: true,
-          message: `Year graduated must be a valid year between ${minYear} and ${currentYear + 1}.`,
-          severity: 'error'
-        });
-        return;
-      }
+    // Validate year graduated (required)
+    if (!yearGraduated || !yearGraduated.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Year Graduated / School Year is required.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    const year = parseInt(yearGraduated);
+    const currentYear = new Date().getFullYear();
+    const minYear = 1950; // Reasonable minimum year
+    if (isNaN(year) || year < minYear || year > currentYear + 1) {
+      setSnackbar({
+        open: true,
+        message: `Year graduated must be a valid year between ${minYear} and ${currentYear + 1}.`,
+        severity: 'error'
+      });
+      return;
     }
 
     // Validate description/purpose
@@ -867,6 +873,7 @@ const RequestDocument = () => {
                   onChange={handleInputChange}
                   fullWidth
                   placeholder="e.g., 2024"
+                  required
                   helperText={newRequest.yearGraduated && (
                     (() => {
                       const year = parseInt(newRequest.yearGraduated);
