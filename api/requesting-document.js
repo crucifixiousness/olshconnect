@@ -49,24 +49,32 @@ module.exports = async (req, res) => {
     const requestDate = form_data?.date || new Date().toISOString().slice(0, 10);
 
     // Convert arrays to comma-separated strings (no brackets)
-    const levelAttended = Array.isArray(levelAttendedArray) ? levelAttendedArray.join(',') : (levelAttendedArray || '');
-    const academicCredentials = Array.isArray(academicCredentialsArray) ? academicCredentialsArray.join(',') : (academicCredentialsArray || '');
-    const certification = Array.isArray(certificationArray) ? certificationArray.join(',') : (certificationArray || '');
+    // If empty, store as NULL instead of empty string
+    const levelAttended = Array.isArray(levelAttendedArray) && levelAttendedArray.length > 0 
+      ? levelAttendedArray.join(',') 
+      : (Array.isArray(levelAttendedArray) ? null : (levelAttendedArray || null));
+    
+    const academicCredentials = Array.isArray(academicCredentialsArray) && academicCredentialsArray.length > 0
+      ? academicCredentialsArray.join(',')
+      : (Array.isArray(academicCredentialsArray) ? null : (academicCredentialsArray || null));
+    
+    const certification = Array.isArray(certificationArray) && certificationArray.length > 0
+      ? certificationArray.join(',')
+      : (Array.isArray(certificationArray) ? null : (certificationArray || null));
 
     // Validate that at least one level is attended
-    if (!levelAttended || levelAttended.trim() === '') {
+    if (!levelAttended) {
       return res.status(400).json({ message: "At least one level attended must be selected." });
     }
 
     // Validate that at least one academic credential or certification is selected
-    if ((!academicCredentials || academicCredentials.trim() === '') && 
-        (!certification || certification.trim() === '')) {
+    if (!academicCredentials && !certification) {
       return res.status(400).json({ message: "At least one academic credential or certification must be selected." });
     }
 
     // Derive doc_type automatically from selections
     let docType = null;
-    if (academicCredentials && academicCredentials.trim() !== '') {
+    if (academicCredentials) {
       const credArray = academicCredentials.split(',');
       if (credArray.includes("TRANSCRIPT OF RECORDS - College")) {
         docType = "Transcript of Records";
@@ -75,7 +83,7 @@ module.exports = async (req, res) => {
       } else {
         docType = credArray[0].trim(); // Use first selected credential
       }
-    } else if (certification && certification.trim() !== '') {
+    } else if (certification) {
       const certArray = certification.split(',');
       if (certArray.includes("GRADES (FOR COLLEGE ONLY)")) {
         docType = "Certificate of Grades";
