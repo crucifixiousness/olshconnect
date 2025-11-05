@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, Typography, CircularProgress, Box, Grid, Chip } from '@mui/material';
+import { useState, useEffect, useContext, useCallback } from 'react';
+import { Card, Typography, CircularProgress } from '@mui/material';
 import { GiBookshelf } from "react-icons/gi";
 import { RiPoliceBadgeFill } from "react-icons/ri";
 import { MdTour } from "react-icons/md";
@@ -12,70 +11,110 @@ import { MyContext } from "../../App";
 
 const Dashboard = () => {
   const context = useContext(MyContext);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    programStats: {
+      education: 0,
+      bscrim: 0,
+      bshm: 0,
+      bsit: 0,
+      bsoad: 0
+    },
+    totalStudents: 0,
+    yearLevelStats: {
+      firstYear: 0,
+      secondYear: 0,
+      thirdYear: 0,
+      fourthYear: 0
+    }
+  });
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.error('No token found');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin-dashboard', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setDashboardData({
+            programStats: data.data.programStats || {
+              education: 0,
+              bscrim: 0,
+              bshm: 0,
+              bsit: 0,
+              bsoad: 0
+            },
+            totalStudents: data.data.totalStudents || 0,
+            yearLevelStats: data.data.yearLevelStats || {
+              firstYear: 0,
+              secondYear: 0,
+              thirdYear: 0,
+              fourthYear: 0
+            }
+          });
+        }
+      } else {
+        console.error('Failed to fetch dashboard data');
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
-  }, [context]);
-
-  // Mock data - replace with actual API calls when needed
-  const dashboardData = {
-    beed: 262,
-    bsed: 250,
-    bscrim: 225,
-    bshm: 247,
-    bsit: 221,
-    bsoad: 230,
-    totalStudents: 1435,
-    yearLevels: {
-      firstYear: 344,
-      secondYear: 352,
-      thirdYear: 367,
-      fourthYear: 372
-    }
-  };
+    fetchDashboardData();
+  }, [context, fetchDashboardData]);
 
   const programCards = [
     {
-      title: 'Total BEED',
-      value: dashboardData.beed,
-      icon: <GiBookshelf size={30} />,
-      color: '#1976d2',
-      gradient: 'linear-gradient(135deg, #1976d2, #42a5f5)'
-    },
-    {
-      title: 'Total BSEd',
-      value: dashboardData.bsed,
+      title: 'Total Education',
+      value: dashboardData.programStats.education,
       icon: <GiBookshelf size={30} />,
       color: '#1976d2',
       gradient: 'linear-gradient(135deg, #1976d2, #42a5f5)'
     },
     {
       title: 'Total BSCrim',
-      value: dashboardData.bscrim,
+      value: dashboardData.programStats.bscrim,
       icon: <RiPoliceBadgeFill size={30} />,
       color: '#c70202',
       gradient: 'linear-gradient(135deg, #c70202, #f44336)'
     },
     {
       title: 'Total BSHM',
-      value: dashboardData.bshm,
+      value: dashboardData.programStats.bshm,
       icon: <MdTour size={30} />,
       color: '#ff9800',
       gradient: 'linear-gradient(135deg, #ff9800, #ffb74d)'
     },
     {
       title: 'Total BSIT',
-      value: dashboardData.bsit,
+      value: dashboardData.programStats.bsit,
       icon: <FaComputer size={30} />,
       color: '#4caf50',
       gradient: 'linear-gradient(135deg, #4caf50, #81c784)'
     },
     {
       title: 'Total BSOAd',
-      value: dashboardData.bsoad,
+      value: dashboardData.programStats.bsoad,
       icon: <PiComputerTowerFill size={30} />,
       color: '#9c27b0',
       gradient: 'linear-gradient(135deg, #9c27b0, #ba68c8)'
@@ -83,10 +122,10 @@ const Dashboard = () => {
   ];
 
   const yearLevelData = [
-    { year: 'First Year', count: dashboardData.yearLevels.firstYear, icon: <TbCircleNumber1Filled />, color: '#1976d2' },
-    { year: 'Second Year', count: dashboardData.yearLevels.secondYear, icon: <TbCircleNumber2Filled />, color: '#388e3c' },
-    { year: 'Third Year', count: dashboardData.yearLevels.thirdYear, icon: <TbCircleNumber3Filled />, color: '#f57c00' },
-    { year: 'Fourth Year', count: dashboardData.yearLevels.fourthYear, icon: <TbCircleNumber4Filled />, color: '#d32f2f' }
+    { year: 'First Year', count: dashboardData.yearLevelStats.firstYear, icon: <TbCircleNumber1Filled />, color: '#1976d2' },
+    { year: 'Second Year', count: dashboardData.yearLevelStats.secondYear, icon: <TbCircleNumber2Filled />, color: '#388e3c' },
+    { year: 'Third Year', count: dashboardData.yearLevelStats.thirdYear, icon: <TbCircleNumber3Filled />, color: '#f57c00' },
+    { year: 'Fourth Year', count: dashboardData.yearLevelStats.fourthYear, icon: <TbCircleNumber4Filled />, color: '#d32f2f' }
   ];
 
   if (loading) {
@@ -139,7 +178,7 @@ const Dashboard = () => {
 
         {/* Total Students Overview */}
         <div className="row">
-          <div className="col-md-8 mb-4">
+          <div className="col-md-12 mb-4">
             <Card className="h-100 p-4" sx={{ 
               background: 'linear-gradient(135deg, #c70202, #f44336)',
               color: 'white'
@@ -178,58 +217,6 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </Card>
-          </div>
-
-          <div className="col-md-4 mb-4">
-            <Card className="h-100 p-4" sx={{ 
-              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
-              border: '1px solid #dee2e6'
-            }}>
-              <Typography variant="h6" className="mb-3" sx={{ color: '#495057', fontWeight: 'bold' }}>
-                Quick Actions
-              </Typography>
-              
-              <div className="d-grid gap-2">
-                <Chip 
-                  label="View All Students" 
-                  sx={{ 
-                    backgroundColor: '#c70202', 
-                    color: 'white',
-                    '&:hover': { backgroundColor: '#a00101' },
-                    cursor: 'pointer'
-                  }}
-                />
-                <Chip 
-                  label="System Reports" 
-                  sx={{ 
-                    backgroundColor: '#28a745', 
-                    color: 'white',
-                    '&:hover': { backgroundColor: '#218838' },
-                    cursor: 'pointer'
-                  }}
-                />
-                <Chip 
-                  label="User Management" 
-                  onClick={() => navigate('/staffs')}
-                  sx={{ 
-                    backgroundColor: '#17a2b8', 
-                    color: 'white',
-                    '&:hover': { backgroundColor: '#138496' },
-                    cursor: 'pointer'
-                  }}
-                />
-                <Chip 
-                  label="Admin Account Management" 
-                  onClick={() => navigate('/admin-account-management')}
-                  sx={{ 
-                    backgroundColor: '#6f42c1', 
-                    color: 'white',
-                    '&:hover': { backgroundColor: '#5a32a3' },
-                    cursor: 'pointer'
-                  }}
-                />
               </div>
             </Card>
           </div>
