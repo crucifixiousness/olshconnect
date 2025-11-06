@@ -57,6 +57,15 @@ module.exports = async (req, res) => {
     `);
     console.log('Debug - Pending Payments Query Result:', pendingPaymentsResult.rows[0]);
 
+    // Get total balance (sum of all remaining balances)
+    const totalBalanceResult = await pool.query(`
+      SELECT CAST(COALESCE(SUM(remaining_balance), 0) AS DECIMAL(10,2)) as total_balance
+      FROM enrollments
+      WHERE enrollment_status IN ('Verified', 'For Payment', 'Officially Enrolled')
+      AND remaining_balance > 0
+    `);
+    console.log('Debug - Total Balance Query Result:', totalBalanceResult.rows[0]);
+
     // Get recent transactions (last 10 payments with detailed info)
     const recentTransactionsResult = await pool.query(`
       SELECT 
@@ -151,6 +160,7 @@ module.exports = async (req, res) => {
       totalRevenue: parseFloat(totalRevenueResult.rows[0].total_revenue) || 0,
       totalStudentsPaid: parseInt(totalStudentsPaidResult.rows[0].total_students_paid) || 0,
       pendingPayments: parseInt(pendingPaymentsResult.rows[0].pending_payments) || 0,
+      totalBalance: parseFloat(totalBalanceResult.rows[0].total_balance) || 0,
       recentTransactions: recentTransactionsResult.rows,
       paymentStats: {
         monthlyData: paymentStatsResult.rows,
