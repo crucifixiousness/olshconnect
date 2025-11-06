@@ -143,83 +143,207 @@ const Dashboard = () => {
 
   return (
     <div className="right-content w-100">
-      <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="mb-4">Admin Dashboard</h3>
+      <div className="card shadow border-0 p-4 mt-1">
+        <div className="mb-4">
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#333', mb: 1 }}>
+            Admin Dashboard
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#666' }}>
+            Overview of student enrollment statistics
+          </Typography>
+        </div>
         
         {/* Program Statistics */}
-        <div className="row mb-4">
-          {programCards.map((card, index) => (
-            <div key={index} className="col-md-4 col-lg-2 mb-3">
-              <Card 
-                className="h-100 p-3" 
-                sx={{ 
-                  background: card.gradient,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': { 
-                    transform: 'translateY(-5px)',
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
-                  },
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div className="d-flex align-items-center mb-3">
-                  <div style={{ color: 'white' }}>{card.icon}</div>
-                  <Typography variant="h6" className="ms-2 text-white" sx={{ fontSize: '0.9rem' }}>
-                    {card.title}
-                  </Typography>
-                </div>
-                <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold' }}>
-                  {card.value}
-                </Typography>
-              </Card>
-            </div>
-          ))}
+        <div className="mb-4">
+          <Typography variant="h6" sx={{ fontWeight: '600', color: '#333', mb: 3 }}>
+            Program Statistics
+          </Typography>
+          <div className="row">
+            {programCards.map((card, index) => (
+              <div key={index} className="col-12 col-sm-6 col-md-4 col-lg-4 col-xl" style={{ marginBottom: '12px' }}>
+                <Card 
+                  className="h-100" 
+                  sx={{ 
+                    background: card.gradient,
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    cursor: 'pointer',
+                    '&:hover': { 
+                      transform: 'translateY(-8px) scale(1.02)',
+                      boxShadow: '0 12px 30px rgba(0,0,0,0.2)'
+                    },
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <div className="p-3">
+                    <div className="d-flex align-items-center mb-2">
+                      <div style={{ 
+                        color: 'white', 
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(255,255,255,0.2)'
+                      }}>
+                        {card.icon}
+                      </div>
+                      <Typography 
+                        variant="body2" 
+                        className="ms-2 text-white" 
+                        sx={{ 
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          opacity: 0.95
+                        }}
+                      >
+                        {card.title}
+                      </Typography>
+                    </div>
+                    <Typography 
+                      variant="h3" 
+                      sx={{ 
+                        color: 'white', 
+                        fontWeight: 'bold',
+                        fontSize: { xs: '2rem', md: '2.5rem' },
+                        lineHeight: 1.2
+                      }}
+                    >
+                      {card.value.toLocaleString()}
+                    </Typography>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Total Students Overview */}
-        <div className="row">
-          <div className="col-md-12 mb-4">
-            <Card className="h-100 p-4" sx={{ 
-              background: 'linear-gradient(135deg, #c70202, #f44336)',
-              color: 'white'
-            }}>
+        <div className="mt-4">
+          <Typography variant="h6" sx={{ fontWeight: '600', color: '#333', mb: 3 }}>
+            Enrollment Overview
+          </Typography>
+          <Card 
+            className="h-100" 
+            sx={{ 
+              background: 'linear-gradient(135deg, #c70202 0%, #f44336 100%)',
+              color: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 8px 24px rgba(199, 2, 2, 0.3)',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            <div className="p-4">
               <div className="d-flex align-items-center justify-content-between mb-4">
-                <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
-                  Total Enrolled Students
-                </Typography>
-                <IoIosPeople size={40} style={{ color: 'white' }} />
+                <div>
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      color: 'white', 
+                      fontWeight: 'bold',
+                      mb: 0.5
+                    }}
+                  >
+                    Total Enrolled Students
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    All programs combined
+                  </Typography>
+                </div>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <IoIosPeople size={32} style={{ color: 'white' }} />
+                </div>
               </div>
               
-              <Typography variant="h2" sx={{ color: 'white', fontWeight: 'bold', mb: 4 }}>
-                {dashboardData.totalStudents}
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  color: 'white', 
+                  fontWeight: 'bold', 
+                  mb: 4,
+                  fontSize: { xs: '2.5rem', md: '3.5rem' }
+                }}
+              >
+                {dashboardData.totalStudents.toLocaleString()}
               </Typography>
 
               <div className="row">
                 {yearLevelData.map((level, index) => (
-                  <div key={index} className="col-md-6 mb-3">
-                    <div className="d-flex align-items-center justify-content-between p-2" 
-                         style={{ 
-                           backgroundColor: 'rgba(255,255,255,0.1)', 
-                           borderRadius: '8px',
-                           border: '1px solid rgba(255,255,255,0.2)'
-                         }}>
+                  <div key={index} className="col-12 col-sm-6 col-md-6 col-lg-3" style={{ marginBottom: '12px' }}>
+                    <div 
+                      className="d-flex align-items-center justify-content-between p-3" 
+                      style={{ 
+                        backgroundColor: 'rgba(255,255,255,0.15)', 
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        backdropFilter: 'blur(10px)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)';
+                        e.currentTarget.style.transform = 'translateX(5px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
                       <div className="d-flex align-items-center">
-                        <span style={{ color: level.color, marginRight: '8px' }}>
+                        <span 
+                          style={{ 
+                            color: level.color, 
+                            marginRight: '12px',
+                            fontSize: '24px',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
                           {level.icon}
                         </span>
-                        <Typography variant="body2" sx={{ color: 'white' }}>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            color: 'white',
+                            fontWeight: '500',
+                            fontSize: '0.9rem'
+                          }}
+                        >
                           {level.year}
                         </Typography>
                       </div>
-                      <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
-                        {level.count}
+                      <Typography 
+                        variant="h5" 
+                        sx={{ 
+                          color: 'white', 
+                          fontWeight: 'bold',
+                          fontSize: '1.5rem'
+                        }}
+                      >
+                        {level.count.toLocaleString()}
                       </Typography>
                     </div>
                   </div>
                 ))}
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
