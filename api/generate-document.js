@@ -1,7 +1,6 @@
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
-const { Readable } = require('stream');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -21,6 +20,53 @@ const authenticateToken = (req) => {
   return jwt.verify(token, process.env.JWT_SECRET);
 };
 
+// Helper function to format year level
+const formatYearLevel = (yearLevel) => {
+  const yearMap = {
+    '1': 'First Year',
+    '2': 'Second Year',
+    '3': 'Third Year',
+    '4': 'Fourth Year',
+    '5': 'Fifth Year'
+  };
+  return yearMap[yearLevel] || `${yearLevel} Year`;
+};
+
+// Helper function to format semester
+const formatSemester = (semester) => {
+  if (typeof semester === 'number') {
+    return semester === 1 ? '1st' : semester === 2 ? '2nd' : `${semester}th`;
+  }
+  const semMap = {
+    '1': '1st',
+    '2': '2nd',
+    'First': '1st',
+    'Second': '2nd'
+  };
+  return semMap[semester] || semester;
+};
+
+// Helper function to calculate GPA
+const calculateGPA = (grades) => {
+  if (!grades || grades.length === 0) return null;
+  const totalPoints = grades.reduce((sum, grade) => {
+    const points = parseFloat(grade.final_grade) || 0;
+    const units = parseInt(grade.units) || 0;
+    return sum + (points * units);
+  }, 0);
+  const totalUnits = grades.reduce((sum, grade) => sum + (parseInt(grade.units) || 0), 0);
+  return totalUnits > 0 ? (totalPoints / totalUnits).toFixed(2) : null;
+};
+
+// Helper function to determine remark
+const getRemark = (grade) => {
+  const gradeValue = parseFloat(grade);
+  if (isNaN(gradeValue)) return '';
+  if (gradeValue >= 1.0 && gradeValue <= 3.0) return 'Passed';
+  if (gradeValue > 3.0 && gradeValue <= 5.0) return 'Failed';
+  return '';
+};
+
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -34,21 +80,31 @@ module.exports = async (req, res) => {
       return res.status(400).json({ message: 'Request ID is required' });
     }
 
-    // Fetch request and student details
+    // Fetch request and student details - Updated to accept "Ready for Pickup" status
     const result = await pool.query(`
       SELECT 
         dr.*,
+        s.id as student_id,
         s.first_name,
         s.middle_name,
         s.last_name,
         s.suffix,
         e.program_id,
-        p.program_name
+        e.year_id,
+        e.semester,
+        e.academic_year,
+        p.program_name,
+        py.year_level
       FROM documentrequest dr
       JOIN students s ON dr.id = s.id
       JOIN enrollments e ON s.id = e.student_id
       JOIN program p ON e.program_id = p.program_id
-      WHERE dr.req_id = $1 AND dr.req_status = 'Approved'
+      JOIN program_year py ON e.year_id = py.year_id
+      WHERE dr.req_id = $1 
+        AND (dr.req_status = 'Approved' OR dr.req_status = 'Ready for Pickup')
+        AND (dr.doc_type = 'Certificate of Grades' OR dr.certification LIKE '%GRADES%')
+      ORDER BY e.enrollment_date DESC
+      LIMIT 1
     `, [req_id]);
 
     if (result.rows.length === 0) {
@@ -57,14 +113,73 @@ module.exports = async (req, res) => {
 
     const student = result.rows[0];
 
+    // Fetch student's grades for the current enrollment
+    const gradesResult = await pool.query(`
+      SELECT 
+        c.course_code,
+        c.course_name,
+        c.units,
+        g.final_grade,
+        pc.semester,
+        pc.year_id
+      FROM grades g
+      JOIN program_course pc ON g.pc_id = pc.pc_id
+      JOIN course c ON pc.course_id = c.course_id
+      WHERE g.student_id = $1
+        AND pc.program_id = $2
+        AND pc.year_id = $3
+        AND pc.semester = $4
+        AND g.approval_status = 'reg_approved'
+      ORDER BY c.course_code
+    `, [student.student_id, student.program_id, student.year_id, student.semester]);
+
+    const courseData = gradesResult.rows.map(grade => ({
+      code: grade.course_code,
+      title: grade.course_name,
+      rating: parseFloat(grade.final_grade).toFixed(2),
+      credits: grade.units.toString(),
+      remarks: getRemark(grade.final_grade)
+    }));
+
+    // If no grades found, return error
+    if (courseData.length === 0) {
+      return res.status(404).json({ message: 'No grades found for this student' });
+    }
+
+    // Calculate GPA
+    const gpa = calculateGPA(gradesResult.rows);
+
+    // Format student name
+    const studentName = `${student.last_name}, ${student.first_name}${student.middle_name ? ` ${student.middle_name.charAt(0)}.` : ''}${student.suffix ? ` ${student.suffix}` : ''}`;
+
+    // Format year level
+    const yearLevelText = formatYearLevel(student.year_level.toString());
+
+    // Format semester
+    const semesterText = formatSemester(student.semester);
+
+    // Format academic year
+    const academicYear = student.academic_year || '2022-2023';
+
+    // Format issuance date
+    const issuanceDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Get program abbreviation for department (e.g., BSIT -> BSIT DEPARTMENT)
+    const programAbbr = student.program_name.split(' ').map(word => word.charAt(0)).join('').toUpperCase();
+    const departmentName = `${programAbbr} DEPARTMENT`;
+
     // Create PDF
     const doc = new PDFDocument({
       size: 'A4',
       margins: {
-        top: 30,
-        bottom: 30,
-        left: 50,
-        right: 50
+        top: 50,
+        bottom: 50,
+        left: 72,
+        right: 72
       }
     });
 
@@ -77,136 +192,225 @@ module.exports = async (req, res) => {
       doc.on('error', reject);
     });
 
-    // Add PDF content
-    // Add logo and header
-    doc.fontSize(16).text('Our Lady of the Sacred Heart College of Guimba, Inc.', { align: 'center' });
-    doc.fontSize(12).text('Guimba, Nueva Ecija', { align: 'center' });
-    doc.moveDown(0.5);
-    doc.fontSize(10).text('Student\'s Copy only', { align: 'right' });
+    // Header Section
+    const startY = 50;
+    let currentY = startY;
+
+    // Student ID (top left)
+    doc.fontSize(10).text(`Student ID#: ${student.student_id}`, 72, currentY);
+
+    // Statement of Account (top right) - optional
+    // doc.fontSize(10).text('Statement of Account', 450, currentY, { align: 'right' });
+
+    currentY += 20;
+
+    // Logo placeholder (circle) - We'll draw a circle for the logo
+    const logoX = 72;
+    const logoY = currentY;
+    const logoRadius = 28;
+    doc.circle(logoX + logoRadius, logoY + logoRadius, logoRadius).stroke();
+    // Note: To add actual logo image, use: doc.image(logoPath, logoX, logoY, { width: logoRadius * 2, height: logoRadius * 2 });
+
+    // College name and contact info (centered)
+    doc.fontSize(14).font('Helvetica-Bold')
+      .text('Our Lady of the Sacred Heart College of Guimba, Inc.', 200, currentY + 10, { align: 'center', width: 250 });
     
-    doc.moveDown(1);
+    currentY += 20;
+    doc.fontSize(11).font('Helvetica')
+      .text('Guimba, Nueva Ecija', 200, currentY, { align: 'center', width: 250 });
     
-    // Department and title
-    doc.fontSize(14).text('BSIT DEPARTMENT', { align: 'center' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).text('CERTIFICATION OF GRADES', { align: 'center' });
-    doc.moveDown(1);
+    currentY += 15;
+    doc.fontSize(9)
+      .text('Tel Nos.: (044)-943-0553 / Fax: (044)-61160026', 200, currentY, { align: 'center', width: 250 });
 
-    doc.fontSize(12).text('TO WHOM IT MAY CONCERN:', { align: 'left' });
-    doc.moveDown(1);
+    currentY += 20;
 
-    // Student information - adjusted text
-    doc.fontSize(12).text(`This is to certify that ${student.first_name} ${student.middle_name || ''} ${student.last_name} ${student.suffix || ''} is presently enrolled as a Third Year College, a Bachelor of Science in Information Technology student and this is an UN OFFICIAL COPY of his/her grades during the 2nd Semester A.Y 2023-2024 as indicated with corresponding units earned:`, { align: 'justify' });
-    doc.moveDown(1);
+    // Separator line
+    doc.moveTo(72, currentY).lineTo(522, currentY).stroke();
 
-    // Table headers with adjusted spacing
-    const startX = 50;
-    const startY = doc.y;
+    currentY += 10;
+
+    // "Student's Copy only" (right side)
+    doc.fontSize(9).font('Helvetica-Oblique')
+      .text('Student\'s Copy only', 450, currentY, { align: 'right' });
+
+    currentY += 25;
+
+    // Department and Title
+    doc.fontSize(12).font('Helvetica-Bold')
+      .text(departmentName, 200, currentY, { align: 'center', width: 250 });
     
-    // Sample course data (keep the original data)
-    const courseData = [
-      { code: 'SIA102', title: 'Systems Integration and Architecture (Advanced SIA)', rating: '1.57', credits: '3', remarks: 'Passed' },
-      { code: 'WS101', title: 'Web Systems and technologies 1', rating: '1.88', credits: '3', remarks: 'Passed' },
-      { code: 'GE11', title: 'Gender and society', rating: '1.25', credits: '3', remarks: 'Passed' },
-      { code: 'IAS101', title: 'Information Assurance and Security 1', rating: '1.75', credits: '3', remarks: 'Passed' },
-      { code: 'IPT102', title: 'Integrative Programming and Technologies', rating: '1.50', credits: '3', remarks: 'Passed' },
-      { code: 'NET102', title: 'Networking 2 (Advanced Networking)', rating: '1.00', credits: '3', remarks: 'Passed' },
-      { code: 'PE301', title: 'Event-Driven Programming', rating: '1.15', credits: '3', remarks: 'Passed' },
-      { code: 'SPT1', title: 'Specialization 1-Computer Programming 3', rating: '1.63', credits: '3', remarks: 'Passed' },
-      { code: 'SPT2', title: 'Specialization 2-Fundamentals of Mobile Programming', rating: '1.38', credits: '3', remarks: 'Passed' }
-    ];
+    currentY += 15;
+    doc.fontSize(12).font('Helvetica-Bold')
+      .text('CERTIFICATION OF GRADES', 200, currentY, { align: 'center', width: 250 });
 
-    // Draw table borders and headers with proper spacing
+    currentY += 20;
+
+    // Salutation
+    doc.fontSize(11).font('Helvetica-Bold')
+      .text('TO WHOM IT MAY CONCERN:', 72, currentY);
+
+    currentY += 20;
+
+    // Certification paragraph
+    const certificationText = `This is to certify that ${studentName} is presently enrolled as a ${yearLevelText} College, a ${student.program_name} student and this is an UNOFFICIAL COPY of his/her grades during the ${semesterText} Semester A.Y ${academicYear} as indicated with corresponding units earned:`;
+    
+    doc.fontSize(10).font('Helvetica')
+      .text(certificationText, {
+        x: 72,
+        y: currentY,
+        width: 450,
+        align: 'justify'
+      });
+
+    // Calculate text height
+    const textHeight = doc.heightOfString(certificationText, {
+      width: 450,
+      align: 'justify'
+    });
+    currentY += textHeight + 15;
+
+    // Table Section
+    const tableStartX = 72;
+    const tableStartY = currentY;
+    const tableWidth = 450;
+    
+    // Column widths
     const columnWidths = {
-      code: 70,      // COURSE CODE width
-      title: 220,    // DESCRIPTIVE TITLE width
-      rating: 60,    // RATINGS width
-      credits: 60,   // CREDITS width
-      remarks: 90    // REMARKS width
+      code: 80,
+      title: 200,
+      rating: 60,
+      credits: 60,
+      remarks: 90
     };
-    
-    // Draw main table border
-    doc.rect(startX, startY, 500, 20).stroke();
-    
-    // Table headers with adjusted positions
-    doc.fontSize(10);
-    // Adjust COURSE CODE header to be properly aligned
-    doc.text('COURSE', startX + 5, startY + 3);
-    doc.text('CODE', startX + 5, startY + 11);
-    doc.text('DESCRIPTIVE TITLE', startX + columnWidths.code + 5, startY + 7);
-    doc.text('RATINGS', startX + columnWidths.code + columnWidths.title + 5, startY + 7);
-    doc.text('CREDITS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, startY + 7);
-    doc.text('REMARKS', startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, startY + 7);
 
-    // Semester header
-    doc.fontSize(10).text('2nd Semester 2023-2024', startX + 5, startY - 15);
+    // Semester sub-header
+    doc.fontSize(9).font('Helvetica')
+      .text(`${semesterText} Semester ${academicYear}`, tableStartX + columnWidths.code, tableStartY - 15, {
+        width: columnWidths.title + columnWidths.rating + columnWidths.credits + columnWidths.remarks,
+        align: 'center'
+      });
 
-    // Course data rendering with adjusted positions
-    let currentY = startY + 20;
+    // Table header row
+    const headerHeight = 25;
+    doc.rect(tableStartX, tableStartY, tableWidth, headerHeight).stroke();
+    
+    // Header text
+    doc.fontSize(9).font('Helvetica-Bold');
+    doc.text('COURSE', tableStartX + 5, tableStartY + 3);
+    doc.text('CODE', tableStartX + 5, tableStartY + 12);
+    doc.text('DESCRIPTIVE TITLE', tableStartX + columnWidths.code + 5, tableStartY + 8);
+    doc.text('RATING', tableStartX + columnWidths.code + columnWidths.title + 5, tableStartY + 8);
+    doc.text('CREDITS', tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, tableStartY + 8);
+    doc.text('REMARKS', tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, tableStartY + 8);
+
+    // Course rows
+    let rowY = tableStartY + headerHeight;
     courseData.forEach(course => {
-      // Calculate required height for the title
       const titleWidth = columnWidths.title - 10;
       const titleHeight = doc.heightOfString(course.title, {
         width: titleWidth,
         align: 'left'
       });
-      const rowHeight = Math.max(20, titleHeight + 10); // Minimum 20, or more if needed
+      const rowHeight = Math.max(25, titleHeight + 10);
 
-      // Draw row border with dynamic height
-      doc.rect(startX, currentY, 500, rowHeight).stroke();
+      // Draw row border
+      doc.rect(tableStartX, rowY, tableWidth, rowHeight).stroke();
       
-      // Position text vertically centered if single line, or at top if multiple lines
-      const textY = titleHeight <= 15 ? currentY + (rowHeight - 10) / 2 : currentY + 5;
-      
-      doc.text(course.code, startX + 5, textY);
-      doc.text(course.title, startX + columnWidths.code + 5, textY, {
+      // Vertical dividers
+      doc.moveTo(tableStartX + columnWidths.code, rowY)
+        .lineTo(tableStartX + columnWidths.code, rowY + rowHeight).stroke();
+      doc.moveTo(tableStartX + columnWidths.code + columnWidths.title, rowY)
+        .lineTo(tableStartX + columnWidths.code + columnWidths.title, rowY + rowHeight).stroke();
+      doc.moveTo(tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating, rowY)
+        .lineTo(tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating, rowY + rowHeight).stroke();
+      doc.moveTo(tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits, rowY)
+        .lineTo(tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits, rowY + rowHeight).stroke();
+
+      // Course data
+      doc.fontSize(9).font('Helvetica');
+      const textY = rowY + (rowHeight / 2) - 5;
+      doc.text(course.code, tableStartX + 5, textY);
+      doc.text(course.title, tableStartX + columnWidths.code + 5, rowY + 5, {
         width: titleWidth,
         align: 'left'
       });
-      doc.text(course.rating, startX + columnWidths.code + columnWidths.title + 5, textY);
-      doc.text(course.credits, startX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, textY);
-      doc.text(course.remarks, startX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, textY);
-      
-      currentY += rowHeight;
+      doc.text(course.rating, tableStartX + columnWidths.code + columnWidths.title + 5, textY);
+      doc.text(course.credits, tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating + 5, textY);
+      doc.text(course.remarks, tableStartX + columnWidths.code + columnWidths.title + columnWidths.rating + columnWidths.credits + 5, textY);
+
+      rowY += rowHeight;
     });
 
-    // Add GPA row
-    doc.rect(startX, currentY, 500, 20).stroke();
-    doc.text('GPA', startX + 5, currentY + 5);
+    // GPA row
+    doc.rect(tableStartX, rowY, tableWidth, 25).stroke();
+    doc.fontSize(9).font('Helvetica-Bold')
+      .text('GPA', tableStartX + 5, rowY + 8);
+    if (gpa) {
+      doc.fontSize(9).font('Helvetica')
+        .text(gpa, tableStartX + columnWidths.code + columnWidths.title + 5, rowY + 8);
+    }
 
-    // Footer text
-    doc.moveDown(4);
-    doc.fontSize(10).text('Issued for the above named student for his/her references purposes only this October 16, 2023 here at', { align: 'left' });
-    doc.text('OLSHCO, Guimba, Nueva Ecija.', { align: 'left' });
-    
-    doc.moveDown(2);
+    // Footer section
+    rowY += 40;
 
-    // Signatory
-    doc.moveDown(1);
-    doc.fontSize(12).text('Checked by:', { align: 'right' });
-    doc.moveDown(2);
-    doc.fontSize(12).text('Joel P. Altura', { align: 'right' });
-    doc.fontSize(10).text('PROGRAM HEAD', { align: 'right' });
+    // Issuance statement
+    doc.fontSize(9).font('Helvetica')
+      .text(`Issued for the above named student for his/her references purposes only this ${issuanceDate} here at OLSHCO, Guimba, Nueva Ecija.`, {
+        x: 72,
+        y: rowY,
+        width: 450,
+        align: 'left'
+      });
 
-    // Add note at the bottom
-    doc.moveDown(2);
-    doc.fontSize(8).text('Note: This copy of grades is for student references only. Valid copy of grades will be issued by the registrar\'s Office upon request.', { align: 'left' });
+    rowY += 50;
 
-    // Add footer and signature
-    doc.moveDown(2);
-    doc.fontSize(10).text('This certification is issued upon request of the above-named student for whatever legal purpose it may serve.', { align: 'justify' });
-    doc.moveDown(3);
-    doc.fontSize(12).text('JUAN DELA CRUZ', { align: 'center' });
-    doc.fontSize(10).text('Registrar', { align: 'center' });
+    // Signatures section
+    // Prepared by (left)
+    doc.fontSize(10).font('Helvetica')
+      .text('Prepared by:', 72, rowY);
+    rowY += 40;
+    // Signature line placeholder
+    doc.moveTo(72, rowY).lineTo(200, rowY).stroke();
+    rowY += 15;
+    doc.fontSize(10).font('Helvetica-Bold')
+      .text('JERICK C. BARNATIA', 72, rowY);
+    rowY += 12;
+    doc.fontSize(9).font('Helvetica')
+      .text('Adviser ' + programAbbr, 72, rowY);
 
-    // End the document and get the buffer
+    // Checked by (right)
+    rowY -= 67;
+    doc.fontSize(10).font('Helvetica')
+      .text('Checked by:', 450, rowY, { align: 'right' });
+    rowY += 40;
+    // Signature line placeholder
+    doc.moveTo(350, rowY).lineTo(522, rowY).stroke();
+    rowY += 15;
+    doc.fontSize(10).font('Helvetica-Bold')
+      .text('PRINCESS D. CALINA', 450, rowY, { align: 'right' });
+    rowY += 12;
+    doc.fontSize(9).font('Helvetica')
+      .text('Program Head', 450, rowY, { align: 'right' });
+
+    // Note at the bottom
+    rowY += 30;
+    doc.fontSize(8).font('Helvetica')
+      .text('Note: This copy of grades is for student references only. Valid copy of grades will be issued by the Registrar\'s Office upon request.', {
+        x: 72,
+        y: rowY,
+        width: 450,
+        align: 'left'
+      });
+
+    // End the document
     doc.end();
     const pdfBuffer = await pdfPromise;
 
     // Send the PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', pdfBuffer.length);
-    res.setHeader('Content-Disposition', `attachment; filename=document_${req_id}.pdf`);
+    res.setHeader('Content-Disposition', `attachment; filename=certificate-of-grades-${req_id}.pdf`);
     res.end(pdfBuffer);
 
   } catch (error) {
