@@ -23,7 +23,6 @@ import { IoIosPeople } from "react-icons/io";
 import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaEye, FaClock, FaGraduationCap } from "react-icons/fa";
 import { MyContext } from "../../App";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const RegistrarDashboard = () => {
   const context = useContext(MyContext);
@@ -379,15 +378,6 @@ const RegistrarDashboard = () => {
     }
   ];
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
-
-  const formatMonth = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short'
-    });
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
       case 'Final':
@@ -538,111 +528,6 @@ const RegistrarDashboard = () => {
                     No program enrollment data available
                   </Typography>
                 </Box>
-              )}
-
-              {/* Monthly Enrollments Chart */}
-              {enrollmentStats.monthlyData.length > 0 ? (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Monthly Enrollments (Last 6 Months)</Typography>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={enrollmentStats.monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="month" 
-                        tickFormatter={(value) => formatMonth(value)}
-                        fontSize={12}
-                      />
-                      <YAxis fontSize={12} />
-                      <RechartsTooltip 
-                        formatter={(value, name) => [
-                          value, 
-                          name === 'enrollment_count' ? 'Total' : 
-                          name === 'verified_count' ? 'Verified' : 'Pending'
-                        ]}
-                        labelFormatter={(value) => formatMonth(value)}
-                      />
-                      <Bar dataKey="enrollment_count" fill="#1976d2" name="Total" />
-                      <Bar dataKey="verified_count" fill="#2e7d32" name="Verified" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Monthly Enrollments (Last 6 Months)</Typography>
-                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                    No monthly enrollment data available
-                  </Typography>
-                </Box>
-              )}
-            </Card>
-          </div>
-        </div>
-
-        {/* Additional Statistics Row */}
-        <div className="row mt-4">
-          {/* Year Level Distribution */}
-          <div className="col-md-6 mb-4">
-            <Card className="h-100 p-3">
-              <Typography variant="h6" className="mb-3">Students by Year Level</Typography>
-              {enrollmentStats.yearLevelStats.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={enrollmentStats.yearLevelStats}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year_level" fontSize={12} />
-                    <YAxis fontSize={12} />
-                    <RechartsTooltip formatter={(value) => [value, 'Students']} />
-                    <Bar dataKey="total_students" fill="#1976d2" name="Students" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                  No year level data available
-                </Typography>
-              )}
-            </Card>
-          </div>
-
-          {/* Document Completion Statistics */}
-          <div className="col-md-6 mb-4">
-            <Card className="h-100 p-3">
-              <Typography variant="h6" className="mb-3">Document Completion Status</Typography>
-              {enrollmentStats.documentStats && Object.keys(enrollmentStats.documentStats).length > 0 ? (
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Typography variant="body1">Total Enrollments</Typography>
-                    <Typography variant="h6" style={{ color: '#1976d2' }}>
-                      {enrollmentStats.documentStats.total_enrollments || 0}
-                    </Typography>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Typography variant="body1">With ID Picture</Typography>
-                    <Typography variant="h6" style={{ color: '#2e7d32' }}>
-                      {enrollmentStats.documentStats.with_id_pic || 0}
-                    </Typography>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Typography variant="body1">With Birth Certificate</Typography>
-                    <Typography variant="h6" style={{ color: '#2e7d32' }}>
-                      {enrollmentStats.documentStats.with_birth_cert || 0}
-                    </Typography>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Typography variant="body1">With Form 137</Typography>
-                    <Typography variant="h6" style={{ color: '#2e7d32' }}>
-                      {enrollmentStats.documentStats.with_form137 || 0}
-                    </Typography>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Typography variant="body1">Complete Documents</Typography>
-                    <Typography variant="h6" style={{ color: '#388e3c', fontWeight: 'bold' }}>
-                      {enrollmentStats.documentStats.complete_documents || 0}
-                    </Typography>
-                  </div>
-                </div>
-              ) : (
-                <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                  No document statistics available
-                </Typography>
               )}
             </Card>
           </div>
