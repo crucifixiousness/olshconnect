@@ -10,6 +10,7 @@ import { IconButton, Dialog } from '@mui/material';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import { useRef } from 'react';
+import olshcoLogo from '../../asset/images/olshco-logo1.png';
 // Request form template preview removed from this page
 
 const RequestDocument = () => {
@@ -29,6 +30,11 @@ const RequestDocument = () => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const pdfCache = useRef(new Map());
   // removed: showFormPreview (moved to admin view)
+
+  // COG Template Modal state
+  const [showCogModal, setShowCogModal] = useState(false);
+  const [cogData, setCogData] = useState(null);
+  const [cogLoading, setCogLoading] = useState(false);
 
 
   useEffect(() => {
@@ -346,47 +352,132 @@ const RequestDocument = () => {
     }
   };
 
-  const handleViewDocument = async (request) => {
-    try {
-      // Check cache first
-      const cachedPdf = pdfCache.current.get(request.req_id);
-      if (cachedPdf) {
-        setPdfUrl(cachedPdf);
-        setShowPdfModal(true);
-        return;
-      }
+  // Helper function to calculate GPA
+  const calculateGPA = (grades) => {
+    if (!grades || grades.length === 0) return null;
+    const validGrades = grades.filter(g => g.final_grade && g.final_grade >= 1.0 && g.final_grade <= 5.0);
+    const totalPoints = validGrades.reduce((sum, grade) => {
+      const points = parseFloat(grade.final_grade) || 0;
+      const units = parseInt(grade.units) || 0;
+      return sum + (points * units);
+    }, 0);
+    const totalUnits = validGrades.reduce((sum, grade) => sum + (parseInt(grade.units) || 0), 0);
+    return totalUnits > 0 ? (totalPoints / totalUnits).toFixed(2) : null;
+  };
 
+  // Fetch COG data for template
+  const fetchCogData = async (request) => {
+    try {
+      setCogLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/generate-document`, {
-        params: { req_id: request.req_id },
-        headers: { 
-          'Authorization': `Bearer ${token}` 
-        },
-        responseType: 'arraybuffer',
-        validateStatus: false
+      
+      // Fetch student profile and grades
+      const [profileResponse, gradesResponse] = await Promise.all([
+        axios.get('/api/studentprofile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        axios.get('/api/student-grades', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      const enrollment = profileResponse.data?.enrollment || {};
+      const grades = gradesResponse.data?.grades || [];
+      const statistics = gradesResponse.data?.statistics || {};
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      // Format student name
+      const formatStudentName = (first, middle, last, suffix) => {
+        const middleInitial = middle ? ` ${middle.charAt(0)}.` : '';
+        const suffixText = suffix ? ` ${suffix}` : '';
+        return `${last}, ${first}${middleInitial}${suffixText}`;
+      };
+
+      // Format year level
+      const formatYearLevel = (yearLevel) => {
+        const yearMap = {
+          '1': 'First Year',
+          '2': 'Second Year',
+          '3': 'Third Year',
+          '4': 'Fourth Year',
+          '5': 'Fifth Year'
+        };
+        return yearMap[yearLevel] || `${yearLevel} Year`;
+      };
+
+      // Format semester
+      const formatSemester = (semester) => {
+        if (typeof semester === 'number') {
+          return semester === 1 ? '1st' : semester === 2 ? '2nd' : `${semester}th`;
+        }
+        const semMap = {
+          '1': '1st',
+          '2': '2nd',
+          'First': '1st',
+          'Second': '2nd'
+        };
+        return semMap[semester] || semester;
+      };
+
+      // Get program abbreviation for department
+      const programName = enrollment.program || '';
+      const programAbbr = programName.split(' ').map(word => word.charAt(0)).join('').toUpperCase();
+      const departmentName = `${programAbbr} DEPARTMENT`;
+
+      // Filter grades by current semester if available
+      const currentSemester = enrollment.semester;
+      const currentYear = enrollment.year_id;
+      const filteredGrades = currentSemester && currentYear 
+        ? grades.filter(g => g.semester === currentSemester && g.year_level === enrollment.year_level)
+        : grades;
+
+      // Format issuance date
+      const issuanceDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
 
-      if (response.status !== 200) {
-        const errorMessage = new TextDecoder().decode(response.data);
-        throw new Error(errorMessage);
-      }
+      setCogData({
+        studentId: user.id || enrollment.student_id,
+        studentName: formatStudentName(
+          user.first_name || user.name?.split(' ')[0] || '',
+          user.middle_name || '',
+          user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
+          user.suffix || ''
+        ),
+        yearLevel: formatYearLevel(enrollment.year_level?.toString() || '1'),
+        program: programName,
+        semester: formatSemester(currentSemester || '1'),
+        academicYear: enrollment.academic_year || '2022-2023',
+        department: departmentName,
+        grades: filteredGrades.map(g => ({
+          code: g.course_code,
+          title: g.course_name,
+          rating: parseFloat(g.final_grade).toFixed(2),
+          credits: g.units?.toString() || '0',
+          remarks: parseFloat(g.final_grade) >= 1.0 && parseFloat(g.final_grade) <= 3.0 ? 'Passed' : 'Failed'
+        })),
+        gpa: statistics.gpa || calculateGPA(filteredGrades),
+        issuanceDate: issuanceDate
+      });
 
-      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      // Cache the PDF URL
-      pdfCache.current.set(request.req_id, pdfUrl);
-
-      setPdfUrl(pdfUrl);
-      setShowPdfModal(true);
+      setShowCogModal(true);
     } catch (error) {
-      console.error('Error fetching PDF:', error);
+      console.error('Error fetching COG data:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'Failed to load document',
+        message: error.message || 'Failed to load certificate data',
         severity: 'error'
       });
+    } finally {
+      setCogLoading(false);
     }
+  };
+
+  const handleViewDocument = async (request) => {
+    // Show COG template modal instead of PDF
+    await fetchCogData(request);
   };
 
   const handleClosePdfModal = () => {
@@ -539,8 +630,9 @@ const RequestDocument = () => {
                           {request.req_status}
                         </TableCell>
                         <TableCell>
-                          {request.req_status === 'Approved' ? (
-                            request.doc_type === 'Certificate of Grades' ? (
+                          {(request.req_status === 'Approved' || request.req_status === 'Ready for Pickup') ? (
+                            (request.doc_type === 'Certificate of Grades' || 
+                             (request.certification && request.certification.includes('GRADES (FOR COLLEGE ONLY)'))) ? (
                               <IconButton
                                 onClick={() => handleViewDocument(request)}
                                 color="primary"
@@ -638,6 +730,184 @@ const RequestDocument = () => {
               <Viewer fileUrl={pdfUrl} />
             )}
           </Worker>
+        </Box>
+      </Dialog>
+
+      {/* Certificate of Grades Template Modal */}
+      <Dialog open={showCogModal} onClose={() => setShowCogModal(false)} maxWidth="md" fullWidth>
+        <Box sx={{ p: 3 }}>
+          {cogLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+              <CircularProgress style={{ color: '#c70202' }} />
+            </Box>
+          ) : cogData ? (
+            <Paper variant="outlined" sx={{ p: 2, borderWidth: 2 }}>
+              {/* Header Section */}
+              <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                <Grid item xs={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 56, height: 56, border: '1px solid #999', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#fff' }}>
+                      <img src={olshcoLogo} alt="School logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>Student ID#: {cogData.studentId}</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Our Lady of the Sacred Heart College of Guimba, Inc.</Typography>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>Guimba, Nueva Ecija</Typography>
+                      <Typography variant="body2" sx={{ fontSize: '0.65rem' }}>Tel Nos.: (044)-943-0553 / Fax: (044)-61160026</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box sx={{ border: '1px solid #000', p: 1, textAlign: 'right' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.7rem', fontStyle: 'italic', textDecoration: 'underline' }}>
+                      Student's Copy only
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Separator Line */}
+              <Box sx={{ borderTop: '1px solid #000', mb: 2 }} />
+
+              {/* Department and Title */}
+              <Box sx={{ textAlign: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '0.9rem', mb: 0.5 }}>
+                  {cogData.department}
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                  CERTIFICATION OF GRADES
+                </Typography>
+              </Box>
+
+              {/* Salutation */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
+                  TO WHOM IT MAY CONCERN:
+                </Typography>
+              </Box>
+
+              {/* Certification Paragraph */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ fontSize: '0.75rem', textAlign: 'justify' }}>
+                  This is to certify that <strong>{cogData.studentName}</strong> is presently enrolled as a <strong>{cogData.yearLevel} College</strong>, a <strong>{cogData.program}</strong> student and this is an <strong>UNOFFICIAL COPY</strong> of his/her grades during the <strong>{cogData.semester} Semester A.Y {cogData.academicYear}</strong> as indicated with corresponding units earned:
+                </Typography>
+              </Box>
+
+              {/* Grades Table */}
+              <Box sx={{ border: '1px solid #000', mb: 2 }}>
+                {/* Semester Sub-header */}
+                <Box sx={{ borderBottom: '1px solid #000', p: 0.5, textAlign: 'center' }}>
+                  <Typography variant="body2" sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+                    {cogData.semester} Semester {cogData.academicYear}
+                  </Typography>
+                </Box>
+
+                {/* Table Headers */}
+                <Grid container sx={{ borderBottom: '1px solid #000' }}>
+                  <Grid item xs={2} sx={{ borderRight: '1px solid #000', p: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}>COURSE CODE</Typography>
+                  </Grid>
+                  <Grid item xs={5} sx={{ borderRight: '1px solid #000', p: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}>DESCRIPTIVE TITLE</Typography>
+                  </Grid>
+                  <Grid item xs={1.5} sx={{ borderRight: '1px solid #000', p: 0.5, textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}>RATING</Typography>
+                  </Grid>
+                  <Grid item xs={1.5} sx={{ borderRight: '1px solid #000', p: 0.5, textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}>CREDITS</Typography>
+                  </Grid>
+                  <Grid item xs={2} sx={{ p: 0.5, textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}>REMARKS</Typography>
+                  </Grid>
+                </Grid>
+
+                {/* Course Rows */}
+                {cogData.grades.map((grade, index) => (
+                  <Grid container key={index} sx={{ borderBottom: '1px solid #000' }}>
+                    <Grid item xs={2} sx={{ borderRight: '1px solid #000', p: 0.5 }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{grade.code}</Typography>
+                    </Grid>
+                    <Grid item xs={5} sx={{ borderRight: '1px solid #000', p: 0.5 }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{grade.title}</Typography>
+                    </Grid>
+                    <Grid item xs={1.5} sx={{ borderRight: '1px solid #000', p: 0.5, textAlign: 'center' }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{grade.rating}</Typography>
+                    </Grid>
+                    <Grid item xs={1.5} sx={{ borderRight: '1px solid #000', p: 0.5, textAlign: 'center' }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{grade.credits}</Typography>
+                    </Grid>
+                    <Grid item xs={2} sx={{ p: 0.5, textAlign: 'center' }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{grade.remarks}</Typography>
+                    </Grid>
+                  </Grid>
+                ))}
+
+                {/* GPA Row */}
+                <Grid container>
+                  <Grid item xs={7.5} sx={{ borderRight: '1px solid #000', p: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>GPA</Typography>
+                  </Grid>
+                  <Grid item xs={1.5} sx={{ borderRight: '1px solid #000', p: 0.5, textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{cogData.gpa || ''}</Typography>
+                  </Grid>
+                  <Grid item xs={3} sx={{ p: 0.5 }} />
+                </Grid>
+              </Box>
+
+              {/* Issuance Statement */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>
+                  Issued for the above named student for his/her references purposes only this {cogData.issuanceDate} here at OLSHCO, Guimba, Nueva Ecija.
+                </Typography>
+              </Box>
+
+              {/* Signatures Section */}
+              <Grid container sx={{ mb: 2 }}>
+                <Grid item xs={6}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', mb: 3 }}>Prepared by:</Typography>
+                    <Box sx={{ borderTop: '1px solid #000', width: '60%', mb: 1 }} />
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      JENNIFER JOY R. DOMINGO
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>
+                      Adviser {cogData.department.split(' ')[0]}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', mb: 3 }}>Checked by:</Typography>
+                    <Box sx={{ borderTop: '1px solid #000', width: '60%', ml: 'auto', mb: 1 }} />
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      JOEL P. ALTURA
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>
+                      Program Head
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Note */}
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" sx={{ fontSize: '0.65rem' }}>
+                  Note: This copy of grades is for student references only. Valid copy of grades will be issued by the Registrar's Office upon request.
+                </Typography>
+              </Box>
+
+              {/* Close Button */}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Button 
+                  onClick={() => setShowCogModal(false)} 
+                  variant="contained" 
+                  sx={{ bgcolor: '#c70202', '&:hover': { bgcolor: '#a00000' } }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </Paper>
+          ) : null}
         </Box>
       </Dialog>
 
