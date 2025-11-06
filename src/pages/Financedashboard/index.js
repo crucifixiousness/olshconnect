@@ -1,10 +1,9 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { Card, Typography, CircularProgress, Box } from '@mui/material';
+import { Card, Typography, CircularProgress } from '@mui/material';
 import { FaMoneyBillWave, FaUserGraduate, FaFileInvoiceDollar, FaCreditCard } from 'react-icons/fa';
 import { MyContext } from '../../App';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const FinanceDashboard = () => {
   const context = useContext(MyContext);
@@ -21,6 +20,7 @@ const FinanceDashboard = () => {
     totalRevenue: 0,
     totalStudentsPaid: 0,
     pendingPayments: 0,
+    totalBalance: 0,
     recentTransactions: []
   });
   const [paymentStats, setPaymentStats] = useState(cachedData?.paymentStats || {
@@ -81,6 +81,7 @@ const FinanceDashboard = () => {
         totalRevenue: response.data.totalRevenue || 0,
         totalStudentsPaid: response.data.totalStudentsPaid || 0,
         pendingPayments: response.data.pendingPayments || 0,
+        totalBalance: response.data.totalBalance || 0,
         recentTransactions: response.data.recentTransactions || []
       };
 
@@ -128,7 +129,7 @@ const FinanceDashboard = () => {
 
   const statCards = [
     {
-      title: 'Total Revenue',
+      title: 'Total Payment',
       value: `₱${dashboardData.totalRevenue.toLocaleString()}`,
       icon: <FaMoneyBillWave size={30} />,
       color: '#1976d2'
@@ -146,27 +147,18 @@ const FinanceDashboard = () => {
       color: '#ed6c02'
     },
     {
-      title: 'Recent Transactions',
-      value: dashboardData.recentTransactions.length,
+      title: 'Total Balance',
+      value: `₱${(dashboardData.totalBalance || 0).toLocaleString()}`,
       icon: <FaCreditCard size={30} />,
       color: '#9c27b0'
     }
   ];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
-    });
-  };
-
-  const formatMonth = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short'
     });
   };
 
@@ -202,20 +194,10 @@ const FinanceDashboard = () => {
 
           <div className="row mt-4">
             {/* Recent Transactions - Loading State */}
-            <div className="col-md-6 mb-4">
+            <div className="col-md-12 mb-4">
               <Card className="h-100 p-3">
                 <Typography variant="h6" className="mb-3">Recent Transactions</Typography>
                 <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
-                  <CircularProgress style={{ color: '#c70202' }} />
-                </div>
-              </Card>
-            </div>
-
-            {/* Payment Statistics - Loading State */}
-            <div className="col-md-6 mb-4">
-              <Card className="h-100 p-3">
-                <Typography variant="h6" className="mb-3">Payment Statistics</Typography>
-                <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
                   <CircularProgress style={{ color: '#c70202' }} />
                 </div>
               </Card>
@@ -257,7 +239,7 @@ const FinanceDashboard = () => {
 
         <div className="row mt-4">
           {/* Recent Transactions */}
-          <div className="col-md-6 mb-4">
+          <div className="col-md-12 mb-4">
             <Card className="h-100 p-3">
               <Typography variant="h6" className="mb-3">Recent Transactions</Typography>
               <TableContainer component={Paper} elevation={0}>
@@ -292,119 +274,6 @@ const FinanceDashboard = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-            </Card>
-          </div>
-
-          {/* Payment Statistics */}
-          <div className="col-md-6 mb-4">
-            <Card className="h-100 p-3">
-              <Typography variant="h6" className="mb-3">Payment Statistics</Typography>
-              
-              {/* Monthly Revenue Chart */}
-              {paymentStats.monthlyData.length > 0 ? (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Monthly Revenue (Last 6 Months)</Typography>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={paymentStats.monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="month" 
-                        tickFormatter={(value) => formatMonth(value)}
-                        fontSize={12}
-                      />
-                      <YAxis fontSize={12} />
-                      <Tooltip 
-                        formatter={(value, name) => [
-                          `₱${parseFloat(value).toLocaleString()}`, 
-                          name === 'monthly_revenue' ? 'Revenue' : 'Transactions'
-                        ]}
-                        labelFormatter={(value) => formatMonth(value)}
-                      />
-                      <Bar dataKey="monthly_revenue" fill="#1976d2" name="Revenue" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Monthly Revenue (Last 6 Months)</Typography>
-                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                    No monthly revenue data available
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Payment Methods Distribution */}
-              {paymentStats.paymentMethods.length > 0 ? (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Payment Methods Distribution</Typography>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={paymentStats.paymentMethods}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="total_amount"
-                        nameKey="payment_method"
-                      >
-                        {paymentStats.paymentMethods.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name) => [`₱${parseFloat(value).toLocaleString()}`, name]}
-                        labelFormatter={(value) => value}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <Box mb={3}>
-                  <Typography variant="subtitle2" className="mb-2">Payment Methods Distribution</Typography>
-                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                    No payment method data available
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Program-wise Statistics */}
-              {paymentStats.programStats.length > 0 ? (
-                <Box>
-                  <Typography variant="subtitle2" className="mb-2">Revenue by Program</Typography>
-                  <TableContainer component={Paper} elevation={0}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Program</TableCell>
-                          <TableCell align="right">Students</TableCell>
-                          <TableCell align="right">Revenue</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {paymentStats.programStats.map((program, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{program.program_name}</TableCell>
-                            <TableCell align="right">{program.student_count}</TableCell>
-                            <TableCell align="right" style={{ fontWeight: 'bold', color: '#2e7d32' }}>
-                              ₱{parseFloat(program.total_revenue || 0).toLocaleString()}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              ) : (
-                <Box>
-                  <Typography variant="subtitle2" className="mb-2">Revenue by Program</Typography>
-                  <Typography variant="body2" color="textSecondary" style={{ textAlign: 'center', padding: '20px' }}>
-                    No program revenue data available
-                  </Typography>
-                </Box>
-              )}
             </Card>
           </div>
         </div>
