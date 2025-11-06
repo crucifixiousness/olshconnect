@@ -20,10 +20,10 @@ import {
   TableRow,
   Box,
   CircularProgress,
-  Dialog
+  Dialog,
+  IconButton
 } from '@mui/material';
-import { FaCheck } from "react-icons/fa";
-import { FaXmark } from "react-icons/fa6";
+import { FaCheck, FaEye } from "react-icons/fa";
 import { sendDocumentApprovalEmail, sendDocumentRejectionEmail } from '../../utils/documentEmailService';
 import olshcoLogo from '../../asset/images/olshco-logo1.png';
 
@@ -420,23 +420,26 @@ const DocumentRequests = () => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button 
-                          variant="outlined"
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <IconButton
                           size="small"
+                          aria-label={`View request form for ${request.first_name} ${request.last_name}`}
                           onClick={() => { setSelectedRequest(request); setShowFormModal(true); }}
-                          sx={{ borderColor: '#c70202', color: '#c70202', minWidth: 'auto', px: 1,
-                               '&:hover': { borderColor: '#a00000', color: '#a00000' } }}
+                          sx={{
+                            border: '1px solid #c70202',
+                            color: '#c70202',
+                            '&:hover': { backgroundColor: 'rgba(199,2,2,0.06)' }
+                          }}
                         >
-                          View
-                        </Button>
+                          <FaEye size={14} />
+                        </IconButton>
                         <Button 
                           variant="contained"
                           size="small"
                           data-testid={`approve-button-${request.req_id}`}
                           aria-label={`Approve request for ${request.first_name} ${request.last_name}`}
                           onClick={() => handleStatusUpdate(request.req_id, 'Approved')}
-                          disabled={request.req_status !== 'Pending'}
+                          disabled={!['pending','processing'].includes((request.req_status || '').toLowerCase())}
                           sx={{
                             bgcolor: '#2e7d32',
                             '&:hover': {
@@ -450,27 +453,6 @@ const DocumentRequests = () => {
                           }}
                         >
                           <FaCheck size={14} />
-                        </Button>
-                        <Button 
-                          variant="contained"
-                          size="small"
-                          data-testid={`reject-button-${request.req_id}`}
-                          aria-label={`Reject request for ${request.first_name} ${request.last_name}`}
-                          onClick={() => handleStatusUpdate(request.req_id, 'Rejected')}
-                          disabled={request.req_status !== 'Pending'}
-                          sx={{
-                            bgcolor: '#d32f2f',
-                            '&:hover': {
-                              bgcolor: '#c62828',
-                            },
-                            '&:disabled': {
-                              bgcolor: '#ccc',
-                            },
-                            minWidth: 'auto',
-                            px: 1
-                          }}
-                        >
-                          <FaXmark size={14} />
                         </Button>
                       </Box>
                     </TableCell>
