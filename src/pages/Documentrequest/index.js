@@ -127,8 +127,8 @@ const DocumentRequests = () => {
       );
       
       // Send email notification based on status
-      if (newStatus === 'Approved') {
-        console.log('📧 Sending approval email to:', request.email);
+      if (newStatus === 'Ready for Pickup') {
+        console.log('📧 Sending ready for pickup email to:', request.email);
         console.log('📧 Request data:', {
           email: request.email,
           name: `${request.first_name} ${request.last_name}`,
@@ -140,7 +140,7 @@ const DocumentRequests = () => {
           console.error('❌ No email found for student:', request);
           setSnackbar({
             open: true,
-            message: 'Request approved but no email found for student',
+            message: 'Request marked as ready for pickup but no email found for student',
             severity: 'warning'
           });
         } else {
@@ -154,7 +154,7 @@ const DocumentRequests = () => {
           if (emailResult.success) {
             // Email sent successfully
           } else {
-            console.error('Failed to send approval email:', emailResult.message);
+            console.error('Failed to send ready for pickup email:', emailResult.message);
           }
         }
       } else if (newStatus === 'Rejected') {
@@ -270,6 +270,15 @@ const DocumentRequests = () => {
       case 'processing':
         return {
           backgroundColor: '#1976d2', // Blue - Processing
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600'
+        };
+      case 'ready for pickup':
+        return {
+          backgroundColor: '#28a745', // Green - Ready for Pickup
           color: 'white',
           padding: '4px 12px',
           borderRadius: '12px',
@@ -436,8 +445,8 @@ const DocumentRequests = () => {
                         <IconButton
                           size="small"
                           data-testid={`approve-button-${request.req_id}`}
-                          aria-label={`Approve request for ${request.first_name} ${request.last_name}`}
-                          onClick={() => handleStatusUpdate(request.req_id, 'Approved')}
+                          aria-label={`Mark request as ready for pickup for ${request.first_name} ${request.last_name}`}
+                          onClick={() => handleStatusUpdate(request.req_id, 'Ready for Pickup')}
                           disabled={!['pending','processing'].includes((request.req_status || '').toLowerCase())}
                           sx={{
                             border: '1px solid #2e7d32',
