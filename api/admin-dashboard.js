@@ -76,15 +76,17 @@ module.exports = async (req, res) => {
     const totalStudents = parseInt(totalStudentsResult.rows[0].total_students) || 0;
 
     // Get students by year level (only Officially Enrolled)
+    // This query counts students directly from enrollments to ensure all enrolled students are counted
+    // We use COALESCE to handle NULL year_level values
     const yearLevelStatsQuery = `
       SELECT 
-        py.year_level,
+        COALESCE(py.year_level, 0) as year_level,
         COUNT(DISTINCT e.student_id) as student_count
-      FROM program_year py
-      LEFT JOIN enrollments e ON py.year_id = e.year_id 
-        AND e.enrollment_status = 'Officially Enrolled'
-      GROUP BY py.year_level, py.year_id
-      ORDER BY py.year_id
+      FROM enrollments e
+      LEFT JOIN program_year py ON e.year_id = py.year_id
+      WHERE e.enrollment_status = 'Officially Enrolled'
+      GROUP BY COALESCE(py.year_level, 0)
+      ORDER BY COALESCE(py.year_level, 0)
     `;
 
     const yearLevelStatsResult = await client.query(yearLevelStatsQuery);
@@ -126,18 +128,37 @@ module.exports = async (req, res) => {
       fourthYear: 0
     };
 
+    let totalYearLevelStudents = 0;
+    let unassignedStudents = 0;
+    
     yearLevelStatsResult.rows.forEach(row => {
-      const yearLevel = parseInt(row.year_level);
+      const yearLevel = parseInt(row.year_level) || 0;
+      const studentCount = parseInt(row.student_count) || 0;
+      
       if (yearLevel === 1) {
-        yearLevelStats.firstYear = parseInt(row.student_count) || 0;
+        yearLevelStats.firstYear = studentCount;
+        totalYearLevelStudents += studentCount;
       } else if (yearLevel === 2) {
-        yearLevelStats.secondYear = parseInt(row.student_count) || 0;
+        yearLevelStats.secondYear = studentCount;
+        totalYearLevelStudents += studentCount;
       } else if (yearLevel === 3) {
-        yearLevelStats.thirdYear = parseInt(row.student_count) || 0;
+        yearLevelStats.thirdYear = studentCount;
+        totalYearLevelStudents += studentCount;
       } else if (yearLevel === 4) {
-        yearLevelStats.fourthYear = parseInt(row.student_count) || 0;
+        yearLevelStats.fourthYear = studentCount;
+        totalYearLevelStudents += studentCount;
+      } else if (yearLevel === 0) {
+        // Students with NULL or 0 year level - these are students without a valid year_id
+        unassignedStudents = studentCount;
+        totalYearLevelStudents += studentCount;
+        console.log(`Found ${studentCount} students with NULL or 0 year level (unassigned)`);
       }
     });
+
+    // Verify: if total students doesn't match sum of year levels, there might be data issues
+    if (totalStudents !== totalYearLevelStudents) {
+      console.log(`Warning: Total students (${totalStudents}) doesn't match sum of year levels (${totalYearLevelStudents}). Unassigned: ${unassignedStudents}`);
+    }
 
     client.release();
 
