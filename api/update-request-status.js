@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     const { req_id } = req.query;
     const { status } = req.body;
 
-    if (!status || !['Approved', 'Rejected'].includes(status)) {
+    if (!status || !['Approved', 'Rejected', 'Ready for Pickup'].includes(status)) {
       return res.status(400).json({ message: "Invalid status provided" });
     }
 
