@@ -433,27 +433,29 @@ const DocumentRequests = () => {
                         >
                           <FaEye size={14} />
                         </IconButton>
-                        <Button 
-                          variant="contained"
+                        <IconButton
                           size="small"
                           data-testid={`approve-button-${request.req_id}`}
                           aria-label={`Approve request for ${request.first_name} ${request.last_name}`}
                           onClick={() => handleStatusUpdate(request.req_id, 'Approved')}
                           disabled={!['pending','processing'].includes((request.req_status || '').toLowerCase())}
                           sx={{
-                            bgcolor: '#2e7d32',
-                            '&:hover': {
-                              bgcolor: '#1b5e20',
+                            border: '1px solid #2e7d32',
+                            color: '#2e7d32',
+                            '&:hover': { 
+                              backgroundColor: 'rgba(46,125,50,0.06)',
+                              borderColor: '#1b5e20',
+                              color: '#1b5e20'
                             },
                             '&:disabled': {
-                              bgcolor: '#ccc',
-                            },
-                            minWidth: 'auto',
-                            px: 1
+                              borderColor: '#ccc',
+                              color: '#ccc',
+                              backgroundColor: 'transparent'
+                            }
                           }}
                         >
                           <FaCheck size={14} />
-                        </Button>
+                        </IconButton>
                       </Box>
                     </TableCell>
                   </TableRow>
