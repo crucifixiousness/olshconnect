@@ -23,11 +23,6 @@ const FinanceDashboard = () => {
     totalBalance: 0,
     recentTransactions: []
   });
-  const [paymentStats, setPaymentStats] = useState(cachedData?.paymentStats || {
-    monthlyData: [],
-    paymentMethods: [],
-    programStats: []
-  });
   const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
   useEffect(() => {
@@ -47,7 +42,6 @@ const FinanceDashboard = () => {
         if (cachedData && cacheAge && cacheAge < 300000) {
           const parsedData = JSON.parse(cachedData);
           setDashboardData(parsedData.dashboardData);
-          setPaymentStats(parsedData.paymentStats);
           setLoading(false);
           
           // Always do background refresh to check for updates (new transactions, revenue changes, etc.)
@@ -111,7 +105,6 @@ const FinanceDashboard = () => {
       localStorage.setItem('financeDashboardTimestamp', Date.now().toString());
 
       setDashboardData(formattedDashboardData);
-      setPaymentStats(formattedPaymentStats);
       
       // Only update loading if not forcing refresh
       if (!forceRefresh) {
@@ -125,6 +118,7 @@ const FinanceDashboard = () => {
 
   useEffect(() => {
     fetchFinanceData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const statCards = [
