@@ -31,20 +31,8 @@ import {
 import { MyContext } from "../../App";
 
 const DeanDashboard = () => {
-  // Feature flags
-  const HIDE_STUDENT_EMAIL = true; // Toggle to show/hide student email in dialog
   const context = useContext(MyContext);
-  const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
-  // Dashboard statistics
-  const [dashboardStats, setDashboardStats] = useState({
-    totalGrades: 0,
-    pendingApproval: 0,
-    registrarApproved: 0,
-    deanApproved: 0,
-    finalApproved: 0
-  });
 
   // Class-level approval
   const [classes, setClasses] = useState([]);
@@ -147,17 +135,6 @@ const DeanDashboard = () => {
   };
 
   // Removed per-student status helpers
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   // Removed per-student statistic cards
 
