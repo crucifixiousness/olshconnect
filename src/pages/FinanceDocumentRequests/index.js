@@ -1,7 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { 
-  Card, 
   Typography, 
   CircularProgress, 
   Box,
