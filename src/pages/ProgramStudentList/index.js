@@ -121,6 +121,7 @@ const ProgramStudentList = () => {
     } else {
       console.error('ProgramStudentList - No valid program_id found');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchStudents = useCallback(async (forceRefresh = false) => {
@@ -195,7 +196,7 @@ const ProgramStudentList = () => {
         setLoading(false);
       }
     }
-  }, [programId, yearLevel, block, showBy]);
+  }, [programId, yearLevel, block]);
 
   useEffect(() => {
     fetchStudents();
