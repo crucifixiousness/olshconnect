@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Paper, 
   Button,
-  Chip,
   CircularProgress,
   Tab,
   Tabs,
@@ -12,15 +11,12 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-  TextField,
-  Grid,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
-  Pagination
+  TableRow
 } from '@mui/material';
 import axios from 'axios';
 import { PhotoCamera } from '@mui/icons-material';
@@ -114,7 +110,7 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     // Send to payment log file
     try {
       console.log('📝 Sending log to payment-log API:', { activityType: type, timestamp });
-      const response = await axios.post('/api/payment-log', {
+      await axios.post('/api/payment-log', {
         logEntry,
         timestamp,
         activityType: type,
@@ -167,12 +163,6 @@ const StudentPayment = () => {
   const [loading, setLoading] = useState(!hasValidPaymentCache); // Only show loading if no valid cache
   const [error, setError] = useState(null);
   const [totalBalance, setTotalBalance] = useState(cachedPayment?.remaining_balance || 0);
-  const [breakdown, setBreakdown] = useState(cachedPayment?.breakdown || {
-    tuition: 0,
-    misc: 0,
-    lab: 0,
-    other: 0
-  });
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   
@@ -182,7 +172,6 @@ const StudentPayment = () => {
   // Honeypot states
   const [showFakeReceiptDialog, setShowFakeReceiptDialog] = useState(false);
   const [fakeReceiptImage, setFakeReceiptImage] = useState(null);
-  const [honeypotTriggered, setHoneypotTriggered] = useState(false);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -308,6 +297,7 @@ const StudentPayment = () => {
   useEffect(() => {
     fetchPayments();
     fetchPaymentHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchPaymentHistory = async () => {
@@ -348,11 +338,10 @@ const StudentPayment = () => {
         
         // Use cache if it's less than 5 minutes old
         if (cachedData && cacheAge && cacheAge < 300000) {
-          const parsedData = JSON.parse(cachedData);
-          setPayments([parsedData]);
-          setTotalBalance(parsedData.remaining_balance || 0);
-          setBreakdown(parsedData.breakdown);
-          setLoading(false);
+        const parsedData = JSON.parse(cachedData);
+        setPayments([parsedData]);
+        setTotalBalance(parsedData.remaining_balance || 0);
+        setLoading(false);
           
           // Always do background refresh to check for updates (balance changes, status updates, etc.)
           fetchPayments(true).catch(err => {
@@ -389,7 +378,6 @@ const StudentPayment = () => {
         
         setPayments([formattedPayment]);
         setTotalBalance(formattedPayment.remaining_balance || 0);
-        setBreakdown(formattedPayment.breakdown);
       }
       
       // Only update loading if not forcing refresh
@@ -400,19 +388,6 @@ const StudentPayment = () => {
       console.error('Error details:', error.response?.data || error.message);
       setError('Failed to fetch payment information.');
       setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'Fully Paid':
-        return 'success';
-      case 'Partial':
-        return 'warning';
-      case 'Unpaid':
-        return 'error';
-      default:
-        return 'default';
     }
   };
 
