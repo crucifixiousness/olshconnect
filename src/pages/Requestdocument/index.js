@@ -427,9 +427,27 @@ const RequestDocument = () => {
       // Filter grades by current semester if available
       const currentSemester = enrollment.semester;
       const currentYear = enrollment.year_id;
-      const filteredGrades = currentSemester && currentYear 
-        ? grades.filter(g => g.semester === currentSemester && g.year_level === enrollment.year_level)
+      let filteredGrades = currentSemester && currentYear 
+        ? grades.filter(g => {
+            // Convert both to strings for comparison to handle type mismatches
+            const gradeSemester = String(g.semester);
+            const enrollmentSemester = String(currentSemester);
+            const gradeYearLevel = String(g.year_level);
+            const enrollmentYearLevel = String(enrollment.year_level);
+            return gradeSemester === enrollmentSemester && gradeYearLevel === enrollmentYearLevel;
+          })
         : grades;
+
+      // Remove duplicates based on course_code (keep the first occurrence)
+      const seenCourses = new Set();
+      filteredGrades = filteredGrades.filter(g => {
+        const courseCode = g.course_code;
+        if (seenCourses.has(courseCode)) {
+          return false; // Duplicate, skip it
+        }
+        seenCourses.add(courseCode);
+        return true; // First occurrence, keep it
+      });
 
       // Format issuance date
       const issuanceDate = new Date().toLocaleDateString('en-US', {
