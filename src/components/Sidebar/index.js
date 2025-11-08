@@ -7,14 +7,12 @@ import { IoIosPeople } from "react-icons/io";
 import { FaGraduationCap } from "react-icons/fa";
 import { FaUserCog } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useContext, useState, useEffect } from 'react';
+import { useState } from 'react';
 import { HiOutlineLogout } from "react-icons/hi";
-import { MyContext } from '../../App';
 
 
 const Sidebar = () =>{
   const [isToggleStudentMenu, setIsToggleStudentMenu] = useState(false);
-  const context = useContext(MyContext);
   const navigate = useNavigate();
   const location = useLocation();
 
