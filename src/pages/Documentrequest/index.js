@@ -195,6 +195,7 @@ const DocumentRequests = () => {
 
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Filter requests based on document type and search term
