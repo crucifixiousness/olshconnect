@@ -23,14 +23,6 @@ const StudentList = () => {
   const [students, setStudents] = useState(hasValidCache ? (JSON.parse(cachedData) || []) : []);
   const [loading, setLoading] = useState(!hasValidCache); // Only show loading if no valid cache
 
-  const programMapping = {
-    '1': 'BSIT',
-    '2': 'BSHM',
-    '3': 'Education',
-    '4': 'BSOAd',
-    '5': 'BSCrim'
-  };
-
   const fetchStudents = useCallback(async (forceRefresh = false) => {
     try {
       // Check cache first (like Academic Records and Student Profile), unless forcing refresh
