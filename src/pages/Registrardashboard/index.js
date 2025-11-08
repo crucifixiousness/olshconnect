@@ -6,21 +6,18 @@ import {
   CircularProgress, 
   Box, 
   Button,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Alert,
   Snackbar,
   Tabs,
   Tab,
-  IconButton,
   Tooltip
 } from '@mui/material';
 import { IoIosPeople } from "react-icons/io";
-import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaEye, FaClock, FaGraduationCap } from "react-icons/fa";
+import { FaFileAlt, FaCheckCircle, FaTimesCircle, FaEye } from "react-icons/fa";
 import { MyContext } from "../../App";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
@@ -55,21 +52,7 @@ const RegistrarDashboard = () => {
     window.scrollTo(0,0);
   }, [context]);
 
-  // Grade approval states
-  const [gradeApprovalTab, setGradeApprovalTab] = useState(0);
-  const [grades, setGrades] = useState([]);
-  const [selectedGrade, setSelectedGrade] = useState(null);
-  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
-  const [approvalComments, setApprovalComments] = useState('');
-  const [approving, setApproving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [gradeStats, setGradeStats] = useState({
-    totalGrades: 0,
-    pendingApproval: 0,
-    registrarApproved: 0,
-    deanApproved: 0,
-    finalApproved: 0
-  });
 
   // Class-level approval states
   const [classes, setClasses] = useState([]);
@@ -100,9 +83,8 @@ const RegistrarDashboard = () => {
             // Keep showing cached data if background refresh fails
           });
           
-          // Still fetch grade and class approval data (they're separate and dynamic)
-          await fetchGradeApprovalData();
-          await fetchClassApprovalData();
+      // Still fetch class approval data (it's separate and dynamic)
+      await fetchClassApprovalData();
           return;
         }
       }
@@ -150,8 +132,6 @@ const RegistrarDashboard = () => {
       setDashboardData(formattedDashboardData);
       setEnrollmentStats(formattedEnrollmentStats);
 
-      // Fetch grade approval data
-      await fetchGradeApprovalData();
       // Fetch class approval data
       await fetchClassApprovalData();
 
@@ -167,37 +147,8 @@ const RegistrarDashboard = () => {
 
   useEffect(() => {
     fetchRegistrarData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const fetchGradeApprovalData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        return;
-      }
-
-      // Fetch grade approval data
-      const response = await axios.get('/api/registrar-grade-approval', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setGrades(response.data.grades || []);
-      setGradeStats(response.data.stats || {
-        totalGrades: 0,
-        pendingApproval: 0,
-        registrarApproved: 0,
-        deanApproved: 0,
-        finalApproved: 0
-      });
-    } catch (error) {
-      console.error('Error fetching grade approval data:', error);
-    }
-  };
-
-  const handleGradeApprovalTabChange = (event, newValue) => {
-    setGradeApprovalTab(newValue);
-  };
 
   const fetchClassApprovalData = async () => {
     try {
@@ -263,92 +214,6 @@ const RegistrarDashboard = () => {
       console.error('Error fetching class students:', e);
       setSnackbar({ open: true, message: 'Failed to load class students', severity: 'error' });
     }
-  };
-
-  const handleApproveGrade = (grade) => {
-    setSelectedGrade(grade);
-    setApprovalComments('');
-    setApprovalDialogOpen(true);
-  };
-
-  const handleApprovalSubmit = async (action) => {
-    if (!selectedGrade) return;
-
-    try {
-      setApproving(true);
-      const token = localStorage.getItem('token');
-
-      const response = await axios.post('/api/approve-grade', {
-        gradeId: selectedGrade.grade_id,
-        action: action,
-        comments: approvalComments
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setSnackbar({
-        open: true,
-        message: response.data.message || 'Grade approval updated successfully',
-        severity: 'success'
-      });
-
-      setApprovalDialogOpen(false);
-      setSelectedGrade(null);
-      setApprovalComments('');
-
-      // Refresh data
-      fetchGradeApprovalData();
-    } catch (error) {
-      console.error('Error approving grade:', error);
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.message || 'Failed to update grade approval',
-        severity: 'error'
-      });
-    } finally {
-      setApproving(false);
-    }
-  };
-
-  const getApprovalStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return '#ed6c02';
-      case 'registrar_approved':
-        return '#1976d2';
-      case 'dean_approved':
-        return '#2e7d32';
-      case 'final':
-        return '#388e3c';
-      default:
-        return '#757575';
-    }
-  };
-
-  const getApprovalStatusIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return <FaClock />;
-      case 'registrar_approved':
-        return <FaCheckCircle />;
-      case 'dean_approved':
-        return <FaCheckCircle />;
-      case 'final':
-        return <FaGraduationCap />;
-      default:
-        return <FaClock />;
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const statCards = [
