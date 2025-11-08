@@ -23,7 +23,7 @@ import {
   Dialog,
   IconButton
 } from '@mui/material';
-import { FaCheck, FaEye } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 import { sendDocumentApprovalEmail, sendDocumentRejectionEmail } from '../../utils/documentEmailService';
 import olshcoLogo from '../../asset/images/olshco-logo1.png';
 
@@ -443,29 +443,41 @@ const DocumentRequests = () => {
                         >
                           <FaEye size={14} />
                         </IconButton>
-                        <IconButton
-                          size="small"
-                          data-testid={`approve-button-${request.req_id}`}
-                          aria-label={`Mark request as ready for pickup for ${request.first_name} ${request.last_name}`}
-                          onClick={() => handleStatusUpdate(request.req_id, 'Ready for Pickup')}
-                          disabled={!['pending','processing'].includes((request.req_status || '').toLowerCase())}
-                          sx={{
-                            border: '1px solid #2e7d32',
-                            color: '#2e7d32',
-                            '&:hover': { 
-                              backgroundColor: 'rgba(46,125,50,0.06)',
-                              borderColor: '#1b5e20',
-                              color: '#1b5e20'
-                            },
-                            '&:disabled': {
-                              borderColor: '#ccc',
-                              color: '#ccc',
-                              backgroundColor: 'transparent'
-                            }
-                          }}
-                        >
-                          <FaCheck size={14} />
-                        </IconButton>
+                        {(request.req_status || '').toLowerCase() === 'processing' ? (
+                          <FormControl size="small" sx={{ minWidth: 150 }}>
+                            <Select
+                              value=""
+                              displayEmpty
+                              onChange={(e) => {
+                                if (e.target.value === 'Ready for Pickup') {
+                                  handleStatusUpdate(request.req_id, 'Ready for Pickup');
+                                }
+                              }}
+                              sx={{
+                                fontSize: '0.75rem',
+                                height: '32px',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#2e7d32',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#1b5e20',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#1b5e20',
+                                },
+                              }}
+                            >
+                              <MenuItem value="" disabled>
+                                <em>Select Action</em>
+                              </MenuItem>
+                              <MenuItem value="Ready for Pickup">Ready for Pickup</MenuItem>
+                            </Select>
+                          </FormControl>
+                        ) : (request.req_status || '').toLowerCase() === 'ready for pickup' ? (
+                          <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                            Ready for Pickup
+                          </Typography>
+                        ) : null}
                       </Box>
                     </TableCell>
                   </TableRow>
