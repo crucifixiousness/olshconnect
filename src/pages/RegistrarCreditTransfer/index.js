@@ -1,7 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { 
-  Card, 
   Typography, 
   CircularProgress, 
   Box, 
@@ -17,10 +16,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Alert,
-  Snackbar,
-  Chip
+  Snackbar
 } from '@mui/material';
 import { FaEye, FaCheck, FaTimes } from "react-icons/fa";
 import { MyContext } from "../../App";
@@ -47,6 +44,7 @@ const RegistrarCreditTransfer = () => {
     context.setIsHideComponents(false);
     window.scrollTo(0, 0);
     fetchTorRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
 
   const fetchTorRequests = async (forceRefresh = false) => {
@@ -153,16 +151,6 @@ const RegistrarCreditTransfer = () => {
         message: `Failed to ${action} credit transfer`, 
         severity: 'error' 
       });
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'warning';
-      case 'program_head_reviewed': return 'info';
-      case 'registrar_approved': return 'success';
-      case 'rejected': return 'error';
-      default: return 'default';
     }
   };
 
