@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Card, Typography, CircularProgress, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Tooltip, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Card, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Tooltip, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { GiBookshelf } from "react-icons/gi";
 import { RiPoliceBadgeFill } from "react-icons/ri";
 import { MdTour } from "react-icons/md";
@@ -168,6 +168,7 @@ const ProgramHeadDashboard = () => {
     context.setIsHideComponents(false);
     window.scrollTo(0,0);
     fetchProgramData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, program_id]);
 
   const fetchClassApprovalData = async () => {
