@@ -7,7 +7,6 @@ import { RiLockPasswordLine } from "react-icons/ri";
 import { VscEye } from "react-icons/vsc";
 import { VscEyeClosed } from "react-icons/vsc";
 import Button from '@mui/material/Button';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -27,7 +26,9 @@ const detectMaliciousStaffLogin = (username, password) => {
     "1' OR '1'='1", "1' OR 1=1#", "admin' #"
   ];
   const xssPatterns = [
-    "<script>", "javascript:", "onload=", "onerror=", "onclick=",
+    "<script>", 
+    // eslint-disable-next-line no-script-url
+    "javascript:", "onload=", "onerror=", "onclick=",
     "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
   ];
   const username_lower = username.toLowerCase();
@@ -59,9 +60,8 @@ const Signup = () => {
   const [isShowPass, setIsShowPass] = useState(false);
   const [credentials, setCredentials] = useState({ staff_username: '', staff_password: '' });
   const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate();
 
-  const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
+  const { setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   const context = useContext(MyContext);
 
