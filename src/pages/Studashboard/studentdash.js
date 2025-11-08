@@ -8,9 +8,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Pagination,
-  Typography,
-  Box
+  Typography
 } from '@mui/material';
 import { MyContext } from "../../App";
 import axios from 'axios';
