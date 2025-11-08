@@ -12,7 +12,6 @@ import {
   TableContainer, 
   TableHead, 
   TableRow, 
-  Paper, 
   CircularProgress, 
   Snackbar, 
   Alert,
@@ -191,23 +190,12 @@ const AdminAccountManagement = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h3 className="mb-2">Admin Account Management</h3>
+            <h3 className="mb-2">Admin Account Managements</h3>
             <Typography variant="body2" color="text.secondary">
               Manage admin accounts and delete your own account
             </Typography>
