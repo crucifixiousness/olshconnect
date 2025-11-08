@@ -28,10 +28,7 @@ import {
   Grade as GradeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-
 const ClassManagement = () => {
-  const navigate = useNavigate();
   
   // Check localStorage cache synchronously on mount for instant display
   const cachedData = localStorage.getItem('instructorClassesData');
