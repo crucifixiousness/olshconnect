@@ -1,4 +1,4 @@
-import { Modal, Button, Select, MenuItem, FormControl, InputLabel, Pagination, Box, Typography, TextField, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { Modal, Button, Select, MenuItem, FormControl, Pagination, Box, Typography, TextField, Paper, Grid, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { FaCirclePlus } from "react-icons/fa6";
@@ -26,7 +26,7 @@ const RequestDocument = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const [pdfUrl, setPdfUrl] = useState(null);
+  const [pdfUrl] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const pdfCache = useRef(new Map());
   // removed: showFormPreview (moved to admin view)
