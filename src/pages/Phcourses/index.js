@@ -365,11 +365,13 @@ const AssignCourses = () => {
       fetchCourses();
       fetchMajors(); // Add fetchMajors call
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program_id, fetchAssignedCourses]);
 
   useEffect(() => {
     fetchAssignedCourses();
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program_id, fetchAssignedCourses]);
 
   // Fetch all available courses for the current program
@@ -407,7 +409,7 @@ const AssignCourses = () => {
     try {
       const response = await axios.get(`/api/major-management`);
       // Filter majors for the current program
-      const programMajors = response.data.filter(major => major.program_id == program_id);
+      const programMajors = response.data.filter(major => major.program_id === program_id);
       setMajors(programMajors);
     } catch (error) {
       console.error("Error fetching majors:", error);
@@ -417,6 +419,7 @@ const AssignCourses = () => {
   useEffect(() => {
     fetchAssignedCourses();
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program_id, fetchAssignedCourses]); // Runs when program_id is available
 
   // Handle input changes
@@ -467,7 +470,7 @@ const AssignCourses = () => {
         requestBody.major_id = newAssignment.major_id;
       }
 
-      const response = await axios.post("/api/program-course", requestBody);
+      await axios.post("/api/program-course", requestBody);
 
       setSnackbar({
         open: true,
@@ -578,7 +581,7 @@ const AssignCourses = () => {
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
-        <h3 className="hd mt-2 pb-0">Assign Courses to Year Level</h3>      
+        <h3 className="hd mt-2 pb-0">Assigning Courses to Year Level</h3>      
       </div>
 
       <div className="card shadow border-0 p-3">
