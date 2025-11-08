@@ -16,8 +16,7 @@ import {
   TableHead,
   TableRow,
   Modal,
-  Box,
-  Chip
+  Box
 } from '@mui/material';
 import { FaSearch, FaPrint, FaHistory } from 'react-icons/fa';
 import axios from 'axios';
@@ -158,21 +157,6 @@ const CounterPayment = () => {
         message: error.response?.data?.error || 'Error processing payment',
         severity: 'error'
       });
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Officially Enrolled':
-        return 'success';
-      case 'Verified':
-        return 'info';
-      case 'For Payment':
-        return 'warning';
-      case 'Fully Paid':
-        return 'success';
-      default:
-        return 'default';
     }
   };
 
