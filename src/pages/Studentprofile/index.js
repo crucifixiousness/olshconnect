@@ -445,7 +445,7 @@ const StudentProfile = () => {
       }
 
       // ✅ Check if major is required (when program has majors)
-      const selectedProgram = programs.find(p => p.program_id == formDataa.programs);
+      const selectedProgram = programs.find(p => p.program_id === formDataa.programs);
       const hasMajors = selectedProgram && selectedProgram.majors && selectedProgram.majors.length > 0;
       
       if (hasMajors && (!formDataa.major_id || formDataa.major_id === '')) {
@@ -1111,7 +1111,7 @@ const StudentProfile = () => {
 
               {/* Major Selection - Only show if program has majors */}
               {formDataa.programs && (() => {
-                const selectedProgram = programs.find(p => p.program_id == formDataa.programs);
+                const selectedProgram = programs.find(p => p.program_id === formDataa.programs);
                 const hasMajors = selectedProgram && selectedProgram.majors && selectedProgram.majors.length > 0;
                 
                 return hasMajors ? (
