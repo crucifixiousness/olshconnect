@@ -29,7 +29,7 @@ export const sendDocumentApprovalEmail = async (studentEmail, studentName, docum
     console.log('- REACT_APP_EMAILJS_TEMPLATE_ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
     console.log('- Final template ID being used:', EMAILJS_TEMPLATE_ID);
     
-    const response = await emailjs.send(
+    await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams
@@ -65,7 +65,7 @@ export const sendDocumentRejectionEmail = async (studentEmail, studentName, docu
 
     console.log('📧 Attempting to send document rejection email with EmailJS...');
     
-    const response = await emailjs.send(
+    await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams
