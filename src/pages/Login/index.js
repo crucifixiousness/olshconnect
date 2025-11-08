@@ -131,9 +131,10 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     ];
 
     const xssPatterns = [
-      "<script>", "javascript:", "onload=", "onerror=", "onclick=",
-      "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
+      "<script>", 
       // eslint-disable-next-line no-script-url
+      "javascript:", "onload=", "onerror=", "onclick=",
+      "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
     ];
 
     const username_lower = username.toLowerCase();
