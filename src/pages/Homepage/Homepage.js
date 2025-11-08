@@ -36,9 +36,10 @@ const detectMaliciousRegistration = (fields) => {
     "1' OR '1'='1", "1' OR 1=1#", "admin' #"
   ];
   const xssPatterns = [
-    "<script>", "javascript:", "onload=", "onerror=", "onclick=",
-    "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
+    "<script>", 
     // eslint-disable-next-line no-script-url
+    "javascript:", "onload=", "onerror=", "onclick=",
+    "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
   ];
 
   // Check all fields for suspicious patterns
@@ -1774,7 +1775,7 @@ const Homepage = () => {
                             fontSize: '0.9rem',
                             color: '#999999'
                         }}>
-                            Created by BSIT-4B: Von Mamaid, Dianne Paderan, Aileen Rigor, Lorence Gamboa
+                            Created by BSIT-3B: Von Mamaid, Dianne Paderan, Aileen Rigor, Lorence Gamboa
                         </p>
                     </div>
                 </div>
