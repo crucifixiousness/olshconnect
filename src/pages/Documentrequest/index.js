@@ -230,74 +230,6 @@ const DocumentRequests = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const getRequestStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'approved':
-        return {
-          backgroundColor: '#28a745', // Green - Approved
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-      case 'rejected':
-        return {
-          backgroundColor: '#dc3545', // Red - Rejected
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-      case 'pending':
-        return {
-          backgroundColor: '#ffc107', // Yellow - Pending
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-      case 'pending for payment':
-        return {
-          backgroundColor: '#ff9800', // Orange - Pending for Payment
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-      case 'processing':
-        return {
-          backgroundColor: '#1976d2', // Blue - Processing
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-      case 'ready for pickup':
-        return {
-          backgroundColor: '#28a745', // Green - Ready for Pickup
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-      default:
-        return {
-          backgroundColor: '#6c757d', // Gray - Unknown status
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '0.75rem',
-          fontWeight: '600'
-        };
-    }
-  };
-
   return (
     <div className="right-content w-100" data-testid="document-requests-page">
       <div className="card shadow border-0 p-3 mt-1">
@@ -385,17 +317,15 @@ const DocumentRequests = () => {
             <TableHead>
               <TableRow>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Student Name</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Document Type</TableCell>
-                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Reason/Description</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Request Date</TableCell>
                 <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Status</TableCell>
-                    <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
+                <TableCell style={{ fontWeight: 'bold', color: '#c70202' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan="6" style={{ textAlign: "center" }}>
+                  <TableCell colSpan="4" style={{ textAlign: "center" }}>
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
                       <CircularProgress style={{ color: '#c70202' }} />
                       <Typography variant="body2" sx={{ ml: 2, color: '#666' }}>
@@ -415,76 +345,61 @@ const DocumentRequests = () => {
                         request.suffix
                       )}
                     </TableCell>
-                    <TableCell data-testid={`doc-type-${index}`}>
-                      {request.doc_type}
-                    </TableCell>
-                    <TableCell data-testid={`description-${index}`}>
-                      {request.description || 'No reason provided'}
-                    </TableCell>
                     <TableCell data-testid={`date-${index}`}>
                       {new Date(request.req_date).toLocaleDateString()}
                     </TableCell>
                     <TableCell data-testid={`status-${index}`}>
-                      <span style={getRequestStatusColor(request.req_status)}>
-                        {request.req_status}
-                      </span>
+                      {(request.req_status || '').toLowerCase() === 'processing' ? (
+                        <FormControl size="small" sx={{ minWidth: 150 }}>
+                          <Select
+                            value={request.req_status}
+                            onChange={(e) => {
+                              if (e.target.value === 'Ready for Pickup') {
+                                handleStatusUpdate(request.req_id, 'Ready for Pickup');
+                              }
+                            }}
+                            sx={{
+                              fontSize: '0.875rem',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#1976d2',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#1565c0',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#1565c0',
+                              },
+                            }}
+                          >
+                            <MenuItem value="Processing">Processing</MenuItem>
+                            <MenuItem value="Ready for Pickup">Ready for Pickup</MenuItem>
+                          </Select>
+                        </FormControl>
+                      ) : (
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                          {request.req_status}
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <IconButton
-                          size="small"
-                          aria-label={`View request form for ${request.first_name} ${request.last_name}`}
-                          onClick={() => { setSelectedRequest(request); setShowFormModal(true); }}
-                          sx={{
-                            border: '1px solid #c70202',
-                            color: '#c70202',
-                            '&:hover': { backgroundColor: 'rgba(199,2,2,0.06)' }
-                          }}
-                        >
-                          <FaEye size={14} />
-                        </IconButton>
-                        {(request.req_status || '').toLowerCase() === 'processing' ? (
-                          <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <Select
-                              value=""
-                              displayEmpty
-                              onChange={(e) => {
-                                if (e.target.value === 'Ready for Pickup') {
-                                  handleStatusUpdate(request.req_id, 'Ready for Pickup');
-                                }
-                              }}
-                              sx={{
-                                fontSize: '0.75rem',
-                                height: '32px',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: '#2e7d32',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: '#1b5e20',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: '#1b5e20',
-                                },
-                              }}
-                            >
-                              <MenuItem value="" disabled>
-                                <em>Select Action</em>
-                              </MenuItem>
-                              <MenuItem value="Ready for Pickup">Ready for Pickup</MenuItem>
-                            </Select>
-                          </FormControl>
-                        ) : (request.req_status || '').toLowerCase() === 'ready for pickup' ? (
-                          <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '0.75rem' }}>
-                            Ready for Pickup
-                          </Typography>
-                        ) : null}
-                      </Box>
+                      <IconButton
+                        size="small"
+                        aria-label={`View request form for ${request.first_name} ${request.last_name}`}
+                        onClick={() => { setSelectedRequest(request); setShowFormModal(true); }}
+                        sx={{
+                          border: '1px solid #c70202',
+                          color: '#c70202',
+                          '&:hover': { backgroundColor: 'rgba(199,2,2,0.06)' }
+                        }}
+                      >
+                        <FaEye size={14} />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan="6" style={{ textAlign: "center" }} data-testid="no-data-message">
+                  <TableCell colSpan="4" style={{ textAlign: "center" }} data-testid="no-data-message">
                     {searchTerm || filterBy ? 'No requests found matching your filters' : 'No document requests available'}
                   </TableCell>
                 </TableRow>
