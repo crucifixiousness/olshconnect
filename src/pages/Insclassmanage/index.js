@@ -229,11 +229,6 @@ const ClassManagement = () => {
     setStudents([]);
   };
 
-  const handleCourseClick = (course) => {
-    localStorage.setItem('selectedCourse', JSON.stringify(course));
-    navigate(`/instructor-classes/grades?course=${course.pc_id}`);
-  };
-
   return (
     <div className="right-content w-100">
       <div className="card shadow border-0 p-3 mt-1">
