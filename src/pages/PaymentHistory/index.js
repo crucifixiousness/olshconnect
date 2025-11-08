@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
   Paper, 
-  Typography, 
   Table, 
   TableBody, 
   TableCell, 
@@ -17,7 +16,6 @@ import {
   Pagination,
   CircularProgress
 } from '@mui/material';
-import { FaPrint } from 'react-icons/fa';
 import axios from 'axios';
 
 const PaymentHistory = () => {
@@ -40,6 +38,7 @@ const PaymentHistory = () => {
 
   useEffect(() => {
     fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchPayments = async (forceRefresh = false) => {
