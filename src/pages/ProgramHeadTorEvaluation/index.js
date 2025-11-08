@@ -23,7 +23,7 @@ import {
   Chip,
   Autocomplete
 } from '@mui/material';
-import { FaEye, FaCheck, FaTimes, FaDownload, FaClipboardList } from "react-icons/fa";
+import { FaEye, FaDownload, FaClipboardList } from "react-icons/fa";
 import { MyContext } from "../../App";
 
 const ProgramHeadTorEvaluation = () => {
@@ -237,7 +237,7 @@ const ProgramHeadTorEvaluation = () => {
     setDialogLoading(true);
 
     try {
-      const [_, enrollmentInfo] = await Promise.all([
+      const [, enrollmentInfo] = await Promise.all([
         fetchAvailableCourses(request.program_id),
         fetchStudentEnrollment(request.student_id),
         fetchExistingEquivalencies(request.id),
@@ -428,7 +428,7 @@ const ProgramHeadTorEvaluation = () => {
     
     // Auto-populate course info when course is selected
     if (field === 'equivalent_course_id') {
-      const course = availableCourses.find(c => c.course_id == value);
+      const course = availableCourses.find(c => c.course_id === value);
       if (course) {
         updated[index].equivalent_course_code = course.course_code;
         updated[index].equivalent_course_name = course.course_name;
@@ -759,7 +759,7 @@ const ProgramHeadTorEvaluation = () => {
                         <Autocomplete
                           options={availableCourses}
                           getOptionLabel={(option) => option.course_code ? `${option.course_code} - ${option.course_name} (${option.units} units)` : ''}
-                          value={availableCourses.find(course => course.course_id == equiv.equivalent_course_id) || null}
+                          value={availableCourses.find(course => course.course_id === equiv.equivalent_course_id) || null}
                           onChange={(event, newValue) => {
                             handleEquivalencyChange(index, 'equivalent_course_id', newValue ? newValue.course_id : '');
                           }}
