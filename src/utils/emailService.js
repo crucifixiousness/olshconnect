@@ -36,7 +36,7 @@ export const sendVerificationEmail = async (email, otp, studentName = 'Student')
     console.log('Template ID:', EMAILJS_TEMPLATE_ID);
     console.log('Template Params:', templateParams);
     
-    const response = await emailjs.send(
+    await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams
