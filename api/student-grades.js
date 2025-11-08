@@ -35,8 +35,9 @@ module.exports = async (req, res) => {
       client = await pool.connect();
 
       // Get student's grades - only show grades with 'reg_approved' (final) status
+      // Use DISTINCT ON to prevent duplicates from multiple course_assignments
       const gradesQuery = `
-        SELECT 
+        SELECT DISTINCT ON (g.grade_id)
           g.grade_id,
           g.final_grade,
           g.approval_status,
@@ -66,11 +67,11 @@ module.exports = async (req, res) => {
         JOIN course c ON pc.course_id = c.course_id
         JOIN program p ON pc.program_id = p.program_id
         JOIN program_year py ON pc.year_id = py.year_id
-        JOIN course_assignments ca ON pc.pc_id = ca.pc_id
+        LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
         LEFT JOIN admins a ON ca.staff_id = a.staff_id
         WHERE g.student_id = $1
           AND g.approval_status = 'reg_approved'
-        ORDER BY pc.semester, c.course_code
+        ORDER BY g.grade_id, pc.semester, c.course_code, ca.day NULLS LAST, ca.start_time NULLS LAST
       `;
 
       const gradesResult = await client.query(gradesQuery, [studentId]);
