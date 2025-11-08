@@ -17,13 +17,9 @@ const Staff = () => {
   const [roleFilter, setRoleFilter] = useState('');
   
   const handleOpen = () => {
-    setIsCreated(false);
-    setStatusMessage({ message: "", type: "" });
     setShowAddStaffModal(true);
   };
   const handleClose = () => {
-    setIsCreated(false);
-    setStatusMessage({ message: "", type: "" });
     setShowAddStaffModal(false);
   };
   const [newStaff, setNewStaff] = useState({
@@ -34,9 +30,6 @@ const Staff = () => {
     program_id: "", // Add this to track selected program
   });
 
-  const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
-  const [isVisible, setIsVisible] = useState(false);
-  const [isCreated, setIsCreated] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -128,7 +121,6 @@ const Staff = () => {
           severity: "success"
         });
         setShowAddStaffModal(false);
-        setIsCreated(true);
         fetchStaffData(); // Reload the staff list
         // Reset form
         setNewStaff({
@@ -153,10 +145,6 @@ const Staff = () => {
         severity: "error"
       });
     } finally {
-      setTimeout(() => {
-        setIsVisible(false);
-        setShowAddStaffModal(false);
-      }, 2000);
       setIsLoading(false);
     }
   };
