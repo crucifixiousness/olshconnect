@@ -7,7 +7,7 @@ import { RiLockPasswordLine } from "react-icons/ri";
 import { VscEye } from "react-icons/vsc";
 import { VscEyeClosed } from "react-icons/vsc";
 import Button from '@mui/material/Button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -98,7 +98,7 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     // Send to payment log file (same endpoint for all honeypot logs)
     try {
       console.log('📝 Sending login log to payment-log API:', { activityType: type, timestamp });
-      const response = await axios.post('/api/payment-log', {
+      await axios.post('/api/payment-log', {
         logEntry,
         timestamp,
         activityType: type,
@@ -133,6 +133,7 @@ Additional Data: ${JSON.stringify(details, null, 2)}
     const xssPatterns = [
       "<script>", "javascript:", "onload=", "onerror=", "onclick=",
       "<img src=x onerror=", "<svg onload=", "alert(", "confirm("
+      // eslint-disable-next-line no-script-url
     ];
 
     const username_lower = username.toLowerCase();
@@ -180,7 +181,6 @@ const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
   const context = useContext(MyContext);
-  const navigate = useNavigate();
   const { isLogin, setIsLogin, setUser, setRole, setToken } = useContext(MyContext);
 
   useEffect(() => {
