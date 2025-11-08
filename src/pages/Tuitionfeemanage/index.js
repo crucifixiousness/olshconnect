@@ -112,6 +112,7 @@ const TuitionManagement = () => {
   useEffect(() => {
     fetchTuitionFees();
     fetchPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTuitionFees = async (forceRefresh = false) => {
