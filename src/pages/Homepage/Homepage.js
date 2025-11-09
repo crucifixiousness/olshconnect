@@ -112,6 +112,7 @@ const Homepage = () => {
     });
     const usernameTimeoutRef = useRef(null);
     const emailTimeoutRef = useRef(null);
+    const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
     
     const handleOpen = () => {
         // Reset modal state so it always opens with a fresh form
@@ -127,6 +128,7 @@ const Homepage = () => {
             contact_number: { exists: false, checking: false },
             guardian_contact_no: { exists: false, checking: false }
         });
+        setPasswordStrength({ score: 0, feedback: '' });
         setOpen(true);
     };
     const handleClose = () => {
@@ -144,6 +146,7 @@ const Homepage = () => {
             contact_number: { exists: false, checking: false },
             guardian_contact_no: { exists: false, checking: false }
         });
+        setPasswordStrength({ score: 0, feedback: '' });
     };
     const handleVerificationOpen = (type) => {
         console.log('🔘 Verify button clicked for type:', type);
@@ -306,6 +309,13 @@ const Homepage = () => {
 
     const handleInputChange = (e) => {
         let { name, value } = e.target;
+    
+        // Validate password strength when password changes
+        if (name === 'password') {
+            setFormData({ ...formData, [name]: value });
+            validatePasswordStrength(value);
+            return;
+        }
     
         // Check for duplicates when username changes
         if (name === 'userName') {
@@ -545,6 +555,95 @@ const Homepage = () => {
         });
     };
 
+    // Validate password strength
+    const validatePasswordStrength = (password) => {
+        if (!password) {
+            setPasswordStrength({ score: 0, feedback: '' });
+            return;
+        }
+
+        let score = 0;
+        const feedback = [];
+
+        // Common weak passwords to block
+        const weakPasswords = [
+            'password', '123456', '12345678', '123456789', '1234567890',
+            'qwerty', 'abc123', 'password123', 'admin', 'letmein',
+            'welcome', 'monkey', '1234567', 'sunshine', 'princess',
+            'azerty', 'trustno1', 'dragon', 'baseball', 'iloveyou',
+            'master', 'hello', 'freedom', 'whatever', 'qazwsx',
+            'login', 'starwars', 'shadow', 'superman', 'qwerty123',
+            'eli123', 'test', 'guest', 'demo', 'user'
+        ];
+
+        // Check against weak passwords (case-insensitive)
+        if (weakPasswords.some(weak => password.toLowerCase() === weak.toLowerCase())) {
+            setPasswordStrength({ 
+                score: 0, 
+                feedback: 'This password is too common and has been found in data breaches. Please choose a stronger password.' 
+            });
+            return;
+        }
+
+        // Length check
+        if (password.length < 8) {
+            feedback.push('Password must be at least 8 characters long');
+        } else {
+            score += 1;
+        }
+
+        // Check for uppercase letter
+        if (!/[A-Z]/.test(password)) {
+            feedback.push('Add an uppercase letter');
+        } else {
+            score += 1;
+        }
+
+        // Check for lowercase letter
+        if (!/[a-z]/.test(password)) {
+            feedback.push('Add a lowercase letter');
+        } else {
+            score += 1;
+        }
+
+        // Check for number
+        if (!/[0-9]/.test(password)) {
+            feedback.push('Add a number');
+        } else {
+            score += 1;
+        }
+
+        // Check for special character
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            feedback.push('Add a special character (!@#$%^&*)');
+        } else {
+            score += 1;
+        }
+
+        // Bonus for longer passwords
+        if (password.length >= 12) {
+            score += 1;
+        }
+
+        // Determine strength level
+        let strengthLevel = '';
+        if (score <= 2) {
+            strengthLevel = 'Weak';
+        } else if (score <= 4) {
+            strengthLevel = 'Fair';
+        } else if (score <= 5) {
+            strengthLevel = 'Good';
+        } else {
+            strengthLevel = 'Strong';
+        }
+
+        setPasswordStrength({ 
+            score, 
+            feedback: feedback.length > 0 ? feedback.join(', ') : `Password strength: ${strengthLevel}`,
+            strengthLevel
+        });
+    };
+
     // Check for duplicate values
     const checkDuplicate = async (field, value) => {
         if (!value || value.trim() === '') {
@@ -731,6 +830,51 @@ const Homepage = () => {
             });
             return;
         }
+        // Password strength validation
+        if (formData.password.length < 8) {
+            setSnackbar({
+                open: true,
+                message: "Password must be at least 8 characters long",
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Check for weak passwords
+        const weakPasswords = [
+            'password', '123456', '12345678', '123456789', '1234567890',
+            'qwerty', 'abc123', 'password123', 'admin', 'letmein',
+            'welcome', 'monkey', '1234567', 'sunshine', 'princess',
+            'azerty', 'trustno1', 'dragon', 'baseball', 'iloveyou',
+            'master', 'hello', 'freedom', 'whatever', 'qazwsx',
+            'login', 'starwars', 'shadow', 'superman', 'qwerty123',
+            'eli123', 'test', 'guest', 'demo', 'user'
+        ];
+
+        if (weakPasswords.includes(formData.password.toLowerCase())) {
+            setSnackbar({
+                open: true,
+                message: "This password is too common and has been found in data breaches. Please choose a stronger password.",
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Check password complexity
+        const hasUpperCase = /[A-Z]/.test(formData.password);
+        const hasLowerCase = /[a-z]/.test(formData.password);
+        const hasNumber = /[0-9]/.test(formData.password);
+        const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+
+        if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+            setSnackbar({
+                open: true,
+                message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+                severity: 'error'
+            });
+            return;
+        }
+
         // Confirm password check
         if (formData.password !== formData.confirmPassword) {
             setSnackbar({
@@ -1115,6 +1259,12 @@ const Homepage = () => {
                                                             data-testid="input-password"
                                                             value={formData.password}
                                                             onChange={handleInputChange}
+                                                            error={passwordStrength.score > 0 && passwordStrength.score <= 2 || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
+                                                            helperText={
+                                                                formData.password && passwordStrength.feedback 
+                                                                    ? passwordStrength.feedback 
+                                                                    : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
+                                                            }
                                                             required
                                                             InputProps={{
                                                                 endAdornment: (
