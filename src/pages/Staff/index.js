@@ -18,9 +18,11 @@ const Staff = () => {
   
   const handleOpen = () => {
     setShowAddStaffModal(true);
+    setPasswordStrength({ score: 0, feedback: '' });
   };
   const handleClose = () => {
     setShowAddStaffModal(false);
+    setPasswordStrength({ score: 0, feedback: '' });
   };
   const [newStaff, setNewStaff] = useState({
     full_name: "",
@@ -35,6 +37,8 @@ const Staff = () => {
     message: '',
     severity: 'success'
   });
+
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
 
   // Fetch staff data on component mount
   const fetchStaffData = useCallback(async () => {
@@ -57,9 +61,107 @@ const Staff = () => {
     setPage(newPage);
   };
 
+  // Validate password strength
+  const validatePasswordStrength = (password) => {
+    if (!password) {
+      setPasswordStrength({ score: 0, feedback: '' });
+      return;
+    }
+
+    let score = 0;
+    const feedback = [];
+
+    // Common weak passwords to block
+    const weakPasswords = [
+      'password', '123456', '12345678', '123456789', '1234567890',
+      'qwerty', 'abc123', 'password123', 'admin', 'letmein',
+      'welcome', 'monkey', '1234567', 'sunshine', 'princess',
+      'azerty', 'trustno1', 'dragon', 'baseball', 'iloveyou',
+      'master', 'hello', 'freedom', 'whatever', 'qazwsx',
+      'login', 'starwars', 'shadow', 'superman', 'qwerty123',
+      'eli123', 'test', 'guest', 'demo', 'user'
+    ];
+
+    // Check against weak passwords (case-insensitive)
+    if (weakPasswords.some(weak => password.toLowerCase() === weak.toLowerCase())) {
+      setPasswordStrength({ 
+        score: 0, 
+        feedback: 'This password is too common and has been found in data breaches. Please choose a stronger password.' 
+      });
+      return;
+    }
+
+    // Length check
+    if (password.length < 8) {
+      feedback.push('Password must be at least 8 characters long');
+    } else {
+      score += 1;
+    }
+
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      feedback.push('Add an uppercase letter');
+    } else {
+      score += 1;
+    }
+
+    // Check for lowercase letter
+    if (!/[a-z]/.test(password)) {
+      feedback.push('Add a lowercase letter');
+    } else {
+      score += 1;
+    }
+
+    // Check for number
+    if (!/[0-9]/.test(password)) {
+      feedback.push('Add a number');
+    } else {
+      score += 1;
+    }
+
+    // Check for special character
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      feedback.push('Add a special character (!@#$%^&*)');
+    } else {
+      score += 1;
+    }
+
+    // Bonus for longer passwords
+    if (password.length >= 12) {
+      score += 1;
+    }
+
+    // Determine strength level
+    let strengthLevel = '';
+    if (score <= 2) {
+      strengthLevel = 'Weak';
+    } else if (score <= 4) {
+      strengthLevel = 'Fair';
+    } else if (score <= 5) {
+      strengthLevel = 'Good';
+    } else {
+      strengthLevel = 'Strong';
+    }
+
+    setPasswordStrength({ 
+      score, 
+      feedback: feedback.length > 0 ? feedback.join(', ') : `Password strength: ${strengthLevel}`,
+      strengthLevel
+    });
+  };
+
   // Handle new staff input changes
   const handleInputChange = (e) => {
-    setNewStaff({ ...newStaff, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Validate password strength when password changes
+    if (name === 'staff_password') {
+      setNewStaff({ ...newStaff, [name]: value });
+      validatePasswordStrength(value);
+      return;
+    }
+    
+    setNewStaff({ ...newStaff, [name]: value });
   };
 
   // Filter and sort staff
@@ -85,6 +187,54 @@ const Staff = () => {
     setIsLoading(true);
   
     const { full_name, staff_username, staff_password, role, program_id } = newStaff;
+  
+    // Password strength validation
+    if (staff_password.length < 8) {
+      setSnackbar({
+        open: true,
+        message: "Password must be at least 8 characters long",
+        severity: "error"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Check for weak passwords
+    const weakPasswords = [
+      'password', '123456', '12345678', '123456789', '1234567890',
+      'qwerty', 'abc123', 'password123', 'admin', 'letmein',
+      'welcome', 'monkey', '1234567', 'sunshine', 'princess',
+      'azerty', 'trustno1', 'dragon', 'baseball', 'iloveyou',
+      'master', 'hello', 'freedom', 'whatever', 'qazwsx',
+      'login', 'starwars', 'shadow', 'superman', 'qwerty123',
+      'eli123', 'test', 'guest', 'demo', 'user'
+    ];
+
+    if (weakPasswords.includes(staff_password.toLowerCase())) {
+      setSnackbar({
+        open: true,
+        message: "This password is too common and has been found in data breaches. Please choose a stronger password.",
+        severity: "error"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Check password complexity
+    const hasUpperCase = /[A-Z]/.test(staff_password);
+    const hasLowerCase = /[a-z]/.test(staff_password);
+    const hasNumber = /[0-9]/.test(staff_password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(staff_password);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      setSnackbar({
+        open: true,
+        message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        severity: "error"
+      });
+      setIsLoading(false);
+      return;
+    }
   
     // Ensure program is selected when role is Program Head or Instructor
     if ((role === "program head" || role === "instructor") && !program_id) {
@@ -416,6 +566,12 @@ const Staff = () => {
                 fullWidth 
                 margin="normal" 
                 data-testid="input-staff_password"
+                error={(passwordStrength.score > 0 && passwordStrength.score <= 2) || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
+                helperText={
+                  newStaff.staff_password && passwordStrength.feedback 
+                    ? passwordStrength.feedback 
+                    : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
+                }
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
