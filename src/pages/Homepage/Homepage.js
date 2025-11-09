@@ -1228,88 +1228,80 @@ const Homepage = () => {
                                                     Account Details
                                                 </Typography>
                                                 <div className="mb-3">
-                                                    <Grid container spacing={2} justifyContent="center">
-                                                        <Grid item xs={6}>
-                                                            <TextField
-                                                            label="Username"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            name="userName"
-                                                            data-testid="input-userName"
-                                                            value={formData.userName}
-                                                            onChange={handleInputChange}
-                                                            error={duplicateValidation.username.exists}
-                                                            helperText={
-                                                                duplicateValidation.username.checking 
-                                                                    ? 'Checking availability...' 
-                                                                    : duplicateValidation.username.exists 
-                                                                        ? 'Username already exists' 
-                                                                        : ''
-                                                            }
-                                                            required
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={6}>
-                                                            <TextField
-                                                            type={showPassword ? 'text' : 'password'}
-                                                            label="Password"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            name="password"
-                                                            data-testid="input-password"
-                                                            value={formData.password}
-                                                            onChange={handleInputChange}
-                                                            error={(passwordStrength.score > 0 && passwordStrength.score <= 2) || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
-                                                            helperText={
-                                                                formData.password && passwordStrength.feedback 
-                                                                    ? passwordStrength.feedback 
-                                                                    : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
-                                                            }
-                                                            required
-                                                            InputProps={{
-                                                                endAdornment: (
-                                                                    <InputAdornment position="end">
-                                                                        <IconButton
-                                                                            aria-label="toggle password visibility"
-                                                                            onClick={() => setShowPassword(prev => !prev)}
-                                                                            edge="end"
-                                                                        >
-                                                                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                                        </IconButton>
-                                                                    </InputAdornment>
-                                                                )
-                                                            }}
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={6}>
-                                                            <TextField
-                                                            type={showConfirmPassword ? 'text' : 'password'}
-                                                            label="Confirm Password"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            name="confirmPassword"
-                                                            data-testid="input-confirmPassword"
-                                                            value={formData.confirmPassword}
-                                                            onChange={handleInputChange}
-                                                            required
-                                                            error={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword}
-                                                            helperText={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
-                                                            InputProps={{
-                                                                endAdornment: (
-                                                                    <InputAdornment position="end">
-                                                                        <IconButton
-                                                                            aria-label="toggle confirm password visibility"
-                                                                            onClick={() => setShowConfirmPassword(prev => !prev)}
-                                                                            edge="end"
-                                                                        >
-                                                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                                                        </IconButton>
-                                                                    </InputAdornment>
-                                                                )
-                                                            }}
-                                                            />
-                                                        </Grid>                                    
-                                                    </Grid>
+                                                    <TextField
+                                                        label="Username"
+                                                        fullWidth
+                                                        margin="normal"
+                                                        name="userName"
+                                                        data-testid="input-userName"
+                                                        value={formData.userName}
+                                                        onChange={handleInputChange}
+                                                        error={duplicateValidation.username.exists}
+                                                        helperText={
+                                                            duplicateValidation.username.checking 
+                                                                ? 'Checking availability...' 
+                                                                : duplicateValidation.username.exists 
+                                                                    ? 'Username already exists' 
+                                                                    : ''
+                                                        }
+                                                        required
+                                                    />
+                                                    <TextField
+                                                        type={showPassword ? 'text' : 'password'}
+                                                        label="Password"
+                                                        fullWidth
+                                                        margin="normal"
+                                                        name="password"
+                                                        data-testid="input-password"
+                                                        value={formData.password}
+                                                        onChange={handleInputChange}
+                                                        error={(passwordStrength.score > 0 && passwordStrength.score <= 2) || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
+                                                        helperText={
+                                                            formData.password && passwordStrength.feedback 
+                                                                ? passwordStrength.feedback 
+                                                                : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
+                                                        }
+                                                        required
+                                                        InputProps={{
+                                                            endAdornment: (
+                                                                <InputAdornment position="end">
+                                                                    <IconButton
+                                                                        aria-label="toggle password visibility"
+                                                                        onClick={() => setShowPassword(prev => !prev)}
+                                                                        edge="end"
+                                                                    >
+                                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                                    </IconButton>
+                                                                </InputAdornment>
+                                                            )
+                                                        }}
+                                                    />
+                                                    <TextField
+                                                        type={showConfirmPassword ? 'text' : 'password'}
+                                                        label="Confirm Password"
+                                                        fullWidth
+                                                        margin="normal"
+                                                        name="confirmPassword"
+                                                        data-testid="input-confirmPassword"
+                                                        value={formData.confirmPassword}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                        error={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword}
+                                                        helperText={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
+                                                        InputProps={{
+                                                            endAdornment: (
+                                                                <InputAdornment position="end">
+                                                                    <IconButton
+                                                                        aria-label="toggle confirm password visibility"
+                                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                                        edge="end"
+                                                                    >
+                                                                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                                    </IconButton>
+                                                                </InputAdornment>
+                                                            )
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                             {/* Student Information */}
@@ -1342,7 +1334,7 @@ const Homepage = () => {
                                                                 onChange={handleInputChange}
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={6}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Last Name"
                                                                 fullWidth
@@ -1354,7 +1346,7 @@ const Homepage = () => {
                                                                 required
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={6}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Suffix"
                                                                 fullWidth
@@ -1406,7 +1398,7 @@ const Homepage = () => {
                                                                 InputLabelProps={{ shrink: true }}
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={4}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Age"
                                                                 fullWidth
@@ -1418,7 +1410,7 @@ const Homepage = () => {
                                                                 disabled
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={4}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Place of Birth"
                                                                 fullWidth
@@ -1430,7 +1422,7 @@ const Homepage = () => {
                                                                 required
                                                             />
                                                         </Grid>
-                                                        <Grid item xs={4}>
+                                                        <Grid item xs={12}>
                                                             <TextField
                                                                 label="Religion"
                                                                 fullWidth
@@ -1523,7 +1515,7 @@ const Homepage = () => {
                                                 </Typography>
                                                 <div className="mb-3">
                                                     <Grid container spacing={2}>
-                                                        <Grid item xs={12} sm={6}>
+                                                        <Grid item xs={12}>
                                                             <Select
                                                                 fullWidth
                                                                 margin="normal"
@@ -1547,7 +1539,7 @@ const Homepage = () => {
                                                                 ))}
                                                             </Select>
                                                         </Grid>
-                                                        <Grid item xs={12} sm={6}>
+                                                        <Grid item xs={12}>
                                                             <Select
                                                                 fullWidth
                                                                 margin="normal"
@@ -1571,7 +1563,7 @@ const Homepage = () => {
                                                                 ))}
                                                             </Select>
                                                         </Grid>
-                                                        <Grid item xs={12} sm={6}>
+                                                        <Grid item xs={12}>
                                                             <Select
                                                                 fullWidth
                                                                 margin="normal"
@@ -1595,7 +1587,7 @@ const Homepage = () => {
                                                                 ))}
                                                             </Select>
                                                         </Grid>
-                                                        <Grid item xs={12} sm={6}>
+                                                        <Grid item xs={12}>
                                                             <Select
                                                                 fullWidth
                                                                 margin="normal"
