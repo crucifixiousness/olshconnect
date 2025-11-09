@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useContext, useState, useRef } from 'react';
 import { MyContext } from '../../App';
 import homepagebg from '../../asset/images/olshcohomebg.jpg';
 import schoolbg from '../../asset/images/olshcodiamond.jpg';
@@ -104,6 +104,14 @@ const Homepage = () => {
     const [resendCooldown, setResendCooldown] = useState(0);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [duplicateValidation, setDuplicateValidation] = useState({
+        username: { exists: false, checking: false },
+        email: { exists: false, checking: false },
+        contact_number: { exists: false, checking: false },
+        guardian_contact_no: { exists: false, checking: false }
+    });
+    const usernameTimeoutRef = useRef(null);
+    const emailTimeoutRef = useRef(null);
     
     const handleOpen = () => {
         // Reset modal state so it always opens with a fresh form
@@ -113,6 +121,12 @@ const Homepage = () => {
         setGuardianPhoneValidation({ isValid: null, message: '' });
         setVerificationType('');
         setVerificationCode('');
+        setDuplicateValidation({
+            username: { exists: false, checking: false },
+            email: { exists: false, checking: false },
+            contact_number: { exists: false, checking: false },
+            guardian_contact_no: { exists: false, checking: false }
+        });
         setOpen(true);
     };
     const handleClose = () => {
@@ -124,6 +138,12 @@ const Homepage = () => {
         setGuardianPhoneValidation({ isValid: null, message: '' });
         setVerificationType('');
         setVerificationCode('');
+        setDuplicateValidation({
+            username: { exists: false, checking: false },
+            email: { exists: false, checking: false },
+            contact_number: { exists: false, checking: false },
+            guardian_contact_no: { exists: false, checking: false }
+        });
     };
     const handleVerificationOpen = (type) => {
         console.log('🔘 Verify button clicked for type:', type);
@@ -287,6 +307,34 @@ const Homepage = () => {
     const handleInputChange = (e) => {
         let { name, value } = e.target;
     
+        // Check for duplicates when username changes
+        if (name === 'userName') {
+            setFormData({ ...formData, [name]: value });
+            // Clear previous timeout
+            if (usernameTimeoutRef.current) {
+                clearTimeout(usernameTimeoutRef.current);
+            }
+            // Debounce duplicate check for username
+            usernameTimeoutRef.current = setTimeout(() => {
+                checkDuplicate('username', value);
+            }, 500);
+            return;
+        }
+        
+        // Check for duplicates when email changes
+        if (name === 'email') {
+            setFormData({ ...formData, [name]: value });
+            // Clear previous timeout
+            if (emailTimeoutRef.current) {
+                clearTimeout(emailTimeoutRef.current);
+            }
+            // Debounce duplicate check for email
+            emailTimeoutRef.current = setTimeout(() => {
+                checkDuplicate('email', value);
+            }, 500);
+            return;
+        }
+    
         if (name === 'birthdate') {
             const today = new Date();
             const selectedDate = new Date(value);
@@ -379,8 +427,14 @@ const Homepage = () => {
                 // Trigger real-time phone validation
                 if (validNumber.length === 11) {
                     validatePhoneInRealTime(validNumber);
+                    // Check for duplicate contact number
+                    checkDuplicate('contact_number', validNumber);
                 } else {
                     setPhoneValidation({ isValid: null, message: '' });
+                    setDuplicateValidation(prev => ({
+                        ...prev,
+                        contact_number: { exists: false, checking: false }
+                    }));
                 }
             }
             // For guardian contact, add validation
@@ -388,8 +442,14 @@ const Homepage = () => {
                 // Trigger real-time guardian phone validation
                 if (validNumber.length === 11) {
                     validateGuardianPhoneInRealTime(validNumber);
+                    // Check for duplicate guardian contact number
+                    checkDuplicate('guardian_contact_no', validNumber);
                 } else {
                     setGuardianPhoneValidation({ isValid: null, message: '' });
+                    setDuplicateValidation(prev => ({
+                        ...prev,
+                        guardian_contact_no: { exists: false, checking: false }
+                    }));
                 }
             }
 
@@ -483,6 +543,41 @@ const Homepage = () => {
             isValid: true,
             message: 'Phone number format is valid'
         });
+    };
+
+    // Check for duplicate values
+    const checkDuplicate = async (field, value) => {
+        if (!value || value.trim() === '') {
+            setDuplicateValidation(prev => ({
+                ...prev,
+                [field]: { exists: false, checking: false }
+            }));
+            return;
+        }
+
+        // Set checking state
+        setDuplicateValidation(prev => ({
+            ...prev,
+            [field]: { exists: false, checking: true }
+        }));
+
+        try {
+            const response = await axios.post('/api/check-duplicates', {
+                field: field,
+                value: value
+            });
+
+            setDuplicateValidation(prev => ({
+                ...prev,
+                [field]: { exists: response.data.exists, checking: false }
+            }));
+        } catch (error) {
+            console.error('Error checking duplicate:', error);
+            setDuplicateValidation(prev => ({
+                ...prev,
+                [field]: { exists: false, checking: false }
+            }));
+        }
     };
 
     // Verification functions
@@ -703,6 +798,69 @@ const Homepage = () => {
                 severity: 'error'
             });
             return;
+        }
+
+        // Check for duplicates before submission
+        if (duplicateValidation.username.exists) {
+            setSnackbar({
+                open: true,
+                message: "Username already exists. Please choose a different username.",
+                severity: 'error'
+            });
+            return;
+        }
+
+        if (duplicateValidation.email.exists) {
+            setSnackbar({
+                open: true,
+                message: "Email already exists. Please use a different email address.",
+                severity: 'error'
+            });
+            return;
+        }
+
+        if (duplicateValidation.contact_number.exists) {
+            setSnackbar({
+                open: true,
+                message: "Contact number already exists. Please use a different contact number.",
+                severity: 'error'
+            });
+            return;
+        }
+
+        if (duplicateValidation.guardian_contact_no.exists) {
+            setSnackbar({
+                open: true,
+                message: "Guardian contact number already exists. Please use a different contact number.",
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Check for duplicate name + birthdate combination
+        try {
+            const nameBirthdateCheck = await axios.post('/api/check-duplicates', {
+                field: 'name_birthdate',
+                value: {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    middleName: formData.middleName || '',
+                    suffix: formData.suffix || '',
+                    birthdate: formData.birthdate
+                }
+            });
+
+            if (nameBirthdateCheck.data.exists) {
+                setSnackbar({
+                    open: true,
+                    message: "A student with the same name and birthdate already exists. Please contact the registrar if you believe this is an error.",
+                    severity: 'error'
+                });
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking name + birthdate duplicate:', error);
+            // Continue with registration if check fails (backend will catch it)
         }
 
         try {
@@ -935,7 +1093,15 @@ const Homepage = () => {
                                                             name="userName"
                                                             data-testid="input-userName"
                                                             value={formData.userName}
-                                                            onChange={handleInputChange}                                       
+                                                            onChange={handleInputChange}
+                                                            error={duplicateValidation.username.exists}
+                                                            helperText={
+                                                                duplicateValidation.username.checking 
+                                                                    ? 'Checking availability...' 
+                                                                    : duplicateValidation.username.exists 
+                                                                        ? 'Username already exists' 
+                                                                        : ''
+                                                            }
                                                             required
                                                             />
                                                         </Grid>
@@ -1146,6 +1312,14 @@ const Homepage = () => {
                                                                 type="email"
                                                                 value={formData.email}
                                                                 onChange={handleInputChange}
+                                                                error={duplicateValidation.email.exists}
+                                                                helperText={
+                                                                    duplicateValidation.email.checking 
+                                                                        ? 'Checking availability...' 
+                                                                        : duplicateValidation.email.exists 
+                                                                            ? 'Email already exists' 
+                                                                            : ''
+                                                                }
                                                                 required
                                                                 InputProps={{
                                                                     endAdornment: (
@@ -1173,9 +1347,10 @@ const Homepage = () => {
                                                                 value={formData.number}
                                                                 onChange={handleInputChange}
                                                                 required
-                                                                error={!!contactNumberError || phoneValidation.isValid === false}
+                                                                error={!!contactNumberError || phoneValidation.isValid === false || duplicateValidation.contact_number.exists}
                                                                 helperText={
                                                                     contactNumberError || 
+                                                                    (duplicateValidation.contact_number.exists ? 'Contact number already exists' : '') ||
                                                                     (phoneValidation.isValid === false ? phoneValidation.message : '') ||
                                                                     (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '')
                                                                 }
@@ -1338,10 +1513,15 @@ const Homepage = () => {
                                                         value={formData.guardianContactNo}
                                                         onChange={handleInputChange}
                                                         required
-                                                        error={guardianPhoneValidation.isValid === false}
+                                                        error={guardianPhoneValidation.isValid === false || duplicateValidation.guardian_contact_no.exists}
                                                         helperText={
-                                                            guardianPhoneValidation.isValid === false ? guardianPhoneValidation.message : 
-                                                            guardianPhoneValidation.isValid === true ? '✓ ' + guardianPhoneValidation.message : ''
+                                                            duplicateValidation.guardian_contact_no.exists 
+                                                                ? 'Guardian contact number already exists' 
+                                                                : guardianPhoneValidation.isValid === false 
+                                                                    ? guardianPhoneValidation.message 
+                                                                    : guardianPhoneValidation.isValid === true 
+                                                                        ? '✓ ' + guardianPhoneValidation.message 
+                                                                        : ''
                                                         }
                                                         InputProps={{
                                                             endAdornment: guardianPhoneValidation.isValid === true && (
