@@ -613,12 +613,12 @@ const Homepage = () => {
             score += 1;
         }
 
-        // Check for special character
-        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-            feedback.push('Add a special character (!@#$%^&*)');
-        } else {
-            score += 1;
-        }
+    // Check for special character
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      feedback.push('Add a special character (!@#$%^&*)');
+    } else {
+      score += 1;
+    }
 
         // Bonus for longer passwords
         if (password.length >= 12) {
@@ -864,7 +864,7 @@ const Homepage = () => {
         const hasUpperCase = /[A-Z]/.test(formData.password);
         const hasLowerCase = /[a-z]/.test(formData.password);
         const hasNumber = /[0-9]/.test(formData.password);
-        const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+        const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password);
 
         if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
             setSnackbar({
@@ -1259,7 +1259,7 @@ const Homepage = () => {
                                                             data-testid="input-password"
                                                             value={formData.password}
                                                             onChange={handleInputChange}
-                                                            error={passwordStrength.score > 0 && passwordStrength.score <= 2 || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
+                                                            error={(passwordStrength.score > 0 && passwordStrength.score <= 2) || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
                                                             helperText={
                                                                 formData.password && passwordStrength.feedback 
                                                                     ? passwordStrength.feedback 
