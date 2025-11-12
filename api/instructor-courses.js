@@ -14,17 +14,32 @@ module.exports = async (req, res) => {
       const { program_id } = req.query;
       
       client = await pool.connect();
-      const result = await client.query(
-        `SELECT 
-          staff_id,
-          full_name,
-          role
-         FROM admins
-         WHERE role = 'instructor' 
-         AND program_id = $1
-         ORDER BY full_name ASC`,
-        [program_id]
-      );
+      
+      // If program_id is provided, filter by it; otherwise, get all instructors
+      let result;
+      if (program_id) {
+        result = await client.query(
+          `SELECT 
+            staff_id,
+            full_name,
+            role
+           FROM admins
+           WHERE role = 'instructor' 
+           AND program_id = $1
+           ORDER BY full_name ASC`,
+          [program_id]
+        );
+      } else {
+        result = await client.query(
+          `SELECT 
+            staff_id,
+            full_name,
+            role
+           FROM admins
+           WHERE role = 'instructor'
+           ORDER BY full_name ASC`
+        );
+      }
       
       res.json(result.rows);
     } catch (error) {
