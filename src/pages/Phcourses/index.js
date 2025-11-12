@@ -84,7 +84,7 @@ const AssignCourses = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [instructors, setInstructors] = useState([]);
-  const [selectedInstructor, setSelectedInstructor] = useState('');
+  const [selectedInstructor, setSelectedInstructor] = useState(null);
   // Blocks that already have assigned students for this program
   const [existingBlocks, setExistingBlocks] = useState([]);
 
@@ -136,8 +136,10 @@ const AssignCourses = () => {
     setShowEditModal(true);
 
     try {
-      // Fetch instructors
-      await fetchInstructors();
+      // Fetch instructors and get the data directly
+      const instructorsResponse = await axios.get(`/api/instructor-courses`);
+      const instructorsData = instructorsResponse.data;
+      setInstructors(instructorsData);
 
       // Fetch existing assignment data
       const response = await axios.get(`/api/course-assignment/${course.pc_id}`);
@@ -148,7 +150,9 @@ const AssignCourses = () => {
         setSelectedDay(assignmentData.day || '');
         setStartTime(assignmentData.start_time || '');
         setEndTime(assignmentData.end_time || '');
-        setSelectedInstructor(assignmentData.staff_id || '');
+        // Find the instructor object from the fetched instructors list
+        const instructor = instructorsData.find(inst => inst.staff_id === assignmentData.staff_id);
+        setSelectedInstructor(instructor || null);
       }
     } catch (error) {
       console.error('Error fetching assignment details:', error);
@@ -164,7 +168,7 @@ const AssignCourses = () => {
   const handleEditClose = () => {
     setShowEditModal(false);
     setSelectedCourse(null);
-    setSelectedInstructor('');
+    setSelectedInstructor(null);
     setSelectedSection('');
     setSelectedDay('');
     setStartTime('');
@@ -176,8 +180,8 @@ const AssignCourses = () => {
   const fetchInstructors = useCallback(async () => {
     try {
       setLoading(true);
-      // Get program_id from state
-      const response = await axios.get(`/api/instructor-courses?program_id=${program_id}`);
+      // Fetch all instructors regardless of program
+      const response = await axios.get(`/api/instructor-courses`);
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -189,14 +193,13 @@ const AssignCourses = () => {
     } finally {
       setLoading(false);
     }
-  }, [program_id]); // Add program_id as dependency
+  }, []); // Removed program_id dependency since we're fetching all instructors
 
   // Update the useEffect for fetchInstructors
   useEffect(() => {
-    if (program_id) { // Only fetch if program_id exists
-      fetchInstructors();
-    }
-  }, [fetchInstructors, program_id]);
+    // Fetch all instructors when component mounts or when fetchInstructors changes
+    fetchInstructors();
+  }, [fetchInstructors]);
 
   // Modify your filteredCourses logic to include semester filtering
   const filteredCourses = assignedCourses.filter(course => {
@@ -531,7 +534,7 @@ const AssignCourses = () => {
     try {
       const response = await axios.put(`/api/assign-instructor`, {
         course_id: selectedCourse.pc_id,
-        instructor_id: selectedInstructor,
+        instructor_id: selectedInstructor.staff_id,
         section: selectedSection,
         day: selectedDay,
         start_time: startTime,
@@ -1216,20 +1219,38 @@ const AssignCourses = () => {
               <Typography variant="h6" className="section-title">
                 Instructor Assignment
               </Typography>
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Select Instructor</InputLabel>
-                <Select
-                  value={selectedInstructor}
-                  onChange={(e) => setSelectedInstructor(e.target.value)}
-                  disabled={loading}
-                >
-                  {instructors.map((instructor) => (
-                    <MenuItem key={instructor.staff_id} value={instructor.staff_id}>
-                      {instructor.full_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={instructors}
+                getOptionLabel={(option) => option.full_name || ''}
+                value={selectedInstructor}
+                onChange={(event, newValue) => {
+                  setSelectedInstructor(newValue);
+                }}
+                disabled={loading}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Instructor"
+                    margin="normal"
+                    placeholder="Type to search instructor..."
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#c70202',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#c70202',
+                        },
+                      },
+                    }}
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option.staff_id === value?.staff_id}
+                noOptionsText="No instructors found"
+                clearOnEscape
+                selectOnFocus
+                handleHomeEndKeys
+              />
             </div>
 
             <Button 
