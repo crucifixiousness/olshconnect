@@ -44,9 +44,7 @@ module.exports = async (req, res) => {
     let paramIndex = 1;
 
     // Registrar set clause (Registrar approval after Program Head)
-    const setClause = `approval_status = 'reg_approved', registrar_approved_by = $1, registrar_approved_at = CURRENT_TIMESTAMP`;
-    params.push(decoded.staff_id || decoded.user_id || null);
-    paramIndex++;
+    const setClause = `approval_status = 'reg_approved', registrar_approved_at = CURRENT_TIMESTAMP`;
 
     let updateQuery = '';
 
