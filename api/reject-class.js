@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
 
     client = await pool.connect();
 
-    const setClause = `approval_status = 'pending', program_head_approved_at = NULL, registrar_approved_by = NULL, registrar_approved_at = NULL, dean_approved_by = NULL, dean_approved_at = NULL`;
+    const setClause = `approval_status = 'pending', program_head_approved_at = NULL, registrar_approved_at = NULL, dean_approved_at = NULL`;
 
     let params = [];
     let paramIndex = 1;
