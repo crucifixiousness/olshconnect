@@ -13,7 +13,7 @@ import courses from '../../asset/images/courses.png';
 import { Link } from "react-router-dom";
 import logo from '../../asset/images/olshco-logo1.png';
 import announcement from '../../asset/images/anno.png';
-import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl, IconButton, InputAdornment } from "@mui/material";
+import { Modal, Button, Box, TextField, MenuItem, Typography, Checkbox, FormControlLabel, Grid, Snackbar, Alert, Select, FormControl, IconButton, InputAdornment, InputLabel } from "@mui/material";
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import axios from "axios";
@@ -113,6 +113,8 @@ const Homepage = () => {
     const usernameTimeoutRef = useRef(null);
     const emailTimeoutRef = useRef(null);
     const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
+    const [currentStep, setCurrentStep] = useState(1);
+    const totalSteps = 6;
     
     const handleOpen = () => {
         // Reset modal state so it always opens with a fresh form
@@ -129,6 +131,7 @@ const Homepage = () => {
             guardian_contact_no: { exists: false, checking: false }
         });
         setPasswordStrength({ score: 0, feedback: '' });
+        setCurrentStep(1);
         setOpen(true);
     };
     const handleClose = () => {
@@ -147,6 +150,7 @@ const Homepage = () => {
             guardian_contact_no: { exists: false, checking: false }
         });
         setPasswordStrength({ score: 0, feedback: '' });
+        setCurrentStep(1);
     };
     const handleVerificationOpen = (type) => {
         console.log('🔘 Verify button clicked for type:', type);
@@ -782,6 +786,125 @@ const Homepage = () => {
         }
     };
 
+    // Step validation functions
+    const validateStep = (step) => {
+        switch(step) {
+            case 1: // Personal Information
+                if (!formData.firstName || !formData.lastName || !formData.sex || !formData.birthdate) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please fill in all required personal information fields",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                return true;
+            case 2: // Contact Information
+                if (!formData.email || !isEmailVerified) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please verify your email address",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                if (!formData.number || formData.number.length !== 11 || phoneValidation.isValid === false || duplicateValidation.contact_number.exists) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please enter a valid contact number",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                return true;
+            case 3: // Address Information
+                if (!address.region || !address.province || !address.city || !address.barangay) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please complete your address information",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                return true;
+            case 4: // Guardian Information
+                if (!formData.guardianName || !formData.guardianContactNo) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please fill in all guardian information fields",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                if (formData.guardianContactNo.length !== 11 || guardianPhoneValidation.isValid === false || duplicateValidation.guardian_contact_no.exists) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please enter a valid guardian contact number",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                return true;
+            case 5: // Review & Submit (Privacy Policy)
+                return true; // No validation needed, just need to check the checkbox
+            case 6: // Account Details
+                if (!formData.userName || duplicateValidation.username.exists) {
+                    setSnackbar({
+                        open: true,
+                        message: "Please enter a valid username",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                if (formData.password.length < 8) {
+                    setSnackbar({
+                        open: true,
+                        message: "Password must be at least 8 characters long",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                // Check password complexity
+                const hasUpperCase = /[A-Z]/.test(formData.password);
+                const hasLowerCase = /[a-z]/.test(formData.password);
+                const hasNumber = /[0-9]/.test(formData.password);
+                const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password);
+                if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+                    setSnackbar({
+                        open: true,
+                        message: "Password must contain uppercase, lowercase, number, and special character",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                if (formData.password !== formData.confirmPassword) {
+                    setSnackbar({
+                        open: true,
+                        message: "Passwords do not match",
+                        severity: 'error'
+                    });
+                    return false;
+                }
+                return true;
+            default:
+                return true;
+        }
+    };
+
+    const handleNext = () => {
+        if (validateStep(currentStep)) {
+            if (currentStep < totalSteps) {
+                setCurrentStep(currentStep + 1);
+            }
+        }
+    };
+
+    const handleBack = () => {
+        if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
     
@@ -1221,495 +1344,586 @@ const Homepage = () => {
                                         Registration Form
                                     </Typography>
 
+                                    {/* Step Indicator */}
+                                    {!isRegistered && (
+                                        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+                                            {[1, 2, 3, 4, 5, 6].map((step) => (
+                                                <Box key={step} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Box
+                                                        sx={{
+                                                            width: 35,
+                                                            height: 35,
+                                                            borderRadius: '50%',
+                                                            backgroundColor: currentStep >= step ? '#c70202' : '#e0e0e0',
+                                                            color: currentStep >= step ? 'white' : '#666',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontWeight: 'bold',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {step}
+                                                    </Box>
+                                                    {step < totalSteps && (
+                                                        <Box
+                                                            sx={{
+                                                                width: 30,
+                                                                height: 2,
+                                                                backgroundColor: currentStep > step ? '#c70202' : '#e0e0e0',
+                                                                mx: 0.5
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    )}
+
                                     {!isRegistered ? (    
                                         <form onSubmit={handleSubmit} data-testid="registration-form">
-                                            <div className="registration-section">
-                                                <Typography variant="h6" className="section-title">
-                                                    Account Details
-                                                </Typography>
-                                                <div className="mb-3">
-                                                    <TextField
-                                                        label="Username"
-                                                        fullWidth
-                                                        margin="normal"
-                                                        name="userName"
-                                                        data-testid="input-userName"
-                                                        value={formData.userName}
-                                                        onChange={handleInputChange}
-                                                        error={duplicateValidation.username.exists}
-                                                        helperText={
-                                                            duplicateValidation.username.checking 
-                                                                ? 'Checking availability...' 
-                                                                : duplicateValidation.username.exists 
-                                                                    ? 'Username already exists' 
-                                                                    : ''
-                                                        }
-                                                        required
-                                                    />
-                                                    <TextField
-                                                        type={showPassword ? 'text' : 'password'}
-                                                        label="Password"
-                                                        fullWidth
-                                                        margin="normal"
-                                                        name="password"
-                                                        data-testid="input-password"
-                                                        value={formData.password}
-                                                        onChange={handleInputChange}
-                                                        error={(passwordStrength.score > 0 && passwordStrength.score <= 2) || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
-                                                        helperText={
-                                                            formData.password && passwordStrength.feedback 
-                                                                ? passwordStrength.feedback 
-                                                                : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
-                                                        }
-                                                        required
-                                                        InputProps={{
-                                                            endAdornment: (
-                                                                <InputAdornment position="end">
-                                                                    <IconButton
-                                                                        aria-label="toggle password visibility"
-                                                                        onClick={() => setShowPassword(prev => !prev)}
-                                                                        edge="end"
-                                                                    >
-                                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                                    </IconButton>
-                                                                </InputAdornment>
-                                                            )
-                                                        }}
-                                                    />
-                                                    <TextField
-                                                        type={showConfirmPassword ? 'text' : 'password'}
-                                                        label="Confirm Password"
-                                                        fullWidth
-                                                        margin="normal"
-                                                        name="confirmPassword"
-                                                        data-testid="input-confirmPassword"
-                                                        value={formData.confirmPassword}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                        error={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword}
-                                                        helperText={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
-                                                        InputProps={{
-                                                            endAdornment: (
-                                                                <InputAdornment position="end">
-                                                                    <IconButton
-                                                                        aria-label="toggle confirm password visibility"
-                                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
-                                                                        edge="end"
-                                                                    >
-                                                                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                                                    </IconButton>
-                                                                </InputAdornment>
-                                                            )
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {/* Student Information */}
-                                            <div className="registration-section">
-                                                <Typography variant="h6" className="section-title">
-                                                    Personal Information
-                                                </Typography>
-                                                <div className="mb-3">
-                                                    <Grid container spacing={2}>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="First Name"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="firstName"
-                                                                data-testid="input-firstName"
-                                                                value={formData.firstName}
-                                                                onChange={handleInputChange}
-                                                                required
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Middle Name"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="middleName"
-                                                                data-testid="input-middleName"
-                                                                value={formData.middleName}
-                                                                onChange={handleInputChange}
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Last Name"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="lastName"
-                                                                data-testid="input-lastName"
-                                                                value={formData.lastName}
-                                                                onChange={handleInputChange}
-                                                                required
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Suffix"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="suffix"
-                                                                data-testid="input-suffix"
-                                                                value={formData.suffix}
-                                                                onChange={handleInputChange}
-                                                            />
-                                                        </Grid>
-                                                    </Grid>
-                                                </div>
-                                            </div>
-                                            {/* Sex Information */}
-                                            <div className="registration-section">
-                                                <Typography variant="h6" className="section-title">
-                                                    Additional Information
-                                                </Typography>
-                                                <div className="mb-3">                                                
-                                                    <Grid container spacing={2}>
-                                                        <Grid item xs={12}>
-                                                            <FormControl fullWidth margin="normal" required>
-                                                            <h6>Sex</h6>
-                                                                <Select
-                                                                    name="sex"
-                                                                    data-testid="input-sex"
-                                                                    value={formData.sex}
+                                            {/* Step 1: Personal Information */}
+                                            {currentStep === 1 && (
+                                                <div className="registration-section">
+                                                    <Typography variant="h6" className="section-title" sx={{ mb: 2, color: '#c70202', fontWeight: 'bold' }}>
+                                                        Step 1: Personal Information
+                                                    </Typography>
+                                                    <div className="mb-3">
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="First Name"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="firstName"
+                                                                    data-testid="input-firstName"
+                                                                    value={formData.firstName}
                                                                     onChange={handleInputChange}
-                                                                    displayEmpty
-                                                                    label="Sex"
-                                                                >
-                                                                    <MenuItem value=""><em>Select Sex</em></MenuItem>
-                                                                    <MenuItem value="Male">Male</MenuItem>
-                                                                    <MenuItem value="Female">Female</MenuItem>
-                                                                </Select>
-                                                            </FormControl>
+                                                                    required
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Middle Name"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="middleName"
+                                                                    data-testid="input-middleName"
+                                                                    value={formData.middleName}
+                                                                    onChange={handleInputChange}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Last Name"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="lastName"
+                                                                    data-testid="input-lastName"
+                                                                    value={formData.lastName}
+                                                                    onChange={handleInputChange}
+                                                                    required
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Suffix"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="suffix"
+                                                                    data-testid="input-suffix"
+                                                                    value={formData.suffix}
+                                                                    onChange={handleInputChange}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth margin="normal" required>
+                                                                    <h6>Sex</h6>
+                                                                    <Select
+                                                                        name="sex"
+                                                                        data-testid="input-sex"
+                                                                        value={formData.sex}
+                                                                        onChange={handleInputChange}
+                                                                        displayEmpty
+                                                                        label="Sex"
+                                                                    >
+                                                                        <MenuItem value=""><em>Select Sex</em></MenuItem>
+                                                                        <MenuItem value="Male">Male</MenuItem>
+                                                                        <MenuItem value="Female">Female</MenuItem>
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField                                    
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="birthdate"
+                                                                    label="Birthday"
+                                                                    data-testid="input-birthdate"
+                                                                    type="date"
+                                                                    value={formData.birthdate ? formData.birthdate.split('/').reverse().join('-') : ''}
+                                                                    onChange={handleInputChange}
+                                                                    required
+                                                                    InputLabelProps={{ shrink: true }}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Age"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="age"
+                                                                    data-testid="input-age"
+                                                                    value={formData.age}
+                                                                    onChange={handleInputChange}
+                                                                    disabled
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Place of Birth"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="placeOfBirth"
+                                                                    data-testid="input-placeOfBirth"
+                                                                    value={formData.placeOfBirth}
+                                                                    onChange={handleInputChange}
+                                                                    required
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Religion"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="religion"
+                                                                    data-testid="input-religion"
+                                                                    value={formData.religion}
+                                                                    onChange={handleInputChange}
+                                                                    required
+                                                                />
+                                                            </Grid>
                                                         </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField                                    
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="birthdate"
-                                                                label="Birthday"
-                                                                data-testid="input-birthdate"
-                                                                type="date"
-                                                                value={formData.birthdate ? formData.birthdate.split('/').reverse().join('-') : ''}
-                                                                onChange={handleInputChange}
-                                                                required
-                                                                InputLabelProps={{ shrink: true }}
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Age"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="age"
-                                                                data-testid="input-age"
-                                                                value={formData.age}
-                                                                onChange={handleInputChange}
-                                                                disabled
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Place of Birth"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="placeOfBirth"
-                                                                data-testid="input-placeOfBirth"
-                                                                value={formData.placeOfBirth}
-                                                                onChange={handleInputChange}
-                                                                required
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Religion"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="religion"
-                                                                data-testid="input-religion"
-                                                                value={formData.religion}
-                                                                onChange={handleInputChange}
-                                                                required
-                                                            />
-                                                        </Grid>
-                                                    </Grid>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            <div className="registration-section">
-                                                <Typography variant="h6" className="section-title">
-                                                    Contact Information
-                                                </Typography>
-                                                <div className="mb-3">
-                                                    <Grid container spacing={2}>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Email"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="email"
-                                                                data-testid="input-email"
-                                                                type="email"
-                                                                value={formData.email}
-                                                                onChange={handleInputChange}
-                                                                error={duplicateValidation.email.exists}
-                                                                helperText={
-                                                                    duplicateValidation.email.checking 
-                                                                        ? 'Checking availability...' 
-                                                                        : duplicateValidation.email.exists 
-                                                                            ? 'Email already exists' 
+                                            {/* Step 2: Contact Information */}
+                                            {currentStep === 2 && (
+                                                <div className="registration-section">
+                                                    <Typography variant="h6" className="section-title" sx={{ mb: 2, color: '#c70202', fontWeight: 'bold' }}>
+                                                        Step 2: Contact Information
+                                                    </Typography>
+                                                    <div className="mb-3">
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Email"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="email"
+                                                                    data-testid="input-email"
+                                                                    type="email"
+                                                                    value={formData.email}
+                                                                    onChange={handleInputChange}
+                                                                    error={duplicateValidation.email.exists}
+                                                                    helperText={
+                                                                        duplicateValidation.email.checking 
+                                                                            ? 'Checking availability...' 
+                                                                            : duplicateValidation.email.exists 
+                                                                                ? 'Email already exists' 
+                                                                                : ''
+                                                                    }
+                                                                    required
+                                                                    InputProps={{
+                                                                        endAdornment: (
+                                                                            <Button
+                                                                                size="small"
+                                                                                variant={isEmailVerified ? "contained" : "outlined"}
+                                                                                color={isEmailVerified ? "success" : "primary"}
+                                                                                onClick={() => handleVerificationOpen('email')}
+                                                                                disabled={!formData.email || verificationLoading}
+                                                                                sx={{ ml: 1, minWidth: '100px' }}
+                                                                            >
+                                                                                {isEmailVerified ? '✓ Verified' : 'Verify'}
+                                                                            </Button>
+                                                                        )
+                                                                    }}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Contact Number"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="number"
+                                                                    data-testid="input-number"
+                                                                    value={formData.number}
+                                                                    onChange={handleInputChange}
+                                                                    required
+                                                                    error={!!contactNumberError || phoneValidation.isValid === false || duplicateValidation.contact_number.exists}
+                                                                    helperText={
+                                                                        contactNumberError || 
+                                                                        (duplicateValidation.contact_number.exists ? 'Contact number already exists' : '') ||
+                                                                        (phoneValidation.isValid === false ? phoneValidation.message : '') ||
+                                                                        (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '')
+                                                                    }
+                                                                    InputProps={{
+                                                                        endAdornment: phoneValidation.isValid === true && (
+                                                                            <span style={{ color: 'green', fontSize: '20px', marginLeft: '8px' }}>
+                                                                                ✓
+                                                                            </span>
+                                                                        )
+                                                                    }}
+                                                                />
+                                                            </Grid>
+                                                        </Grid>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Step 3: Address Information */}
+                                            {currentStep === 3 && (
+                                                <div className="registration-section">
+                                                    <Typography variant="h6" className="section-title" sx={{ mb: 2, color: '#c70202', fontWeight: 'bold' }}>
+                                                        Step 3: Address Information
+                                                    </Typography>
+                                                    <div className="mb-3">
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth margin="normal" required>
+                                                                    <InputLabel>Select Region</InputLabel>
+                                                                    <Select
+                                                                        name="region"
+                                                                        data-testid="input-region"
+                                                                        value={address.region}
+                                                                        onChange={(e) => {
+                                                                            const selectedRegion = regionData.find(r => r.region_code === e.target.value);
+                                                                            setAddress({ ...address, region: e.target.value, province: '', city: '', barangay: '' });
+                                                                            setAddressNames({ ...addressNames, region: selectedRegion ? selectedRegion.region_name : '', province: '', city: '', barangay: '' });
+                                                                        }}
+                                                                        displayEmpty
+                                                                        label="Select Region"
+                                                                    >
+                                                                        <MenuItem value=""><em>Select Region</em></MenuItem>
+                                                                        {regionData.map((region) => (
+                                                                            <MenuItem key={region.region_code} value={region.region_code}>
+                                                                                {region.region_name}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth margin="normal" required>
+                                                                    <InputLabel>Select Province</InputLabel>
+                                                                    <Select
+                                                                        name="province"
+                                                                        data-testid="input-province"
+                                                                        value={address.province}
+                                                                        onChange={(e) => {
+                                                                            const selectedProvince = provinceData.find(p => p.province_code === e.target.value);
+                                                                            setAddress({ ...address, province: e.target.value, city: '', barangay: '' });
+                                                                            setAddressNames({ ...addressNames, province: selectedProvince ? selectedProvince.province_name : '', city: '', barangay: '' });
+                                                                        }}
+                                                                        displayEmpty
+                                                                        label="Select Province"
+                                                                    >
+                                                                        <MenuItem value=""><em>Select Province</em></MenuItem>
+                                                                        {provinceData.map((province) => (
+                                                                            <MenuItem key={province.province_code} value={province.province_code}>
+                                                                                {province.province_name}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth margin="normal" required>
+                                                                    <InputLabel>Select City</InputLabel>
+                                                                    <Select
+                                                                        name="city"
+                                                                        data-testid="input-city"
+                                                                        value={address.city}
+                                                                        onChange={(e) => {
+                                                                            const selectedCity = cityData.find(c => c.city_code === e.target.value);
+                                                                            setAddress({ ...address, city: e.target.value, barangay: '' });
+                                                                            setAddressNames({ ...addressNames, city: selectedCity ? selectedCity.city_name : '', barangay: '' });
+                                                                        }}
+                                                                        displayEmpty
+                                                                        label="Select City"
+                                                                    >
+                                                                        <MenuItem value=""><em>Select City</em></MenuItem>
+                                                                        {cityData.map((city) => (
+                                                                            <MenuItem key={city.city_code} value={city.city_code}>
+                                                                                {city.city_name}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth margin="normal" required>
+                                                                    <InputLabel>Select Barangay</InputLabel>
+                                                                    <Select
+                                                                        name="barangay"
+                                                                        data-testid="input-barangay"
+                                                                        value={address.barangay}
+                                                                        onChange={(e) => {
+                                                                            const selectedBarangay = barangayData.find(b => b.brgy_code === e.target.value);
+                                                                            setAddress({ ...address, barangay: e.target.value });
+                                                                            setAddressNames({ ...addressNames, barangay: selectedBarangay ? selectedBarangay.brgy_name : '' });
+                                                                        }}
+                                                                        displayEmpty
+                                                                        label="Select Barangay"
+                                                                    >
+                                                                        <MenuItem value=""><em>Select Barangay</em></MenuItem>
+                                                                        {barangayData.map((barangay) => (
+                                                                            <MenuItem key={barangay.brgy_code} value={barangay.brgy_code}>
+                                                                                {barangay.brgy_name}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Full Address (Auto-generated)"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    name="street_text"
+                                                                    data-testid="input-street_text"
+                                                                    id="street-text"
+                                                                    value={formData.street_text}
+                                                                    InputProps={{
+                                                                        readOnly: true,
+                                                                    }}
+                                                                    placeholder="Select province, city, and barangay to generate address"
+                                                                />
+                                                            </Grid>
+                                                        </Grid>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Step 4: Guardian Information */}
+                                            {currentStep === 4 && (
+                                                <div className="registration-section">
+                                                    <Typography variant="h6" className="section-title" sx={{ mb: 2, color: '#c70202', fontWeight: 'bold' }}>
+                                                        Step 4: Guardian Information
+                                                    </Typography>
+                                                    <div className="mb-3">
+                                                        <TextField
+                                                            label="Guardian Name"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="guardianName"
+                                                            data-testid="input-guardianName"
+                                                            value={formData.guardianName}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                        />
+                                                        <TextField
+                                                            label="Guardian Contact"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="guardianContactNo"
+                                                            data-testid="input-guardianContactNo"
+                                                            value={formData.guardianContactNo}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            error={guardianPhoneValidation.isValid === false || duplicateValidation.guardian_contact_no.exists}
+                                                            helperText={
+                                                                duplicateValidation.guardian_contact_no.exists 
+                                                                    ? 'Guardian contact number already exists' 
+                                                                    : guardianPhoneValidation.isValid === false 
+                                                                        ? guardianPhoneValidation.message 
+                                                                        : guardianPhoneValidation.isValid === true 
+                                                                            ? '✓ ' + guardianPhoneValidation.message 
                                                                             : ''
-                                                                }
-                                                                required
-                                                                InputProps={{
-                                                                    endAdornment: (
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant={isEmailVerified ? "contained" : "outlined"}
-                                                                            color={isEmailVerified ? "success" : "primary"}
-                                                                            onClick={() => handleVerificationOpen('email')}
-                                                                            disabled={!formData.email || verificationLoading}
-                                                                            sx={{ ml: 1, minWidth: '100px' }}
-                                                                        >
-                                                                            {isEmailVerified ? '✓ Verified' : 'Verify'}
-                                                                        </Button>
-                                                                    )
-                                                                }}
-                                                            />
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Contact Number"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="number"
-                                                                data-testid="input-number"
-                                                                value={formData.number}
-                                                                onChange={handleInputChange}
-                                                                required
-                                                                error={!!contactNumberError || phoneValidation.isValid === false || duplicateValidation.contact_number.exists}
-                                                                helperText={
-                                                                    contactNumberError || 
-                                                                    (duplicateValidation.contact_number.exists ? 'Contact number already exists' : '') ||
-                                                                    (phoneValidation.isValid === false ? phoneValidation.message : '') ||
-                                                                    (phoneValidation.isValid === true ? '✓ ' + phoneValidation.message : '')
-                                                                }
-                                                                InputProps={{
-                                                                    endAdornment: phoneValidation.isValid === true && (
-                                                                        <span style={{ color: 'green', fontSize: '20px', marginLeft: '8px' }}>
-                                                                            ✓
-                                                                        </span>
-                                                                    )
-                                                                }}
-                                                            />
-                                                        </Grid>
-                                                    </Grid>
+                                                            }
+                                                            InputProps={{
+                                                                endAdornment: guardianPhoneValidation.isValid === true && (
+                                                                    <span style={{ color: 'green', fontSize: '20px', marginLeft: '8px' }}>
+                                                                        ✓
+                                                                    </span>
+                                                                )
+                                                            }}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            <div className="registration-section">
-                                                <Typography variant="h6" className="section-title">
-                                                    Address Information
-                                                </Typography>
-                                                <div className="mb-3">
-                                                    <Grid container spacing={2}>
-                                                        <Grid item xs={12}>
-                                                            <Select
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="region"
-                                                                data-testid="input-region"
-                                                                value={address.region}
-                                                                onChange={(e) => {
-                                                                    const selectedRegion = regionData.find(r => r.region_code === e.target.value);
-                                                                    setAddress({ ...address, region: e.target.value, province: '', city: '', barangay: '' });
-                                                                    setAddressNames({ ...addressNames, region: selectedRegion ? selectedRegion.region_name : '', province: '', city: '', barangay: '' });
-                                                                }}
-                                                                displayEmpty
-                                                                label="Select Region"
-                                                                required
-                                                            >
-                                                                <MenuItem value=""><em>Select Region</em></MenuItem>
-                                                                {regionData.map((region) => (
-                                                                    <MenuItem key={region.region_code} value={region.region_code}>
-                                                                        {region.region_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <Select
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="province"
-                                                                data-testid="input-province"
-                                                                value={address.province}
-                                                                onChange={(e) => {
-                                                                    const selectedProvince = provinceData.find(p => p.province_code === e.target.value);
-                                                                    setAddress({ ...address, province: e.target.value, city: '', barangay: '' });
-                                                                    setAddressNames({ ...addressNames, province: selectedProvince ? selectedProvince.province_name : '', city: '', barangay: '' });
-                                                                }}
-                                                                displayEmpty
-                                                                label="Select Province"
-                                                                required
-                                                            >
-                                                                <MenuItem value=""><em>Select Province</em></MenuItem>
-                                                                {provinceData.map((province) => (
-                                                                    <MenuItem key={province.province_code} value={province.province_code}>
-                                                                        {province.province_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <Select
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="city"
-                                                                data-testid="input-city"
-                                                                value={address.city}
-                                                                onChange={(e) => {
-                                                                    const selectedCity = cityData.find(c => c.city_code === e.target.value);
-                                                                    setAddress({ ...address, city: e.target.value, barangay: '' });
-                                                                    setAddressNames({ ...addressNames, city: selectedCity ? selectedCity.city_name : '', barangay: '' });
-                                                                }}
-                                                                displayEmpty
-                                                                label="Select City"
-                                                                required
-                                                            >
-                                                                <MenuItem value=""><em>Select City</em></MenuItem>
-                                                                {cityData.map((city) => (
-                                                                    <MenuItem key={city.city_code} value={city.city_code}>
-                                                                        {city.city_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <Select
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="barangay"
-                                                                data-testid="input-barangay"
-                                                                value={address.barangay}
-                                                                onChange={(e) => {
-                                                                    const selectedBarangay = barangayData.find(b => b.brgy_code === e.target.value);
-                                                                    setAddress({ ...address, barangay: e.target.value });
-                                                                    setAddressNames({ ...addressNames, barangay: selectedBarangay ? selectedBarangay.brgy_name : '' });
-                                                                }}
-                                                                displayEmpty
-                                                                label="Select Barangay"
-                                                                required
-                                                            >
-                                                                <MenuItem value=""><em>Select Barangay</em></MenuItem>
-                                                                {barangayData.map((barangay) => (
-                                                                    <MenuItem key={barangay.brgy_code} value={barangay.brgy_code}>
-                                                                        {barangay.brgy_name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                        </Grid>
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Full Address (Auto-generated)"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                name="street_text"
-                                                                data-testid="input-street_text"
-                                                                id="street-text"
-                                                                value={formData.street_text}
-                                                                InputProps={{
-                                                                    readOnly: true,
-                                                                }}
-                                                                placeholder="Select province, city, and barangay to generate address"
-                                                            />
-                                                        </Grid>
-                                                    </Grid>
+                                            {/* Step 5: Privacy Policy & Submit */}
+                                            {currentStep === 5 && (
+                                                <div className="registration-section">
+                                                    <Typography variant="h6" className="section-title" sx={{ mb: 2, color: '#c70202', fontWeight: 'bold' }}>
+                                                        Step 5: Review & Submit
+                                                    </Typography>
+                                                    <div className="mb-3">
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox 
+                                                                    required 
+                                                                    sx={{
+                                                                        color: '#c70202',
+                                                                        '&.Mui-checked': {
+                                                                            color: '#c70202',
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            }
+                                                            label="I agree with the Privacy Policy"
+                                                            sx={{ mt: 2 }}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            {/* Guardian Information */}
-                                            <div className="registration-section">
-                                            <Typography variant="h6" className="section-title">
-                                                Guardian Information
-                                            </Typography>
-                                                <div className="mb-3">
-                                                    <TextField
-                                                        label="Guardian Name"
-                                                        fullWidth
-                                                        margin="normal"
-                                                        name="guardianName"
-                                                        data-testid="input-guardianName"
-                                                        value={formData.guardianName}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                    <TextField
-                                                        label="Guardian Contact"
-                                                        fullWidth
-                                                        margin="normal"
-                                                        name="guardianContactNo"
-                                                        data-testid="input-guardianContactNo"
-                                                        value={formData.guardianContactNo}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                        error={guardianPhoneValidation.isValid === false || duplicateValidation.guardian_contact_no.exists}
-                                                        helperText={
-                                                            duplicateValidation.guardian_contact_no.exists 
-                                                                ? 'Guardian contact number already exists' 
-                                                                : guardianPhoneValidation.isValid === false 
-                                                                    ? guardianPhoneValidation.message 
-                                                                    : guardianPhoneValidation.isValid === true 
-                                                                        ? '✓ ' + guardianPhoneValidation.message 
+                                            {/* Step 6: Account Details */}
+                                            {currentStep === 6 && (
+                                                <div className="registration-section">
+                                                    <Typography variant="h6" className="section-title" sx={{ mb: 2, color: '#c70202', fontWeight: 'bold' }}>
+                                                        Step 6: Account Details
+                                                    </Typography>
+                                                    <div className="mb-3">
+                                                        <TextField
+                                                            label="Username"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="userName"
+                                                            data-testid="input-userName"
+                                                            value={formData.userName}
+                                                            onChange={handleInputChange}
+                                                            error={duplicateValidation.username.exists}
+                                                            helperText={
+                                                                duplicateValidation.username.checking 
+                                                                    ? 'Checking availability...' 
+                                                                    : duplicateValidation.username.exists 
+                                                                        ? 'Username already exists' 
                                                                         : ''
-                                                        }
-                                                        InputProps={{
-                                                            endAdornment: guardianPhoneValidation.isValid === true && (
-                                                                <span style={{ color: 'green', fontSize: '20px', marginLeft: '8px' }}>
-                                                                    ✓
-                                                                </span>
-                                                            )
-                                                        }}
-                                                    />
+                                                            }
+                                                            required
+                                                        />
+                                                        <TextField
+                                                            type={showPassword ? 'text' : 'password'}
+                                                            label="Password"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="password"
+                                                            data-testid="input-password"
+                                                            value={formData.password}
+                                                            onChange={handleInputChange}
+                                                            error={(passwordStrength.score > 0 && passwordStrength.score <= 2) || (passwordStrength.feedback && passwordStrength.feedback.includes('data breaches'))}
+                                                            helperText={
+                                                                formData.password && passwordStrength.feedback 
+                                                                    ? passwordStrength.feedback 
+                                                                    : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
+                                                            }
+                                                            required
+                                                            InputProps={{
+                                                                endAdornment: (
+                                                                    <InputAdornment position="end">
+                                                                        <IconButton
+                                                                            aria-label="toggle password visibility"
+                                                                            onClick={() => setShowPassword(prev => !prev)}
+                                                                            edge="end"
+                                                                        >
+                                                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                                )
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            type={showConfirmPassword ? 'text' : 'password'}
+                                                            label="Confirm Password"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            name="confirmPassword"
+                                                            data-testid="input-confirmPassword"
+                                                            value={formData.confirmPassword}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            error={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword}
+                                                            helperText={Boolean(formData.confirmPassword) && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
+                                                            InputProps={{
+                                                                endAdornment: (
+                                                                    <InputAdornment position="end">
+                                                                        <IconButton
+                                                                            aria-label="toggle confirm password visibility"
+                                                                            onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                                            edge="end"
+                                                                        >
+                                                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                                )
+                                                            }}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            {/* Privacy Policy Agreement */}
-                                            <FormControlLabel
-                                                control={
-                                                    <Checkbox 
-                                                        required 
+                                            {/* Navigation Buttons */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, gap: 2 }}>
+                                                <Button
+                                                    variant="outlined"
+                                                    onClick={handleBack}
+                                                    disabled={currentStep === 1}
+                                                    sx={{
+                                                        borderColor: '#c70202',
+                                                        color: '#c70202',
+                                                        '&:hover': {
+                                                            borderColor: '#a00000',
+                                                            backgroundColor: 'rgba(199, 2, 2, 0.1)',
+                                                        },
+                                                        minWidth: '120px',
+                                                        height: '45px',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                >
+                                                    Back
+                                                </Button>
+                                                {currentStep < totalSteps ? (
+                                                    <Button
+                                                        variant="contained"
+                                                        onClick={handleNext}
                                                         sx={{
-                                                            color: '#c70202',
-                                                            '&.Mui-checked': {
-                                                                color: '#c70202',
+                                                            bgcolor: '#c70202',
+                                                            '&:hover': {
+                                                                bgcolor: '#a00000',
                                                             },
+                                                            minWidth: '120px',
+                                                            height: '45px',
+                                                            fontWeight: 'bold'
                                                         }}
-                                                    />
-                                                }
-                                                label="I agree with the Privacy Policy"
-                                                sx={{ mt: 2 }}
-                                            />
-
-                                            {/* Submit Button */}
-                                            <Button 
-                                                variant="contained" 
-                                                type="submit"
-                                                fullWidth
-                                                sx={{ 
-                                                    mt: 3,
-                                                    bgcolor: '#c70202',
-                                                    '&:hover': {
-                                                        bgcolor: '#a00000',
-                                                    },
-                                                    height: '45px',
-                                                    fontWeight: 'bold'
-                                                }}
-                                            >
-                                                Register
-                                            </Button>
+                                                    >
+                                                        Next
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        variant="contained"
+                                                        type="submit"
+                                                        disabled={formData.password !== formData.confirmPassword || !formData.password || !formData.confirmPassword}
+                                                        sx={{
+                                                            bgcolor: '#c70202',
+                                                            '&:hover': {
+                                                                bgcolor: '#a00000',
+                                                            },
+                                                            '&:disabled': {
+                                                                bgcolor: '#ccc',
+                                                                color: '#666'
+                                                            },
+                                                            minWidth: '120px',
+                                                            height: '45px',
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                    >
+                                                        Register
+                                                    </Button>
+                                                )}
+                                            </Box>
                                         </form>
                                     ) : (
                                         <div style={{ textAlign: 'center', padding: '20px' }}>
