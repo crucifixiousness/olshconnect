@@ -81,9 +81,9 @@ module.exports = async (req, res) => {
           TO_CHAR(ca.start_time, 'HH12:MI AM') as start_time,
           TO_CHAR(ca.end_time, 'HH12:MI AM') as end_time,
           
-          -- Approval information
-          reg.full_name as registrar_name,
-          dean.full_name as dean_name
+          -- Approval information (removed approval_by columns)
+          NULL as registrar_name,
+          NULL as dean_name
           
         FROM grades g
         JOIN students s ON g.student_id = s.id
@@ -93,8 +93,6 @@ module.exports = async (req, res) => {
         JOIN program_year py ON pc.year_id = py.year_id
         LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
         LEFT JOIN admins st ON ca.staff_id = st.staff_id
-        LEFT JOIN admins reg ON g.registrar_approved_by = reg.staff_id
-        LEFT JOIN admins dean ON g.dean_approved_by = dean.staff_id
         ORDER BY g.grade_id, ca.day NULLS LAST, ca.start_time NULLS LAST
         LIMIT 100
       `;
