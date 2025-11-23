@@ -1761,6 +1761,36 @@ const Homepage = () => {
                                                         Step 5: Review & Submit
                                                     </Typography>
                                                     <div className="mb-3">
+                                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                            Privacy Policy
+                                                        </Typography>
+                                                        <Box
+                                                            sx={{
+                                                                maxHeight: '300px',
+                                                                overflowY: 'auto',
+                                                                border: '1px solid #e0e0e0',
+                                                                borderRadius: '8px',
+                                                                padding: '15px',
+                                                                marginBottom: '20px',
+                                                                backgroundColor: '#f9f9f9',
+                                                                '&::-webkit-scrollbar': {
+                                                                    width: '8px',
+                                                                },
+                                                                '&::-webkit-scrollbar-track': {
+                                                                    background: '#f1f1f1',
+                                                                    borderRadius: '4px',
+                                                                },
+                                                                '&::-webkit-scrollbar-thumb': {
+                                                                    background: '#c70202',
+                                                                    borderRadius: '4px',
+                                                                },
+                                                                '&::-webkit-scrollbar-thumb:hover': {
+                                                                    background: '#a00000',
+                                                                },
+                                                            }}
+                                                        >
+                                                            <div className="uc-privacy-policy"></div>
+                                                        </Box>
                                                         <FormControlLabel
                                                             control={
                                                                 <Checkbox 
