@@ -93,6 +93,7 @@ module.exports = async (req, res) => {
         JOIN program_year py ON pc.year_id = py.year_id
         LEFT JOIN course_assignments ca ON pc.pc_id = ca.pc_id
         LEFT JOIN admins st ON ca.staff_id = st.staff_id
+        WHERE g.approval_status = 'dean_approved'
         ORDER BY g.grade_id, ca.day NULLS LAST, ca.start_time NULLS LAST
         LIMIT 100
       `;
