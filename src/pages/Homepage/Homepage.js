@@ -112,6 +112,7 @@ const Homepage = () => {
     });
     const usernameTimeoutRef = useRef(null);
     const emailTimeoutRef = useRef(null);
+    const privacyPolicyRef = useRef(null);
     const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 6;
@@ -1196,6 +1197,63 @@ const Homepage = () => {
         console.log(formData); // Log the state to check if it's properly populated
       }, [formData]);
 
+      // Initialize privacy policy when step 5 is shown
+      useEffect(() => {
+        if (currentStep === 5 && privacyPolicyRef.current) {
+          const policyElement = privacyPolicyRef.current;
+          if (!policyElement) return;
+
+          // Check if already loaded
+          if (policyElement.innerHTML.trim() !== '') {
+            return;
+          }
+
+          // Wait for DOM to be ready
+          const timer = setTimeout(() => {
+            // Try to trigger the Usercentrics script to find the element
+            // The script should automatically populate elements with class 'uc-privacy-policy'
+            // We'll create a new script instance that will scan for the element
+            const existingDynamicScript = document.getElementById('usercentrics-ppg-dynamic');
+            if (existingDynamicScript) {
+              existingDynamicScript.remove();
+            }
+
+            // Create a script that will initialize the privacy policy
+            const script = document.createElement('script');
+            script.id = 'usercentrics-ppg-dynamic';
+            script.setAttribute('privacy-policy-id', '77ae48d5-ac02-413d-98d2-3751d4baddc7');
+            script.src = 'https://policygenerator.usercentrics.eu/api/privacy-policy';
+            script.async = true;
+            
+            script.onload = () => {
+              // After script loads, it should automatically populate the element
+              // If not, try to manually trigger it after a short delay
+              setTimeout(() => {
+                if (policyElement.innerHTML.trim() === '') {
+                  // Try to dispatch a custom event or check for Usercentrics API
+                  if (window.UC_UI && typeof window.UC_UI.showPrivacyPolicy === 'function') {
+                    try {
+                      window.UC_UI.showPrivacyPolicy('77ae48d5-ac02-413d-98d2-3751d4baddc7', policyElement);
+                    } catch (error) {
+                      console.error('Error initializing privacy policy:', error);
+                    }
+                  }
+                }
+              }, 300);
+            };
+
+            script.onerror = () => {
+              console.error('Failed to load privacy policy script');
+              policyElement.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Privacy policy is loading... If it does not appear, please refresh the page.</p>';
+            };
+
+            document.head.appendChild(script);
+          }, 100);
+
+          return () => clearTimeout(timer);
+        }
+      }, [currentStep]);
+
   return (
     <>
             <header className="d-flex align-items-center">
@@ -1789,7 +1847,11 @@ const Homepage = () => {
                                                                 },
                                                             }}
                                                         >
-                                                            <div className="uc-privacy-policy"></div>
+                                                            <div 
+                                                                ref={privacyPolicyRef}
+                                                                className="uc-privacy-policy"
+                                                                id="uc-privacy-policy-container"
+                                                            ></div>
                                                         </Box>
                                                         <FormControlLabel
                                                             control={
