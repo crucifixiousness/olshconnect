@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
     let params = [];
     let paramIndex = 1;
 
-    // Registrar set clause (Registrar approval after Program Head)
+    // Registrar set clause (Registrar approval after Dean)
     const setClause = `approval_status = 'reg_approved', registrar_approved_at = CURRENT_TIMESTAMP`;
 
     let updateQuery = '';
