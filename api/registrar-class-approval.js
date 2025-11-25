@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
         LEFT JOIN grades g ON g.pc_id = pc.pc_id AND g.student_id = e.student_id
         GROUP BY ca.assignment_id, ca.pc_id, ca.section, c.course_code, c.course_name, p.program_name, py.year_level, pc.semester, a.full_name
         HAVING COUNT(g.*) > 0
-           AND COUNT(CASE WHEN g.approval_status = 'dean_approved' THEN 1 END) > 0
+           AND COUNT(CASE WHEN g.approval_status = 'dean_approved' THEN 1 END) = COUNT(g.*)
            AND COUNT(CASE WHEN g.approval_status = 'reg_approved' THEN 1 END) = 0
         ORDER BY c.course_code, ca.section
       `;
