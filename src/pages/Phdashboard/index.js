@@ -179,7 +179,10 @@ const ProgramHeadDashboard = () => {
       const response = await axios.get(`/api/program-head-class-approval?program_id=${program_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const list = (response.data.classes || []).filter(c => (parseInt(c.total_grades, 10) || 0) > 0);
+      const list = (response.data.classes || [])
+        .filter(c => (parseInt(c.total_grades, 10) || 0) > 0)
+        .filter(c => (parseInt(c.dean_approved_count, 10) || 0) === 0)
+        .filter(c => (parseInt(c.registrar_approved_count, 10) || 0) === 0);
       setClasses(list);
     } catch (e) {
       console.error('Error fetching PH class approvals:', e);
