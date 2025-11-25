@@ -63,10 +63,23 @@ module.exports = async (req, res) => {
         HAVING COUNT(g.*) > 0
            AND COUNT(CASE WHEN g.approval_status = 'dean_approved' THEN 1 END) = COUNT(g.*)
            AND COUNT(CASE WHEN g.approval_status = 'reg_approved' THEN 1 END) = 0
+           AND COUNT(CASE WHEN g.approval_status NOT IN ('dean_approved', 'reg_approved') AND g.approval_status IS NOT NULL THEN 1 END) = 0
         ORDER BY c.course_code, ca.section
       `;
 
       const result = await client.query(query);
+      
+      console.log('🔍 Registrar class approval query results:', {
+        totalRows: result.rows.length,
+        sampleData: result.rows.slice(0, 3).map(r => ({
+          course: r.course_code,
+          section: r.section,
+          total_grades: r.total_grades,
+          dean_approved_count: r.dean_approved_count,
+          reg_approved_count: r.registrar_approved_count
+        }))
+      });
+      
       return res.status(200).json({ success: true, classes: result.rows });
 
     } catch (error) {
