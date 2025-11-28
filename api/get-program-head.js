@@ -39,7 +39,8 @@ module.exports = async (req, res) => {
         `SELECT full_name 
          FROM admins 
          WHERE program_id = $1 
-         AND role = 'program_head' 
+           AND LOWER(role) IN ('program head', 'program_head')
+         ORDER BY staff_id ASC
          LIMIT 1`,
         [program_id]
       );
