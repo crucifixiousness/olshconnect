@@ -382,7 +382,7 @@ const RequestDocument = () => {
       ]);
 
       // Fetch program head name if program_id is available
-      let programHeadName = 'JOEL P. ALTURA'; // Default fallback
+      let programHeadName = 'PRINCESS LEA ANN D. CALINA, MSIT'; // Default fallback
       if (profileResponse.data?.enrollment?.program_id) {
         try {
           const programHeadResponse = await axios.get(`/api/get-program-head?program_id=${profileResponse.data.enrollment.program_id}`, {
