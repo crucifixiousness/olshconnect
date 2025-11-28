@@ -13,6 +13,51 @@ import { useRef } from 'react';
 import olshcoLogo from '../../asset/images/olshco-logo1.png';
 // Request form template preview removed from this page
 
+const DEFAULT_PROGRAM_HEAD = 'PRINCESS LEA ANN D. CALINA, MSIT';
+
+const PROGRAM_HEAD_FALLBACKS = {
+  bsit: DEFAULT_PROGRAM_HEAD,
+  bsinformationtechnology: DEFAULT_PROGRAM_HEAD,
+  bachelorofscienceininformationtechnology: DEFAULT_PROGRAM_HEAD
+};
+
+const normalizeProgramKey = (programName = '') => programName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const getProgramHeadFallback = (programName = '') => {
+  const normalized = normalizeProgramKey(programName);
+  if (!normalized) return null;
+  if (PROGRAM_HEAD_FALLBACKS[normalized]) {
+    return PROGRAM_HEAD_FALLBACKS[normalized];
+  }
+  if (normalized.includes('bsit') || normalized.includes('informationtechnology')) {
+    return DEFAULT_PROGRAM_HEAD;
+  }
+  return null;
+};
+
+const normalizeSemesterValue = (semesterValue) => {
+  if (semesterValue === null || semesterValue === undefined) return '';
+  if (typeof semesterValue === 'string') {
+    const trimmed = semesterValue.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.length ? String(parsed[0]) : '';
+        }
+        if (parsed && typeof parsed === 'object' && 'value' in parsed) {
+          return String(parsed.value);
+        }
+        return String(parsed);
+      } catch {
+        return trimmed;
+      }
+    }
+    return trimmed;
+  }
+  return String(semesterValue);
+};
+
 const RequestDocument = () => {
   // eslint-disable-next-line
   const [isLoading, setIsLoading] = useState(false);
@@ -371,7 +416,7 @@ const RequestDocument = () => {
       setCogLoading(true);
       const token = localStorage.getItem('token');
       
-      // Fetch student profile, grades, and program head
+      // Fetch student profile and grades
       const [profileResponse, gradesResponse] = await Promise.all([
         axios.get('/api/studentprofile', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -381,11 +426,19 @@ const RequestDocument = () => {
         })
       ]);
 
+      const enrollment = profileResponse.data?.enrollment || {};
+      const grades = gradesResponse.data?.grades || [];
+      const statistics = gradesResponse.data?.statistics || {};
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      const programName = enrollment.program || '';
+      const fallbackProgramHead = getProgramHeadFallback(programName) || DEFAULT_PROGRAM_HEAD;
+      let programHeadName = fallbackProgramHead;
+
       // Fetch program head name if program_id is available
-      let programHeadName = 'PRINCESS LEA ANN D. CALINA, MSIT'; // Default fallback
-      if (profileResponse.data?.enrollment?.program_id) {
+      if (enrollment.program_id) {
         try {
-          const programHeadResponse = await axios.get(`/api/get-program-head?program_id=${profileResponse.data.enrollment.program_id}`, {
+          const programHeadResponse = await axios.get(`/api/get-program-head?program_id=${enrollment.program_id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (programHeadResponse.data?.full_name) {
@@ -393,14 +446,9 @@ const RequestDocument = () => {
           }
         } catch (error) {
           console.error('Error fetching program head:', error);
-          // Use default fallback if fetch fails
+          programHeadName = fallbackProgramHead;
         }
       }
-
-      const enrollment = profileResponse.data?.enrollment || {};
-      const grades = gradesResponse.data?.grades || [];
-      const statistics = gradesResponse.data?.statistics || {};
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
 
       // Format student name
       const formatStudentName = (first, middle, last, suffix) => {
@@ -435,22 +483,25 @@ const RequestDocument = () => {
         return semMap[semester] || semester;
       };
 
+      const enrollmentYearLevel = enrollment.yearLevel ?? enrollment.year_level;
+      const normalizedSemesterValue = normalizeSemesterValue(enrollment.semester);
+      const academicYearValue = enrollment.academic_year || enrollment.academicYear || '2022-2023';
+
       // Get department name from program name
-      const programName = enrollment.program || '';
       // Use program name directly (e.g., "BSIT" becomes "BSIT DEPARTMENT")
       const departmentName = programName ? `${programName.toUpperCase()} DEPARTMENT` : 'DEPARTMENT';
 
       // Filter grades by current semester if available
-      const currentSemester = enrollment.semester;
-      const currentYear = enrollment.year_id;
-      let filteredGrades = currentSemester && currentYear 
+      const enrollmentYearLevelString = enrollmentYearLevel !== undefined && enrollmentYearLevel !== null
+        ? String(enrollmentYearLevel)
+        : null;
+
+      let filteredGrades = normalizedSemesterValue && enrollmentYearLevelString
         ? grades.filter(g => {
             // Convert both to strings for comparison to handle type mismatches
-            const gradeSemester = String(g.semester);
-            const enrollmentSemester = String(currentSemester);
-            const gradeYearLevel = String(g.year_level);
-            const enrollmentYearLevel = String(enrollment.year_level);
-            return gradeSemester === enrollmentSemester && gradeYearLevel === enrollmentYearLevel;
+            const gradeSemester = normalizeSemesterValue(g.semester);
+            const gradeYearLevel = String(g.year_level ?? g.yearLevel ?? '');
+            return gradeSemester === normalizedSemesterValue && gradeYearLevel === enrollmentYearLevelString;
           })
         : grades;
 
@@ -480,10 +531,10 @@ const RequestDocument = () => {
           user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
           user.suffix || ''
         ),
-        yearLevel: formatYearLevel(enrollment.year_level?.toString() || '1'),
+        yearLevel: formatYearLevel((enrollmentYearLevelString || '1')),
         program: programName,
-        semester: formatSemester(currentSemester || '1'),
-        academicYear: enrollment.academic_year || '2022-2023',
+        semester: formatSemester(normalizedSemesterValue || '1'),
+        academicYear: academicYearValue,
         department: departmentName,
         grades: filteredGrades.map(g => ({
           code: g.course_code,
@@ -903,7 +954,7 @@ const RequestDocument = () => {
                     <Typography variant="body2" sx={{ fontSize: '0.75rem', mb: 3 }}>Checked by:</Typography>
                     <Box sx={{ borderTop: '1px solid #000', width: '60%', ml: 'auto', mb: 1 }} />
                     <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-                      {cogData.programHeadName || 'PRINCESS LEA ANN D. CALINA, MSIT'}
+                      {cogData.programHeadName || DEFAULT_PROGRAM_HEAD}
                     </Typography>
                     <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>
                       Program Head
