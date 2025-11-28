@@ -79,6 +79,7 @@ module.exports = async (req, res) => {
         guardianContactNo: studentResult.rows[0].guardian_contact_no,
         enrollment: enrollmentResult.rows[0] ? {
           program: enrollmentResult.rows[0].program_name,
+          program_id: enrollmentResult.rows[0].program_id,
           yearLevel: enrollmentResult.rows[0].year_level,
           status: enrollmentResult.rows[0].enrollment_status,
           idpic: enrollmentResult.rows[0].idpic ? Buffer.from(enrollmentResult.rows[0].idpic).toString('base64') : null
