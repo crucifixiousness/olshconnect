@@ -371,7 +371,7 @@ const RequestDocument = () => {
       setCogLoading(true);
       const token = localStorage.getItem('token');
       
-      // Fetch student profile and grades
+      // Fetch student profile, grades, and program head
       const [profileResponse, gradesResponse] = await Promise.all([
         axios.get('/api/studentprofile', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -380,6 +380,22 @@ const RequestDocument = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
+
+      // Fetch program head name if program_id is available
+      let programHeadName = 'JOEL P. ALTURA'; // Default fallback
+      if (profileResponse.data?.enrollment?.program_id) {
+        try {
+          const programHeadResponse = await axios.get(`/api/get-program-head?program_id=${profileResponse.data.enrollment.program_id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (programHeadResponse.data?.full_name) {
+            programHeadName = programHeadResponse.data.full_name;
+          }
+        } catch (error) {
+          console.error('Error fetching program head:', error);
+          // Use default fallback if fetch fails
+        }
+      }
 
       const enrollment = profileResponse.data?.enrollment || {};
       const grades = gradesResponse.data?.grades || [];
@@ -419,10 +435,10 @@ const RequestDocument = () => {
         return semMap[semester] || semester;
       };
 
-      // Get program abbreviation for department
+      // Get department name from program name
       const programName = enrollment.program || '';
-      const programAbbr = programName.split(' ').map(word => word.charAt(0)).join('').toUpperCase();
-      const departmentName = `${programAbbr} DEPARTMENT`;
+      // Use program name directly (e.g., "BSIT" becomes "BSIT DEPARTMENT")
+      const departmentName = programName ? `${programName.toUpperCase()} DEPARTMENT` : 'DEPARTMENT';
 
       // Filter grades by current semester if available
       const currentSemester = enrollment.semester;
@@ -477,7 +493,8 @@ const RequestDocument = () => {
           remarks: parseFloat(g.final_grade) >= 1.0 && parseFloat(g.final_grade) <= 3.0 ? 'Passed' : 'Failed'
         })),
         gpa: statistics.gpa || calculateGPA(filteredGrades),
-        issuanceDate: issuanceDate
+        issuanceDate: issuanceDate,
+        programHeadName: programHeadName
       });
 
       setShowCogModal(true);
@@ -881,24 +898,12 @@ const RequestDocument = () => {
 
               {/* Signatures Section */}
               <Grid container sx={{ mb: 2 }}>
-                <Grid item xs={6}>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontSize: '0.75rem', mb: 3 }}>Prepared by:</Typography>
-                    <Box sx={{ borderTop: '1px solid #000', width: '60%', mb: 1 }} />
-                    <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-                      JENNIFER JOY R. DOMINGO
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>
-                      Adviser {cogData.department.split(' ')[0]}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={12}>
                   <Box sx={{ textAlign: 'right' }}>
                     <Typography variant="body2" sx={{ fontSize: '0.75rem', mb: 3 }}>Checked by:</Typography>
                     <Box sx={{ borderTop: '1px solid #000', width: '60%', ml: 'auto', mb: 1 }} />
                     <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-                      JOEL P. ALTURA
+                      {cogData.programHeadName || 'PRINCESS LEA ANN D. CALINA, MSIT'}
                     </Typography>
                     <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>
                       Program Head
