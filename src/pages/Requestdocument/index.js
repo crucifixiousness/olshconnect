@@ -931,8 +931,8 @@ const RequestDocument = () => {
                 {/* GPA Row */}
                 <Grid container>
                   <Grid item xs={2} sx={{ borderRight: '1px solid #000', p: 0.5 }} />
-                  <Grid item xs={5} sx={{ borderRight: '1px solid #000', p: 0.5 }}>
-                    <Typography variant="body2" sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>GPA</Typography>
+                  <Grid item xs={5} sx={{ borderRight: '1px solid #000', p: 0.5, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.7rem', fontWeight: 'bold', fontStyle: 'italic' }}>GPA</Typography>
                   </Grid>
                   <Grid item xs={1.5} sx={{ borderRight: '1px solid #000', p: 0.5, textAlign: 'center' }}>
                     <Typography variant="body2" sx={{ fontSize: '0.7rem' }}>{cogData.gpa || ''}</Typography>
